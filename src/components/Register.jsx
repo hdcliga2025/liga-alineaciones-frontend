@@ -39,6 +39,7 @@ export default function Register({ onSuccess }) {
     setMsg("");
     setError("");
 
+    // Validación mínima
     if (form.password.length < 8) {
       setError("O contrasinal debe ter como mínimo 8 caracteres.");
       return;
@@ -76,6 +77,9 @@ export default function Register({ onSuccess }) {
     route("/partidos");
   };
 
+  const hintColor =
+    form.password && form.password.length < 8 ? "#d00" : "#6b7280";
+
   return (
     <form class="register-form" onSubmit={handleSubmit} noValidate>
       <label>Nome e apelidos</label>
@@ -100,9 +104,27 @@ export default function Register({ onSuccess }) {
         autoComplete="email"
       />
 
-      <label>Contrasinal</label>
+      {/* Fila con etiqueta + aviso alineado á dereita na mesma liña */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          justifyContent: "space-between",
+          marginTop: "12px",
+        }}
+      >
+        <label style={{ margin: 0 }}>Contrasinal</label>
+        <span
+          style={{
+            fontSize: "12px",
+            lineHeight: 1.1,
+            color: hintColor,
+          }}
+        >
+          [Mínimo 8 caracteres]
+        </span>
+      </div>
       <input
-        id="password"
         type="password"
         name="password"
         placeholder="Contrasinal"
@@ -110,22 +132,7 @@ export default function Register({ onSuccess }) {
         onInput={handleChange}
         required
         autoComplete="new-password"
-        aria-describedby="pw-hint"
       />
-      {/* Aviso MUY pegado y alineado a la derecha */}
-      <div
-        id="pw-hint"
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          marginTop: "2px",
-          fontSize: "12px",
-          lineHeight: 1.1,
-          color: form.password && form.password.length < 8 ? "#d00" : "#6b7280",
-        }}
-      >
-        [Mínimo 8 caracteres]
-      </div>
 
       <label>Confirma o contrasinal</label>
       <input
