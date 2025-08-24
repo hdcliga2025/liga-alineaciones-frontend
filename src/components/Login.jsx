@@ -17,7 +17,6 @@ export default function Login() {
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
 
-  // Aviso cando vimos de confirmar: .../login?verified=true
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("verified") === "true") {
@@ -48,7 +47,7 @@ export default function Login() {
     }
 
     if (data?.session) {
-      route("/partidos", true); // cambia a /dashboard se o prefires
+      route("/partidos", true);
     } else {
       setMsg("Sesión non creada. Proba de novo.");
     }
@@ -82,7 +81,7 @@ export default function Login() {
       {msg && <p class="form-info">{msg}</p>}
 
       <button type="submit" disabled={loading}>
-        {loading ? "Entrando..." : "Imos !!"}
+        {loading ? "Entrando..." : "Imos!!"}
       </button>
     </form>
   );

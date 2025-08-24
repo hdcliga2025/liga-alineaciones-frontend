@@ -112,10 +112,13 @@ export default function Register({ onSuccess }) {
         autoComplete="new-password"
         aria-describedby="pw-hint"
       />
+      {/* Aviso MUY pegado y alineado a la derecha */}
       <div
         id="pw-hint"
         style={{
-          marginTop: "4px",
+          display: "flex",
+          justifyContent: "flex-end",
+          marginTop: "2px",
           fontSize: "12px",
           lineHeight: 1.1,
           color: form.password && form.password.length < 8 ? "#d00" : "#6b7280",
