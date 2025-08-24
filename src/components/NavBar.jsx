@@ -16,12 +16,13 @@ export default function NavBar({ currentPath = "/" }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  // No mostrar nada en páginas públicas
+  // Non amosar en páxinas públicas
   if (PUBLIC_PATHS.includes(currentPath)) return null;
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    route("/login", true);
+    // 👉 Despois de pechar sesión, ir á landing
+    route("/", true);
   };
 
   return (
@@ -34,7 +35,7 @@ export default function NavBar({ currentPath = "/" }) {
         borderBottom: "1px solid #eee",
       }}
     >
-      {/* Marca (solo navega a la home pública) */}
+      {/* Marca (home pública) */}
       <a href="/" style={{ fontWeight: 700, textDecoration: "underline" }}>
         HDC Liga
       </a>
@@ -46,10 +47,8 @@ export default function NavBar({ currentPath = "/" }) {
           <a href="/haz-tu-11">Fai o teu 11</a>
           <a href="/clasificacion">Clasificación</a>
 
-          {/* separador flexible para empuxar o botón á dereita */}
           <span style={{ flex: 1 }} />
 
-          {/* Botón de peche de sesión */}
           <button
             onClick={handleLogout}
             style={{
