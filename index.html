@@ -2,20 +2,30 @@
 <html lang="gl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Heredeirxs do Celta</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HDC Liga</title>
 
-    <!-- Montserrat cargada de forma global -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Montserrat para toda a app -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+      :root {
+        --font-sans: "Montserrat", system-ui, -apple-system, "Segoe UI",
+                     Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji",
+                     "Segoe UI Emoji", "Segoe UI Symbol";
+      }
+      html, body {
+        font-family: var(--font-sans);
+        margin: 0;
+        color: #0f172a;
+        background: #f8fafc;
+      }
+    </style>
   </head>
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
-

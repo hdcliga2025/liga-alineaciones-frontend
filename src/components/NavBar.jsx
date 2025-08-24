@@ -3,6 +3,7 @@ import { useEffect, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient";
 import { route } from "preact-router";
 
+// En rutas públicas seguimos ocultando la barra
 const PUBLIC_PATHS = ["/", "/login", "/register"];
 
 export default function NavBar({ currentPath = "/" }) {
@@ -20,45 +21,36 @@ export default function NavBar({ currentPath = "/" }) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    route("/", true);
+    route("/", true); // tras pechar sesión → landing
   };
 
   return (
     <nav
       style={{
-        padding: "8px 12px",
+        padding: "10px 14px",
         display: "flex",
         alignItems: "center",
-        gap: "14px",
-        borderBottom: "1px solid #eee",
+        borderBottom: "1px solid #eef2ff",
+        boxShadow: "0 2px 6px rgba(0,0,0,.04)",
+        background: "#fff",
       }}
     >
-      <a href="/" style={{ fontWeight: 700, textDecoration: "underline" }}>
-        HDC Liga
-      </a>
-
+      {/* empuxamos o botón á dereita */}
+      <span style={{ flex: 1 }} />
       {hasSession && (
-        <>
-          <a href="/dashboard">Panel</a>
-          <a href="/partidos">Partidos</a>
-          <a href="/haz-tu-11">Fai o teu 11</a>
-          <a href="/clasificacion">Clasificación</a>
-
-          <span style={{ flex: 1 }} />
-
-          <button
-            onClick={handleLogout}
-            style={{
-              border: "1px solid #333",
-              borderRadius: "6px",
-              padding: "6px 10px",
-              background: "transparent",
-              cursor: "pointer",
-            }}
-          >
-            Pechar sesión
-          </button>
-        </>
+        <button
+          onClick={handleLogout}
+          style={{
+            border: "1px solid #1f2937",
+            borderRadius: "8px",
+            padding: "8px 12px",
+            background: "transparent",
+            cursor: "pointer",
+            fontWeight: 600,
+          }}
+        >
+          Pechar sesión
+        </button>
       )}
     </nav>
   );
