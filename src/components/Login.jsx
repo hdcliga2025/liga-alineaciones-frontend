@@ -48,7 +48,6 @@ export default function Login() {
     }
 
     if (data?.session) {
-      // Sesión creada → navega a túa ruta post-login
       route("/partidos", true); // cambia a /dashboard se o prefires
     } else {
       setMsg("Sesión non creada. Proba de novo.");
@@ -85,12 +84,6 @@ export default function Login() {
       <button type="submit" disabled={loading}>
         {loading ? "Entrando..." : "Imos !!"}
       </button>
-
-      {/* Enlaces útiles */}
-      <div style={{ marginTop: "12px", display: "flex", gap: "12px" }}>
-        <a href="/register">Crear conta</a>
-        <a href="/">Volver ao inicio</a>
-      </div>
     </form>
   );
 }

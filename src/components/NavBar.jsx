@@ -3,40 +3,40 @@ import { useEffect, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient";
 import { route } from "preact-router";
 
-export default function NavBar() {
+const PUBLIC_PATHS = ["/", "/login", "/register"];
+
+export default function NavBar({ currentPath = "/" }) {
   const [hasSession, setHasSession] = useState(false);
 
   useEffect(() => {
-    // estado inicial
-    supabase.auth.getSession().then(({ data }) => {
-      setHasSession(!!data.session);
-    });
-    // escuchar cambios (login/logout)
-    const { data: sub } = supabase.auth.onAuthStateChange((_evt, session) => {
-      setHasSession(!!session);
-    });
+    supabase.auth.getSession().then(({ data }) => setHasSession(!!data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_evt, session) =>
+      setHasSession(!!session)
+    );
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  // No mostrar NADA en páginas públicas
+  if (PUBLIC_PATHS.includes(currentPath)) return null;
+
   const handleLogout = async () => {
-    // Si ya no hay sesión, no hagas nada
-    const { data } = await supabase.auth.getSession();
-    if (!data?.session) {
-      route("/login", true);
-      return;
-    }
     await supabase.auth.signOut();
-    route("/login", true); // navega limpio al login
+    route("/login", true);
   };
 
   return (
-    <nav class="navbar" style={{ padding: "0.5rem" }}>
-      {/* aquí iría tu logo / enlaces */}
-      {/* 👇 Mostrar "Saír" SOLO si hay sesión */}
+    <nav style={{ padding: "8px", display: "flex", gap: "12px", alignItems: "center" }}>
+      <a href="/" style={{ fontWeight: 700 }}>HDC Liga</a>
+
       {hasSession && (
-        <button onClick={handleLogout} class="px-3 py-1 rounded border">
-          Saír
-        </button>
+        <>
+          <a href="/partidos">Partidos</a>
+          <a href="/haz-tu-11">Fai o teu 11</a>
+          <a href="/clasificacion">Clasificación</a>
+          <button onClick={handleLogout} style={{ marginLeft: "auto" }}>
+            Saír
+          </button>
+        </>
       )}
     </nav>
   );

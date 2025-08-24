@@ -1,6 +1,8 @@
 // src/App.jsx
 import { h } from "preact";
+import { useState } from "preact/hooks";
 import { Router } from "preact-router";
+
 import AuthWatcher from "./components/AuthWatcher.jsx";
 import NavBar from "./components/NavBar.jsx";
 
@@ -14,18 +16,20 @@ import Clasificacion from "./pages/Clasificacion.jsx";
 const NotFound = () => (
   <main style={{ padding: "1rem" }}>
     <h2>Páxina non atopada</h2>
-    <p>
-      Volver ao <a href="/login">login</a>
-    </p>
+    <p>Volver ao <a href="/login">login</a></p>
   </main>
 );
 
 export default function App() {
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+
   return (
     <>
       <AuthWatcher />
-      <NavBar />
-      <Router>
+      {/* Pasamos la ruta actual para ocultar NavBar en páginas públicas */}
+      <NavBar currentPath={currentPath} />
+
+      <Router onChange={(e) => setCurrentPath(e.url)}>
         {/* Públicas */}
         <LandingPage path="/" />
         <Login path="/login" />
