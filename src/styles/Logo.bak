@@ -1,0 +1,22 @@
+.logo-wrap {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  width:100%;
+  margin-top: 16px;
+}
+
+.logo-img {
+  display:block;
+  width: 160px;          /* tamaño base móvil */
+  max-width: 40vw;       /* no se sale en pantallas pequeñas */
+  height:auto;
+  border-radius: 6px;    /* por si el jpg tiene borde, suaviza */
+}
+
+@media (min-width: 480px){
+  .logo-img { width: 180px; }
+}
+@media (min-width: 640px){
+  .logo-img { width: 200px; }
+}
