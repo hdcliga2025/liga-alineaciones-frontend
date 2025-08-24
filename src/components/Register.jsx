@@ -56,4 +56,91 @@ export default function Register({ onSuccess }) {
       password: form.password,
       options: {
         data: { nombre, apellidos, full_name: form.nomeCompleto },
-        emailRedire
+        emailRedirectTo: `${window.location.origin}/login?verified=true`,
+      },
+    });
+
+    setLoading(false);
+
+    if (error) {
+      setError(mapAuthError(error));
+      return;
+    }
+
+    if (data?.user && !data.session) {
+      setMsg("Revisa o teu correo e confirma a conta para continuar.");
+      return;
+    }
+
+    if (onSuccess) onSuccess(data?.session || null);
+    route("/partidos");
+  };
+
+  return (
+    <form class="register-form" onSubmit={handleSubmit} noValidate>
+      <label>Nome e apelidos</label>
+      <input
+        type="text"
+        name="nomeCompleto"
+        placeholder="Nome e apelidos"
+        value={form.nomeCompleto}
+        onInput={handleChange}
+        required
+        autoComplete="name"
+      />
+
+      <label>Correo electrónico</label>
+      <input
+        type="email"
+        name="email"
+        placeholder="Correo electrónico"
+        value={form.email}
+        onInput={handleChange}
+        required
+        autoComplete="email"
+      />
+
+      <label>Contrasinal</label>
+      <input
+        id="password"
+        type="password"
+        name="password"
+        placeholder="Contrasinal"
+        value={form.password}
+        onInput={handleChange}
+        required
+        autoComplete="new-password"
+        aria-describedby="pw-hint"
+      />
+      <div
+        id="pw-hint"
+        style={{
+          marginTop: "4px",
+          fontSize: "12px",
+          lineHeight: 1.1,
+          color: form.password && form.password.length < 8 ? "#d00" : "#6b7280",
+        }}
+      >
+        [Mínimo 8 caracteres]
+      </div>
+
+      <label>Confirma o contrasinal</label>
+      <input
+        type="password"
+        name="confirmPassword"
+        placeholder="Confirma o contrasinal"
+        value={form.confirmPassword}
+        onInput={handleChange}
+        required
+        autoComplete="new-password"
+      />
+
+      {error && <p class="form-error">{error}</p>}
+      {msg && <p class="form-info">{msg}</p>}
+
+      <button type="submit" disabled={loading}>
+        {loading ? "Rexistrando..." : "Adiante co rexistro"}
+      </button>
+    </form>
+  );
+}
