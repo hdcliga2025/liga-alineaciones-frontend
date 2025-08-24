@@ -3,7 +3,7 @@ import { useState } from "preact/hooks";
 import { route } from "preact-router";
 import { supabase } from "../lib/supabaseClient";
 
-// Mapea mensajes de error de Supabase a algo más claro
+// Mapea mensaxes de erro de Supabase a algo máis claro
 function mapAuthError(err) {
   if (!err) return "";
   const m = (err.message || "").toLowerCase();
@@ -41,6 +41,11 @@ export default function Register({ onSuccess }) {
     setMsg("");
     setError("");
 
+    // Validación básica
+    if (form.password.length < 8) {
+      setError("O contrasinal debe ter como mínimo 8 caracteres.");
+      return;
+    }
     if (form.password !== form.confirmPassword) {
       setError("Os contrasinais non coinciden.");
       return;
@@ -53,13 +58,13 @@ export default function Register({ onSuccess }) {
       email: form.email,
       password: form.password,
       options: {
-        // Guardamos los 3 campos para que el trigger SQL pueda poblar 'profiles'
+        // gardamos os 3 campos para poboar 'profiles'
         data: {
           nombre,
           apellidos,
           full_name: form.nomeCompleto,
         },
-        // 🔑 Tras confirmar email → volvemos al login con marca 'verified'
+        // Tras confirmar correo → volver ao login co marcador 'verified'
         emailRedirectTo: `${window.location.origin}/login?verified=true`,
       },
     });
@@ -71,13 +76,13 @@ export default function Register({ onSuccess }) {
       return;
     }
 
-    // Si el proyecto exige confirmación por email (lo normal), no habrá sesión aún
+    // Se require confirmación por email, non haberá sesión aínda
     if (data?.user && !data.session) {
       setMsg("Revisa o teu correo e confirma a conta para continuar.");
       return;
     }
 
-    // Si NO exige confirmación y ya hay sesión, continúa a tu ruta post-login
+    // Se NON require confirmación e xa hai sesión
     if (onSuccess) onSuccess(data?.session || null);
     route("/partidos");
   };
@@ -106,7 +111,12 @@ export default function Register({ onSuccess }) {
         autoComplete="email"
       />
 
-      <label>Contrasinal</label>
+      <label>
+        Contrasinal{" "}
+        <span style={{ fontWeight: 400, fontSize: "0.9em" }}>
+          [Mínimo 8 caracteres]
+        </span>
+      </label>
       <input
         type="password"
         name="password"
@@ -115,6 +125,8 @@ export default function Register({ onSuccess }) {
         onInput={handleChange}
         required
         autoComplete="new-password"
+        minLength={8}
+        title="Mínimo 8 caracteres"
       />
 
       <label>Confirma o contrasinal</label>
@@ -123,17 +135,3 @@ export default function Register({ onSuccess }) {
         name="confirmPassword"
         placeholder="Confirma o contrasinal"
         value={form.confirmPassword}
-        onInput={handleChange}
-        required
-        autoComplete="new-password"
-      />
-
-      {error && <p class="form-error">{error}</p>}
-      {msg && <p class="form-info">{msg}</p>}
-
-      <button type="submit" disabled={loading}>
-        {loading ? "Rexistrando..." : "Adiante co rexistro"}
-      </button>
-    </form>
-  );
-}
