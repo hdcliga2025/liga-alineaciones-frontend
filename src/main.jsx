@@ -1,11 +1,10 @@
-import { h } from 'preact';
-import { render } from 'preact';
-import App from './App';
+// src/main.jsx
+import { h, render } from "preact";
+import App from "./App.jsx";
 
-// Tipografía y base global
-import './styles/index.css';
+/* Importa estilos globais existentes */
+import "./styles/index.css";
+/* 👉 Importa Montserrat para toda a app */
+import "./styles/fonts.css";
 
-// Estilos de la landing (tu hoja ya trabajada)
-import './styles/LandingPage.css';
-
-render(<App />, document.getElementById('app'));
+render(<App />, document.getElementById("app"));

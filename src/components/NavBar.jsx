@@ -3,7 +3,7 @@ import { useEffect, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient";
 import { route } from "preact-router";
 
-// En rutas públicas seguimos ocultando la barra
+/* A barra non aparece nas rutas públicas */
 const PUBLIC_PATHS = ["/", "/login", "/register"];
 
 export default function NavBar({ currentPath = "/" }) {
@@ -30,13 +30,33 @@ export default function NavBar({ currentPath = "/" }) {
         padding: "10px 14px",
         display: "flex",
         alignItems: "center",
+        gap: "12px",
         borderBottom: "1px solid #eef2ff",
         boxShadow: "0 2px 6px rgba(0,0,0,.04)",
         background: "#fff",
       }}
     >
-      {/* empuxamos o botón á dereita */}
+      {/* ← Botón de volta ao panel principal */}
+      {hasSession && (
+        <a
+          href="/dashboard"
+          style={{
+            border: "1px solid #1f2937",
+            borderRadius: "8px",
+            padding: "8px 12px",
+            background: "transparent",
+            fontWeight: 600,
+            textDecoration: "none",
+            color: "inherit",
+          }}
+        >
+          ← Panel
+        </a>
+      )}
+
+      {/* empuxamos o botón de peche á dereita */}
       <span style={{ flex: 1 }} />
+
       {hasSession && (
         <button
           onClick={handleLogout}
