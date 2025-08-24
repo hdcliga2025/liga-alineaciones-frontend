@@ -3,9 +3,7 @@ import { useEffect } from "preact/hooks";
 import { route } from "preact-router";
 import { supabase } from "../lib/supabaseClient";
 
-// Rutas públicas
 const PUBLIC_PATHS = ["/", "/login", "/register"];
-// Prefijos privados
 const PRIVATE_PREFIXES = ["/dashboard", "/partidos", "/haz-tu-11", "/clasificacion"];
 
 function isPrivate(pathname) {
@@ -22,20 +20,17 @@ export default function AuthWatcher() {
       const p = path();
 
       if (hasSession) {
-        // Se hai sesión e estás en auth → leva ao panel
         if (p === "/login" || p === "/register") {
           route("/dashboard", true);
         }
       } else {
-        // Sen sesión: se tentas ir a privada → manda a login
         if (isPrivate(p)) {
           route("/login", true);
         }
-        // En "/", "/login" e "/register" déixase estar
       }
     });
 
-    // Responder a cambios de sesión (login/logout)
+    // Cambios de sesión
     const { data: sub } = supabase.auth.onAuthStateChange((_evt, session) => {
       const p = window.location.pathname;
       const hasSession = !!session;
@@ -45,8 +40,7 @@ export default function AuthWatcher() {
           route("/dashboard", true);
         }
       } else {
-        // Tras logout → landing
-        route("/", true);
+        route("/", true); // logout → landing
       }
     });
 

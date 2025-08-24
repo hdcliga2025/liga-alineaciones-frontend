@@ -16,12 +16,10 @@ export default function NavBar({ currentPath = "/" }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  // Non amosar en páxinas públicas
   if (PUBLIC_PATHS.includes(currentPath)) return null;
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    // 👉 Despois de pechar sesión, ir á landing
     route("/", true);
   };
 
@@ -35,14 +33,13 @@ export default function NavBar({ currentPath = "/" }) {
         borderBottom: "1px solid #eee",
       }}
     >
-      {/* Marca (home pública) */}
       <a href="/" style={{ fontWeight: 700, textDecoration: "underline" }}>
         HDC Liga
       </a>
 
-      {/* Menú privado */}
       {hasSession && (
         <>
+          <a href="/dashboard">Panel</a>
           <a href="/partidos">Partidos</a>
           <a href="/haz-tu-11">Fai o teu 11</a>
           <a href="/clasificacion">Clasificación</a>

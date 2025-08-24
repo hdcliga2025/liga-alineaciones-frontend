@@ -27,7 +27,6 @@ export default function App() {
   return (
     <>
       <AuthWatcher />
-      {/* NavBar ocúltase en rutas públicas vía currentPath */}
       <NavBar currentPath={currentPath} />
 
       <Router onChange={(e) => setCurrentPath(e.url)}>
