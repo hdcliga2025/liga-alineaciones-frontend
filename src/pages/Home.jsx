@@ -1,3 +1,2 @@
-export default function Home() {
-  return <h1>🏠 Bienvenido a HDC Liga</h1>
-}
+// src/pages/Home.jsx
+export { default } from "./Dashboard.jsx";

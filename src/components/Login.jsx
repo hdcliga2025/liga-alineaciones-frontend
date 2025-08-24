@@ -47,7 +47,7 @@ export default function Login() {
     }
 
     if (data?.session) {
-      route("/partidos", true);
+      route("/dashboard", true);
     } else {
       setMsg("Sesión non creada. Proba de novo.");
     }
@@ -86,3 +86,4 @@ export default function Login() {
     </form>
   );
 }
+

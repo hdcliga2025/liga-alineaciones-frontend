@@ -39,7 +39,6 @@ export default function Register({ onSuccess }) {
     setMsg("");
     setError("");
 
-    // Validación mínima
     if (form.password.length < 8) {
       setError("O contrasinal debe ter como mínimo 8 caracteres.");
       return;
@@ -74,7 +73,7 @@ export default function Register({ onSuccess }) {
     }
 
     if (onSuccess) onSuccess(data?.session || null);
-    route("/partidos");
+    route("/dashboard");
   };
 
   const hintColor =
@@ -104,7 +103,6 @@ export default function Register({ onSuccess }) {
         autoComplete="email"
       />
 
-      {/* Fila con etiqueta + aviso alineado á dereita na mesma liña */}
       <div
         style={{
           display: "flex",
@@ -154,3 +152,4 @@ export default function Register({ onSuccess }) {
     </form>
   );
 }
+

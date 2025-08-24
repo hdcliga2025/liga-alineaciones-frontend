@@ -9,6 +9,7 @@ import NavBar from "./components/NavBar.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
 import Login from "./components/Login.jsx";
 import Register from "./components/Register.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
 import Partidos from "./pages/Partidos.jsx";
 import HazTu11 from "./pages/HazTu11.jsx";
 import Clasificacion from "./pages/Clasificacion.jsx";
@@ -16,7 +17,7 @@ import Clasificacion from "./pages/Clasificacion.jsx";
 const NotFound = () => (
   <main style={{ padding: "1rem" }}>
     <h2>Páxina non atopada</h2>
-    <p>Volver ao <a href="/login">login</a></p>
+    <p>Volver ao <a href="/">inicio</a></p>
   </main>
 );
 
@@ -26,7 +27,7 @@ export default function App() {
   return (
     <>
       <AuthWatcher />
-      {/* Pasamos la ruta actual para ocultar NavBar en páginas públicas */}
+      {/* NavBar ocúltase en rutas públicas vía currentPath */}
       <NavBar currentPath={currentPath} />
 
       <Router onChange={(e) => setCurrentPath(e.url)}>
@@ -36,6 +37,7 @@ export default function App() {
         <Register path="/register" />
 
         {/* Privadas */}
+        <Dashboard path="/dashboard" />
         <Partidos path="/partidos" />
         <HazTu11 path="/haz-tu-11" />
         <Clasificacion path="/clasificacion" />
@@ -45,4 +47,5 @@ export default function App() {
     </>
   );
 }
+
 

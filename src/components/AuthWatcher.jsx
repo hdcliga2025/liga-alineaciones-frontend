@@ -5,8 +5,8 @@ import { supabase } from "../lib/supabaseClient";
 
 // Rutas públicas
 const PUBLIC_PATHS = ["/", "/login", "/register"];
-// Prefixs privados
-const PRIVATE_PREFIXES = ["/partidos", "/haz-tu-11", "/clasificacion", "/dashboard"];
+// Prefijos privados
+const PRIVATE_PREFIXES = ["/dashboard", "/partidos", "/haz-tu-11", "/clasificacion"];
 
 function isPrivate(pathname) {
   return PRIVATE_PREFIXES.some((p) => pathname.startsWith(p));
@@ -14,39 +14,38 @@ function isPrivate(pathname) {
 
 export default function AuthWatcher() {
   useEffect(() => {
-    const pathname = () => window.location.pathname;
+    const path = () => window.location.pathname;
 
-    // Estado inicial
+    // Estado inicial ao cargar
     supabase.auth.getSession().then(({ data }) => {
       const hasSession = !!data.session;
-      const path = pathname();
+      const p = path();
 
       if (hasSession) {
-        // Se hai sesión e estás en auth → vai á app
-        if (path === "/login" || path === "/register") {
-          route("/partidos", true);
+        // Se hai sesión e estás en auth → leva ao panel
+        if (p === "/login" || p === "/register") {
+          route("/dashboard", true);
         }
       } else {
-        // Sen sesión: se vas a privada → a /login (primeira protección)
-        if (isPrivate(path)) {
+        // Sen sesión: se tentas ir a privada → manda a login
+        if (isPrivate(p)) {
           route("/login", true);
         }
         // En "/", "/login" e "/register" déixase estar
       }
     });
 
-    // Cambios de sesión
+    // Responder a cambios de sesión (login/logout)
     const { data: sub } = supabase.auth.onAuthStateChange((_evt, session) => {
-      const path = window.location.pathname;
+      const p = window.location.pathname;
       const hasSession = !!session;
 
       if (hasSession) {
-        // Tras login, se estás en auth → vai á app
-        if (path === "/login" || path === "/register") {
-          route("/partidos", true);
+        if (p === "/login" || p === "/register") {
+          route("/dashboard", true);
         }
       } else {
-        // Tras logout → ir sempre á landing
+        // Tras logout → landing
         route("/", true);
       }
     });
