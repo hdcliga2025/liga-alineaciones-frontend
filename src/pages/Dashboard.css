@@ -5,14 +5,66 @@
   --dash-shadow: rgba(0, 0, 0, 0.06);
   --dash-shadow-strong: rgba(0, 0, 0, 0.12);
 }
-.dash-wrap{max-width:1080px;margin:0 auto;padding:16px;}
-.dash-title{font-size:28px;line-height:1.2;margin:8px 0 16px;font-weight:800;}
-/* 2 columnas tamén en móbil */
-.dash-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
-.dash-card{position:relative;display:block;background:#fff;border-radius:16px;padding:14px;text-decoration:none;color:inherit;border:1px solid #eef2ff;box-shadow:0 2px 8px var(--dash-shadow);transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease;overflow:hidden;}
-.dash-card::before{content:"";position:absolute;inset:0;border-radius:16px;background:linear-gradient(180deg, rgba(37,99,235,0.08), rgba(37,99,235,0));pointer-events:none;}
-.dash-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px var(--dash-shadow-strong);border-color:#dbeafe;}
-.dash-card-header{font-size:16px;font-weight:700;margin-bottom:6px;}
-.dash-card-desc{font-size:13px;color:#4b5563;margin:0 0 10px;}
-.dash-card-cta{font-size:12px;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--dash-accent),var(--dash-accent-2));padding:6px 10px;border-radius:999px;box-shadow:0 2px 6px rgba(29,78,216,.25);align-self:flex-start;}
-@media (max-width:380px){.dash-card-header{font-size:15px}.dash-card-desc{font-size:12px}.dash-card{padding:12px}}
+
+.dash-wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.dash-title {
+  font-size: 28px;
+  line-height: 1.2;
+  margin: 8px 0 16px 0;
+  font-weight: 800;
+}
+
+/* 👉 2 columnas tamén en móbil */
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* Base card máis estreita e limpa */
+.dash-card {
+  position: relative;
+  display: block;
+  background: #fff;
+  border-radius: 16px;
+  padding: 12px;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid #eef2ff;
+  box-shadow: 0 2px 8px var(--dash-shadow);
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  overflow: hidden;
+  min-height: 104px; /* máis estreitas */
+}
+
+.dash-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(37,99,235,0.06), rgba(37,99,235,0));
+  pointer-events: none;
+}
+
+.dash-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px var(--dash-shadow-strong);
+  border-color: #dbeafe;
+}
+
+/* Layout “media esquerda + texto dereita” */
+.dash-card--media {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Bloque de imaxe/icono grande */
+.dash-media {
+  flex: 0 0 86px;
+  width
