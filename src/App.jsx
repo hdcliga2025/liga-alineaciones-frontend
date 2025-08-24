@@ -26,10 +26,12 @@ export default function App() {
       <AuthWatcher />
       <NavBar />
       <Router>
+        {/* Públicas */}
         <LandingPage path="/" />
         <Login path="/login" />
         <Register path="/register" />
 
+        {/* Privadas */}
         <Partidos path="/partidos" />
         <HazTu11 path="/haz-tu-11" />
         <Clasificacion path="/clasificacion" />
@@ -39,3 +41,4 @@ export default function App() {
     </>
   );
 }
+
