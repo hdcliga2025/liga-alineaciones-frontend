@@ -14,45 +14,35 @@
 }
 
 /* =========================
-   Cabeceira: imaxe (esq) + texto (der) 50/50
+   Cabeceira: imaxe (esq) + texto (der) 50/50, centrados
    ========================= */
 .dash-hero.two-cols {
-  width: min(94vw, 380px);
-  margin: 0 auto 8px;
+  width: min(92vw, 380px);
+  margin: 8px auto 10px;       /* máis separación dos bordes */
   display: grid;
   grid-template-columns: 1fr 1fr; /* 50/50 */
   align-items: center;
-  gap: 6px; /* más pegado */
+  justify-items: center;       /* centra elementos en cada columna */
+  gap: 12px;
 }
 @media (min-width: 560px) {
   .dash-hero.two-cols {
-    width: min(94vw, 760px);
-    gap: 8px;
+    width: min(92vw, 760px);
+    gap: 14px;
   }
 }
 
-.dash-hero-col {
-  align-self: stretch;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start; /* imagen pegada a la izquierda */
-}
+/* centrar tanto a imaxe como o texto dentro das súas columnas */
+.center-hero .dash-hero-col { justify-content: center; }
+.center-hero .dash-hero-center { justify-items: center; }
 
 .dash-hero-img.fill-col {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  object-position: left center;
   max-height: 140px;
+  object-fit: contain;
+  object-position: center;     /* imaxe centrada */
 }
-
-.dash-hero-center {
-  display: grid;
-  justify-items: start; /* texto a la izquierda */
-}
-
-.left-align .dash-title,
-.left-align .dash-subtitle { text-align: left; }
 
 .dash-title {
   font-size: 27px;
@@ -60,20 +50,22 @@
   margin: 0 0 6px;
   font-weight: 800;
   color: var(--celeste);
+  text-align: center;
 }
 
 .dash-subtitle {
-  font-size: 21px;   /* un poco mayor */
+  font-size: 21px;
   line-height: 1.35;
   margin: 0;
   color: var(--celeste);
+  text-align: center;
 }
 
 /* =========================
-   Grid de cards
+   Grid de cards (centrada e responsiva)
    ========================= */
 .dash-grid {
-  width: min(94vw, 380px); /* sincronizado con header */
+  width: min(92vw, 380px);
   margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr;
@@ -81,23 +73,16 @@
   justify-items: center;
 }
 
-/* en escritorio forzamos 2 columnas y más ancho */
 @media (min-width: 560px) {
   .dash-grid {
-    width: min(94vw, 760px);
+    width: min(92vw, 760px);
     grid-template-columns: repeat(2, minmax(0, 1fr));
     justify-items: stretch;
   }
 }
-/* refuerzo adicional por si acaso */
-@media (min-width: 700px) {
-  .dash-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
 
 .dash-card {
-  width: min(94vw, 380px);
+  width: min(92vw, 380px);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -154,11 +139,11 @@
 
 /* Moi pequeno */
 @media (max-width: 360px) {
-  .dash-card { width: min(96vw, 340px); }
+  .dash-card { width: min(94vw, 340px); }
   .dash-icon { width: 60px; height: 60px; }
 }
 
-/* Dende 560px: as cards en cada columna ocupan 100% */
+/* escritorio: columnas e tamaños */
 @media (min-width: 560px) {
   .dash-card {
     width: 100%;

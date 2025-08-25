@@ -70,12 +70,12 @@ const IconGear = () => (
 export default function Dashboard() {
   return (
     <main class="dash-wrap dash-pill">
-      {/* Cabeceira: imaxe á esquerda, texto á dereita (50/50) */}
-      <div class="dash-hero two-cols">
+      {/* Cabeceira centrada: imaxe esquerda + texto dereita (50/50) */}
+      <div class="dash-hero two-cols center-hero">
         <div class="dash-hero-col">
           <img src="/logoHDC.jpg" alt="Logo HDC" class="dash-hero-img fill-col" />
         </div>
-        <div class="dash-hero-center left-align">
+        <div class="dash-hero-center">
           <h1 class="dash-title">{"Men\u00FA principal"}</h1>
           <p class="dash-subtitle">{"Benvidxs \u00E1 Liga das Ali\u00F1aci\u00F3ns."}</p>
         </div>
