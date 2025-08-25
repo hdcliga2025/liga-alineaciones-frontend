@@ -29,8 +29,10 @@ export default function NavBar({ currentPath = "" }) {
       color: "#fff",
       boxShadow: "0 4px 14px rgba(0,0,0,.12)",
     },
-    menu: { background: "linear-gradient(135deg, #60a5fa, #ef4444)" },
-    logout: { background: "linear-gradient(135deg, #ef4444, #60a5fa)" },
+    /* degradado celeste para Menú */
+    menu: { background: "linear-gradient(135deg, #38bdf8, #60a5fa)" },
+    /* degradado vermello para Pechar */
+    logout: { background: "linear-gradient(135deg, #ef4444, #dc2626)" },
     left: { display: "flex", gap: 8, alignItems: "center" },
     right: { display: "flex", gap: 8, alignItems: "center" },
   };
@@ -51,10 +53,11 @@ export default function NavBar({ currentPath = "" }) {
         )}
       </div>
       <div style={styles.right}>
-        <button style={{ ...styles.btnBase, ...styles.logout }} onClick={logout} aria-label="Pechar sesión">
-          Pechar sesión ✕
+        <button style={{ ...styles.btnBase, ...styles.logout }} onClick={logout} aria-label="Pechar">
+          Pechar
         </button>
       </div>
     </div>
   );
 }
+

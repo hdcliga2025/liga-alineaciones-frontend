@@ -83,14 +83,15 @@ export default function Dashboard() {
 
   return (
     <main class="dash-wrap dash-pill">
-      {/* Cabeceira: en móbil lado a lado; en PC (>=960px) apílase imaxe arriba e texto abaixo */}
+      {/* Móbil/tablet: imaxe esquerda + texto dereita (moi xuntos)
+          PC (>=960px): imaxe centrada enriba + texto debaixo */}
       <div class="dash-hero two-cols center-hero">
         <div class="dash-hero-col">
           <img src="/logoHDC.jpg" alt="Logo HDC" class="dash-hero-img fill-col" />
         </div>
         <div class="dash-hero-center">
           <p class="dash-greet">
-            Benvidx á Liga das Aliñacións {firstName && <strong class="dash-name">{firstName}</strong>}
+            Boas {firstName && <strong class="dash-name">{firstName}</strong>}, benvidx á Liga das Aliñacións.
           </p>
         </div>
       </div>
