@@ -15,6 +15,7 @@
   line-height: 1.2;
   margin: 8px 0 16px;
   font-weight: 800;
+  text-align: center; /* centrado del título */
 }
 
 /* Mobile-first: 1 columna, cards estrechas centradas */
@@ -31,7 +32,7 @@
   align-items: center;
   gap: 10px;
   background: #fff;
-  border-radius: 16px; /* base */
+  border-radius: 16px; /* base (se suaviza más con .dash-pill abajo) */
   padding: 12px;
   text-decoration: none;
   color: inherit;
@@ -42,17 +43,19 @@
   min-height: 92px;
   outline: none;
 }
+
 .dash-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px var(--dash-shadow-strong);
   border-color: #dbeafe;
 }
+
 .dash-card:focus-visible {
   box-shadow: 0 0 0 3px rgba(37,99,235,.35);
   border-color: #93c5fd;
 }
 
-/* Icono/imagen (SVG inline) en móvil */
+/* Bloque icono (SVG inline) en móvil */
 .dash-icon {
   flex: 0 0 64px;
   width: 64px;
@@ -60,11 +63,11 @@
   border-radius: 14px;
   display: grid;
   place-items: center;
-  font-size: 0; /* el SVG define su propio tamaño */
+  font-size: 0; /* el SVG define su tamaño */
   box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 10px rgba(0,0,0,.10);
 }
 
-/* Fondos por tipo */
+/* Fondos por tipo (consistentes con el look de las cards) */
 .dash-icon--proximo      { background: linear-gradient(135deg, #e0f2fe, #bfdbfe); }
 .dash-icon--alineacion   { background: linear-gradient(135deg, #fde68a, #f59e0b); }
 .dash-icon--convocatoria { background: linear-gradient(135deg, #fce7f3, #f9a8d4); }
@@ -76,10 +79,26 @@
 .dash-icon--book         { background: linear-gradient(135deg, #e0e7ff, #a5b4fc); }
 .dash-icon--gear         { background: linear-gradient(135deg, #f1f5f9, #e2e8f0); }
 
-/* Texto móvil (un poco más grande y compacto) */
-.dash-text { display: grid; align-content: center; gap: 2px; }
-.dash-card-header { font-size: 18px; line-height: 1.15; font-weight: 700; margin: 0; }
-.dash-card-desc   { font-size: 14px; line-height: 1.25; color: #4b5563; margin: 0; }
+/* Texto móvil: un poco más grande y compacto */
+.dash-text {
+  display: grid;
+  align-content: center;
+  gap: 2px;
+}
+
+.dash-card-header {
+  font-size: 18px;
+  line-height: 1.15;
+  font-weight: 700;
+  margin: 0;
+}
+
+.dash-card-desc {
+  font-size: 14px;
+  line-height: 1.25;
+  color: #4b5563;
+  margin: 0;
+}
 
 /* Muy pequeño */
 @media (max-width: 360px) {
@@ -109,7 +128,6 @@
   .dash-card-desc   { font-size: 13px; }
 }
 
-/* --- Modo "pill" moderado para todas las cards (toggle con .dash-pill) --- */
-/* Antes: 9999px (muy redondo). Ahora: 22px/16px para un look más sobrio. */
+/* Modo “pill” moderado para todas las cards (activado via .dash-pill en el contenedor) */
 .dash-pill .dash-card { border-radius: 22px; }
-.dash-pill .dash-icon { border-radius: 16px; }
+.dash-pill .dash-icon { borde
