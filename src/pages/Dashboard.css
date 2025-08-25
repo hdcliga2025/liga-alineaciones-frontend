@@ -17,34 +17,30 @@
   font-weight: 800;
 }
 
-/* 🔹 Por defecto: 1 columna (móvil) */
+/* 📱 MÓVIL (mobile-first): 1 columna, cards estrechas y centradas */
 .dash-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
-}
-
-/* 🔹 Desde ~560px (tableta/desktop): 2 columnas */
-@media (min-width: 560px) {
-  .dash-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  justify-items: center; /* centra cada card estrecha */
 }
 
 .dash-card {
+  /* ancho estrecho: un poco más que el icono */
+  width: min(94vw, 380px);
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   background: #fff;
   border-radius: 16px;
-  padding: 14px 16px;
+  padding: 12px;
   text-decoration: none;
   color: inherit;
   border: 1px solid #eef2ff;
   box-shadow: 0 2px 8px var(--dash-shadow);
   transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
   cursor: pointer;
-  min-height: 108px;
+  min-height: 92px;
   outline: none;
 }
 .dash-card:hover {
@@ -57,20 +53,76 @@
   border-color: #93c5fd;
 }
 
-/* Bloque icono grande (emoji vía escapes Unicode) */
+/* Icono/emoji más pequeño en móvil */
 .dash-icon {
-  flex: 0 0 88px;
-  width: 88px;
-  height: 88px;
-  border-radius: 16px;
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
   display: grid;
   place-items: center;
-  font-size: 48px;
+  font-size: 36px;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 10px rgba(0,0,0,.10);
 }
 
-/* Variantes cromáticas (fondo del bloque de icono) */
+/* Fondos del bloque de icono */
 .dash-icon--proximo      { background: linear-gradient(135deg, #e0f2fe, #bfdbfe); }
 .dash-icon--alineacion   { background: linear-gradient(135deg, #fde68a, #f59e0b); }
 .dash-icon--convocatoria { background: linear-gradient(135deg, #fce7f3, #f9a8d4); }
-.dash-icon--pasados      { background: linear-gradient(135deg, #e5e7eb, #cb
+.dash-icon--pasados      { background: linear-gradient(135deg, #e5e7eb, #cbd5e1); }
+.dash-icon--vindeiros    { background: linear-gradient(135deg, #dcfce7, #86efac); }
+.dash-icon--fai11        { background: linear-gradient(135deg, #fee2e2, #fca5a5); }
+.dash-icon--ultimo       { background: linear-gradient(135deg, #fae8ff, #d8b4fe); }
+.dash-icon--xeral        { background: linear-gradient(135deg, #dbeafe, #93c5fd); }
+.dash-icon--book         { background: linear-gradient(135deg, #e0e7ff, #a5b4fc); }
+.dash-icon--gear         { background: linear-gradient(135deg, #f1f5f9, #e2e8f0); }
+
+/* Texto bien pegado (título + descripción) */
+.dash-text {
+  display: grid;
+  align-content: center;
+  gap: 2px;                 /* pegado */
+}
+
+.dash-card-header {
+  font-size: 16px;
+  line-height: 1.15;        /* compacto */
+  font-weight: 700;
+  margin: 0;
+}
+
+.dash-card-desc {
+  font-size: 12px;
+  line-height: 1.25;        /* compacto */
+  color: #4b5563;
+  margin: 0;
+}
+
+/* 🧩 muy pequeño */
+@media (max-width: 360px) {
+  .dash-card { width: min(96vw, 340px); }
+  .dash-icon { width: 60px; height: 60px; font-size: 34px; }
+}
+
+/* 🖥️ Desde ~560px: 2 columnas y tamaños “grandes” */
+@media (min-width: 560px) {
+  .dash-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-items: stretch;         /* cards ocupan el ancho de su columna */
+  }
+  .dash-card {
+    width: 100%;
+    min-height: 108px;
+    padding: 14px 16px;
+    gap: 14px;
+  }
+  .dash-icon {
+    width: 88px;
+    height: 88px;
+    border-radius: 16px;
+    font-size: 48px;
+  }
+  .dash-text { gap: 6px; }
+  .dash-card-header { font-size: 17px; }
+  .dash-card-desc { font-size: 13px; }
+}
