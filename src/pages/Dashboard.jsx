@@ -95,33 +95,33 @@ export default function Dashboard() {
 
       {/* GRID principal: 3 cards nivel 1 */}
       <section class="dash-grid dash-grid--main">
-        {/* 1) Partidos do Celta */}
+        {/* 1) Calendario (antes: Partidos do Celta) */}
         <div class="main-block">
           <button class="main-card" onClick={() => toggle("partidos")} aria-expanded={open.partidos} aria-controls="sub-partidos">
             <div class="dash-icon dash-icon--ball"><IcoBall /></div>
             <div class="dash-text">
-              <h2 class="dash-card-header">Partidos do Celta</h2>
-              <p class="dash-card-desc">Calendario e resultados</p>
+              <h2 class="dash-card-header">Calendario</h2>
+              <p class="dash-card-desc">Todos los partidos agendados do Celta</p>
             </div>
             <span class={`chev ${open.partidos ? "open" : ""}`} aria-hidden="true">▾</span>
           </button>
 
           <div id="sub-partidos" class={`subgrid ${open.partidos ? "open" : ""}`}>
-            <a class="subcard" href="/proximo-partido">
+            <a class="subcard" href="/proximo-partido" aria-label="Próximo partido">
               <div class="sub-ico sub-ico--calendar"><IcoCalendar /></div>
               <div class="sub-texts">
                 <div class="sub-title">Próximo partido</div>
                 <div class="sub-desc">Detalle do seguinte encontro</div>
               </div>
             </a>
-            <a class="subcard" href="/vindeiros-partidos">
+            <a class="subcard" href="/vindeiros-partidos" aria-label="Vindeiros partidos">
               <div class="sub-ico sub-ico--calendar"><IcoCalendar /></div>
               <div class="sub-texts">
                 <div class="sub-title">Vindeiros partidos</div>
                 <div class="sub-desc">Axenda dos seguintes partidos</div>
               </div>
             </a>
-            <a class="subcard" href="/partidos-finalizados">
+            <a class="subcard" href="/partidos-finalizados" aria-label="Partidos finalizados">
               <div class="sub-ico sub-ico--flag"><IcoFlag /></div>
               <div class="sub-texts">
                 <div class="sub-title">Partidos finalizados</div>
@@ -143,28 +143,28 @@ export default function Dashboard() {
           </button>
 
           <div id="sub-alineacions" class={`subgrid ${open.alineacions ? "open" : ""}`}>
-            <a class="subcard" href="/convocatoria-proximo">
+            <a class="subcard" href="/convocatoria-proximo" aria-label="Convocatoria próximo partido">
               <div class="sub-ico sub-ico--meg"><IcoMegaphone /></div>
               <div class="sub-texts">
                 <div class="sub-title">Convocatoria próximo partido</div>
                 <div class="sub-desc">Lista oficial de convocados</div>
               </div>
             </a>
-            <a class="subcard" href="/haz-tu-11">
+            <a class="subcard" href="/haz-tu-11" aria-label="Fai o teu 11">
               <div class="sub-ico sub-ico--clip"><IcoClipboard /></div>
               <div class="sub-texts">
                 <div class="sub-title">Fai o teu 11</div>
                 <div class="sub-desc">Escolle a túa aliñación</div>
               </div>
             </a>
-            <a class="subcard" href="/alineacion-oficial">
+            <a class="subcard" href="/alineacion-oficial" aria-label="Aliñación oficial">
               <div class="sub-ico sub-ico--shirt"><IcoShirt /></div>
               <div class="sub-texts">
                 <div class="sub-title">Aliñación oficial</div>
                 <div class="sub-desc">Once confirmado polo club</div>
               </div>
             </a>
-            <a class="subcard" href="/instruccions">
+            <a class="subcard" href="/instruccions" aria-label="Normas do concurso">
               <div class="sub-ico sub-ico--book"><IcoBook /></div>
               <div class="sub-texts">
                 <div class="sub-title">Normas do concurso</div>
@@ -186,14 +186,14 @@ export default function Dashboard() {
           </button>
 
           <div id="sub-clasificacions" class={`subgrid ${open.clasificacions ? "open" : ""}`}>
-            <a class="subcard" href="/clasificacion?tipo=ultimo">
+            <a class="subcard" href="/clasificacion?tipo=ultimo" aria-label="Clasificación último partido">
               <div class="sub-ico sub-ico--tgt"><IcoTarget /></div>
               <div class="sub-texts">
                 <div class="sub-title">Clasificación último partido</div>
                 <div class="sub-desc">Puntuación por última xornada</div>
               </div>
             </a>
-            <a class="subcard" href="/clasificacion?tipo=xeral">
+            <a class="subcard" href="/clasificacion?tipo=xeral" aria-label="Clasificación xeral">
               <div class="sub-ico sub-ico--trophy"><IcoTrophy /></div>
               <div class="sub-texts">
                 <div class="sub-title">Clasificación xeral</div>
