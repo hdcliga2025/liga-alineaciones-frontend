@@ -11,14 +11,15 @@ export default function NavBar({ currentPath = "" }) {
 
   const styles = {
     bar: {
-      position: "sticky",
+      position: "sticky",      // fijo al hacer scroll
       top: 0,
-      zIndex: 40,
+      zIndex: 100,             // por encima del contenido
       display: "flex",
       alignItems: "center",
-      justifyContent: "space-between",   // Menú á esquerda, Pechar á dereita
+      justifyContent: "space-between",   // Menú izq, Pechar der
       padding: "8px 12px",
       background: "transparent",
+      backdropFilter: "none",
     },
     btnBase: {
       display: "inline-flex",
@@ -30,17 +31,18 @@ export default function NavBar({ currentPath = "" }) {
       border: "none",
       cursor: "pointer",
       color: "#fff",
-      boxShadow: "0 8px 18px rgba(0,0,0,.18)",  // sombra máis marcada
+      boxShadow: "0 8px 18px rgba(0,0,0,.18)", // sombra más marcada
       lineHeight: 1,
+      userSelect: "none",
     },
     // Degradado celeste para Menú
     menu: { background: "linear-gradient(135deg, #38bdf8, #60a5fa)" },
-    // Degradado vermello para Pechar
+    // Degradado rojo para Pechar
     logout: { background: "linear-gradient(135deg, #ef4444, #dc2626)" },
     left: { display: "flex", gap: 8, alignItems: "center" },
     right: { display: "flex", gap: 8, alignItems: "center" },
-    iconLeft: { fontSize: "22px", lineHeight: 1, transform: "translateY(-1px)" },
-    iconRight: { fontSize: "20px", lineHeight: 1, marginLeft: "6px", transform: "translateY(-1px)" },
+    iconLeft: { fontSize: "26px", lineHeight: 1, transform: "translateY(-1px)" },  // flecha más grande
+    iconRight: { fontSize: "16px", lineHeight: 1, marginLeft: "6px", transform: "translateY(-1px)" }, // X más pequeña
   };
 
   const goMenu = () => route("/dashboard");
