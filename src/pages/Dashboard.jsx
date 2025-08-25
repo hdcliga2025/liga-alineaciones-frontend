@@ -1,5 +1,7 @@
 // src/pages/Dashboard.jsx
 import { h } from "preact";
+import { useEffect, useState } from "preact/hooks";
+import { supabase } from "../lib/supabaseClient";
 import "./Dashboard.css";
 
 /* Iconas SVG inline (ASCII-safe) */
@@ -68,16 +70,28 @@ const IconGear = () => (
 );
 
 export default function Dashboard() {
+  const [displayName, setDisplayName] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      const full = data?.user?.user_metadata?.full_name || "";
+      setDisplayName(full);
+    })();
+  }, []);
+
   return (
     <main class="dash-wrap dash-pill">
-      {/* Cabeceira centrada: imaxe esquerda + texto dereita (50/50) */}
+      {/* Cabeceira: imaxe esquerda + texto dereita (50/50) */}
       <div class="dash-hero two-cols center-hero">
         <div class="dash-hero-col">
           <img src="/logoHDC.jpg" alt="Logo HDC" class="dash-hero-img fill-col" />
         </div>
         <div class="dash-hero-center">
-          <h1 class="dash-title">{"Men\u00FA principal"}</h1>
-          <p class="dash-subtitle">{"Benvidxs \u00E1 Liga das Ali\u00F1aci\u00F3ns."}</p>
+          <p class="dash-greet">
+            Ola!! {displayName ? <strong class="dash-name">{displayName}</strong> : null},&nbsp;
+            Benvidxs á Liga das Aliñacións.
+          </p>
         </div>
       </div>
 
@@ -85,80 +99,80 @@ export default function Dashboard() {
         <a class="dash-card" href="/proximo-partido" aria-label="Próximo partido">
           <div class="dash-icon dash-icon--proximo"><IconBall /></div>
           <div class="dash-text">
-            <h2 class="dash-card-header">{"Pr\u00F3ximo partido"}</h2>
-            <p class="dash-card-desc">{"Informaci\u00F3n do seguinte encontro."}</p>
+            <h2 class="dash-card-header">Próximo partido</h2>
+            <p class="dash-card-desc">Información do seguinte encontro.</p>
           </div>
         </a>
 
         <a class="dash-card" href="/alineacion-oficial" aria-label="Aliñación oficial">
           <div class="dash-icon dash-icon--alineacion"><IconShirt /></div>
           <div class="dash-text">
-            <h2 class="dash-card-header">{"Ali\u00F1aci\u00F3n oficial"}</h2>
-            <p class="dash-card-desc">{"Once confirmado polo club."}</p>
+            <h2 class="dash-card-header">Aliñación oficial</h2>
+            <p class="dash-card-desc">Once confirmado polo club.</p>
           </div>
         </a>
 
         <a class="dash-card" href="/convocatoria-oficial" aria-label="Convocatoria oficial">
           <div class="dash-icon dash-icon--convocatoria"><IconMegaphone /></div>
           <div class="dash-text">
-            <h2 class="dash-card-header">{"Convocatoria oficial"}</h2>
-            <p class="dash-card-desc">{"Lista de xogadores convocados."}</p>
+            <h2 class="dash-card-header">Convocatoria oficial</h2>
+            <p class="dash-card-desc">Lista de xogadores convocados.</p>
           </div>
         </a>
 
         <a class="dash-card" href="/partidos?f=pasados" aria-label="Partidos pasados">
           <div class="dash-icon dash-icon--pasados"><IconFlag /></div>
           <div class="dash-text">
-            <h2 class="dash-card-header">{"Partidos pasados"}</h2>
-            <p class="dash-card-desc">{"Resultados e datos dos partidos xa disputados."}</p>
+            <h2 class="dash-card-header">Partidos pasados</h2>
+            <p class="dash-card-desc">Resultados e datos dos partidos xa disputados.</p>
           </div>
         </a>
 
         <a class="dash-card" href="/partidos?f=vindeiros" aria-label="Vindeiros partidos">
           <div class="dash-icon dash-icon--vindeiros"><IconCalendar /></div>
           <div class="dash-text">
-            <h2 class="dash-card-header">{"Vindeiros partidos"}</h2>
-            <p class="dash-card-desc">{"Calendario e detalles dos seguintes encontros."}</p>
+            <h2 class="dash-card-header">Vindeiros partidos</h2>
+            <p class="dash-card-desc">Calendario e detalles dos seguintes encontros.</p>
           </div>
         </a>
 
         <a class="dash-card" href="/haz-tu-11" aria-label="Fai o teu 11">
           <div class="dash-icon dash-icon--fai11"><IconClipboard /></div>
           <div class="dash-text">
-            <h2 class="dash-card-header">{"Fai o teu 11"}</h2>
-            <p class="dash-card-desc">{"Escolle a t\u00FAa ali\u00F1aci\u00F3n da xornada."}</p>
+            <h2 class="dash-card-header">Fai o teu 11</h2>
+            <p class="dash-card-desc">Escolle a túa aliñación da xornada.</p>
           </div>
         </a>
 
         <a class="dash-card" href="/clasificacion?tipo=ultimo" aria-label="Clasificación último partido">
           <div class="dash-icon dash-icon--ultimo"><IconTarget /></div>
           <div class="dash-text">
-            <h2 class="dash-card-header">{"Clasificaci\u00F3n individual do \u00FAltimo partido"}</h2>
-            <p class="dash-card-desc">{"Puntuaci\u00F3ns dos participantes na \u00FAltima xornada."}</p>
+            <h2 class="dash-card-header">Clasificación individual do último partido</h2>
+            <p class="dash-card-desc">Puntuacións dos participantes na última xornada.</p>
           </div>
         </a>
 
         <a class="dash-card" href="/clasificacion?tipo=xeral" aria-label="Clasificación xeral">
           <div class="dash-icon dash-icon--xeral"><IconTrophy /></div>
           <div class="dash-text">
-            <h2 class="dash-card-header">{"Clasificaci\u00F3n xeral"}</h2>
-            <p class="dash-card-desc">{"T\u00E1boa acumulada de toda a liga."}</p>
+            <h2 class="dash-card-header">Clasificación xeral</h2>
+            <p class="dash-card-desc">Táboa acumulada de toda a liga.</p>
           </div>
         </a>
 
         <a class="dash-card" href="/instruccions" aria-label="Instrucións, Regras e Premio">
           <div class="dash-icon dash-icon--book"><IconBook /></div>
           <div class="dash-text">
-            <h2 class="dash-card-header">{"Instruci\u00F3ns \u00B7 Regras \u00B7 Premio"}</h2>
-            <p class="dash-card-desc">{"Como xogar, normativa e premio final."}</p>
+            <h2 class="dash-card-header">Instrucións · Regras · Premio</h2>
+            <p class="dash-card-desc">Como xogar, normativa e premio final.</p>
           </div>
         </a>
 
         <a class="dash-card" href="/axustes" aria-label="Axustes">
           <div class="dash-icon dash-icon--gear"><IconGear /></div>
           <div class="dash-text">
-            <h2 class="dash-card-header">{"Axustes"}</h2>
-            <p class="dash-card-desc">{"Perfil e opci\u00F3ns da conta."}</p>
+            <h2 class="dash-card-header">Axustes</h2>
+            <p class="dash-card-desc">Perfil e opcións da conta.</p>
           </div>
         </a>
       </section>
