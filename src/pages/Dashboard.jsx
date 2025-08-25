@@ -186,7 +186,7 @@ export default function Dashboard() {
             <div class="dash-icon dash-icon--trophy"><IcoTrophy /></div>
             <div class="dash-text">
               <h2 class="dash-card-header">Clasificacións</h2>
-              <p class="dash-card-desc">Resultados do xogo</p>
+              <p class="dash-card-desc">Os resultados do xogo de todos e cada quen</p>
             </div>
             <span class={`chev ${open.clasificacions ? "open" : ""}`} aria-hidden="true">▾</span>
           </button>

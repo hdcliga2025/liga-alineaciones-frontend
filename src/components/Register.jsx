@@ -11,17 +11,10 @@ function mapAuthError(err) {
   return err.message;
 }
 
-function splitFullName(full) {
-  const safe = (full || "").trim().replace(/\s+/g, " ");
-  if (!safe) return { nombre: "", apellidos: "" };
-  const parts = safe.split(" ");
-  if (parts.length === 1) return { nombre: parts[0], apellidos: "" };
-  return { nombre: parts[0], apellidos: parts.slice(1).join(" ") };
-}
-
 export default function Register({ onSuccess }) {
   const [form, setForm] = useState({
     nomeCompleto: "",
+    phone: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -39,24 +32,22 @@ export default function Register({ onSuccess }) {
     setMsg("");
     setError("");
 
-    if (form.password.length < 8) {
-      setError("O contrasinal debe ter como mínimo 8 caracteres.");
-      return;
-    }
     if (form.password !== form.confirmPassword) {
       setError("Os contrasinais non coinciden.");
       return;
     }
 
-    const { nombre, apellidos } = splitFullName(form.nomeCompleto);
     setLoading(true);
 
     const { data, error } = await supabase.auth.signUp({
-      email: form.email,
+      email: form.email.trim(),
       password: form.password,
       options: {
-        data: { nombre, apellidos, full_name: form.nomeCompleto },
-        emailRedirectTo: `${window.location.origin}/login?verified=true`,
+        data: {
+          full_name: form.nomeCompleto.trim(),
+          phone: form.phone.trim(),
+        },
+        emailRedirectTo: `${location.origin}/login?verified=true`,
       },
     });
 
@@ -76,80 +67,88 @@ export default function Register({ onSuccess }) {
     route("/dashboard");
   };
 
-  const hintColor =
-    form.password && form.password.length < 8 ? "#d00" : "#6b7280";
+  const styles = {
+    wrap: { maxWidth: 520, margin: "72px auto 40px", padding: "0 16px", fontFamily: "Montserrat, system-ui, sans-serif" },
+    form: { display: "grid", gap: 12 },
+    label: { fontSize: 14, fontWeight: 600, color: "#0f172a" },
+    input: {
+      width: "100%", padding: "10px 12px", borderRadius: 12,
+      border: "1px solid #e5e7eb", outline: "none", fontSize: 15, background: "#fff",
+    },
+    helpInline: { fontSize: 12, color: "#6b7280", marginLeft: 8 },
+    err: { color: "#b91c1c", fontSize: 13 },
+    info: { color: "#065f46", fontSize: 13 },
+    actions: { display: "grid", gap: 10, marginTop: 6 },
+    primary: {
+      padding: "10px 14px", borderRadius: 14, border: "1px solid #0ea5e9",
+      background: "linear-gradient(135deg,#93c5fd,#60a5fa)", color: "#fff",
+      fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 14px rgba(0,0,0,.12)",
+    },
+  };
 
   return (
-    <form class="register-form" onSubmit={handleSubmit} noValidate>
-      <label>Nome e apelidos</label>
-      <input
-        type="text"
-        name="nomeCompleto"
-        placeholder="Nome e apelidos"
-        value={form.nomeCompleto}
-        onInput={handleChange}
-        required
-        autoComplete="name"
-      />
+    <main style={styles.wrap}>
+      <form class="register-form" onSubmit={handleSubmit} noValidate style={styles.form}>
+        <label style={styles.label} for="nomeCompleto">
+          Nome e apelidos
+        </label>
+        <input
+          id="nomeCompleto" type="text" name="nomeCompleto"
+          placeholder="Nome e apelidos"
+          value={form.nomeCompleto} onInput={handleChange} required autoComplete="name"
+          style={styles.input}
+        />
 
-      <label>Correo electrónico</label>
-      <input
-        type="email"
-        name="email"
-        placeholder="Correo electrónico"
-        value={form.email}
-        onInput={handleChange}
-        required
-        autoComplete="email"
-      />
+        <label style={styles.label} for="phone">
+          Número de teléfono móbil
+        </label>
+        <input
+          id="phone" type="tel" name="phone"
+          placeholder="Número de teléfono móbil"
+          value={form.phone} onInput={handleChange} autoComplete="tel"
+          style={styles.input}
+        />
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          justifyContent: "space-between",
-          marginTop: "12px",
-        }}
-      >
-        <label style={{ margin: 0 }}>Contrasinal</label>
-        <span
-          style={{
-            fontSize: "12px",
-            lineHeight: 1.1,
-            color: hintColor,
-          }}
-        >
-          [Mínimo 8 caracteres]
-        </span>
-      </div>
-      <input
-        type="password"
-        name="password"
-        placeholder="Contrasinal"
-        value={form.password}
-        onInput={handleChange}
-        required
-        autoComplete="new-password"
-      />
+        <label style={styles.label} for="email">
+          Correo electrónico
+        </label>
+        <input
+          id="email" type="email" name="email"
+          placeholder="Correo electrónico"
+          value={form.email} onInput={handleChange} required autoComplete="email"
+          style={styles.input}
+        />
 
-      <label>Confirma o contrasinal</label>
-      <input
-        type="password"
-        name="confirmPassword"
-        placeholder="Confirma o contrasinal"
-        value={form.confirmPassword}
-        onInput={handleChange}
-        required
-        autoComplete="new-password"
-      />
+        <label style={styles.label} for="password">
+          Contrasinal <span style={styles.helpInline}>[mínimo 8 caracteres]</span>
+        </label>
+        <input
+          id="password" type="password" name="password"
+          placeholder="Contrasinal"
+          value={form.password} onInput={handleChange} required autoComplete="new-password"
+          minlength={8}
+          style={styles.input}
+        />
 
-      {error && <p class="form-error">{error}</p>}
-      {msg && <p class="form-info">{msg}</p>}
+        <label style={styles.label} for="confirmPassword">Confirma o contrasinal</label>
+        <input
+          id="confirmPassword" type="password" name="confirmPassword"
+          placeholder="Confirma o contrasinal"
+          value={form.confirmPassword} onInput={handleChange} required autoComplete="new-password"
+          minlength={8}
+          style={styles.input}
+        />
 
-      <button type="submit" disabled={loading}>
-        {loading ? "Rexistrando..." : "Adiante co rexistro"}
-      </button>
-    </form>
+        {error && <p style={styles.err}>{error}</p>}
+        {msg && <p style={styles.info}>{msg}</p>}
+
+        <div style={styles.actions}>
+          <button type="submit" disabled={loading} style={styles.primary}>
+            {loading ? "Rexistrando..." : "Crear conta"}
+          </button>
+        </div>
+      </form>
+    </main>
   );
 }
 
