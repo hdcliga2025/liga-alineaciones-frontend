@@ -101,7 +101,7 @@ export default function Dashboard() {
             <div class="dash-icon dash-icon--ball"><IcoBall /></div>
             <div class="dash-text">
               <h2 class="dash-card-header">Calendario</h2>
-              <p class="dash-card-desc">Todos los partidos agendados do Celta</p>
+              <p class="dash-card-desc">Todos os partidos axendados do Celta</p>
             </div>
             <span class={`chev ${open.partidos ? "open" : ""}`} aria-hidden="true">▾</span>
           </button>
@@ -131,13 +131,13 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* 2) Aliñacións */}
+        {/* 2) Xogar ás Aliñacións (antes: Aliñacións) */}
         <div class="main-block">
           <button class="main-card" onClick={() => toggle("alineacions")} aria-expanded={open.alineacions} aria-controls="sub-alineacions">
             <div class="dash-icon dash-icon--shirt"><IcoShirt /></div>
             <div class="dash-text">
-              <h2 class="dash-card-header">Aliñacións</h2>
-              <p class="dash-card-desc">Convocatoria, once e o teu 11</p>
+              <h2 class="dash-card-header">Xogar ás Aliñacións</h2>
+              <p class="dash-card-desc">Aquí é onde amosarás o Claudio que levas dentro</p>
             </div>
             <span class={`chev ${open.alineacions ? "open" : ""}`} aria-hidden="true">▾</span>
           </button>
