@@ -72,7 +72,7 @@ export default function Dashboard() {
     <main class="dash-wrap dash-pill">
       <h1 class="dash-title">{"Men\u00FA principal"}</h1>
       <p class="dash-subtitle">
-        {"Levamos un Gir\u00E1ldez no noso interior, benvidas e benvidos \u00E1 Liga das Ali\u00F1aci\u00F3ns."}
+        {"Levamos un Gir\u00E1ldez no noso interior, benvidxs \u00E1 Liga das Ali\u00F1aci\u00F3ns."}
       </p>
 
       <section class="dash-grid">

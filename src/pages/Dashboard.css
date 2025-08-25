@@ -22,7 +22,7 @@
 
 .dash-subtitle {
   text-align: center;
-  font-size: 16px;
+  font-size: 18px; /* sube lixeiramente o tamaño */
   line-height: 1.35;
   margin: 0 0 16px 0;
   color: var(--celeste);
