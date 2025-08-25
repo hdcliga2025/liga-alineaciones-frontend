@@ -14,10 +14,9 @@
 }
 
 /* =========================
-   Cabeceira: texto (esq) + logo (der) 50/50
+   Cabeceira: imaxe (esq) + texto (der) 50/50
    ========================= */
 .dash-hero.two-cols {
-  /* ancho sincronizado co das cards (1 card en móbil, 2 en >=560px) */
   width: min(94vw, 380px);
   margin: 0 auto 8px;
   display: grid;
@@ -27,20 +26,35 @@
 }
 @media (min-width: 560px) {
   .dash-hero.two-cols {
-    width: min(94vw, 760px); /* dúas cards lado a lado */
+    width: min(94vw, 760px);
   }
+}
+
+.dash-hero-col {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* imaxe pegada á esquerda */
+}
+
+.dash-hero-img.fill-col {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left center;
+  max-height: 140px;
 }
 
 .dash-hero-center {
   display: grid;
-  justify-items: start; /* texto á esquerda */
+  justify-items: start; /* texto á esquerda dentro da súa metade */
 }
 
 .left-align .dash-title,
 .left-align .dash-subtitle { text-align: left; }
 
 .dash-title {
-  font-size: 28px;
+  font-size: 27px;   /* -1px */
   line-height: 1.2;
   margin: 0 0 6px;
   font-weight: 800;
@@ -48,25 +62,10 @@
 }
 
 .dash-subtitle {
-  font-size: 20px;
+  font-size: 19px;   /* -1px */
   line-height: 1.35;
   margin: 0;
   color: var(--celeste);
-}
-
-.dash-hero-col {
-  align-self: stretch;              /* columna ocupa toda a altura da fila */
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-.dash-hero-img.fill-col {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: right center;
-  max-height: 140px; /* límite de seguridade para que non se dispare en pantallas grandes */
 }
 
 /* =========================
@@ -85,7 +84,7 @@
   align-items: center;
   gap: 10px;
   background: #fff;
-  border-radius: 16px; /* base */
+  border-radius: 16px;
   padding: 12px;
   text-decoration: none;
   color: inherit;
@@ -106,7 +105,7 @@
   border-color: #93c5fd;
 }
 
-/* Bloque icona (SVG inline) */
+/* Icona */
 .dash-icon {
   flex: 0 0 64px;
   width: 64px;
@@ -136,33 +135,4 @@
 .dash-card-desc   { font-size: 14px; line-height: 1.25; color: #4b5563; margin: 0; }
 
 /* Moi pequeno */
-@media (max-width: 360px) {
-  .dash-card { width: min(96vw, 340px); }
-  .dash-icon { width: 60px; height: 60px; }
-}
-
-/* Dende 560px: 2 columnas e tamaños “grandes” */
-@media (min-width: 560px) {
-  .dash-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    justify-items: stretch;
-  }
-  .dash-card {
-    width: 100%;
-    min-height: 108px;
-    padding: 14px 16px;
-    gap: 14px;
-  }
-  .dash-icon {
-    width: 88px;
-    height: 88px;
-    border-radius: 16px;
-  }
-  .dash-text { gap: 6px; }
-  .dash-card-header { font-size: 17px; }
-  .dash-card-desc   { font-size: 13px; }
-}
-
-/* Modo “pill” moderado (activado con .dash-pill no contedor) */
-.dash-pill .dash-card { border-radius: 22px; }
-.dash-pill .dash-icon { border-radius: 16px; }
+@media (max-width: 3
