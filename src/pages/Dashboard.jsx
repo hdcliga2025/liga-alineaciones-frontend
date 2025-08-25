@@ -77,7 +77,13 @@ export default function Dashboard() {
     })();
   }, []);
 
-  const toggle = (k) => setOpen((s) => ({ ...s, [k]: !s[k] }));
+  // Acordeón: abre unha e pecha as demais
+  const toggle = (key) =>
+    setOpen((s) => ({
+      partidos: key === "partidos" ? !s.partidos : false,
+      alineacions: key === "alineacions" ? !s.alineacions : false,
+      clasificacions: key === "clasificacions" ? !s.clasificacions : false,
+    }));
 
   return (
     <main class="dash-wrap">
