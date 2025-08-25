@@ -77,14 +77,12 @@ export default function Dashboard() {
         </div>
         <div class="dash-hero-center left-align">
           <h1 class="dash-title">{"Men\u00FA principal"}</h1>
-          <p class="dash-subtitle">
-            {"Levamos un Gir\u00E1ldez no noso interior, benvidxs \u00E1 Liga das Ali\u00F1aci\u00F3ns."}
-          </p>
+          <p class="dash-subtitle">{"Benvidxs \u00E1 Liga das Ali\u00F1aci\u00F3ns."}</p>
         </div>
       </div>
 
       <section class="dash-grid">
-        <a class="dash-card" href="/proximo-partido" aria-label="Pr\u00F3ximo partido">
+        <a class="dash-card" href="/proximo-partido" aria-label="Próximo partido">
           <div class="dash-icon dash-icon--proximo"><IconBall /></div>
           <div class="dash-text">
             <h2 class="dash-card-header">{"Pr\u00F3ximo partido"}</h2>
@@ -92,7 +90,7 @@ export default function Dashboard() {
           </div>
         </a>
 
-        <a class="dash-card" href="/alineacion-oficial" aria-label="Ali\u00F1aci\u00F3n oficial">
+        <a class="dash-card" href="/alineacion-oficial" aria-label="Aliñación oficial">
           <div class="dash-icon dash-icon--alineacion"><IconShirt /></div>
           <div class="dash-text">
             <h2 class="dash-card-header">{"Ali\u00F1aci\u00F3n oficial"}</h2>
@@ -132,7 +130,7 @@ export default function Dashboard() {
           </div>
         </a>
 
-        <a class="dash-card" href="/clasificacion?tipo=ultimo" aria-label="Clasificaci\u00F3n \u00FAltimo partido">
+        <a class="dash-card" href="/clasificacion?tipo=ultimo" aria-label="Clasificación último partido">
           <div class="dash-icon dash-icon--ultimo"><IconTarget /></div>
           <div class="dash-text">
             <h2 class="dash-card-header">{"Clasificaci\u00F3n individual do \u00FAltimo partido"}</h2>
@@ -140,7 +138,7 @@ export default function Dashboard() {
           </div>
         </a>
 
-        <a class="dash-card" href="/clasificacion?tipo=xeral" aria-label="Clasificaci\u00F3n xeral">
+        <a class="dash-card" href="/clasificacion?tipo=xeral" aria-label="Clasificación xeral">
           <div class="dash-icon dash-icon--xeral"><IconTrophy /></div>
           <div class="dash-text">
             <h2 class="dash-card-header">{"Clasificaci\u00F3n xeral"}</h2>
@@ -148,7 +146,7 @@ export default function Dashboard() {
           </div>
         </a>
 
-        <a class="dash-card" href="/instruccions" aria-label="Instruci\u00F3ns, Regras e Premio">
+        <a class="dash-card" href="/instruccions" aria-label="Instrucións, Regras e Premio">
           <div class="dash-icon dash-icon--book"><IconBook /></div>
           <div class="dash-text">
             <h2 class="dash-card-header">{"Instruci\u00F3ns \u00B7 Regras \u00B7 Premio"}</h2>

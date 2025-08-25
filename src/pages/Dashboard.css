@@ -22,11 +22,12 @@
   display: grid;
   grid-template-columns: 1fr 1fr; /* 50/50 */
   align-items: center;
-  gap: 12px;
+  gap: 6px; /* más pegado */
 }
 @media (min-width: 560px) {
   .dash-hero.two-cols {
     width: min(94vw, 760px);
+    gap: 8px;
   }
 }
 
@@ -34,7 +35,7 @@
   align-self: stretch;
   display: flex;
   align-items: center;
-  justify-content: flex-start; /* imaxe pegada á esquerda */
+  justify-content: flex-start; /* imagen pegada a la izquierda */
 }
 
 .dash-hero-img.fill-col {
@@ -47,14 +48,14 @@
 
 .dash-hero-center {
   display: grid;
-  justify-items: start; /* texto á esquerda dentro da súa metade */
+  justify-items: start; /* texto a la izquierda */
 }
 
 .left-align .dash-title,
 .left-align .dash-subtitle { text-align: left; }
 
 .dash-title {
-  font-size: 27px;   /* -1px */
+  font-size: 27px;
   line-height: 1.2;
   margin: 0 0 6px;
   font-weight: 800;
@@ -62,7 +63,7 @@
 }
 
 .dash-subtitle {
-  font-size: 19px;   /* -1px */
+  font-size: 21px;   /* un poco mayor */
   line-height: 1.35;
   margin: 0;
   color: var(--celeste);
@@ -72,10 +73,27 @@
    Grid de cards
    ========================= */
 .dash-grid {
+  width: min(94vw, 380px); /* sincronizado con header */
+  margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
   justify-items: center;
+}
+
+/* en escritorio forzamos 2 columnas y más ancho */
+@media (min-width: 560px) {
+  .dash-grid {
+    width: min(94vw, 760px);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-items: stretch;
+  }
+}
+/* refuerzo adicional por si acaso */
+@media (min-width: 700px) {
+  .dash-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .dash-card {
@@ -135,4 +153,29 @@
 .dash-card-desc   { font-size: 14px; line-height: 1.25; color: #4b5563; margin: 0; }
 
 /* Moi pequeno */
-@media (max-width: 3
+@media (max-width: 360px) {
+  .dash-card { width: min(96vw, 340px); }
+  .dash-icon { width: 60px; height: 60px; }
+}
+
+/* Dende 560px: as cards en cada columna ocupan 100% */
+@media (min-width: 560px) {
+  .dash-card {
+    width: 100%;
+    min-height: 108px;
+    padding: 14px 16px;
+    gap: 14px;
+  }
+  .dash-icon {
+    width: 88px;
+    height: 88px;
+    border-radius: 16px;
+  }
+  .dash-text { gap: 6px; }
+  .dash-card-header { font-size: 17px; }
+  .dash-card-desc   { font-size: 13px; }
+}
+
+/* Modo “pill” moderado */
+.dash-pill .dash-card { border-radius: 22px; }
+.dash-pill .dash-icon { border-radius: 16px; }
