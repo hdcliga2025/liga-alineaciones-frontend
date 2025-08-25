@@ -9,12 +9,44 @@
   max-width: 1080px;
   margin: 0 auto;
   padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* =========================
+   Cabeceira con imaxes laterais
+   ========================= */
+.dash-hero {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.dash-hero-col {
+  align-self: stretch;               /* columna ocupa toda a altura da fila */
+  display: flex;
+  align-items: center;               /* centra verticalmente a imaxe */
+}
+
+.dash-hero-img {
+  height: 100%;                      /* EXACTAMENTE a altura do bloque central (título+subtítulo) */
+  width: auto;
+  object-fit: contain;
+  max-width: 28vw;                   /* evita desbordes en pantallas estreitas */
+}
+
+/* Centro: título+subtítulo */
+.dash-hero-center {
+  display: grid;
+  justify-items: center;
 }
 
 .dash-title {
   font-size: 28px;
   line-height: 1.2;
-  margin: 8px 0 6px;
+  margin: 0 0 6px;
   font-weight: 800;
   text-align: center;
   color: var(--celeste);
@@ -22,13 +54,21 @@
 
 .dash-subtitle {
   text-align: center;
-  font-size: 18px; /* sube lixeiramente o tamaño */
+  font-size: 20px;    /* tamaño lixeiramente maior */
   line-height: 1.35;
-  margin: 0 0 16px 0;
+  margin: 0 0 8px 0;
   color: var(--celeste);
 }
 
-/* Mobile-first: 1 columna, cards estreitas centradas */
+/* Axustes en pantallas pequenas */
+@media (max-width: 480px) {
+  .dash-hero { gap: 8px; }
+  .dash-hero-img { max-width: 22vw; }
+}
+
+/* =========================
+   Grid de cards
+   ========================= */
 .dash-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -53,19 +93,17 @@
   min-height: 92px;
   outline: none;
 }
-
 .dash-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px var(--dash-shadow-strong);
   border-color: #dbeafe;
 }
-
 .dash-card:focus-visible {
   box-shadow: 0 0 0 3px rgba(37,99,235,.35);
   border-color: #93c5fd;
 }
 
-/* Bloque icona (SVG inline) en móbil */
+/* Bloque icona (SVG inline) */
 .dash-icon {
   flex: 0 0 64px;
   width: 64px;
@@ -89,7 +127,7 @@
 .dash-icon--book         { background: linear-gradient(135deg, #e0e7ff, #a5b4fc); }
 .dash-icon--gear         { background: linear-gradient(135deg, #f1f5f9, #e2e8f0); }
 
-/* Texto móbil */
+/* Texto das cards */
 .dash-text { display: grid; align-content: center; gap: 2px; }
 .dash-card-header { font-size: 18px; line-height: 1.15; font-weight: 700; margin: 0; }
 .dash-card-desc   { font-size: 14px; line-height: 1.25; color: #4b5563; margin: 0; }
