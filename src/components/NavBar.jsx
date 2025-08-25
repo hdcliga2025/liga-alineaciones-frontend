@@ -5,36 +5,18 @@ import { route } from "preact-router";
 
 const PUBLIC_PATHS = ["/", "/login", "/register"];
 
-/** Iconos SVG inline (trazo un pouco máis groso) */
+/* Iconos SVG (trazo grueso) */
 const IconArrowLeft = ({ size = 18 }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2.6"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    aria-hidden="true"
-  >
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M15 6l-6 6 6 6" />
     <path d="M21 12H9" />
   </svg>
 );
 
 const IconX = ({ size = 18 }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2.6"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    aria-hidden="true"
-  >
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M18 6L6 18" />
     <path d="M6 6l12 12" />
   </svg>
@@ -51,9 +33,9 @@ export default function NavBar({ currentPath = "/" }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  if (PUBLIC_PATHS.includes(currentPath)) return null;
+  if (PUBLIC_PATHS.includes(currentPath) || !hasSession) return null;
 
-  const handleBack = (e) => {
+  const handleMenu = (e) => {
     e?.preventDefault?.();
     route("/dashboard", true);
   };
@@ -64,16 +46,16 @@ export default function NavBar({ currentPath = "/" }) {
     route("/", true);
   };
 
-  // Botóns estilo “landing”
+  // Botones estilo landing (sin pill)
   const btnBase = {
     display: "inline-flex",
     alignItems: "center",
     gap: "8px",
-    padding: "10px 14px",
-    borderRadius: "18px",
-    border: "1px solid rgba(15,23,42,.2)",
+    padding: "10px 16px",
+    borderRadius: "6px", // NO redondeado extremo
+    border: "1px solid rgba(15,23,42,.18)",
     color: "#fff",
-    fontWeight: 700,
+    fontWeight: 800,
     textDecoration: "none",
     boxShadow: "0 6px 14px rgba(0,0,0,.12)",
     cursor: "pointer",
@@ -82,14 +64,14 @@ export default function NavBar({ currentPath = "/" }) {
     transition: "transform .12s ease, box-shadow .12s ease, filter .12s ease",
   };
 
-  const btnPrimary = {
+  const btnBlue = {
     ...btnBase,
-    background: "linear-gradient(135deg, rgba(29,78,216,1), rgba(37,99,235,1))",
+    background: "linear-gradient(135deg, #1d4ed8, #2563eb)",
   };
 
-  const btnDanger = {
+  const btnRed = {
     ...btnBase,
-    background: "linear-gradient(135deg, rgba(239,68,68,1), rgba(185,28,28,1))",
+    background: "linear-gradient(135deg, #ef4444, #b91c1c)",
   };
 
   const navStyle = {
@@ -119,28 +101,26 @@ export default function NavBar({ currentPath = "/" }) {
     e.currentTarget.style.filter = "none";
   };
 
-  if (!hasSession) return null;
-
   return (
     <nav style={navStyle}>
-      {/* Esquerda: VOLVER */}
+      {/* Izquierda: MENÚ */}
       <div style={leftWrap}>
         <button
           type="button"
-          onClick={handleBack}
+          onClick={handleMenu}
           onMouseEnter={onHoverIn}
           onMouseLeave={onHoverOut}
           onFocus={onHoverIn}
           onBlur={onHoverOut}
-          style={btnPrimary}
-          aria-label="Volver ao panel"
+          style={btnBlue}
+          aria-label="Ir ao menú principal"
         >
           <IconArrowLeft size={18} />
-          <span>Volver</span>
+          <span>{"Men\u00FA"}</span>
         </button>
       </div>
 
-      {/* Dereita: SAÍR */}
+      {/* Derecha: PECHAR SESIÓN (X a la derecha) */}
       <div style={rightWrap}>
         <button
           type="button"
@@ -149,11 +129,11 @@ export default function NavBar({ currentPath = "/" }) {
           onMouseLeave={onHoverOut}
           onFocus={onHoverIn}
           onBlur={onHoverOut}
-          style={btnDanger}
-          aria-label="Saír (pechar sesión)"
+          style={btnRed}
+          aria-label="Pechar sesión"
         >
+          <span>{"Pechar sesi\u00F3n"}</span>
           <IconX size={18} />
-          <span>Saír</span>
         </button>
       </div>
     </nav>
