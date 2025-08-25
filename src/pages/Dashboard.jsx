@@ -4,7 +4,7 @@ import { useEffect, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient";
 import "./Dashboard.css";
 
-/* --- Iconas SVG inline (ASCII-safe) --- */
+/* Iconas grandes (cards nivel 1) */
 const IcoBall = () => (
   <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <circle cx="12" cy="12" r="9"></circle>
@@ -23,14 +23,8 @@ const IcoTrophy = () => (
     <path d="M12 13v3M8 20h8"></path>
   </svg>
 );
-const IcoGear = () => (
-  <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <circle cx="12" cy="12" r="3"></circle>
-    <path d="M12 4v2M12 18v2M4 12h2M18 12h2M6.5 6.5l1.4 1.4M16.1 16.1l1.4 1.4M6.5 17.5l1.4-1.4M16.1 7.9l1.4-1.4"></path>
-  </svg>
-);
 
-/* Sub-iconas */
+/* Sub-iconas (nivel 2) */
 const IcoCalendar = () => (
   <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <rect x="4" y="6" width="16" height="14" rx="2"></rect>
@@ -66,23 +60,6 @@ const IcoTarget = () => (
     <circle cx="12" cy="12" r="4"></circle>
   </svg>
 );
-const IcoUser = () => (
-  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <circle cx="12" cy="8" r="4"></circle>
-    <path d="M6 20a6 6 0 0112 0"></path>
-  </svg>
-);
-const IcoAlert = () => (
-  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M12 9v4M12 17h.01"></path>
-    <path d="M10.3 3.5l-8 14A2 2 0 004 21h16a2 2 0 001.7-3l-8-14a2 2 0 00-3.4 0z"></path>
-  </svg>
-);
-const IcoMessage = () => (
-  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M21 15a4 4 0 01-4 4H8l-5 3 1-4a4 4 0 01-1-3V7a4 4 0 014-4h10a4 4 0 014 4z"></path>
-  </svg>
-);
 
 export default function Dashboard() {
   const [firstName, setFirstName] = useState("");
@@ -90,7 +67,6 @@ export default function Dashboard() {
     partidos: false,
     alineacions: false,
     clasificacions: false,
-    axustes: false,
   });
 
   useEffect(() => {
@@ -105,6 +81,7 @@ export default function Dashboard() {
 
   return (
     <main class="dash-wrap">
+      {/* Hero */}
       <div class="dash-hero two-cols center-hero">
         <div class="dash-hero-col">
           <img src="/logoHDC.jpg" alt="Logo HDC" class="dash-hero-img fill-col" />
@@ -116,6 +93,7 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* GRID principal: 3 cards nivel 1 */}
       <section class="dash-grid dash-grid--main">
         {/* 1) Partidos do Celta */}
         <div class="main-block">
@@ -220,42 +198,6 @@ export default function Dashboard() {
               <div class="sub-texts">
                 <div class="sub-title">Clasificación xeral</div>
                 <div class="sub-desc">Acumulado da tempada</div>
-              </div>
-            </a>
-          </div>
-        </div>
-
-        {/* 4) Axustes */}
-        <div class="main-block">
-          <button class="main-card" onClick={() => toggle("axustes")} aria-expanded={open.axustes} aria-controls="sub-axustes">
-            <div class="dash-icon dash-icon--gear"><IcoGear /></div>
-            <div class="dash-text">
-              <h2 class="dash-card-header">Axustes</h2>
-              <p class="dash-card-desc">Conta e contacto</p>
-            </div>
-            <span class={`chev ${open.axustes ? "open" : ""}`} aria-hidden="true">▾</span>
-          </button>
-
-          <div id="sub-axustes" class={`subgrid ${open.axustes ? "open" : ""}`}>
-            <a class="subcard" href="/axustes">
-              <div class="sub-ico sub-ico--user"><IcoUser /></div>
-              <div class="sub-texts">
-                <div class="sub-title">Modificar datos</div>
-                <div class="sub-desc">Perfil e preferencias</div>
-              </div>
-            </a>
-            <a class="subcard" href="/incidencia">
-              <div class="sub-ico sub-ico--alert"><IcoAlert /></div>
-              <div class="sub-texts">
-                <div class="sub-title">Comunicar incidencia</div>
-                <div class="sub-desc">Soporte e reporte de erros</div>
-              </div>
-            </a>
-            <a class="subcard" href="/propostas">
-              <div class="sub-ico sub-ico--msg"><IcoMessage /></div>
-              <div class="sub-texts">
-                <div class="sub-title">Propostas e/ou comentarios</div>
-                <div class="sub-desc">Melloras e feedback</div>
               </div>
             </a>
           </div>

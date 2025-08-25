@@ -1,47 +1,21 @@
-﻿# =========================
-# Node / Vite / Preact
-# =========================
+# dependencias
 node_modules/
+
+# build
 dist/
 .vite/
-.cache/
+*.log
 
-# =========================
-# Registros y diagnósticos
-# =========================
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-# =========================
-# Variables de entorno
-# (dejamos .env.example versionado)
-# =========================
+# entorno
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*.local
 
-# =========================
-# Cobertura / builds auxiliares
-# =========================
-coverage/
-*.tsbuildinfo
-
-# =========================
-# Vercel / herramientas
-# =========================
-.vercel/
-
-# =========================
-# SO / Editores
-# =========================
+# SO / editor
 .DS_Store
 Thumbs.db
-desktop.ini
-*.swp
 .idea/
 .vscode/
+*.swp
+
+# vercel
+.vercel/
