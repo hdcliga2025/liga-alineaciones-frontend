@@ -3,6 +3,24 @@ import { h } from "preact";
 import { route } from "preact-router";
 import { supabase } from "../lib/supabaseClient";
 
+function ArrowLeftBold() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M15 6l-6 6 6 6"></path>
+      <path d="M9 12h10"></path>
+    </svg>
+  );
+}
+function SmallX() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M18 6L6 18M6 6l12 12"></path>
+    </svg>
+  );
+}
+
 export default function NavBar({ currentPath = "" }) {
   const isPublic = ["/", "/login", "/register"].includes(currentPath);
   if (isPublic) return null;
@@ -11,15 +29,19 @@ export default function NavBar({ currentPath = "" }) {
 
   const styles = {
     bar: {
-      position: "sticky",      // fijo al hacer scroll
+      position: "fixed",        // fijo SIEMPRE
       top: 0,
-      zIndex: 100,             // por encima del contenido
+      left: 0,
+      right: 0,
+      zIndex: 100,
       display: "flex",
       alignItems: "center",
-      justifyContent: "space-between",   // Menú izq, Pechar der
+      justifyContent: "space-between", // Menú izq, Pechar der
       padding: "8px 12px",
-      background: "transparent",
-      backdropFilter: "none",
+      background: "rgba(255,255,255,0.82)",   // fondo semitransparente
+      backdropFilter: "saturate(180%) blur(10px)",
+      WebkitBackdropFilter: "saturate(180%) blur(10px)",
+      borderBottom: "1px solid rgba(0,0,0,0.06)",
     },
     btnBase: {
       display: "inline-flex",
@@ -31,18 +53,15 @@ export default function NavBar({ currentPath = "" }) {
       border: "none",
       cursor: "pointer",
       color: "#fff",
-      boxShadow: "0 8px 18px rgba(0,0,0,.18)", // sombra más marcada
+      boxShadow: "0 8px 18px rgba(0,0,0,.18)",
       lineHeight: 1,
       userSelect: "none",
     },
-    // Degradado celeste para Menú
-    menu: { background: "linear-gradient(135deg, #38bdf8, #60a5fa)" },
-    // Degradado rojo para Pechar
-    logout: { background: "linear-gradient(135deg, #ef4444, #dc2626)" },
+    // Degradados
+    menu: { background: "linear-gradient(135deg, #38bdf8, #60a5fa)" },     // celeste
+    logout: { background: "linear-gradient(135deg, #ef4444, #dc2626)" },   // vermello
     left: { display: "flex", gap: 8, alignItems: "center" },
     right: { display: "flex", gap: 8, alignItems: "center" },
-    iconLeft: { fontSize: "26px", lineHeight: 1, transform: "translateY(-1px)" },  // flecha más grande
-    iconRight: { fontSize: "16px", lineHeight: 1, marginLeft: "6px", transform: "translateY(-1px)" }, // X más pequeña
   };
 
   const goMenu = () => route("/dashboard");
@@ -56,15 +75,14 @@ export default function NavBar({ currentPath = "" }) {
       <div style={styles.left}>
         {showMenu && (
           <button style={{ ...styles.btnBase, ...styles.menu }} onClick={goMenu} aria-label="Menú">
-            <span style={styles.iconLeft} aria-hidden="true">←</span>
+            <ArrowLeftBold />
             Menú
           </button>
         )}
       </div>
       <div style={styles.right}>
         <button style={{ ...styles.btnBase, ...styles.logout }} onClick={logout} aria-label="Pechar">
-          Pechar
-          <span style={styles.iconRight} aria-hidden="true">✕</span>
+          Pechar <SmallX />
         </button>
       </div>
     </div>
