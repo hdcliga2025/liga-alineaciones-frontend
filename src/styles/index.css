@@ -1,19 +1,71 @@
-/* src/styles/index.css */
+/* ===== Global Styles — Montserrat en toda a app ===== */
 
-/* Familia tipográfica global */
 :root {
-  --font-sans: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  /* Cores base (opcional, por se queres reutilizar) */
+  --celeste: #38bdf8;      /* sky-400 */
+  --celeste-500: #0ea5e9;  /* sky-500 */
+  --gray-50: #f8fafc;
+  --gray-700: #374151;
 }
 
-* { box-sizing: border-box; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
-html, body, #app { height: 100%; }
+html,
+body {
+  height: 100%;
+}
 
-html { -webkit-text-size-adjust: 100%; }
+html {
+  /* Activa anti-aliasing en moitos navegadores */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
 body {
   margin: 0;
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-family: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-weight: 400;
+  color: #0f172a;         /* slate-900 */
+  background: var(--gray-50);
+  line-height: 1.35;
+}
+
+/* Tipografía consistente en elementos comúns */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 .4rem 0;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+p {
+  margin: 0 0 .75rem 0;
+}
+
+a {
+  color: var(--celeste-500);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* Formularios e botóns herdando tipografía */
+input, button, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* Imaxes responsivas por defecto */
+img, svg, video, canvas {
+  display: block;
+  max-width: 100%;
+}
+
+/* Contedor base da app (opcional, por se o precisas nalgún layout) */
+#app {
+  min-height: 100%;
 }
