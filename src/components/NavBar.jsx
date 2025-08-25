@@ -1,84 +1,48 @@
 // src/components/NavBar.jsx
 import { h } from "preact";
 import { route } from "preact-router";
-import { supabase } from "../lib/supabaseClient";
-
-/* Iconas SVG (ASCII-safe) */
-function BellIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M6 8a6 6 0 1112 0c0 7 3 7 3 7H3s3 0 3-7"></path>
-      <path d="M10 21h4"></path>
-    </svg>
-  );
-}
-function UserIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <circle cx="12" cy="8" r="4"></circle>
-      <path d="M6 20a6 6 0 0112 0"></path>
-    </svg>
-  );
-}
 
 export default function NavBar({ currentPath = "" }) {
-  const isPublic = ["/", "/login", "/register"].includes(currentPath);
+  const isPublic = currentPath === "/" || currentPath === "/login" || currentPath === "/register";
   if (isPublic) return null;
 
-  const styles = {
-    bar: {
-      position: "fixed",
-      top: 0, left: 0, right: 0,
-      zIndex: 120,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "flex-end", // todo alineado á dereita
-      gap: "10px",
-      padding: "8px 12px",
-      background: "rgba(255,255,255,0.82)",
-      backdropFilter: "saturate(180%) blur(10px)",
-      WebkitBackdropFilter: "saturate(180%) blur(10px)",
-      borderBottom: "1px solid rgba(0,0,0,0.06)",
-    },
-    // Botón redondo blanco (campá)
-    roundWhite: {
-      width: 40, height: 40,
-      borderRadius: "50%",
-      display: "grid", placeItems: "center",
-      background: "#fff",
-      color: "#0f172a",
-      border: "1px solid #e5e7eb",
-      boxShadow: "0 6px 14px rgba(0,0,0,.12)",
-      cursor: "pointer",
-    },
-    // Botón redondo negro (perfil)
-    roundBlack: {
-      width: 40, height: 40,
-      borderRadius: "50%",
-      display: "grid", placeItems: "center",
-      background: "#0f172a",
-      color: "#fff",
-      border: "1px solid #0f172a",
-      boxShadow: "0 6px 14px rgba(0,0,0,.22)",
-      cursor: "pointer",
-    },
+  const wrap = {
+    position: "sticky", top: 0, zIndex: 40,
+    background: "rgba(255,255,255,.75)", backdropFilter: "blur(8px)",
+    borderBottom: "1px solid #eef2ff",
   };
-
-  const goNotis = () => route("/notificacions");
-  const goPerfil = () => route("/perfil");
-
-  // Se queres pechar sesión dende Perfil máis adiante, úsase supabase.auth.signOut()
+  const bar = {
+    maxWidth: 1080, margin: "0 auto", padding: "10px 12px",
+    display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10,
+  };
+  const round = {
+    width: 40, height: 40, borderRadius: "50%", display: "grid", placeItems: "center",
+    boxShadow: "0 4px 12px rgba(0,0,0,.12)", cursor: "pointer", border: "1px solid #e5e7eb",
+  };
+  const whiteBtn = { ...round, background: "#fff", color: "#0f172a" };
+  const exitBtn = {
+    ...round,
+    background: "linear-gradient(135deg,#fecaca,#f87171)", // vermello degradado
+    color: "#0f172a", border: "1px solid #ef4444",
+  };
+  const ico = { fontSize: 18, fontWeight: 800, lineHeight: 1 };
 
   return (
-    <div style={styles.bar}>
-      <button style={styles.roundWhite} onClick={goNotis} aria-label="Notificacións" title="Notificacións">
-        <BellIcon />
-      </button>
-      <button style={styles.roundBlack} onClick={goPerfil} aria-label="Perfil" title="Perfil">
-        <UserIcon />
-      </button>
+    <div style={wrap}>
+      <div style={bar}>
+        {/* Notificacións */}
+        <button style={whiteBtn} aria-label="Notificacións" onClick={() => route("/notificacions")}>
+          <span style={ico}>🔔</span>
+        </button>
+        {/* Perfil */}
+        <button style={whiteBtn} aria-label="Perfil" onClick={() => route("/perfil")}>
+          <span style={ico}>👤</span>
+        </button>
+        {/* Saír á landing (non pecha sesión, só vai a "/") */}
+        <button style={exitBtn} aria-label="Saír ao inicio" title="Saír ao inicio" onClick={() => route("/")}>
+          <span style={{ ...ico, fontSize: 20, fontWeight: 900, color: "#111" }}>✖</span>
+        </button>
+      </div>
     </div>
   );
 }

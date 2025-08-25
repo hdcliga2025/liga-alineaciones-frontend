@@ -18,9 +18,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setForm((s) => ({ ...s, [e.currentTarget.name]: e.currentTarget.value }));
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,11 +30,7 @@ export default function Login() {
       password: form.password,
     });
     setLoading(false);
-
-    if (error) {
-      setError(mapAuthError(error));
-      return;
-    }
+    if (error) return setError(mapAuthError(error));
     if (data?.session) route("/dashboard");
   };
 
@@ -49,15 +44,13 @@ export default function Login() {
       maxWidth: 440, margin: "84px auto 40px", padding: "0 16px",
       fontFamily: "Montserrat, system-ui, sans-serif",
     },
-    title: { margin: "0 0 4px", fontWeight: 700, fontSize: 22, color: "#111", display: "none" }, // oculto “Entrar”
-    form: { display: "grid", gap: 10, marginTop: 8 }, // menos gap para achegar campos aos botóns
+    form: { display: "grid", gap: 8, marginTop: 0 }, // máis xunto
     label: { fontSize: 14, fontWeight: 600, color: "#0f172a" },
     input: {
       width: "100%", padding: "10px 12px", borderRadius: 12,
-      border: "1px solid #e5e7eb", outline: "none",
-      fontSize: 15, background: "#fff",
+      border: "1px solid #e5e7eb", outline: "none", fontSize: 15, background: "#fff",
     },
-    actions: { display: "grid", gap: 8, marginTop: 6 },
+    actions: { display: "grid", gap: 6, marginTop: 6 }, // campos pegadiños aos botóns
     primary: {
       padding: "10px 14px", borderRadius: 14, border: "1px solid #0ea5e9",
       background: "linear-gradient(135deg,#93c5fd,#60a5fa)", color: "#fff",
@@ -67,24 +60,21 @@ export default function Login() {
       padding: "10px 14px", borderRadius: 14, border: "1px solid #e5e7eb",
       background: "#fff", color: "#0f172a", fontWeight: 600, cursor: "pointer",
     },
-    err: { color: "#b91c1c", fontSize: 13, marginTop: 6 }
+    err: { color: "#b91c1c", fontSize: 13, marginTop: 6 },
   };
 
   return (
     <main style={styles.wrap}>
-      {/* <h1 style={styles.title}>Entrar</h1> */}
       <form onSubmit={handleSubmit} style={styles.form} noValidate>
         <label style={styles.label} for="email">Correo electrónico</label>
         <input
           id="email" name="email" type="email" required
-          placeholder="correo electrónico"
           value={form.email} onInput={handleChange} style={styles.input} autoComplete="email"
         />
 
         <label style={styles.label} for="password">Contrasinal</label>
         <input
           id="password" name="password" type="password" required
-          placeholder="contrasinal"
           value={form.password} onInput={handleChange} style={styles.input} autoComplete="current-password"
         />
 
