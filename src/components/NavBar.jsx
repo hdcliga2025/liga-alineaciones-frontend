@@ -5,7 +5,7 @@ import { route } from "preact-router";
 
 const PUBLIC_PATHS = ["/", "/login", "/register"];
 
-/* Iconos SVG (trazo grueso) */
+/* Iconas SVG (trazo groso) */
 const IconArrowLeft = ({ size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
        stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -46,13 +46,13 @@ export default function NavBar({ currentPath = "/" }) {
     route("/", true);
   };
 
-  // Botones estilo landing (sin pill)
+  // Botóns estilo landing con degradado e borde redondeado moderado
   const btnBase = {
     display: "inline-flex",
     alignItems: "center",
     gap: "8px",
     padding: "10px 16px",
-    borderRadius: "6px", // NO redondeado extremo
+    borderRadius: "18px",
     border: "1px solid rgba(15,23,42,.18)",
     color: "#fff",
     fontWeight: 800,
@@ -66,12 +66,12 @@ export default function NavBar({ currentPath = "/" }) {
 
   const btnBlue = {
     ...btnBase,
-    background: "linear-gradient(135deg, #1d4ed8, #2563eb)",
+    background: "linear-gradient(135deg, #60a5fa, #2563eb)", // azul degradado
   };
 
   const btnRed = {
     ...btnBase,
-    background: "linear-gradient(135deg, #ef4444, #b91c1c)",
+    background: "linear-gradient(135deg, #f87171, #ef4444)", // vermello degradado
   };
 
   const navStyle = {
@@ -103,7 +103,7 @@ export default function NavBar({ currentPath = "/" }) {
 
   return (
     <nav style={navStyle}>
-      {/* Izquierda: MENÚ */}
+      {/* Esquerda: MENÚ */}
       <div style={leftWrap}>
         <button
           type="button"
@@ -120,7 +120,7 @@ export default function NavBar({ currentPath = "/" }) {
         </button>
       </div>
 
-      {/* Derecha: PECHAR SESIÓN (X a la derecha) */}
+      {/* Dereita: PECHAR SESI\u00D3N (X á dereita) */}
       <div style={rightWrap}>
         <button
           type="button"
@@ -130,7 +130,7 @@ export default function NavBar({ currentPath = "/" }) {
           onFocus={onHoverIn}
           onBlur={onHoverOut}
           style={btnRed}
-          aria-label="Pechar sesión"
+          aria-label="Pechar sesi\u00F3n"
         >
           <span>{"Pechar sesi\u00F3n"}</span>
           <IconX size={18} />
