@@ -17,7 +17,7 @@
   font-weight: 800;
 }
 
-/* 📱 MÓVIL (mobile-first): 1 columna, cards estrechas y centradas */
+/* Mobile-first: 1 columna, cards estrechas centradas */
 .dash-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -26,7 +26,6 @@
 }
 
 .dash-card {
-  /* ancho estrecho: un poco más que el icono */
   width: min(94vw, 380px);
   display: flex;
   align-items: center;
@@ -53,7 +52,7 @@
   border-color: #93c5fd;
 }
 
-/* Icono/emoji más pequeño en móvil */
+/* Icono/emoji en móvil */
 .dash-icon {
   flex: 0 0 64px;
   width: 64px;
@@ -77,38 +76,36 @@
 .dash-icon--book         { background: linear-gradient(135deg, #e0e7ff, #a5b4fc); }
 .dash-icon--gear         { background: linear-gradient(135deg, #f1f5f9, #e2e8f0); }
 
-/* Texto bien pegado (título + descripción) */
+/* Texto en móvil: un poco más grande y muy compacto */
 .dash-text {
   display: grid;
   align-content: center;
-  gap: 2px;                 /* pegado */
+  gap: 2px;
 }
-
 .dash-card-header {
-  font-size: 16px;
-  line-height: 1.15;        /* compacto */
+  font-size: 18px;        /* antes 16px */
+  line-height: 1.15;
   font-weight: 700;
   margin: 0;
 }
-
 .dash-card-desc {
-  font-size: 12px;
-  line-height: 1.25;        /* compacto */
+  font-size: 14px;        /* antes 12px */
+  line-height: 1.25;
   color: #4b5563;
   margin: 0;
 }
 
-/* 🧩 muy pequeño */
+/* Muy pequeño */
 @media (max-width: 360px) {
   .dash-card { width: min(96vw, 340px); }
   .dash-icon { width: 60px; height: 60px; font-size: 34px; }
 }
 
-/* 🖥️ Desde ~560px: 2 columnas y tamaños “grandes” */
+/* Desde ~560px: 2 columnas y tamaños “grandes” en desktop/tablet */
 @media (min-width: 560px) {
   .dash-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    justify-items: stretch;         /* cards ocupan el ancho de su columna */
+    justify-items: stretch;
   }
   .dash-card {
     width: 100%;
@@ -123,6 +120,14 @@
     font-size: 48px;
   }
   .dash-text { gap: 6px; }
-  .dash-card-header { font-size: 17px; }
-  .dash-card-desc { font-size: 13px; }
+  .dash-card-header { font-size: 17px; } /* desktop queda como antes */
+  .dash-card-desc { font-size: 13px; }   /* desktop queda como antes */
+}
+
+/* OPCIONAL: estilo "pill" (bordes muy redondeados) */
+.dash-card--pill {
+  border-radius: 9999px;
+}
+.dash-card--pill .dash-icon {
+  border-radius: 9999px; /* icono circular */
 }
