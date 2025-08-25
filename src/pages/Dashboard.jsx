@@ -70,27 +70,27 @@ const IconGear = () => (
 );
 
 export default function Dashboard() {
-  const [displayName, setDisplayName] = useState("");
+  const [firstName, setFirstName] = useState("");
 
   useEffect(() => {
     (async () => {
       const { data } = await supabase.auth.getUser();
       const full = data?.user?.user_metadata?.full_name || "";
-      setDisplayName(full);
+      const first = full.trim().split(/\s+/)[0] || "";
+      setFirstName(first);
     })();
   }, []);
 
   return (
     <main class="dash-wrap dash-pill">
-      {/* Cabeceira: imaxe esquerda + texto dereita (50/50) */}
+      {/* Cabeceira: en móbil lado a lado; en PC (>=960px) apílase imaxe arriba e texto abaixo */}
       <div class="dash-hero two-cols center-hero">
         <div class="dash-hero-col">
           <img src="/logoHDC.jpg" alt="Logo HDC" class="dash-hero-img fill-col" />
         </div>
         <div class="dash-hero-center">
           <p class="dash-greet">
-            Ola!! {displayName ? <strong class="dash-name">{displayName}</strong> : null},&nbsp;
-            Benvidxs á Liga das Aliñacións.
+            Benvidx á Liga das Aliñacións {firstName && <strong class="dash-name">{firstName}</strong>}
           </p>
         </div>
       </div>

@@ -1,16 +1,26 @@
+// src/components/NavBar.jsx
 import { h } from "preact";
 import { route } from "preact-router";
 import { supabase } from "../lib/supabaseClient";
 
 export default function NavBar({ currentPath = "" }) {
-  // Non amosar en páxinas públicas
   const isPublic = ["/", "/login", "/register"].includes(currentPath);
   if (isPublic) return null;
 
-  const showMenu = currentPath !== "/dashboard"; // ocultar en dashboard
+  const showMenu = currentPath !== "/dashboard"; // ocultar no dashboard
 
-  const btn = {
-    base: {
+  const styles = {
+    bar: {
+      position: "sticky",
+      top: 0,
+      zIndex: 40,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",   // menú á esquerda, pechar á dereita
+      padding: "8px 12px",
+      background: "transparent",
+    },
+    btnBase: {
       padding: "8px 14px",
       fontWeight: 700,
       borderRadius: "10px",
@@ -19,22 +29,10 @@ export default function NavBar({ currentPath = "" }) {
       color: "#fff",
       boxShadow: "0 4px 14px rgba(0,0,0,.12)",
     },
-    menu: {
-      background: "linear-gradient(135deg, #60a5fa, #ef4444)",
-      marginRight: 8,
-    },
-    logout: {
-      background: "linear-gradient(135deg, #ef4444, #60a5fa)",
-    },
-    bar: {
-      position: "sticky",
-      top: 0,
-      zIndex: 40,
-      background: "transparent",
-      display: "flex",
-      justifyContent: "flex-end",
-      padding: "8px 12px",
-    },
+    menu: { background: "linear-gradient(135deg, #60a5fa, #ef4444)" },
+    logout: { background: "linear-gradient(135deg, #ef4444, #60a5fa)" },
+    left: { display: "flex", gap: 8, alignItems: "center" },
+    right: { display: "flex", gap: 8, alignItems: "center" },
   };
 
   const goMenu = () => route("/dashboard");
@@ -44,15 +42,19 @@ export default function NavBar({ currentPath = "" }) {
   };
 
   return (
-    <div style={btn.bar}>
-      {showMenu && (
-        <button style={{ ...btn.base, ...btn.menu }} onClick={goMenu} aria-label="Menú">
-          ← Menú
+    <div style={styles.bar}>
+      <div style={styles.left}>
+        {showMenu && (
+          <button style={{ ...styles.btnBase, ...styles.menu }} onClick={goMenu} aria-label="Menú">
+            ← Menú
+          </button>
+        )}
+      </div>
+      <div style={styles.right}>
+        <button style={{ ...styles.btnBase, ...styles.logout }} onClick={logout} aria-label="Pechar sesión">
+          Pechar sesión ✕
         </button>
-      )}
-      <button style={{ ...btn.base, ...btn.logout }} onClick={logout} aria-label="Pechar sesión">
-        Pechar sesión ✕
-      </button>
+      </div>
     </div>
   );
 }

@@ -14,21 +14,27 @@
 }
 
 /* =========================
-   Cabeceira: imaxe (esq) + texto (der) 50/50, centrados e moi pegados
+   Header:
+   - Base (móbil/tableta): 2 columnas (imaxe esquerda, texto dereita)
+   - PC (>=960px): stack vertical (imaxe centrada arriba + texto abaixo)
    ========================= */
 .dash-hero.two-cols {
   width: min(92vw, 380px);
   margin: 8px auto 10px;
   display: grid;
-  grid-template-columns: 1fr 1fr; /* 50/50 */
+  grid-template-columns: 1fr 1fr;   /* lado a lado por defecto */
   align-items: center;
   justify-items: center;
-  gap: 8px;                     /* máis pegado ca antes */
+  gap: 6px;                          /* máis xuntos */
 }
 @media (min-width: 560px) {
+  .dash-hero.two-cols { width: min(92vw, 760px); }
+}
+/* PC de sobremesa: apilar e facer a imaxe máis grande */
+@media (min-width: 960px) {
   .dash-hero.two-cols {
-    width: min(92vw, 760px);
-    gap: 10px;
+    grid-template-columns: 1fr;      /* unha soa columna */
+    gap: 8px;                        /* lixeiro espazo vertical */
   }
 }
 
@@ -42,10 +48,13 @@
   object-fit: contain;
   object-position: center;
 }
+@media (min-width: 960px) {
+  .dash-hero-img.fill-col { max-height: 190px; } /* máis grande en PC */
+}
 
-/* Saúdo sustituíndo o antigo título/subtítulo */
+/* Saúdo */
 .dash-greet {
-  font-size: 23px;             /* +2px sobre o anterior */
+  font-size: 25px;                  /* +2px */
   line-height: 1.3;
   margin: 0;
   color: var(--celeste);
@@ -55,7 +64,7 @@
 .dash-name { font-weight: 800; }
 
 /* =========================
-   Grid de cards (centrada e responsiva)
+   Grid de cards
    ========================= */
 .dash-grid {
   width: min(92vw, 380px);
@@ -79,7 +88,7 @@
   align-items: center;
   gap: 10px;
   background: #fff;
-  border-radius: 22px;          /* pill suave */
+  border-radius: 22px;
   padding: 12px;
   text-decoration: none;
   color: inherit;
