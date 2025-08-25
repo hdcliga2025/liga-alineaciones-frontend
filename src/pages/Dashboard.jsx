@@ -95,8 +95,8 @@ export default function Dashboard() {
 
       {/* GRID principal: 3 cards nivel 1 */}
       <section class="dash-grid dash-grid--main">
-        {/* 1) Calendario (antes: Partidos do Celta) */}
-        <div class="main-block">
+        {/* 1) Calendario */}
+        <div class={`main-block ${open.partidos ? "open open--partidos" : ""}`}>
           <button class="main-card" onClick={() => toggle("partidos")} aria-expanded={open.partidos} aria-controls="sub-partidos">
             <div class="dash-icon dash-icon--ball"><IcoBall /></div>
             <div class="dash-text">
@@ -131,13 +131,13 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* 2) Xogar ás Aliñacións (antes: Aliñacións) */}
-        <div class="main-block">
+        {/* 2) Xogar ás Aliñacións */}
+        <div class={`main-block ${open.alineacions ? "open open--alineacions" : ""}`}>
           <button class="main-card" onClick={() => toggle("alineacions")} aria-expanded={open.alineacions} aria-controls="sub-alineacions">
             <div class="dash-icon dash-icon--shirt"><IcoShirt /></div>
             <div class="dash-text">
               <h2 class="dash-card-header">Xogar ás Aliñacións</h2>
-              <p class="dash-card-desc">Aquí é onde amosarás o Claudio que levas dentro</p>
+              <p class="dash-card-desc">Aquí é onde demostras o Claudio que levas dentro</p>
             </div>
             <span class={`chev ${open.alineacions ? "open" : ""}`} aria-hidden="true">▾</span>
           </button>
@@ -175,7 +175,7 @@ export default function Dashboard() {
         </div>
 
         {/* 3) Clasificacións */}
-        <div class="main-block">
+        <div class={`main-block ${open.clasificacions ? "open open--clasificacions" : ""}`}>
           <button class="main-card" onClick={() => toggle("clasificacions")} aria-expanded={open.clasificacions} aria-controls="sub-clasificacions">
             <div class="dash-icon dash-icon--trophy"><IcoTrophy /></div>
             <div class="dash-text">
