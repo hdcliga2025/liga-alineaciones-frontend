@@ -1,89 +1,48 @@
 // src/components/Login.jsx
-import { useState, useEffect } from "preact/hooks";
+import { h } from "preact";
+import { useState } from "preact/hooks";
 import { route } from "preact-router";
 import { supabase } from "../lib/supabaseClient";
 
-function mapAuthError(err) {
-  if (!err) return "";
-  const m = (err.message || "").toLowerCase();
-  if (m.includes("invalid login credentials")) return "Credenciais incorrectas.";
-  if (m.includes("email not confirmed")) return "Confirma o teu correo antes de iniciar sesión.";
-  return err.message;
-}
-
 export default function Login() {
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [loading, setLoading] = useState(false);
-  const [msg, setMsg] = useState("");
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("verified") === "true") {
-      setMsg("Correo verificado. Xa podes iniciar sesión.");
-    }
-  }, []);
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.currentTarget.name]: e.currentTarget.value });
-  };
+  const [email, setEmail]       = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError]       = useState("");
+  const [loading, setLoading]   = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setMsg("");
     setLoading(true);
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: form.email.trim(),
-      password: form.password,
-    });
-
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
 
     if (error) {
-      setError(mapAuthError(error));
+      setError(error.message || "Erro ao iniciar sesión");
       return;
     }
-
-    if (data?.session) {
-      route("/dashboard", true);
-    } else {
-      setMsg("Sesión non creada. Proba de novo.");
-    }
+    // ⬇️ aquí el cambio clave
+    route("/dashboard");
   };
 
   return (
-    <form class="login-form" onSubmit={handleSubmit} noValidate>
-      <label>Correo electrónico</label>
-      <input
-        type="email"
-        name="email"
-        placeholder="Correo electrónico"
-        value={form.email}
-        onInput={handleChange}
-        required
-        autoComplete="email"
-      />
-
-      <label>Contrasinal</label>
-      <input
-        type="password"
-        name="password"
-        placeholder="Contrasinal"
-        value={form.password}
-        onInput={handleChange}
-        required
-        autoComplete="current-password"
-      />
-
-      {error && <p class="form-error">{error}</p>}
-      {msg && <p class="form-info">{msg}</p>}
-
-      <button type="submit" disabled={loading}>
-        {loading ? "Entrando..." : "Imos!!"}
-      </button>
-    </form>
+    <main style={{ padding: "72px 16px 24px" }}>
+      <h1 style={{ fontFamily: "Montserrat,system-ui", fontWeight: 700 }}>Entrar</h1>
+      <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12, maxWidth: 360 }}>
+        <input
+          type="email" placeholder="Correo"
+          value={email} onInput={(e)=>setEmail(e.currentTarget.value)} required
+        />
+        <input
+          type="password" placeholder="Contrasinal"
+          value={password} onInput={(e)=>setPassword(e.currentTarget.value)} required
+        />
+        {error && <p style={{ color: "crimson" }}>{error}</p>}
+        <button type="submit" disabled={loading}>
+          {loading ? "Accedendo..." : "Imos!!"}
+        </button>
+      </form>
+    </main>
   );
 }
 
