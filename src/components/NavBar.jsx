@@ -16,25 +16,31 @@ export default function NavBar({ currentPath = "" }) {
       zIndex: 40,
       display: "flex",
       alignItems: "center",
-      justifyContent: "space-between",   // menú á esquerda, pechar á dereita
+      justifyContent: "space-between",   // Menú á esquerda, Pechar á dereita
       padding: "8px 12px",
       background: "transparent",
     },
     btnBase: {
-      padding: "8px 14px",
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "8px",
+      padding: "10px 16px",
       fontWeight: 700,
       borderRadius: "10px",
       border: "none",
       cursor: "pointer",
       color: "#fff",
-      boxShadow: "0 4px 14px rgba(0,0,0,.12)",
+      boxShadow: "0 8px 18px rgba(0,0,0,.18)",  // sombra máis marcada
+      lineHeight: 1,
     },
-    /* degradado celeste para Menú */
+    // Degradado celeste para Menú
     menu: { background: "linear-gradient(135deg, #38bdf8, #60a5fa)" },
-    /* degradado vermello para Pechar */
+    // Degradado vermello para Pechar
     logout: { background: "linear-gradient(135deg, #ef4444, #dc2626)" },
     left: { display: "flex", gap: 8, alignItems: "center" },
     right: { display: "flex", gap: 8, alignItems: "center" },
+    iconLeft: { fontSize: "22px", lineHeight: 1, transform: "translateY(-1px)" },
+    iconRight: { fontSize: "20px", lineHeight: 1, marginLeft: "6px", transform: "translateY(-1px)" },
   };
 
   const goMenu = () => route("/dashboard");
@@ -48,13 +54,15 @@ export default function NavBar({ currentPath = "" }) {
       <div style={styles.left}>
         {showMenu && (
           <button style={{ ...styles.btnBase, ...styles.menu }} onClick={goMenu} aria-label="Menú">
-            ← Menú
+            <span style={styles.iconLeft} aria-hidden="true">←</span>
+            Menú
           </button>
         )}
       </div>
       <div style={styles.right}>
         <button style={{ ...styles.btnBase, ...styles.logout }} onClick={logout} aria-label="Pechar">
           Pechar
+          <span style={styles.iconRight} aria-hidden="true">✕</span>
         </button>
       </div>
     </div>
