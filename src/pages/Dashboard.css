@@ -109,6 +109,7 @@
   .dash-card-desc   { font-size: 13px; }
 }
 
-/* --- Modo "pill" para todas las cards (toggle con .dash-pill) --- */
-.dash-pill .dash-card { border-radius: 9999px; }
-.dash-pill .dash-icon { border-radius: 9999px; }
+/* --- Modo "pill" moderado para todas las cards (toggle con .dash-pill) --- */
+/* Antes: 9999px (muy redondo). Ahora: 22px/16px para un look más sobrio. */
+.dash-pill .dash-card { border-radius: 22px; }
+.dash-pill .dash-icon { border-radius: 16px; }
