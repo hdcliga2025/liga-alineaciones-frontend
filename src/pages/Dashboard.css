@@ -8,22 +8,22 @@
 .dash-wrap {
   max-width: 1080px;
   margin: 0 auto;
-  padding: 72px 16px 16px;  /* ↑ padding-top para non quedar debaixo da barra fixa */
+  padding: 60px 16px 16px;  /* ↓ máis cerca da barra fixa */
   position: relative;
   overflow: hidden;
 }
 
 /* Header:
    - Base (móbil/tablet): 2 columnas, SUPER xuntas (imaxe esquerda + texto dereita)
-   - PC (>=960px): apilar (imaxe grande centrada enriba + texto debaixo) */
+   - PC (>=960px): apilar (imaxe centrada enriba + texto debaixo) */
 .dash-hero.two-cols {
   width: min(92vw, 380px);
-  margin: 8px auto 18px;       /* + espazo cara as cards */
+  margin: 6px auto 18px;       /* lixeiro axuste superior */
   display: grid;
   grid-template-columns: 1fr 1fr;
   align-items: center;
   justify-items: center;
-  gap: 1px;                     /* aínda máis xuntas en móbil */
+  gap: 1px;                     /* máis xuntas en móbil */
 }
 @media (min-width: 560px) {
   .dash-hero.two-cols { width: min(92vw, 760px); gap: 2px; }
@@ -50,26 +50,27 @@
 }
 
 /* Saúdo:
-   - móbil: máis grande, sen negrita, 4 liñas (coas <br> só en móbil)
-   - PC: tamaño contido */
+   - móbil: grande, sen negrita, 4 liñas (coas <br> só en móbil)
+   - PC: nunha soa liña e tamaño contido */
 .dash-greet {
-  font-size: 22px;              /* máis grande en móbil */
+  font-size: 22px;              /* móbil */
   line-height: 1.22;
   margin: 0;
   color: var(--celeste);
   text-align: center;
-  font-weight: 400;             /* SEN negrita */
-  padding-right: 16px;          /* máis separación do marxe dereito */
+  font-weight: 400;             /* sen negrita */
+  padding-right: 18px;          /* un chisco máis de marxe dereito */
 }
 .dash-name {
   font-weight: 400;
-  text-decoration: underline;   /* subliñado do nome */
+  color: #111;                  /* nome en negro */
+  text-decoration: none;        /* sen subliñado */
 }
 
 /* Saltos só en móbil: en PC amósase nunha soa liña */
 .only-mobile { display: inline; }
 @media (min-width: 960px) {
-  .dash-greet { font-size: 26px; }  /* PC un chisco máis pequeno */
+  .dash-greet { font-size: 26px; }  /* PC algo máis pequeno para elegancia */
   .only-mobile { display: none; }
 }
 

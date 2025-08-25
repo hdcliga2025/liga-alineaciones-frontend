@@ -83,19 +83,20 @@ export default function Dashboard() {
 
   return (
     <main class="dash-wrap dash-pill">
-      {/* Móbil/tablet: imaxe esquerda + texto dereita (super xuntos)
+      {/* Móbil/tablet: imaxe esquerda + texto dereita (super xuntas)
           PC (>=960px): imaxe centrada enriba + texto debaixo */}
       <div class="dash-hero two-cols center-hero">
         <div class="dash-hero-col">
           <img src="/logoHDC.jpg" alt="Logo HDC" class="dash-hero-img fill-col" />
         </div>
         <div class="dash-hero-center">
+          {/* NOTA: engado espazos finais en cada tramo para que en PC (sen <br>) non se xunten as palabras */}
           <p class="dash-greet">
-            <span class="dash-line">Boas <strong class="dash-name">{firstName}</strong>,</span>
+            <span class="dash-line">
+              Boas <strong class="dash-name">{firstName}</strong>, benvidx á{" "}
+            </span>
             <br class="only-mobile" />
-            <span class="dash-line">benvidx á</span>
-            <br class="only-mobile" />
-            <span class="dash-line">Liga das</span>
+            <span class="dash-line">Liga das{" "} </span>
             <br class="only-mobile" />
             <span class="dash-line">Aliñacións</span>
           </p>
