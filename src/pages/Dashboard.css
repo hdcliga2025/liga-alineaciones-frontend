@@ -19,36 +19,24 @@
   font-weight: 800;
 }
 
-/* 👉 2 columnas tamén en móbil */
+/* 2 columnas tamén en móbil */
 .dash-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
-/* Base card máis estreita e limpa */
+/* Card simple e estable */
 .dash-card {
-  position: relative;
   display: block;
-  background: #fff;
+  background: #ffffff;
   border-radius: 16px;
-  padding: 12px;
+  padding: 16px;
   text-decoration: none;
   color: inherit;
   border: 1px solid #eef2ff;
   box-shadow: 0 2px 8px var(--dash-shadow);
   transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
-  overflow: hidden;
-  min-height: 104px; /* máis estreitas */
-}
-
-.dash-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 16px;
-  background: linear-gradient(180deg, rgba(37,99,235,0.06), rgba(37,99,235,0));
-  pointer-events: none;
 }
 
 .dash-card:hover {
@@ -57,18 +45,31 @@
   border-color: #dbeafe;
 }
 
-/* Layout “media esquerda + texto dereita” */
-.dash-card--media {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.dash-card-header {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 6px;
 }
 
-/* Bloque de imaxe/icono grande */
-.dash-media {
-  flex: 0 0 86px;
-  width
+.dash-card-desc {
+  font-size: 13px;
+  color: #4b5563;
+  margin: 0 0 10px 0;
+}
 
-/* deploy-bump 2025-08-25T00:26:12 */
+.dash-card-cta {
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, var(--dash-accent), var(--dash-accent-2));
+  padding: 6px 10px;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(29,78,216,.25);
+}
 
-/* deploy-bump 2025-08-25T00:28:00 */
+/* Pequenos axustes en pantallas moi pequenas mantendo 2 columnas */
+@media (max-width: 380px) {
+  .dash-card { padding: 12px; }
+  .dash-card-header { font-size: 15px; }
+  .dash-card-desc { font-size: 12px; }
+}
