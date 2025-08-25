@@ -41,16 +41,20 @@ export default function Login() {
 
   const styles = {
     wrap: {
-      maxWidth: 440, margin: "84px auto 40px", padding: "0 16px",
+      maxWidth: 440,
+      margin: "40px auto 36px",          // menos altura
+      padding: "0 16px",
       fontFamily: "Montserrat, system-ui, sans-serif",
     },
-    form: { display: "grid", gap: 8, marginTop: 0 }, // máis xunto
+    // truco: anulamos el padding del contenedor de pestañas
+    shim: { marginTop: "-22px" },        // sube el bloque bajo las tabs
+    form: { display: "grid", gap: 6, marginTop: 0 },
     label: { fontSize: 14, fontWeight: 600, color: "#0f172a" },
     input: {
       width: "100%", padding: "10px 12px", borderRadius: 12,
       border: "1px solid #e5e7eb", outline: "none", fontSize: 15, background: "#fff",
     },
-    actions: { display: "grid", gap: 6, marginTop: 6 }, // campos pegadiños aos botóns
+    actions: { display: "grid", gap: 6, marginTop: 6 },
     primary: {
       padding: "10px 14px", borderRadius: 14, border: "1px solid #0ea5e9",
       background: "linear-gradient(135deg,#93c5fd,#60a5fa)", color: "#fff",
@@ -65,30 +69,32 @@ export default function Login() {
 
   return (
     <main style={styles.wrap}>
-      <form onSubmit={handleSubmit} style={styles.form} noValidate>
-        <label style={styles.label} for="email">Correo electrónico</label>
-        <input
-          id="email" name="email" type="email" required
-          value={form.email} onInput={handleChange} style={styles.input} autoComplete="email"
-        />
+      <div style={styles.shim}>
+        <form onSubmit={handleSubmit} style={styles.form} noValidate>
+          <label style={styles.label} for="email">Correo electrónico</label>
+          <input
+            id="email" name="email" type="email" required
+            value={form.email} onInput={handleChange} style={styles.input} autoComplete="email"
+          />
 
-        <label style={styles.label} for="password">Contrasinal</label>
-        <input
-          id="password" name="password" type="password" required
-          value={form.password} onInput={handleChange} style={styles.input} autoComplete="current-password"
-        />
+          <label style={styles.label} for="password">Contrasinal</label>
+          <input
+            id="password" name="password" type="password" required
+            value={form.password} onInput={handleChange} style={styles.input} autoComplete="current-password"
+          />
 
-        {error && <p style={styles.err}>{error}</p>}
+          {error && <p style={styles.err}>{error}</p>}
 
-        <div style={styles.actions}>
-          <button type="submit" style={styles.primary} disabled={loading}>
-            {loading ? "Accedendo..." : "Entra"}
-          </button>
-          <button style={styles.secondary} onClick={goRegister}>
-            Rexístrate
-          </button>
-        </div>
-      </form>
+          <div style={styles.actions}>
+            <button type="submit" style={styles.primary} disabled={loading}>
+              {loading ? "Accedendo..." : "Entra"}
+            </button>
+            <button style={styles.secondary} onClick={goRegister}>
+              Rexístrate
+            </button>
+          </div>
+        </form>
+      </div>
     </main>
   );
 }

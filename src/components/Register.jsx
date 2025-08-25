@@ -35,8 +35,7 @@ export default function Register({ onSuccess }) {
     }
 
     const phoneDigits = form.phone.trim();
-    const phoneOk = /^[0-9]{9,15}$/.test(phoneDigits);
-    if (!phoneOk) {
+    if (!/^[0-9]{9,15}$/.test(phoneDigits)) {
       return setError("O teléfono debe ter só díxitos (9–15).");
     }
 
@@ -66,9 +65,10 @@ export default function Register({ onSuccess }) {
   };
 
   const styles = {
-    wrap: { maxWidth: 520, margin: "72px auto 40px", padding: "0 16px",
+    wrap: { maxWidth: 520, margin: "40px auto 36px", padding: "0 16px",
       fontFamily: "Montserrat, system-ui, sans-serif" },
-    form: { display: "grid", gap: 10 }, // máis xunto
+    shim: { marginTop: "-22px" },
+    form: { display: "grid", gap: 8 },
     label: { fontSize: 14, fontWeight: 600, color: "#0f172a" },
     input: {
       width: "100%", padding: "10px 12px", borderRadius: 12,
@@ -77,7 +77,7 @@ export default function Register({ onSuccess }) {
     helpInline: { fontSize: 12, color: "#6b7280", marginLeft: 8 },
     err: { color: "#b91c1c", fontSize: 13 },
     info: { color: "#065f46", fontSize: 13 },
-    actions: { display: "grid", gap: 8, marginTop: 6 },
+    actions: { display: "grid", gap: 6, marginTop: 6 },
     primary: {
       padding: "10px 14px", borderRadius: 14, border: "1px solid #0ea5e9",
       background: "linear-gradient(135deg,#93c5fd,#60a5fa)", color: "#fff",
@@ -87,53 +87,45 @@ export default function Register({ onSuccess }) {
 
   return (
     <main style={styles.wrap}>
-      <form class="register-form" onSubmit={handleSubmit} noValidate style={styles.form}>
-        <label style={styles.label} for="nomeCompleto">Nome e apelidos</label>
-        <input
-          id="nomeCompleto" type="text" name="nomeCompleto"
-          value={form.nomeCompleto} onInput={handleChange} required autoComplete="name"
-          style={styles.input}
-        />
+      <div style={styles.shim}>
+        <form class="register-form" onSubmit={handleSubmit} noValidate style={styles.form}>
+          <label style={styles.label} for="nomeCompleto">Nome e apelidos</label>
+          <input id="nomeCompleto" type="text" name="nomeCompleto"
+            value={form.nomeCompleto} onInput={handleChange} required autoComplete="name"
+            style={styles.input} />
 
-        <label style={styles.label} for="phone">Número de teléfono móbil</label>
-        <input
-          id="phone" type="tel" name="phone" inputMode="numeric"
-          value={form.phone} onInput={handleChange} autoComplete="tel"
-          style={styles.input}
-        />
+          <label style={styles.label} for="phone">Número de teléfono móbil</label>
+          <input id="phone" type="tel" name="phone" inputMode="numeric"
+            value={form.phone} onInput={handleChange} autoComplete="tel"
+            style={styles.input} />
 
-        <label style={styles.label} for="email">Correo electrónico</label>
-        <input
-          id="email" type="email" name="email"
-          value={form.email} onInput={handleChange} required autoComplete="email"
-          style={styles.input}
-        />
+          <label style={styles.label} for="email">Correo electrónico</label>
+          <input id="email" type="email" name="email"
+            value={form.email} onInput={handleChange} required autoComplete="email"
+            style={styles.input} />
 
-        <label style={styles.label} for="password">
-          Contrasinal <span style={styles.helpInline}>[mínimo 8 caracteres]</span>
-        </label>
-        <input
-          id="password" type="password" name="password"
-          value={form.password} onInput={handleChange} required autoComplete="new-password"
-          minlength={8} style={styles.input}
-        />
+          <label style={styles.label} for="password">
+            Contrasinal <span style={styles.helpInline}>[mínimo 8 caracteres]</span>
+          </label>
+          <input id="password" type="password" name="password"
+            value={form.password} onInput={handleChange} required autoComplete="new-password"
+            minlength={8} style={styles.input} />
 
-        <label style={styles.label} for="confirmPassword">Confirma o contrasinal</label>
-        <input
-          id="confirmPassword" type="password" name="confirmPassword"
-          value={form.confirmPassword} onInput={handleChange} required autoComplete="new-password"
-          minlength={8} style={styles.input}
-        />
+          <label style={styles.label} for="confirmPassword">Confirma o contrasinal</label>
+          <input id="confirmPassword" type="password" name="confirmPassword"
+            value={form.confirmPassword} onInput={handleChange} required autoComplete="new-password"
+            minlength={8} style={styles.input} />
 
-        {error && <p style={styles.err}>{error}</p>}
-        {msg && <p style={styles.info}>{msg}</p>}
+          {error && <p style={styles.err}>{error}</p>}
+          {msg && <p style={styles.info}>{msg}</p>}
 
-        <div style={styles.actions}>
-          <button type="submit" disabled={loading} style={styles.primary}>
-            {loading ? "Rexistrando..." : "Crear conta"}
-          </button>
-        </div>
-      </form>
+          <div style={styles.actions}>
+            <button type="submit" disabled={loading} style={styles.primary}>
+              {loading ? "Rexistrando..." : "Crear conta"}
+            </button>
+          </div>
+        </form>
+      </div>
     </main>
   );
 }
