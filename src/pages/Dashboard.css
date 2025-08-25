@@ -17,11 +17,18 @@
   font-weight: 800;
 }
 
-/* 2 columnas tamén en móbil */
+/* 🔹 Por defecto: 1 columna (móvil) */
 .dash-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 12px;
+}
+
+/* 🔹 Desde ~560px (tableta/desktop): 2 columnas */
+@media (min-width: 560px) {
+  .dash-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .dash-card {
@@ -66,30 +73,4 @@
 .dash-icon--proximo      { background: linear-gradient(135deg, #e0f2fe, #bfdbfe); }
 .dash-icon--alineacion   { background: linear-gradient(135deg, #fde68a, #f59e0b); }
 .dash-icon--convocatoria { background: linear-gradient(135deg, #fce7f3, #f9a8d4); }
-.dash-icon--pasados      { background: linear-gradient(135deg, #e5e7eb, #cbd5e1); }
-.dash-icon--vindeiros    { background: linear-gradient(135deg, #dcfce7, #86efac); }
-.dash-icon--fai11        { background: linear-gradient(135deg, #fee2e2, #fca5a5); }
-.dash-icon--ultimo       { background: linear-gradient(135deg, #fae8ff, #d8b4fe); }
-.dash-icon--xeral        { background: linear-gradient(135deg, #dbeafe, #93c5fd); }
-.dash-icon--book         { background: linear-gradient(135deg, #e0e7ff, #a5b4fc); }
-.dash-icon--gear         { background: linear-gradient(135deg, #f1f5f9, #e2e8f0); }
-
-.dash-text {
-  display: grid;
-  align-content: center;
-  gap: 6px;
-}
-
-.dash-card-header {
-  font-size: 17px;
-  font-weight: 700;
-  margin: 0;
-}
-
-.dash-card-desc {
-  font-size: 13px;
-  color: #4b5563;
-  margin: 0;
-}
-
-/* Axustes en pantallas moi pequenas mantend*
+.dash-icon--pasados      { background: linear-gradient(135deg, #e5e7eb, #cb
