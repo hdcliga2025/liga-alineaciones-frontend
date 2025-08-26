@@ -112,15 +112,14 @@ body {
 .eye-btn { width: 32px; height: 32px; display: grid; place-items: center; background: transparent; border: 0; cursor: pointer; opacity: .9; flex: 0 0 auto; }
 .eye-btn:hover { opacity: 1; }
 
-/* Envoltura del botón (ligeramente más oscura que antes) */
+/* Envoltura del botón — sombra suave (como al principio) */
 .cta-wrap{
   background:#f7fafc;
   border:none;
   border-radius:12px;
   padding:6px;
   margin-top:10px;
-  /* sombra/contorno más marcado para login y registro */
-  box-shadow: 0 8px 22px rgba(0,0,0,0.12);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
 }
 
 /* Botón principal */
@@ -128,7 +127,7 @@ body {
   width: 100%;
   height: var(--auth-row-h);
   padding: 0 16px;
-  border: 1px solid #d1d7e6;   /* contorno un poco más visible */
+  border: 1px solid var(--border);
   border-radius: 10px;
   background: #ffffff;
   color: var(--celeste);
@@ -141,8 +140,7 @@ body {
 .auth-card button[type="submit"]:hover {
   background: var(--celeste);
   color: #ffffff;
-  box-shadow: 0 16px 40px rgba(0,163,224,.24);
-  border-color: #c4ccde;
+  box-shadow: 0 12px 34px rgba(0,163,224,.20);
 }
 
 /* Footer */
