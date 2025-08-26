@@ -60,6 +60,7 @@ export default function Register() {
     <form onSubmit={onSubmit} noValidate>
       {/* Nome */}
       <div class="input-row" style={{ marginBottom: '10px' }}>
+        {/* usuario */}
         <svg class="icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="#6b7280" stroke-width="1.5"/>
           <path d="M4 20a8 8 0 1 1 16 0" stroke="#6b7280" stroke-width="1.5"/>
@@ -75,11 +76,15 @@ export default function Register() {
         />
       </div>
 
-      {/* Apelidos (mismo icono que Nome) */}
+      {/* Apelidos — doble monigote */}
       <div class="input-row" style={{ marginBottom: '10px' }}>
         <svg class="icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="#6b7280" stroke-width="1.5"/>
-          <path d="M4 20a8 8 0 1 1 16 0" stroke="#6b7280" stroke-width="1.5"/>
+          {/* persona izquierda */}
+          <path d="M9 10.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="#6b7280" stroke-width="1.5"/>
+          <path d="M2.5 20c.7-3.8 3.9-6 6.5-6s5.8 2.2 6.5 6" stroke="#6b7280" stroke-width="1.5"/>
+          {/* persona derecha (ligeramente más pequeña y desplazada) */}
+          <path d="M16 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="#6b7280" stroke-width="1.5"/>
+          <path d="M13.2 20c.6-3.1 3.1-5 5.3-5" stroke="#6b7280" stroke-width="1.5"/>
         </svg>
         <input
           id="last"
@@ -92,11 +97,12 @@ export default function Register() {
         />
       </div>
 
-      {/* Móbil (smartphone minimal) */}
+      {/* Móbil — handset estilizado */}
       <div class="input-row" style={{ marginBottom: '10px' }}>
         <svg class="icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <rect x="7" y="2.5" width="10" height="19" rx="2.5" stroke="#6b7280" stroke-width="1.5"/>
-          <circle cx="12" cy="18.5" r="1" fill="#6b7280"/>
+          <g stroke="#6b7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 5.5l2.7-2.7a2 2 0 0 1 2.8 0l1.2 1.2a2 2 0 0 1 0 2.8l-.9.9a2.5 2.5 0 0 0 0 3.5l4 4a2.5 2.5 0 0 0 3.5 0l.9-.9a2 2 0 0 1 2.8 0l1.2 1.2a2 2 0 0 1 0 2.8l-2.7 2.7c-1.3 1.3-3.3 1.4-4.9.5-2.6-1.5-5.6-4.2-8.6-7.2s-5.7-6-7.2-8.6c-.9-1.6-.8-3.6.5-4.9Z"/>
+          </g>
         </svg>
         <input
           id="phone"
@@ -128,7 +134,7 @@ export default function Register() {
         />
       </div>
 
-      {/* Contrasinal + ollo */}
+      {/* Contrasinal + ojo */}
       <div class="input-row" style={{ marginBottom: '10px' }}>
         <svg class="icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect x="5" y="10" width="14" height="10" rx="2" stroke="#6b7280" stroke-width="1.5"/>
@@ -166,7 +172,7 @@ export default function Register() {
         </button>
       </div>
 
-      {/* Confirma + ollo (placeholder “Confirma”) */}
+      {/* Confirma + ojo (placeholder “Confirma”) */}
       <div class="input-row">
         <svg class="icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect x="5" y="10" width="14" height="10" rx="2" stroke="#6b7280" stroke-width="1.5"/>

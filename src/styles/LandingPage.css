@@ -1,3 +1,4 @@
+/* src/styles/LandingPage.css */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap');
 
 :root {
@@ -16,13 +17,19 @@
 * { box-sizing: border-box; }
 html, body, #app { height: 100%; }
 
-/* FONDO BLANCO FORZADO en landing */
+/* Fondo blanco forzado en landing */
 html, body, #app { background: #ffffff !important; }
 
 body {
   margin: 0;
   font-family: var(--font-sans);
   color: var(--text);
+}
+
+/* Solo lectores de pantalla (accesibilidad) */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
 
 /* Layout principal */
@@ -37,7 +44,7 @@ body {
 /* Main */
 .landing-main { width: 100%; display: flex; flex-direction: column; align-items: center; padding: 14px 16px 24px; }
 
-/* Tarxeta auth */
+/* Tarjeta auth */
 .auth-card {
   width: 100%;
   max-width: 440px;
@@ -76,10 +83,10 @@ body {
   box-shadow: 0 2px 10px rgba(0,0,0,0.04);
 }
 
-/* Contido — mismo padding lateral que los tabs */
+/* Contenido */
 .tab-body { padding: 8px 6px 4px; }
 
-/* Filas de input (misma altura que botón) */
+/* Filas de input (misma altura que el botón) */
 .input-row {
   display: flex; align-items: center; gap: 12px;
   height: var(--auth-row-h);
@@ -88,54 +95,54 @@ body {
   background: #fff;
   padding: 0 14px;
   transition: border-color .15s, box-shadow .15s;
-  overflow: hidden;                 /* evita que nada “salga” en móvil */
+  overflow: hidden;
 }
 .input-row:focus-within {
   border-color: #dbeafe;
   box-shadow: 0 0 0 3px rgba(59,130,246,.16);
 }
 .input-row input {
-  flex: 1 1 0;                      /* permite encoger sin empujar el ojo fuera */
-  min-width: 0;                     /* evita desbordes en pantallas estrechas */
+  flex: 1 1 0; min-width: 0;
   border: none; outline: none; background: transparent;
   font-family: var(--font-sans); font-size: 15px; line-height: 1.25;
 }
 
-/* Iconos (no se encogen) */
+/* Iconos */
 .icon-24 { width: 24px; height: 24px; opacity: .85; flex: 0 0 auto; }
 .eye-btn { width: 32px; height: 32px; display: grid; place-items: center; background: transparent; border: 0; cursor: pointer; opacity: .9; flex: 0 0 auto; }
 .eye-btn:hover { opacity: 1; }
 
-/* Envoltura del botón — IGUAL a la caja de los tabs, PERO SIN BORDE (solo sombra) */
+/* Envoltura del botón (ligeramente más oscura que antes) */
 .cta-wrap{
   background:#f7fafc;
-  /* border eliminado a petición */
-  border: none;
+  border:none;
   border-radius:12px;
   padding:6px;
   margin-top:10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  /* sombra/contorno más marcado para login y registro */
+  box-shadow: 0 8px 22px rgba(0,0,0,0.12);
 }
 
-/* Botón principal dentro de la caja */
+/* Botón principal */
 .auth-card button[type="submit"] {
   width: 100%;
   height: var(--auth-row-h);
   padding: 0 16px;
-  border: 1px solid var(--border);  /* marco discreto del propio botón */
+  border: 1px solid #d1d7e6;   /* contorno un poco más visible */
   border-radius: 10px;
   background: #ffffff;
   color: var(--celeste);
   font-weight: 600;
-  font-size: 17px;                  /* un poco más grande */
+  font-size: 17px;
   cursor: pointer;
-  transition: background .18s, color .18s, box-shadow .18s, transform .06s;
+  transition: background .18s, color .18s, box-shadow .18s, transform .06s, border-color .18s;
   font-family: var(--font-sans);
 }
 .auth-card button[type="submit"]:hover {
   background: var(--celeste);
   color: #ffffff;
-  box-shadow: 0 12px 34px rgba(0,163,224,.20);
+  box-shadow: 0 16px 40px rgba(0,163,224,.24);
+  border-color: #c4ccde;
 }
 
 /* Footer */
@@ -150,10 +157,10 @@ body {
   background: #ffffff;
 }
 
-/* Móbil: iconos máis grandes e mellor encaixe do ollo */
+/* Móvil */
 @media (max-width: 480px) {
   .icon-24 { width: 28px; height: 28px; }
-  .eye-btn { width: 30px; height: 30px; }   /* lixeiramente máis pequeno para caber mellor */
-  .input-row { gap: 10px; padding: 0 10px; }/* máis espazo útil dentro do campo */
+  .eye-btn { width: 30px; height: 30px; }
+  .input-row { gap: 10px; padding: 0 10px; }
   .input-row input { font-size: 16px; }
 }
