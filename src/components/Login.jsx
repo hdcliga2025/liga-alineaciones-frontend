@@ -89,8 +89,9 @@ export default function Login() {
 
       {err && <p style="margin:8px 0 0;color:#b91c1c">{err}</p>}
 
+      {/* O estilo/ombreado e borde veñen de LandingPage.css (igual ás tabs) */}
       <button type="submit" disabled={loading}>
-        {loading ? 'Accedendo…' : 'Veña, dálle!!'}
+        {loading ? 'Accedendo…' : 'Fillos dunha paixón, imos!!'}
       </button>
     </form>
   );

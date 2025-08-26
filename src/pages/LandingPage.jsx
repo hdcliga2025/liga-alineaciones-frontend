@@ -3,6 +3,7 @@ import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import Login from '../components/Login.jsx';
 import Register from '../components/Register.jsx';
+import Footer from '../components/Footer.jsx';
 import '../styles/LandingPage.css';
 
 export default function LandingPage() {
@@ -39,10 +40,10 @@ export default function LandingPage() {
             {tab === 'login' ? <Login /> : <Register />}
           </div>
         </div>
-
-        {/* Tagline DEBAIXO da caixa de login/registro */}
-        <p class="landing-tagline-below">Fillos dunha paixón</p>
       </main>
+
+      {/* Footer restaurado */}
+      <Footer />
     </div>
   );
 }
