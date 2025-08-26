@@ -9,17 +9,19 @@
   --shadow: 0 8px 30px rgba(0,0,0,0.08);
   --font-sans: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 
-  /* NUEVO: altura común para inputs y botón */
+  /* Altura común para inputs y botón */
   --auth-row-h: 50px;
 }
 
 * { box-sizing: border-box; }
 html, body, #app { height: 100%; }
 
+/* FONDO BLANCO FORZADO en landing */
+html, body, #app { background: #ffffff !important; }
+
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background: var(--bg);
   color: var(--text);
 }
 
@@ -33,7 +35,7 @@ body {
 .landing-subtitle { margin: 6px 0 0 0; font-weight: 500; color: var(--celeste); opacity: 0.95; line-height: 1.1; font-size: clamp(16px, 3.8vw, 22px); }
 
 /* Main */
-.landing-main { width: 100%; display: flex; justify-content: center; padding: 14px 16px 24px; }
+.landing-main { width: 100%; display: flex; flex-direction: column; align-items: center; padding: 14px 16px 24px; }
 
 /* Tarxeta auth */
 .auth-card {
@@ -55,7 +57,6 @@ body {
   padding: 6px;
   margin-bottom: 8px;
 }
-
 .tab-btn {
   flex: 1;
   border: none;
@@ -68,7 +69,6 @@ body {
   font-family: var(--font-sans);
   font-size: 15px;
 }
-
 .tab-btn.is-active {
   background: #ffffff;
   color: var(--celeste);
@@ -76,14 +76,12 @@ body {
   box-shadow: 0 2px 10px rgba(0,0,0,0.04);
 }
 
-/* Contido — AJUSTE CLAVE: mismo padding lateral que los tabs (6px) */
+/* Contido — mismo padding lateral que los tabs */
 .tab-body { padding: 8px 6px 4px; }
 
-/* ====== NUEVO: filas de input con icono y ojo, altura igual al botón ====== */
+/* Filas de input (misma altura que botón) */
 .input-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  display: flex; align-items: center; gap: 12px;
   height: var(--auth-row-h);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -92,36 +90,26 @@ body {
   transition: border-color .15s, box-shadow .15s;
 }
 .input-row:focus-within {
-  border-color: #dbeafe;                   /* borde suave al foco */
+  border-color: #dbeafe;
   box-shadow: 0 0 0 3px rgba(59,130,246,.16);
 }
 .input-row input {
-  flex: 1;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-family: var(--font-sans);
-  font-size: 15px;
-  line-height: 1.25;
+  flex: 1; border: none; outline: none; background: transparent;
+  font-family: var(--font-sans); font-size: 15px; line-height: 1.25;
 }
 
-/* Iconos coherentes (sobre/candado/ollo) */
+/* Iconos */
 .icon-24 { width: 24px; height: 24px; opacity: .85; }
-.eye-btn {
-  width: 32px; height: 32px;
-  display: grid; place-items: center;
-  background: transparent; border: 0; cursor: pointer; opacity: .9;
-}
+.eye-btn { width: 32px; height: 32px; display: grid; place-items: center; background: transparent; border: 0; cursor: pointer; opacity: .9; }
 .eye-btn:hover { opacity: 1; }
 
-/* Botón principal — IGUAL que “Entra” (blanco, borde gris suave, sombra) */
-/* Ancho 100% (equivale al ancho de los dos tabs juntos) */
+/* Botón principal — estilo tipo tabs (borde gris + sombra ligera) */
 .auth-card button[type="submit"] {
   width: 100%;
   height: var(--auth-row-h);
   margin-top: 14px;
   padding: 0 16px;
-  border: 1px solid #e6e9f0;
+  border: 1px solid var(--border);
   border-radius: 12px;
   background: #ffffff;
   color: var(--celeste);
@@ -130,7 +118,7 @@ body {
   cursor: pointer;
   transition: background .18s, color .18s, box-shadow .18s, transform .06s;
   font-family: var(--font-sans);
-  box-shadow: 0 8px 26px rgba(0,0,0,.06);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
 }
 .auth-card button[type="submit"]:hover {
   background: var(--celeste);
@@ -138,7 +126,17 @@ body {
   box-shadow: 0 12px 34px rgba(0,163,224,.20);
 }
 
-/* Footer pegado abaixo */
+/* Tagline debajo de la caja de login */
+.landing-tagline-below {
+  margin: 12px 0 0;
+  font-weight: 600;
+  color: var(--celeste);
+  line-height: 1.1;
+  font-size: clamp(16px, 3.8vw, 22px);
+  text-align: center;
+}
+
+/* Footer */
 .landing-footer {
   margin-top: auto;
   width: 100%;
@@ -149,9 +147,10 @@ body {
   border-top: 1px solid var(--border);
 }
 
-/* Pequenos axustes en móbil */
-@media (max-width: 400px) {
-  .auth-card { padding: 12px; }
-  .tab-btn { padding: 10px 12px; font-size: 14px; }
-  .tab-body { padding: 8px 6px 4px; }
+/* Móbil: iconos máis grandes */
+@media (max-width: 480px) {
+  .icon-24 { width: 28px; height: 28px; }
+  .eye-btn { width: 36px; height: 36px; }
+  .input-row { gap: 14px; }
+  .input-row input { font-size: 16px; }
 }

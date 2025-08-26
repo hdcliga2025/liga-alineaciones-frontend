@@ -1,49 +1,48 @@
+// src/pages/LandingPage.jsx
 import { h } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
-import Login from '../components/Login';
-import Register from '../components/Register';
+import { useState } from 'preact/hooks';
+import Login from '../components/Login.jsx';
+import Register from '../components/Register.jsx';
 import '../styles/LandingPage.css';
 
 export default function LandingPage() {
-  const [modo, setModo] = useState('login'); // 'login' | 'register'
-
-  useEffect(() => { window.scrollTo(0, 0); }, []);
+  const [tab, setTab] = useState('login');
 
   return (
     <div class="landing">
       <header class="landing-header">
-        {/* Logo desde /public */}
-        <img src="/logoHDC.jpg" alt="Heredeirxs do Celta" class="landing-logo" />
-        <h1 class="landing-title">Heredeirxs do Celta</h1>
-        <h2 class="landing-subtitle">Benvidxs á vosa comunidade celeste</h2>
+        <img src="/logoHDC.jpg" alt="HDC" class="landing-logo" />
+        <h1 class="landing-title">Heredéirxs do Celta</h1>
+        <p class="landing-subtitle">Benvidxs á vosa comunidade celeste</p>
       </header>
 
       <main class="landing-main">
         <div class="auth-card">
           <div class="auth-tabs">
             <button
-              class={`tab-btn ${modo === 'login' ? 'is-active' : ''}`}
-              onClick={() => setModo('login')}
+              class={`tab-btn ${tab === 'login' ? 'is-active' : ''}`}
+              onClick={() => setTab('login')}
+              type="button"
             >
               Entra
             </button>
             <button
-              class={`tab-btn ${modo === 'register' ? 'is-active' : ''}`}
-              onClick={() => setModo('register')}
+              class={`tab-btn ${tab === 'register' ? 'is-active' : ''}`}
+              onClick={() => setTab('register')}
+              type="button"
             >
               Rexístrate
             </button>
           </div>
 
           <div class="tab-body">
-            {modo === 'login' ? <Login /> : <Register />}
+            {tab === 'login' ? <Login /> : <Register />}
           </div>
         </div>
-      </main>
 
-      <footer class="landing-footer">
-        © {new Date().getFullYear()} Heredeirxs do Celta | Feito por Iago Fernández
-      </footer>
+        {/* Tagline DEBAIXO da caixa de login/registro */}
+        <p class="landing-tagline-below">Fillos dunha paixón</p>
+      </main>
     </div>
   );
 }
