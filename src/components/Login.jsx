@@ -10,7 +10,6 @@ export default function Login() {
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
-  const [btnHover, setBtnHover] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -19,12 +18,9 @@ export default function Login() {
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
-        password,
+        password
       });
-      if (error) {
-        setErr(error.message || 'Erro iniciando sesión.');
-        return;
-      }
+      if (error) return setErr(error.message || 'Erro iniciando sesión.');
       route('/dashboard', true);
     } catch (e2) {
       console.error(e2);
@@ -34,143 +30,157 @@ export default function Login() {
     }
   }
 
-  const cardStyle = {
-    background: '#fff',
-    border: '1px solid #e5e7eb',
-    borderRadius: '16px',
-    padding: '16px',
-    boxShadow: '0 8px 24px rgba(0,0,0,.06)',
-    maxWidth: '720px',             // MÁS LARGO
-    width: '100%',
-  };
-
-  const fieldStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '14px',
-    padding: '6px 16px',           // MENOS ALTO
-    minHeight: '40px',             // MENOS ALTO
-    background: '#fff',
-  };
-
-  const inputStyle = {
-    border: 'none',
-    outline: 'none',
-    flex: 1,
-    fontFamily: 'Montserrat, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
-    fontSize: '1rem',
-    background: 'transparent',
-    lineHeight: 1.2,
-  };
-
-  const iconSize = { width: 24, height: 24, opacity: 0.85 }; // ICONOS 24px
-
-  const btnStyle = {
-    width: '100%',
-    padding: '12px 20px',
-    border: '1px solid #3892ff',
-    borderRadius: '12px',          // MENOS REDONDEADO (como tab)
-    background: btnHover ? '#3892ff' : '#ffffff',
-    color: btnHover ? '#ffffff' : '#3892ff',
-    fontWeight: 700,
-    cursor: 'pointer',
-    boxShadow: btnHover
-      ? '0 12px 34px rgba(56,146,255,0.22)'
-      : '0 10px 30px rgba(56,146,255,0.12)',  // SOMBRA ELEGANTE como “Entra”
-    transition: 'all .18s ease',
-    marginTop: '12px',
-  };
+  // Constantes de estilo compartidas
+  const HEIGHT = 48; // misma altura inputs y botón
+  const BLUE = '#3892ff';
 
   return (
     <main
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        padding: '24px',
-        background: '#ffffff',
-        fontFamily:
-          'Montserrat, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
-      }}
+      id="login-root"
+      style="
+        display:flex;justify-content:center;padding:24px;
+        background:#ffffff;
+        font-family:'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      "
     >
-      <div style={cardStyle}>
-        <form onSubmit={handleSubmit} noValidate>
-          {/* Email */}
-          <div style={{ margin: '12px 0' }}>
-            <div style={fieldStyle} aria-label="Email">
-              {/* Sobre 24px */}
-              <svg viewBox="0 0 24 24" style={iconSize} fill="none" aria-hidden="true">
-                <rect x="3" y="5" width="18" height="14" rx="2" stroke="#6b7280" stroke-width="1.5" />
-                <path d="M3 6l9 7 9-7" stroke="#6b7280" stroke-width="1.5" />
-              </svg>
-              <input
-                id="email"
-                type="email"
-                placeholder="Email"
-                value={email}
-                onInput={(e) => setEmail(e.currentTarget.value)}
-                autoComplete="username"
-                required
-                style={inputStyle}
-              />
+      <style>{`
+        html, body, #app { background:#ffffff !important; }
+
+        #login-root { --blue:${BLUE}; }
+
+        /* Panel principal */
+        #login-root .panel{
+          background:#fff;border:1px solid #e5e7eb;border-radius:16px;
+          padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.06);
+          max-width:760px;width:100%;
+        }
+
+        /* Caja de datos con los mismos márgenes laterales que el bloque de tabs */
+        #login-root .fields-box{
+          margin: 0 24px;                         /* alineado con tabs */
+          background:#fff;border:1px solid #eef2ff;
+          border-radius:16px; padding:16px;
+          box-shadow:0 12px 32px rgba(56,146,255,.08);
+        }
+
+        #login-root .group{ margin:12px 0; }
+
+        /* Campo: menos alto, mismo alto que el botón, largo por la card */
+        #login-root .field{
+          display:flex;align-items:center;gap:12px;
+          border:1px solid #d1d5db;border-radius:12px;
+          background:#fff; padding:6px 16px; min-height:${HEIGHT}px;
+          transition:border-color .15s, box-shadow .15s;
+        }
+        #login-root .field:focus-within{
+          border-color:var(--blue);
+          box-shadow:0 0 0 3px rgba(56,146,255,.16);
+        }
+        #login-root .input{
+          border:none;outline:none;flex:1;background:transparent;
+          font-family:inherit;font-size:1rem; line-height:1.2;
+        }
+        #login-root .icon{ width:24px;height:24px;opacity:.85 }
+
+        /* Botón ojo en SVG, mismo trazo que sobre/candado */
+        #login-root .eye-btn{
+          width:28px;height:28px;display:grid;place-items:center;
+          background:transparent;border:0;cursor:pointer;opacity:.9;
+        }
+        #login-root .eye-btn:hover{ opacity:1 }
+
+        /* Botón Imos!! igual a “Entra”: caja blanca, borde azul, sombra; hover invertido */
+        #login-root .cta{
+          width:100%; min-height:${HEIGHT}px; padding:0 20px;
+          border:1px solid var(--blue);
+          border-radius:12px; background:#ffffff; color:var(--blue);
+          font-weight:700; cursor:pointer;
+          box-shadow:0 10px 28px rgba(56,146,255,.12);
+          transition:background .18s,color .18s,box-shadow .18s,transform .06s;
+          display:flex;align-items:center;justify-content:center;
+          margin:12px 24px 0;                      /* mismos márgenes laterales */
+        }
+        #login-root .cta:hover{
+          background:var(--blue); color:#ffffff;
+          box-shadow:0 14px 34px rgba(56,146,255,.22);
+        }
+        #login-root .cta:active{ transform:translateY(1px) }
+
+        #login-root .err{ margin:8px 24px 0; color:#b91c1c }
+      `}</style>
+
+      <div class="panel">
+        {/* Caja de introducción de datos alineada con los márgenes de las tabs */}
+        <div class="fields-box">
+          <form onSubmit={handleSubmit} noValidate>
+            {/* Email */}
+            <div class="group">
+              <div class="field" aria-label="Email">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <rect x="3" y="5" width="18" height="14" rx="2" stroke="#6b7280" stroke-width="1.5"/>
+                  <path d="M3 6l9 7 9-7" stroke="#6b7280" stroke-width="1.5"/>
+                </svg>
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onInput={(e)=>setEmail(e.currentTarget.value)}
+                  autoComplete="username"
+                  required
+                  class="input"
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Contrasinal */}
-          <div style={{ margin: '12px 0' }}>
-            <div style={fieldStyle} aria-label="Contrasinal">
-              {/* Candado 24px */}
-              <svg viewBox="0 0 24 24" style={iconSize} fill="none" aria-hidden="true">
-                <rect x="5" y="10" width="14" height="10" rx="2" stroke="#6b7280" stroke-width="1.5" />
-                <path d="M8 10V7a4 4 0 118 0v3" stroke="#6b7280" stroke-width="1.5" />
-              </svg>
-              <input
-                id="password"
-                type={showPwd ? 'text' : 'password'}
-                placeholder="Contrasinal"
-                value={password}
-                onInput={(e) => setPassword(e.currentTarget.value)}
-                autoComplete="current-password"
-                required
-                style={inputStyle}
-              />
-              {/* Ojo igual que en Rexistro (emoji), claro y funcional */}
-              <button
-                type="button"
-                aria-label={showPwd ? 'Ocultar contrasinal' : 'Amosar contrasinal'}
-                title={showPwd ? 'Ocultar' : 'Amosar'}
-                onClick={() => setShowPwd((s) => !s)}
-                style={{
-                  background: 'transparent',
-                  border: 0,
-                  cursor: 'pointer',
-                  fontSize: '18px',
-                  lineHeight: 1,
-                  opacity: 0.9,
-                }}
-              >
-                {showPwd ? '🙈' : '👁️'}
-              </button>
+            {/* Contrasinal */}
+            <div class="group">
+              <div class="field" aria-label="Contrasinal">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <rect x="5" y="10" width="14" height="10" rx="2" stroke="#6b7280" stroke-width="1.5"/>
+                  <path d="M8 10V7a4 4 0 118 0v3" stroke="#6b7280" stroke-width="1.5"/>
+                </svg>
+                <input
+                  id="password"
+                  type={showPwd ? 'text' : 'password'}
+                  placeholder="Contrasinal"
+                  value={password}
+                  onInput={(e)=>setPassword(e.currentTarget.value)}
+                  autoComplete="current-password"
+                  required
+                  class="input"
+                />
+                <button
+                  type="button"
+                  class="eye-btn"
+                  aria-label={showPwd ? 'Ocultar contrasinal' : 'Amosar contrasinal'}
+                  onClick={()=>setShowPwd(s=>!s)}
+                  title={showPwd ? 'Ocultar' : 'Amosar'}
+                >
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+                    {showPwd ? (
+                      <g stroke="#6b7280" stroke-width="1.6">
+                        <path d="M2 12s4.5-7 10-7 10 7 10 7-4.5 7-10 7S2 12 2 12Z"/>
+                        <circle cx="12" cy="12" r="3.2"/>
+                      </g>
+                    ) : (
+                      <g stroke="#6b7280" stroke-width="1.6">
+                        <path d="M2 12s4.5-7 10-7 10 7 10 7-4.5 7-10 7S2 12 2 12Z"/>
+                        <path d="M6 6l12 12"/>
+                      </g>
+                    )}
+                  </svg>
+                </button>
+              </div>
             </div>
-          </div>
 
-          {err && (
-            <p style={{ margin: '8px 0 0', color: '#b91c1c' }}>
-              {err}
-            </p>
-          )}
+            {err && <p class="err">{err}</p>}
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={btnStyle}
-            onMouseEnter={() => setBtnHover(true)}
-            onMouseLeave={() => setBtnHover(false)}
-          >
-            {loading ? 'Accedendo…' : 'Imos!!'}
-          </button>
-        </form>
+            <button type="submit" class="cta" disabled={loading}>
+              {loading ? 'Accedendo…' : 'Imos!!'}
+            </button>
+          </form>
+        </div>
       </div>
     </main>
   );
