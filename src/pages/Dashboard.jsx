@@ -4,59 +4,63 @@ import { useEffect, useState } from 'preact/hooks';
 import { supabase } from '../lib/supabaseClient.js';
 import './Dashboard.css';
 
-/* ---------- ICONS (stroke, estilo coherente con login/registro) ---------- */
+/* --------- NOVOS ICONOS (outline, redondeados e máis grandes) ---------- */
 const IcoBall = () => (
-  <svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <svg class="ico-svg" viewBox="0 0 24 24" fill="none">
     <circle cx="12" cy="12" r="9"/>
-    <path d="M9 6l3 2 3-2M6 9l2 3-2 3M18 9l-2 3 2 3M12 14l-3 2 1 3m5-5l3 2-1 3M9 6l-3 2M15 6l3 2"/>
+    <path d="M9 7.5l3 1.8 3-1.8M6.5 10l2 2.8-2 2.8M17.5 10l-2 2.8 2 2.8M12 13.8l-2.8 1.6 1 3M12 13.8l2.8 1.6-1 3"/>
   </svg>
 );
 const IcoShirt = () => (
-  <svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <svg class="ico-svg" viewBox="0 0 24 24" fill="none">
     <path d="M8 4l4 2 4-2 3 3-3 3v10H8V10L5 7l3-3z"/>
   </svg>
 );
 const IcoTrophy = () => (
-  <svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <svg class="ico-svg" viewBox="0 0 24 24" fill="none">
     <path d="M8 21h8M9 17h6M8 4h8v3a4 4 0 0 1-8 0V4z"/>
     <path d="M8 6H5a3 3 0 0 0 3 5M16 6h3a3 3 0 0 1-3 5"/>
   </svg>
 );
 const IcoCalendar = () => (
-  <svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <svg class="ico-svg" viewBox="0 0 24 24" fill="none">
     <rect x="3" y="5" width="18" height="16" rx="2"/>
     <path d="M16 3v4M8 3v4M3 10h18"/>
   </svg>
 );
 const IcoFlag = () => (
-  <svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M4 4v16M6 4h11l-2 4 2 4H6z"/>
+  <svg class="ico-svg" viewBox="0 0 24 24" fill="none">
+    <path d="M4 4v16"/>
+    <path d="M6 5h10l-2 4 2 4H6z"/>
   </svg>
 );
 const IcoBook = () => (
-  <svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <svg class="ico-svg" viewBox="0 0 24 24" fill="none">
     <path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/>
     <path d="M6 5h10"/>
   </svg>
 );
 const IcoTarget = () => (
-  <svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2m10-10h-2M4 12H2"/>
+  <svg class="ico-svg" viewBox="0 0 24 24" fill="none">
+    <circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M22 12h-2M4 12H2"/>
   </svg>
 );
 const IcoMegaphone = () => (
-  <svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M3 11v2l12 5V6L3 11z"/><path d="M17 7h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2"/>
+  <svg class="ico-svg" viewBox="0 0 24 24" fill="none">
+    <path d="M3 11v2l12 5V6L3 11z"/>
+    <path d="M17 7h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2"/>
     <path d="M7 13v4a2 2 0 0 0 2 2h1"/>
   </svg>
 );
-const IcoClip = () => (
-  <svg class="ico-svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M21 8l-9.5 9.5a4 4 0 0 1-5.7-5.7L13 4a3 3 0 0 1 4.2 4.2L9 16"/>
+const IcoClipboard = () => (
+  <svg class="ico-svg" viewBox="0 0 24 24" fill="none">
+    <rect x="5" y="5" width="14" height="16" rx="2"/>
+    <path d="M9 5V3h6v2M8 9h8M8 13h8M8 17h5"/>
   </svg>
 );
 
-/* ---------- helpers ---------- */
+/* ----------------- helpers ------------------ */
 function pickFirstNameLike({ first_name, full_name, email }) {
   if (first_name && String(first_name).trim()) {
     const s = String(first_name).trim();
@@ -78,7 +82,7 @@ export default function Dashboard() {
   const [name, setName] = useState('Amigx');
   const [now, setNow] = useState('');
 
-  /* Nome */
+  /* Nome curto desde profiles */
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -136,7 +140,7 @@ export default function Dashboard() {
 
   return (
     <div class="dash-wrap">
-      {/* HERO */}
+      {/* HERO arriba de todo */}
       <div class="dash-hero two-cols">
         {/* Ruta pública a /public/logoHDC.jpg */}
         <img class="dash-hero-img fill-col" src="/logoHDC.jpg" alt="HDC Liga" />
@@ -213,7 +217,7 @@ export default function Dashboard() {
               </div>
             </a>
             <a href="/haz-tu-11" class="subcard">
-              <div class="sub-ico sub-ico--clip"><IcoClip/></div>
+              <div class="sub-ico sub-ico--clip"><IcoClipboard/></div>
               <div class="sub-texts">
                 <p class="sub-title">Aliñación oficial</p>
                 <p class="sub-desc">Publicación do 11 do club</p>
