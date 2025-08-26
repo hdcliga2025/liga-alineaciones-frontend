@@ -4,15 +4,15 @@ import { Link } from "preact-router/match";
 
 export default function Header() {
   const wrap = {
-    padding: "10px 16px",
-    background: "rgba(0, 64, 128, 0.28)",     // máis transparente
+    padding: "8px 14px",
+    background: "rgba(0, 64, 128, 0.06)",     // lo máis transparente posible pero visible
     color: "white",
     display: "flex",
     alignItems: "center",
-    gap: "20px",
-    backdropFilter: "saturate(120%) blur(4px)", // lixeiro efecto, opcional
-    WebkitBackdropFilter: "saturate(120%) blur(4px)",
-    borderBottom: "1px solid rgba(255,255,255,0.15)",
+    gap: "18px",
+    backdropFilter: "saturate(120%) blur(3px)",
+    WebkitBackdropFilter: "saturate(120%) blur(3px)",
+    borderBottom: "1px solid rgba(255,255,255,0.08)",
   };
 
   const link = {
@@ -34,15 +34,15 @@ export default function Header() {
         <Link activeClassName="active" href="/" style={link} activeStyle={linkActive}>
           Inicio
         </Link>
-        <span style={{ opacity: 0.4 }}>|</span>
+        <span style={{ opacity: 0.35 }}>|</span>
         <Link activeClassName="active" href="/partidos" style={link} activeStyle={linkActive}>
           Partidos
         </Link>
-        <span style={{ opacity: 0.4 }}>|</span>
+        <span style={{ opacity: 0.35 }}>|</span>
         <Link activeClassName="active" href="/haztu11" style={link} activeStyle={linkActive}>
           Fai o teu 11
         </Link>
-        <span style={{ opacity: 0.4 }}>|</span>
+        <span style={{ opacity: 0.35 }}>|</span>
         <Link activeClassName="active" href="/clasificacion" style={link} activeStyle={linkActive}>
           Clasificación
         </Link>
@@ -50,3 +50,4 @@ export default function Header() {
     </header>
   );
 }
+
