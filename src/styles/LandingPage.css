@@ -103,37 +103,27 @@ body {
 .eye-btn { width: 32px; height: 32px; display: grid; place-items: center; background: transparent; border: 0; cursor: pointer; opacity: .9; }
 .eye-btn:hover { opacity: 1; }
 
-/* Botón principal — estilo tipo tabs (borde gris + sombra ligera) */
+/* Botón principal — borde/sombra igual a tabs (con !important para ganar especificidad) */
 .auth-card button[type="submit"] {
   width: 100%;
   height: var(--auth-row-h);
   margin-top: 14px;
   padding: 0 16px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border) !important;           /* marco gris visible */
   border-radius: 12px;
   background: #ffffff;
   color: var(--celeste);
   font-weight: 600;
-  font-size: 15px;
+  font-size: 16px;                                       /* +1 punto */
   cursor: pointer;
   transition: background .18s, color .18s, box-shadow .18s, transform .06s;
   font-family: var(--font-sans);
-  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04) !important;    /* sombra como tabs */
 }
 .auth-card button[type="submit"]:hover {
   background: var(--celeste);
   color: #ffffff;
-  box-shadow: 0 12px 34px rgba(0,163,224,.20);
-}
-
-/* Tagline debajo de la caja de login */
-.landing-tagline-below {
-  margin: 12px 0 0;
-  font-weight: 600;
-  color: var(--celeste);
-  line-height: 1.1;
-  font-size: clamp(16px, 3.8vw, 22px);
-  text-align: center;
+  box-shadow: 0 12px 34px rgba(0,163,224,.20) !important;
 }
 
 /* Footer */
@@ -145,6 +135,7 @@ body {
   font-size: 12px;
   color: #64748b;
   border-top: 1px solid var(--border);
+  background: #ffffff; /* asegura branco baixo */
 }
 
 /* Móbil: iconos máis grandes */
