@@ -40,12 +40,12 @@ export default function Login() {
       "
     >
       <style>{`
-        /* Fondo branco garantido nesta vista */
+        /* Fondo branco garantido */
         html, body, #app { background:#ffffff !important; }
 
-        #login-root { --primary:#3892ff; --primary-600:#2e85f0; }
+        #login-root { --primary:#3892ff; --primary-600:#2f7fe6; }
 
-        /* Card máis ancha para alongar os campos */
+        /* Card máis ancha para alongar campos */
         #login-root .card{
           background:#fff;border:1px solid #e5e7eb;border-radius:16px;
           padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.06);
@@ -54,43 +54,44 @@ export default function Login() {
 
         #login-root .group{ margin:12px 0; }
 
-        /* Campos: menos altos (padding vertical 6px), min-height 42, iconas 24 */
+        /* Campos: menos altos e máis longos */
         #login-root .field{
           display:flex;align-items:center;gap:12px;
           border:1px solid #d1d5db;border-radius:14px;
-          padding:6px 16px; background:#fff; min-height:42px;
+          padding:6px 16px; background:#fff; min-height:40px;
           transition:border-color .15s ease, box-shadow .15s ease;
         }
         #login-root .field:focus-within{
           border-color:var(--primary);
-          box-shadow:0 0 0 3px rgba(56,146,255,.16);
+          box-shadow:0 0 0 3px rgba(56,146,255,.15);
         }
         #login-root .field input{
-          border:none;outline:none;flex:1;
-          font-family:inherit;font-size:1rem;background:transparent;
+          border:none;outline:none;flex:1;background:transparent;
+          font-family:inherit;font-size:1rem;line-height:1.2;
         }
         #login-root .icon{ width:24px;height:24px;opacity:.85 }
 
-        /* Ollo (igual filosofía que en rexistro: emoji) */
+        /* Botón-ollo (SVG, non emoji) */
         #login-root .eye-btn{
-          background:transparent;border:0;cursor:pointer;
-          font-size:18px;line-height:1;opacity:.85;
+          background:transparent;border:0;cursor:pointer;padding:0;margin:0;
+          width:28px;height:28px;display:grid;place-items:center;opacity:.85;
         }
         #login-root .eye-btn:hover{ opacity:1 }
 
-        /* Botón “Imos!!”: igual que a tab “Entra”, con inversión no hover */
+        /* Botón “Imos!!” como o tab “Entra”, con inversión no hover, menos redondeo */
         #login-root .cta{
           width:100%; padding:12px 20px;
           border:1px solid var(--primary) !important;
-          border-radius:9999px; background:#ffffff; color:var(--primary);
+          border-radius:12px;                          /* menos pill */
+          background:#ffffff; color:var(--primary);
           font-weight:700; cursor:pointer;
-          box-shadow:0 6px 18px rgba(56,146,255,0.14);
+          box-shadow:0 10px 30px rgba(56,146,255,0.12); /* sombrita elegante */
           transition:background .18s,color .18s,box-shadow .18s,transform .06s;
           margin-top:12px;
         }
         #login-root .cta:hover{
           background:var(--primary); color:#ffffff;
-          box-shadow:0 8px 22px rgba(56,146,255,0.24);
+          box-shadow:0 12px 34px rgba(56,146,255,0.22);
         }
         #login-root .cta:active{ transform:translateY(1px) }
 
@@ -137,11 +138,24 @@ export default function Login() {
               <button
                 type="button"
                 class="eye-btn"
-                aria-label="Mostrar/ocultar contrasinal"
-                onClick={()=>setShowPwd(s=>!s)}
+                aria-label={showPwd ? 'Ocultar contrasinal' : 'Amosar contrasinal'}
                 title={showPwd ? 'Ocultar' : 'Amosar'}
+                onClick={()=>setShowPwd(s=>!s)}
               >
-                {showPwd ? '🙈' : '👁️'}
+                {/* Ollo en SVG (claro e nítido) */}
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+                  {showPwd ? (
+                    <g stroke="#6b7280" stroke-width="1.6">
+                      <path d="M2 12s4.5-7 10-7 10 7 10 7-4.5 7-10 7S2 12 2 12Z"/>
+                      <circle cx="12" cy="12" r="3.2" />
+                    </g>
+                  ) : (
+                    <g stroke="#6b7280" stroke-width="1.6">
+                      <path d="M2 12s4.5-7 10-7 10 7 10 7-4.5 7-10 7S2 12 2 12Z"/>
+                      <path d="M16 8l-8 8" />
+                    </g>
+                  )}
+                </svg>
               </button>
             </div>
           </div>
