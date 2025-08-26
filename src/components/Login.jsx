@@ -40,43 +40,48 @@ export default function Login() {
       "
     >
       <style>{`
-        /* Forzamos fondo branco nesta vista */
+        /* Fondo branco garantido nesta vista */
         html, body, #app { background:#ffffff !important; }
 
-        #login-root { --primary:#3892ff; --primary-700:#2a78d6; }
+        #login-root { --primary:#3892ff; --primary-600:#2e85f0; }
 
-        /* Tarxeta algo máis ancha para que os campos se vexan longos */
+        /* Card máis ancha para alongar os campos */
         #login-root .card{
           background:#fff;border:1px solid #e5e7eb;border-radius:16px;
           padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.06);
-          max-width:680px;width:100%;
+          max-width:720px;width:100%;
         }
 
-        #login-root .group{ margin:10px 0; }
+        #login-root .group{ margin:12px 0; }
 
-        /* Campos: menos altos (padding vertical 6), máis longos (depende do ancho da card) */
+        /* Campos: menos altos (padding vertical 6px), min-height 42, iconas 24 */
         #login-root .field{
-          display:flex;align-items:center;gap:10px;
+          display:flex;align-items:center;gap:12px;
           border:1px solid #d1d5db;border-radius:14px;
-          padding:6px 14px; background:#fff; min-height:44px;
+          padding:6px 16px; background:#fff; min-height:42px;
+          transition:border-color .15s ease, box-shadow .15s ease;
         }
         #login-root .field:focus-within{
           border-color:var(--primary);
-          box-shadow:0 0 0 3px rgba(56,146,255,.15);
+          box-shadow:0 0 0 3px rgba(56,146,255,.16);
         }
         #login-root .field input{
           border:none;outline:none;flex:1;
-          font-family:inherit;font-size:1rem; background:transparent;
+          font-family:inherit;font-size:1rem;background:transparent;
         }
+        #login-root .icon{ width:24px;height:24px;opacity:.85 }
 
-        /* Iconas un chisco máis grandes */
-        #login-root .icon{ width:24px;height:24px;opacity:.82 }
-        #login-root .eye{ cursor:pointer; opacity:.8 }
-        #login-root .eye:hover{ opacity:1 }
+        /* Ollo (igual filosofía que en rexistro: emoji) */
+        #login-root .eye-btn{
+          background:transparent;border:0;cursor:pointer;
+          font-size:18px;line-height:1;opacity:.85;
+        }
+        #login-root .eye-btn:hover{ opacity:1 }
 
-        /* Botón estilo tab “Entra”: pill branco + celeste; invértese no hover */
+        /* Botón “Imos!!”: igual que a tab “Entra”, con inversión no hover */
         #login-root .cta{
-          width:100%; padding:12px 20px; border:1px solid var(--primary);
+          width:100%; padding:12px 20px;
+          border:1px solid var(--primary) !important;
           border-radius:9999px; background:#ffffff; color:var(--primary);
           font-weight:700; cursor:pointer;
           box-shadow:0 6px 18px rgba(56,146,255,0.14);
@@ -94,7 +99,7 @@ export default function Login() {
 
       <div class="card">
         <form onSubmit={handleSubmit} noValidate>
-          {/* Email: icona + placeholder (sen label) */}
+          {/* Email */}
           <div class="group">
             <div class="field" aria-label="Email">
               <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -113,7 +118,7 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Contrasinal: candado + ollo + placeholder (sen label) */}
+          {/* Contrasinal */}
           <div class="group">
             <div class="field" aria-label="Contrasinal">
               <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -129,19 +134,15 @@ export default function Login() {
                 autoComplete="current-password"
                 required
               />
-              <svg
-                class="icon eye"
+              <button
+                type="button"
+                class="eye-btn"
+                aria-label="Mostrar/ocultar contrasinal"
                 onClick={()=>setShowPwd(s=>!s)}
-                viewBox="0 0 24 24" fill="none" aria-label="Mostrar/ocultar contrasinal" role="button"
+                title={showPwd ? 'Ocultar' : 'Amosar'}
               >
-                {showPwd
-                  ? <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Zm10 3a3 3 0 100-6 3 3 0 000 6z" stroke="#6b7280" stroke-width="1.5"/>
-                  : <>
-                      <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z" stroke="#6b7280" stroke-width="1.5"/>
-                      <path d="M15 9l-6 6" stroke="#6b7280" stroke-width="1.5"/>
-                    </>
-                }
-              </svg>
+                {showPwd ? '🙈' : '👁️'}
+              </button>
             </div>
           </div>
 
