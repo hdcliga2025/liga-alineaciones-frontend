@@ -67,13 +67,13 @@
 .main-block.open--alineacions .main-card{ border-color:var(--amber-500); border-width:2px; }
 .main-block.open--clasificacions .main-card{ border-color:var(--violet-500); border-width:2px; }
 
-/* Icono bloque — contorno grosor e cor por sección */
+/* Icono bloque — contorno fino e elegante */
 .dash-icon{
   flex:0 0 120px;width:120px;height:120px;border-radius:20px;overflow:hidden;
   display:grid;place-items:center;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 10px rgba(0,0,0,.10);
   color:var(--celeste-500);
-  border:4px solid transparent; /* base */
+  border:2px solid transparent; /* antes 4px */
 }
 @media(min-width:960px){.dash-icon{flex:0 0 128px;width:128px;height:128px;border-radius:22px}}
 .dash-icon--ball{   background:linear-gradient(135deg,#dcfce7,#86efac); border-color:var(--green-500); }
@@ -83,7 +83,7 @@
 /* Tamaño dos SVGs de icono */
 .ico-svg{ width:52px;height:52px; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 
-/* Textos card */
+/* Textos card principal */
 .dash-text{display:grid;align-content:center;gap:4px}
 .dash-card-header{font:700 18px/1.15 'Montserrat',system-ui,sans-serif;margin:0}
 .dash-card-desc{font:400 14px/1.25 'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}
@@ -100,7 +100,7 @@
 .subgrid{overflow:hidden;max-height:0;opacity:.0;transform:translateY(-6px);transition:max-height .25s ease,opacity .2s ease,transform .25s ease}
 .subgrid.open{max-height:600px;opacity:1;transform:translateY(0);margin-top:12px}
 
-/* Subcards base */
+/* Subcards */
 .subcard{
   display:flex;align-items:center;gap:10px;
   background:#fff;border:1px solid var(--border);border-radius:16px;
@@ -111,12 +111,12 @@
 @media(max-width:559px){.subcard{min-height:84px}}
 .subcard:hover{ transform:translateY(-1px); }
 
-/* Icono das subcards (contorno grosor) */
+/* Icono das subcards — contorno máis fino */
 .sub-ico{
   flex:0 0 56px;width:56px;height:56px;border-radius:14px;display:grid;place-items:center;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 8px rgba(0,0,0,.10);
   color:var(--celeste-500);
-  border:3px solid var(--border);
+  border:2px solid var(--border); /* antes 3px */
 }
 .sub-ico--calendar{background:linear-gradient(135deg,#dcfce7,#86efac)}
 .sub-ico--flag{background:linear-gradient(135deg,#e5e7eb,#cbd5e1)}
@@ -124,6 +124,11 @@
 .sub-ico--clip{background:linear-gradient(135deg,#fee2e2,#fca5a5)}
 .sub-ico--book{background:linear-gradient(135deg,#e0e7ff,#a5b4fc)}
 .sub-ico--tgt{background:linear-gradient(135deg,#dbeafe,#93c5fd)}
+
+/* Tipografía das subcards: títulos fortes e descrición máis pequena */
+.sub-texts{display:grid;gap:2px}
+.sub-title{font:700 16px/1.15 'Montserrat',system-ui,sans-serif;margin:0}
+.sub-desc{font:400 12px/1.3  'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}
 
 /* —— ESTADO DESPREGADO: subcards adoptan a cor da sección —— */
 #sub-partidos.open .subcard{
@@ -155,3 +160,4 @@
   border-color: var(--violet-500);
   color: var(--violet-500);
 }
+
