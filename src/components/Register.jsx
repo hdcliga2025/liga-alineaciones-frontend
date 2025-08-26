@@ -4,122 +4,173 @@ import { useState } from 'preact/hooks';
 import { supabase } from '../lib/supabaseClient.js';
 
 export default function Register() {
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone]       = useState('');
-  const [email, setEmail]       = useState('');
-  const [password, setPassword] = useState('');
-  const [password2, setPassword2] = useState('');
-  const [showPwd, setShowPwd]   = useState(false);
-
+  const [first, setFirst] = useState('');
+  const [last, setLast] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [pwd, setPwd] = useState('');
+  const [pwd2, setPwd2] = useState('');
   const [loading, setLoading] = useState(false);
-  const [msg, setMsg]         = useState('');
-  const [err, setErr]         = useState('');
+  const [msg, setMsg] = useState('');
+  const [err, setErr] = useState('');
 
-  const phoneOk = (v) => /^\d{9,15}$/.test(String(v || '').trim());
+  const onlyDigits = (v) => v.replace(/\D/g, '');
 
-  async function handleSubmit(e) {
+  function validate() {
+    if (!first.trim() || !last.trim()) return 'Completa nome e apelidos.';
+    if (!/^\d{9,15}$/.test(phone)) return 'O teléfono debe ter entre 9 e 15 díxitos.';
+    if (pwd.length < 8) return 'O contrasinal debe ter polo menos 8 caracteres.';
+    if (pwd !== pwd2) return 'Os contrasinais non coinciden.';
+    return null;
+  }
+
+  async function onSubmit(e) {
     e.preventDefault();
-    setMsg(''); setErr('');
-
-    if (!phoneOk(phone))   return setErr('O teléfono debe ter entre 9 e 15 díxitos.');
-    if (password.length<8) return setErr('O contrasinal debe ter 8 caracteres como mínimo.');
-    if (password!==password2) return setErr('Os contrasinais non coinciden.');
-
+    setErr(''); setMsg('');
+    const v = validate();
+    if (v) { setErr(v); return; }
     setLoading(true);
     try {
-      const redirect = `${window.location.origin}/login?verified=true`;
+      const full_name = `${first.trim()} ${last.trim()}`.trim();
       const { error } = await supabase.auth.signUp({
         email: email.trim(),
-        password,
+        password: pwd,
         options: {
-          emailRedirectTo: redirect,
-          data: { full_name: fullName.trim(), phone: phone.trim() }
-        }
+          data: { full_name, phone },
+          emailRedirectTo: `${window.location.origin}/login?verified=true`,
+        },
       });
-      if (error) return setErr(error.message || 'Produciuse un erro ao crear a conta.');
-      setMsg('Enviamos un correo de verificación. Revisa a túa bandexa e segue as instrucións.');
-      setFullName(''); setPhone(''); setEmail(''); setPassword(''); setPassword2('');
+      if (error) throw error;
+      setMsg('Rexistro creado. Revisa o teu correo para confirmar a conta.');
+      setFirst(''); setLast(''); setPhone(''); setEmail(''); setPwd(''); setPwd2('');
     } catch (e2) {
       console.error(e2);
-      setErr('Erro inesperado ao crear a conta.');
+      setErr(e2?.message || 'Erro ao crear a conta.');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main
-      style="
-        display:flex;justify-content:center;padding:24px;
-        background:#ffffff; /* fondo branco nesta vista */
-        font-family:'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-      "
-    >
-      {/* forza fondo branco global cando se carga rexistro */}
-      <style>{`html, body, #app { background:#ffffff !important; }`}</style>
-
-      {/* --- aquí mantemos o teu formulario existente --- */}
-      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.06);max-width:560px;width:100%;">
-        <form onSubmit={handleSubmit} noValidate>
-          <label for="fullName" style="display:block;margin:6px 0 6px;font-weight:600;">Nome e apelidos</label>
-          <input id="fullName" type="text" value={fullName}
-                 onInput={(e)=>setFullName(e.currentTarget.value)} required
-                 style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px;" />
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
-            <div>
-              <label for="phone" style="display:block;margin:6px 0 6px;font-weight:600;">Número de teléfono móbil</label>
-              <input id="phone" inputMode="numeric" value={phone}
-                     onInput={(e)=>setPhone(e.currentTarget.value.replace(/[^0-9]/g,''))}
-                     required pattern="\\d{9,15}"
-                     style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px;" />
-              <p style="margin:6px 0 0;font-size:.85rem;opacity:.7;">Só díxitos (9–15).</p>
-            </div>
-            <div>
-              <label for="email" style="display:block;margin:6px 0 6px;font-weight:600;">Correo electrónico</label>
-              <input id="email" type="email" value={email}
-                     onInput={(e)=>setEmail(e.currentTarget.value)} required autoComplete="email"
-                     style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px;" />
-            </div>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
-            <div>
-              <label for="password" style="display:block;margin:6px 0 6px;font-weight:600;">Contrasinal</label>
-              <div style="display:flex;align-items:center;gap:10px;border:1px solid #d1d5db;border-radius:12px;padding:8px 14px;background:#fff;">
-                <input id="password" type={showPwd ? 'text':'password'} value={password}
-                       onInput={(e)=>setPassword(e.currentTarget.value)} required autoComplete="new-password"
-                       style="border:none;outline:none;flex:1;font-family:inherit;font-size:1rem" />
-                <button type="button" onClick={()=>setShowPwd(s=>!s)} aria-label="Mostrar/ocultar contrasinal"
-                        style="background:transparent;border:0;cursor:pointer;opacity:.75;">
-                  {showPwd ? '🙈' : '👁️'}
-                </button>
-              </div>
-              <p style="margin:6px 0 0;font-size:.85rem;opacity:.7;">Mínimo 8 caracteres.</p>
-            </div>
-            <div>
-              <label for="password2" style="display:block;margin:6px 0 6px;font-weight:600;">Confirma o contrasinal</label>
-              <input id="password2" type="password" value={password2}
-                     onInput={(e)=>setPassword2(e.currentTarget.value)} required autoComplete="new-password"
-                     style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px;" />
-            </div>
-          </div>
-
-          {err && <p style="margin:10px 0 0;color:#b91c1c;">{err}</p>}
-          {msg && <p style="margin:10px 0 0;color:green;">{msg}</p>}
-
-          <button type="submit"
-                  style="width:100%;padding:12px 18px;border:1px solid #90c2ff;border-radius:9999px;
-                         background:#ffffff;color:#3892ff;font-weight:700;cursor:pointer;
-                         box-shadow:0 6px 18px rgba(56,146,255,0.12);
-                         transition:background .18s,color .18s,box-shadow .18s,transform .06s;margin-top:12px;"
-                  onMouseOver={(e)=>{e.currentTarget.style.background='#3892ff';e.currentTarget.style.color='#fff'}}
-                  onMouseOut={(e)=>{e.currentTarget.style.background='#fff';e.currentTarget.style.color='#3892ff'}}>
-            Crear conta
-          </button>
-        </form>
+    <form onSubmit={onSubmit} noValidate>
+      {/* Nome */}
+      <label class="sr-only" for="first">Nome</label>
+      <div class="input-row" style={{ marginBottom: '10px' }}>
+        {/* Icono tipo Login: “usuario” (cabeza+ombros), trazo 1.5 */}
+        <svg class="icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="#6b7280" stroke-width="1.5"/>
+          <path d="M4 20a8 8 0 1 1 16 0" stroke="#6b7280" stroke-width="1.5"/>
+        </svg>
+        <input
+          id="first"
+          type="text"
+          placeholder="Nome"
+          value={first}
+          onInput={(e)=>setFirst(e.currentTarget.value)}
+          required
+        />
       </div>
-    </main>
+
+      {/* Apelidos */}
+      <label class="sr-only" for="last">Apelidos</label>
+      <div class="input-row" style={{ marginBottom: '10px' }}>
+        <svg class="icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="#6b7280" stroke-width="1.5"/>
+          <path d="M4 20a8 8 0 1 1 16 0" stroke="#6b7280" stroke-width="1.5"/>
+        </svg>
+        <input
+          id="last"
+          type="text"
+          placeholder="Apelidos"
+          value={last}
+          onInput={(e)=>setLast(e.currentTarget.value)}
+          required
+        />
+      </div>
+
+      {/* Teléfono (9–15 díxitos) */}
+      <label class="sr-only" for="phone">Teléfono</label>
+      <div class="input-row" style={{ marginBottom: '10px' }}>
+        {/* Icono tipo Login: teléfono con trazo fino */}
+        <svg class="icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6.8 2.8l2.2 2.2a2 2 0 0 1 0 2.8l-1 1a2 2 0 0 0 0 2.8l4.4 4.4a2 2 0 0 0 2.8 0l1-1a2 2 0 0 1 2.8 0l2.2 2.2a2 2 0 0 1 0 2.8l-1.2 1.2a4 4 0 0 1-4.7.6c-2.5-1.4-5.5-3.9-8.9-7.3-3.4-3.4-5.9-6.4-7.3-8.9a4 4 0 0 1 .6-4.7L4 2.2a2 2 0 0 1 2.8 0Z"
+                stroke="#6b7280" stroke-width="1.3"/>
+        </svg>
+        <input
+          id="phone"
+          type="tel"
+          inputMode="numeric"
+          pattern="\d{9,15}"
+          placeholder="Teléfono (9–15)"
+          value={phone}
+          onInput={(e)=>setPhone(onlyDigits(e.currentTarget.value))}
+          required
+        />
+      </div>
+
+      {/* Email */}
+      <label class="sr-only" for="email">Email</label>
+      <div class="input-row" style={{ marginBottom: '10px' }}>
+        {/* Icono tipo Login: carta (rectángulo + flap) */}
+        <svg class="icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="3" y="5" width="18" height="14" rx="2" stroke="#6b7280" stroke-width="1.5"/>
+          <path d="M3 6l9 7 9-7" stroke="#6b7280" stroke-width="1.5"/>
+        </svg>
+        <input
+          id="email"
+          type="email"
+          placeholder="Email"
+          value={email}
+          onInput={(e)=>setEmail(e.currentTarget.value)}
+          required
+        />
+      </div>
+
+      {/* Contrasinal (sen ollo) */}
+      <label class="sr-only" for="pwd">Contrasinal</label>
+      <div class="input-row" style={{ marginBottom: '10px' }}>
+        {/* Icono tipo Login: cadeado */}
+        <svg class="icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="5" y="10" width="14" height="10" rx="2" stroke="#6b7280" stroke-width="1.5"/>
+          <path d="M8 10V7a4 4 0 1 1 8 0v3" stroke="#6b7280" stroke-width="1.5"/>
+        </svg>
+        <input
+          id="pwd"
+          type="password"
+          placeholder="Contrasinal (8 caracteres mínimo)"
+          value={pwd}
+          onInput={(e)=>setPwd(e.currentTarget.value)}
+          required
+        />
+      </div>
+
+      {/* Confirmación (cadeado, sen ollo) */}
+      <label class="sr-only" for="pwd2">Confirma o contrasinal</label>
+      <div class="input-row">
+        <svg class="icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="5" y="10" width="14" height="10" rx="2" stroke="#6b7280" stroke-width="1.5"/>
+          <path d="M8 10V7a4 4 0 1 1 8 0v3" stroke="#6b7280" stroke-width="1.5"/>
+        </svg>
+        <input
+          id="pwd2"
+          type="password"
+          placeholder="Confirma o contrasinal"
+          value={pwd2}
+          onInput={(e)=>setPwd2(e.currentTarget.value)}
+          required
+        />
+      </div>
+
+      {err && <p style={{ margin: '10px 0 0', color: '#b91c1c' }}>{err}</p>}
+      {msg && <p style={{ margin: '10px 0 0', color: '#065f46' }}>{msg}</p>}
+
+      {/* Botón igual que en Login (en caxita con sombra) */}
+      <div class="cta-wrap">
+        <button type="submit" disabled={loading}>
+          {loading ? 'Enviando…' : 'Adiante!!, rexístrame xa!!'}
+        </button>
+      </div>
+    </form>
   );
 }
 

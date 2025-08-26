@@ -1,10 +1,6 @@
 // src/main.jsx
-import { h, render } from "preact";
-import App from "./App.jsx";
+import { h, render } from 'preact';
+import App from './App.jsx';
+import './styles/fonts.css'; // Montserrat global
 
-/* Importa estilos globais existentes */
-import "./styles/index.css";
-/* 👉 Importa Montserrat para toda a app */
-import "./styles/fonts.css";
-
-render(<App />, document.getElementById("app"));
+render(<App />, document.getElementById('app'));
