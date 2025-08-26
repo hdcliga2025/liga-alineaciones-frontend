@@ -18,7 +18,7 @@ export default function Login() {
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
-        password,
+        password
       });
       if (error) return setErr(error.message || 'Erro iniciando sesión.');
       route('/dashboard', true);
@@ -39,24 +39,24 @@ export default function Login() {
       "
     >
       <style>{`
-        /* Forzar fondo branco nesta vista */
         html, body, #app { background:#ffffff !important; }
 
-        #login-root { --blue:#3892ff; --h:50px; } /* mesma altura inputs e botón */
+        #login-root { --blue:#3892ff; --h:44px; } /* mesma altura inputs e botón */
 
-        /* Panel único (sen duplicar caixas con sombras) */
+        /* Panel principal (unha soa caixa) */
         #login-root .panel{
           background:#fff;border:1px solid #e5e7eb;border-radius:16px;
           padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.06);
           max-width:760px;width:100%;
         }
 
-        /* El bloque de campos queda alineado a 24px para casar cos tabs superiores */
-        #login-root .form-wrap{ margin: 0 24px; }
+        /* Márxenes laterais máis amplos para campos e botón */
+        #login-root .form-wrap{ margin: 0 40px; }
+        @media (max-width: 480px){ #login-root .form-wrap{ margin: 0 20px; } }
 
         #login-root .group{ margin:12px 0; }
 
-        /* Campo: longo, menos alto, con mesma altura que o botón */
+        /* Campo fino e longo (alto = 44px) */
         #login-root .field{
           display:flex;align-items:center;gap:12px;
           border:1px solid #d1d5db !important; border-radius:12px !important;
@@ -70,36 +70,36 @@ export default function Login() {
         }
         #login-root .input{
           border:none !important; outline:none !important; flex:1;
-          background:transparent !important;
-          font-family:inherit; font-size:1rem; line-height:1.2;
+          background:transparent !important; font-size:1rem; line-height:1.2;
         }
         #login-root .icon{ width:24px;height:24px;opacity:.85 }
 
-        /* Ollo con mesmo trazo que os outros iconos */
+        /* Ollo SVG co mesmo trazo */
         #login-root .eye-btn{
           width:28px;height:28px;display:grid;place-items:center;
           background:transparent;border:0;cursor:pointer;opacity:.9;
         }
         #login-root .eye-btn:hover{ opacity:1 }
 
-        /* Botón “Imos!!” igual a “Entra”: branco, borde azul, sombra; hover invertido */
+        /* Botón “Imos!!” = estilo “Entra”: branco, texto azul, borde gris suave, sombra; hover invertido */
         #login-root .cta{
-          width:100%; min-height:var(--h) !important; padding:0 20px !important;
-          border:1px solid var(--blue) !important; border-radius:12px !important;
+          width:100%; min-height:var(--h); padding:0 20px;
+          border:1px solid #e6e9f0 !important;               /* SIN borde celeste */
+          border-radius:12px !important;
           background:#ffffff !important; color:var(--blue) !important;
           font-weight:700; cursor:pointer;
-          box-shadow:0 10px 28px rgba(56,146,255,.12) !important;
+          box-shadow:0 8px 26px rgba(0,0,0,.06);              /* sombra suave tipo tab */
           transition:background .18s,color .18s,box-shadow .18s,transform .06s;
           display:flex;align-items:center;justify-content:center;
-          margin-top:12px; margin-left:24px; margin-right:24px; /* mesmos marxes */
+          margin-top:12px;                                    /* centrado por width:100% */
         }
         #login-root .cta:hover{
           background:var(--blue) !important; color:#ffffff !important;
-          box-shadow:0 14px 34px rgba(56,146,255,.22) !important;
+          box-shadow:0 12px 34px rgba(56,146,255,.22) !important;
         }
         #login-root .cta:active{ transform:translateY(1px) }
 
-        #login-root .err{ margin:8px 24px 0; color:#b91c1c }
+        #login-root .err{ margin:8px 0 0; color:#b91c1c }
       `}</style>
 
       <div class="panel">
@@ -163,4 +163,5 @@ export default function Login() {
     </main>
   );
 }
+
 
