@@ -18,7 +18,8 @@ export default function Register() {
 
   function validate() {
     if (!first.trim() || !last.trim()) return 'Completa nome e apelidos.';
-    if (!/^\d{9,15}$/.test(phone)) return 'O teléfono debe ter entre 9 e 15 díxitos.';
+    // Acepta 9–15 díxitos (lógica), aínda que non se mostra na UI
+    if (!/^\d{9,15}$/.test(phone)) return 'O móbil debe ter entre 9 e 15 díxitos.';
     if (pwd.length < 8) return 'O contrasinal debe ter polo menos 8 caracteres.';
     if (pwd !== pwd2) return 'Os contrasinais non coinciden.';
     return null;
@@ -54,9 +55,8 @@ export default function Register() {
   return (
     <form onSubmit={onSubmit} noValidate>
       {/* Nome */}
-      <label class="sr-only" for="first">Nome</label>
       <div class="input-row" style={{ marginBottom: '10px' }}>
-        {/* Icono tipo Login: “usuario” (cabeza+ombros), trazo 1.5 */}
+        {/* Icono estilo Login: usuario */}
         <svg class="icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="#6b7280" stroke-width="1.5"/>
           <path d="M4 20a8 8 0 1 1 16 0" stroke="#6b7280" stroke-width="1.5"/>
@@ -68,15 +68,19 @@ export default function Register() {
           value={first}
           onInput={(e)=>setFirst(e.currentTarget.value)}
           required
+          aria-label="Nome"
         />
       </div>
 
-      {/* Apelidos */}
-      <label class="sr-only" for="last">Apelidos</label>
+      {/* Apelidos (dous monicreques) */}
       <div class="input-row" style={{ marginBottom: '10px' }}>
         <svg class="icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="#6b7280" stroke-width="1.5"/>
-          <path d="M4 20a8 8 0 1 1 16 0" stroke="#6b7280" stroke-width="1.5"/>
+          {/* cabeza/ombreiros esquerda */}
+          <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="#6b7280" stroke-width="1.5"/>
+          <path d="M3 20a6 6 0 0 1 12 0" stroke="#6b7280" stroke-width="1.5"/>
+          {/* cabeza/ombreiros dereita */}
+          <path d="M16 9.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" stroke="#6b7280" stroke-width="1.5"/>
+          <path d="M13 20a5 5 0 0 1 8 0" stroke="#6b7280" stroke-width="1.5"/>
         </svg>
         <input
           id="last"
@@ -85,33 +89,32 @@ export default function Register() {
           value={last}
           onInput={(e)=>setLast(e.currentTarget.value)}
           required
+          aria-label="Apelidos"
         />
       </div>
 
-      {/* Teléfono (9–15 díxitos) */}
-      <label class="sr-only" for="phone">Teléfono</label>
+      {/* Móbil (icono smartphone moderno, sen texto 9–15) */}
       <div class="input-row" style={{ marginBottom: '10px' }}>
-        {/* Icono tipo Login: teléfono con trazo fino */}
         <svg class="icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M6.8 2.8l2.2 2.2a2 2 0 0 1 0 2.8l-1 1a2 2 0 0 0 0 2.8l4.4 4.4a2 2 0 0 0 2.8 0l1-1a2 2 0 0 1 2.8 0l2.2 2.2a2 2 0 0 1 0 2.8l-1.2 1.2a4 4 0 0 1-4.7.6c-2.5-1.4-5.5-3.9-8.9-7.3-3.4-3.4-5.9-6.4-7.3-8.9a4 4 0 0 1 .6-4.7L4 2.2a2 2 0 0 1 2.8 0Z"
-                stroke="#6b7280" stroke-width="1.3"/>
+          <rect x="7" y="2.5" width="10" height="19" rx="2.5" stroke="#6b7280" stroke-width="1.5"/>
+          <path d="M11 5.2h2" stroke="#6b7280" stroke-width="1.5" />
+          <circle cx="12" cy="18.5" r="1" fill="#6b7280"/>
         </svg>
         <input
           id="phone"
           type="tel"
           inputMode="numeric"
           pattern="\d{9,15}"
-          placeholder="Teléfono (9–15)"
+          placeholder="Móbil"
           value={phone}
           onInput={(e)=>setPhone(onlyDigits(e.currentTarget.value))}
           required
+          aria-label="Móbil"
         />
       </div>
 
       {/* Email */}
-      <label class="sr-only" for="email">Email</label>
       <div class="input-row" style={{ marginBottom: '10px' }}>
-        {/* Icono tipo Login: carta (rectángulo + flap) */}
         <svg class="icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect x="3" y="5" width="18" height="14" rx="2" stroke="#6b7280" stroke-width="1.5"/>
           <path d="M3 6l9 7 9-7" stroke="#6b7280" stroke-width="1.5"/>
@@ -123,13 +126,12 @@ export default function Register() {
           value={email}
           onInput={(e)=>setEmail(e.currentTarget.value)}
           required
+          aria-label="Email"
         />
       </div>
 
-      {/* Contrasinal (sen ollo) */}
-      <label class="sr-only" for="pwd">Contrasinal</label>
+      {/* Contrasinal (sen palabra, só “(8 caracteres mínimo)”) */}
       <div class="input-row" style={{ marginBottom: '10px' }}>
-        {/* Icono tipo Login: cadeado */}
         <svg class="icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect x="5" y="10" width="14" height="10" rx="2" stroke="#6b7280" stroke-width="1.5"/>
           <path d="M8 10V7a4 4 0 1 1 8 0v3" stroke="#6b7280" stroke-width="1.5"/>
@@ -137,15 +139,15 @@ export default function Register() {
         <input
           id="pwd"
           type="password"
-          placeholder="Contrasinal (8 caracteres mínimo)"
+          placeholder="(8 caracteres mínimo)"
           value={pwd}
           onInput={(e)=>setPwd(e.currentTarget.value)}
           required
+          aria-label="Contrasinal"
         />
       </div>
 
-      {/* Confirmación (cadeado, sen ollo) */}
-      <label class="sr-only" for="pwd2">Confirma o contrasinal</label>
+      {/* Confirmación */}
       <div class="input-row">
         <svg class="icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect x="5" y="10" width="14" height="10" rx="2" stroke="#6b7280" stroke-width="1.5"/>
@@ -158,13 +160,15 @@ export default function Register() {
           value={pwd2}
           onInput={(e)=>setPwd2(e.currentTarget.value)}
           required
+          aria-label="Confirma o contrasinal"
         />
       </div>
 
+      {/* Mensaxes (só aparecen se hai algo que dicir) */}
       {err && <p style={{ margin: '10px 0 0', color: '#b91c1c' }}>{err}</p>}
       {msg && <p style={{ margin: '10px 0 0', color: '#065f46' }}>{msg}</p>}
 
-      {/* Botón igual que en Login (en caxita con sombra) */}
+      {/* Botón igual a Login, dentro da caixa con sombra */}
       <div class="cta-wrap">
         <button type="submit" disabled={loading}>
           {loading ? 'Enviando…' : 'Adiante!!, rexístrame xa!!'}
