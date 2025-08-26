@@ -37,33 +37,35 @@ export default function Login() {
     <main
       style="
         display:flex;justify-content:center;padding:24px;
-        background:#ffffff; /* fondo totalmente branco */
+        background:#ffffff; /* fondo branco na sección */
         font-family:'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
       "
     >
+      {/* forza fondo branco global nesta vista */}
       <style>{`
-        .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.06);max-width:420px;width:100%}
+        html, body, #app { background:#ffffff !important; }
+        .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.06);max-width:560px;width:100%}
         .group{margin:10px 0}
-        .field{display:flex;align-items:center;gap:8px;border:1px solid #d1d5db;border-radius:12px;padding:10px 12px;background:#fff}
+        .field{display:flex;align-items:center;gap:10px;border:1px solid #d1d5db;border-radius:12px;padding:8px 14px;background:#fff}
         .field input{border:none;outline:none;flex:1;font-family:inherit;font-size:1rem}
-        .icon{width:18px;height:18px;opacity:.75}
-        .eye{cursor:pointer;opacity:.7}
+        .icon{width:22px;height:22px;opacity:.78}
+        .eye{cursor:pointer;opacity:.75}
         .eye:hover{opacity:1}
         .cta{
-          width:100%;padding:12px 16px;border:1px solid #90c2ff;border-radius:12px;
+          width:100%;padding:12px 18px;border:1px solid #90c2ff;border-radius:9999px;
           background:#ffffff;color:#3892ff;font-weight:700;cursor:pointer;
           box-shadow:0 6px 18px rgba(56,146,255,0.12);
           transition:background .18s,color .18s,box-shadow .18s,transform .06s;
-          margin-top:8px;
+          margin-top:10px;
         }
-        .cta:hover{background:#3892ff;color:#fff;box-shadow:0 8px 22px rgba(56,146,255,0.22)}
+        .cta:hover{background:#3892ff;color:#ffffff;box-shadow:0 8px 22px rgba(56,146,255,0.22)}
         .cta:active{transform:translateY(1px)}
         .err{margin:8px 0 0;color:#b91c1c}
       `}</style>
 
       <div class="card">
         <form onSubmit={handleSubmit} noValidate>
-          {/* Email: icono y placeholder (sin label) */}
+          {/* Email: icona + placeholder (sen label) */}
           <div class="group">
             <div class="field" aria-label="Email">
               <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -82,7 +84,7 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Contrasinal: candado + ojo + placeholder (sin label) */}
+          {/* Contrasinal: candado + ollo + placeholder (sen label) */}
           <div class="group">
             <div class="field" aria-label="Contrasinal">
               <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">

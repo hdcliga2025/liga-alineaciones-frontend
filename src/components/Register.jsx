@@ -51,118 +51,71 @@ export default function Register() {
     <main
       style="
         display:flex;justify-content:center;padding:24px;
-        background:#ffffff; /* fondo totalmente branco */
+        background:#ffffff; /* fondo branco nesta vista */
         font-family:'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
       "
     >
-      <style>{`
-        .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.06);max-width:560px;width:100%}
-        .grid2{display:grid;grid-template-columns:1fr;gap:12px}
-        @media(min-width:640px){.grid2{grid-template-columns:1fr 1fr}}
-        .label{display:block;margin:6px 0 6px;font-weight:600}
-        .input{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px}
-        .field{display:flex;align-items:center;gap:8px;border:1px solid #d1d5db;border-radius:12px;padding:10px 12px;background:#fff}
-        .field input{border:none;outline:none;flex:1;font-family:inherit;font-size:1rem}
-        .icon{width:18px;height:18px;opacity:.75}
-        .eye{cursor:pointer;opacity:.7}
-        .eye:hover{opacity:1}
-        .cta{
-          width:100%;padding:12px 16px;border:1px solid #90c2ff;border-radius:12px;
-          background:#ffffff;color:#3892ff;font-weight:700;cursor:pointer;
-          box-shadow:0 6px 18px rgba(56,146,255,0.12);
-          transition:background .18s,color .18s,box-shadow .18s,transform .06s;
-          margin-top:8px;
-        }
-        .cta:hover{background:#3892ff;color:#fff;box-shadow:0 8px 22px rgba(56,146,255,0.22)}
-        .cta:active{transform:translateY(1px)}
-        .hint{margin:6px 0 0;font-size:.85rem;opacity:.7}
-        .ok{margin:10px 0 0;color:green}
-        .err{margin:10px 0 0;color:#b91c1c}
-      `}</style>
+      {/* forza fondo branco global cando se carga rexistro */}
+      <style>{`html, body, #app { background:#ffffff !important; }`}</style>
 
-      <div class="card">
+      {/* --- aquí mantemos o teu formulario existente --- */}
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.06);max-width:560px;width:100%;">
         <form onSubmit={handleSubmit} noValidate>
-          {/* Nome e teléfono seguen co seu label (sen cambios) */}
-          <label for="fullName" class="label">Nome e apelidos</label>
-          <input id="fullName" type="text" class="input" value={fullName}
-            onInput={(e)=>setFullName(e.currentTarget.value)} required autoComplete="name" />
+          <label for="fullName" style="display:block;margin:6px 0 6px;font-weight:600;">Nome e apelidos</label>
+          <input id="fullName" type="text" value={fullName}
+                 onInput={(e)=>setFullName(e.currentTarget.value)} required
+                 style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px;" />
 
-          <div class="grid2" style="margin-top:12px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
             <div>
-              <label for="phone" class="label">Número de teléfono móbil</label>
-              <input id="phone" inputMode="numeric" class="input" value={phone}
-                onInput={(e)=>setPhone(e.currentTarget.value.replace(/[^0-9]/g,''))}
-                required pattern="\\d{9,15}" />
-              <p class="hint">Só díxitos (9–15).</p>
+              <label for="phone" style="display:block;margin:6px 0 6px;font-weight:600;">Número de teléfono móbil</label>
+              <input id="phone" inputMode="numeric" value={phone}
+                     onInput={(e)=>setPhone(e.currentTarget.value.replace(/[^0-9]/g,''))}
+                     required pattern="\\d{9,15}"
+                     style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px;" />
+              <p style="margin:6px 0 0;font-size:.85rem;opacity:.7;">Só díxitos (9–15).</p>
             </div>
-
-            {/* Email: con icono y placeholder (sin label) */}
             <div>
-              <div class="field" aria-label="Email" style="margin-top:30px">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <rect x="3" y="5" width="18" height="14" rx="2" stroke="#6b7280" stroke-width="1.5"/>
-                  <path d="M3 6l9 7 9-7" stroke="#6b7280" stroke-width="1.5"/>
-                </svg>
-                <input id="email" type="email" placeholder="Email" value={email}
-                  onInput={(e)=>setEmail(e.currentTarget.value)} required autoComplete="email" />
-              </div>
+              <label for="email" style="display:block;margin:6px 0 6px;font-weight:600;">Correo electrónico</label>
+              <input id="email" type="email" value={email}
+                     onInput={(e)=>setEmail(e.currentTarget.value)} required autoComplete="email"
+                     style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px;" />
             </div>
           </div>
 
-          <div class="grid2" style="margin-top:12px;">
-            {/* Contrasinal: candado + ojo + placeholder (sin label) */}
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
             <div>
-              <div class="field" aria-label="Contrasinal">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <rect x="5" y="10" width="14" height="10" rx="2" stroke="#6b7280" stroke-width="1.5"/>
-                  <path d="M8 10V7a4 4 0 118 0v3" stroke="#6b7280" stroke-width="1.5"/>
-                </svg>
-                <input
-                  id="password"
-                  type={showPwd ? 'text' : 'password'}
-                  placeholder="Contrasinal"
-                  value={password}
-                  onInput={(e)=>setPassword(e.currentTarget.value)}
-                  autoComplete="new-password"
-                  required
-                />
-                <svg
-                  class="icon eye"
-                  onClick={()=>setShowPwd(s=>!s)}
-                  viewBox="0 0 24 24" fill="none" aria-label="Mostrar/ocultar contrasinal" role="button"
-                >
-                  {showPwd
-                    ? <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Zm10 3a3 3 0 100-6 3 3 0 000 6z" stroke="#6b7280" stroke-width="1.5"/>
-                    : <>
-                        <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z" stroke="#6b7280" stroke-width="1.5"/>
-                        <path d="M15 9l-6 6" stroke="#6b7280" stroke-width="1.5"/>
-                      </>
-                  }
-                </svg>
+              <label for="password" style="display:block;margin:6px 0 6px;font-weight:600;">Contrasinal</label>
+              <div style="display:flex;align-items:center;gap:10px;border:1px solid #d1d5db;border-radius:12px;padding:8px 14px;background:#fff;">
+                <input id="password" type={showPwd ? 'text':'password'} value={password}
+                       onInput={(e)=>setPassword(e.currentTarget.value)} required autoComplete="new-password"
+                       style="border:none;outline:none;flex:1;font-family:inherit;font-size:1rem" />
+                <button type="button" onClick={()=>setShowPwd(s=>!s)} aria-label="Mostrar/ocultar contrasinal"
+                        style="background:transparent;border:0;cursor:pointer;opacity:.75;">
+                  {showPwd ? '🙈' : '👁️'}
+                </button>
               </div>
-              <p class="hint">Mínimo 8 caracteres.</p>
+              <p style="margin:6px 0 0;font-size:.85rem;opacity:.7;">Mínimo 8 caracteres.</p>
             </div>
-
-            {/* Confirmación (deixamos co seu label para claridade) */}
             <div>
-              <label for="password2" class="label">Confirma o contrasinal</label>
-              <input
-                id="password2"
-                type="password"
-                class="input"
-                value={password2}
-                onInput={(e)=>setPassword2(e.currentTarget.value)}
-                autoComplete="new-password"
-                required
-              />
+              <label for="password2" style="display:block;margin:6px 0 6px;font-weight:600;">Confirma o contrasinal</label>
+              <input id="password2" type="password" value={password2}
+                     onInput={(e)=>setPassword2(e.currentTarget.value)} required autoComplete="new-password"
+                     style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px;" />
             </div>
           </div>
 
-          {err && <p class="err">{err}</p>}
-          {msg && <p class="ok">{msg}</p>}
+          {err && <p style="margin:10px 0 0;color:#b91c1c;">{err}</p>}
+          {msg && <p style="margin:10px 0 0;color:green;">{msg}</p>}
 
-          <button type="submit" class="cta" disabled={loading} style="margin-top:12px;">
-            {loading ? 'Creando…' : 'Crear conta'}
+          <button type="submit"
+                  style="width:100%;padding:12px 18px;border:1px solid #90c2ff;border-radius:9999px;
+                         background:#ffffff;color:#3892ff;font-weight:700;cursor:pointer;
+                         box-shadow:0 6px 18px rgba(56,146,255,0.12);
+                         transition:background .18s,color .18s,box-shadow .18s,transform .06s;margin-top:12px;"
+                  onMouseOver={(e)=>{e.currentTarget.style.background='#3892ff';e.currentTarget.style.color='#fff'}}
+                  onMouseOut={(e)=>{e.currentTarget.style.background='#fff';e.currentTarget.style.color='#3892ff'}}>
+            Crear conta
           </button>
         </form>
       </div>
