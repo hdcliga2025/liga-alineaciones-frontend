@@ -88,42 +88,46 @@ body {
   background: #fff;
   padding: 0 14px;
   transition: border-color .15s, box-shadow .15s;
+  overflow: hidden;                 /* evita que nada “salga” en móvil */
 }
 .input-row:focus-within {
   border-color: #dbeafe;
   box-shadow: 0 0 0 3px rgba(59,130,246,.16);
 }
 .input-row input {
-  flex: 1; border: none; outline: none; background: transparent;
+  flex: 1 1 0;                      /* permite encoger sin empujar el ojo fuera */
+  min-width: 0;                     /* evita desbordes en pantallas estrechas */
+  border: none; outline: none; background: transparent;
   font-family: var(--font-sans); font-size: 15px; line-height: 1.25;
 }
 
-/* Iconos (no se encogen en móvil) */
+/* Iconos (no se encogen) */
 .icon-24 { width: 24px; height: 24px; opacity: .85; flex: 0 0 auto; }
 .eye-btn { width: 32px; height: 32px; display: grid; place-items: center; background: transparent; border: 0; cursor: pointer; opacity: .9; flex: 0 0 auto; }
 .eye-btn:hover { opacity: 1; }
 
-/* Envoltura del botón — IGUAL a la caja de los tabs */
+/* Envoltura del botón — IGUAL a la caja de los tabs, PERO SIN BORDE (solo sombra) */
 .cta-wrap{
   background:#f7fafc;
-  border:1px solid var(--border);
+  /* border eliminado a petición */
+  border: none;
   border-radius:12px;
   padding:6px;
   margin-top:10px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.04);
 }
 
-/* Botón principal dentro de la caja (como tab activo) */
+/* Botón principal dentro de la caja */
 .auth-card button[type="submit"] {
   width: 100%;
   height: var(--auth-row-h);
   padding: 0 16px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border);  /* marco discreto del propio botón */
   border-radius: 10px;
   background: #ffffff;
   color: var(--celeste);
   font-weight: 600;
-  font-size: 17px; /* un poco más grande */
+  font-size: 17px;                  /* un poco más grande */
   cursor: pointer;
   transition: background .18s, color .18s, box-shadow .18s, transform .06s;
   font-family: var(--font-sans);
@@ -146,10 +150,10 @@ body {
   background: #ffffff;
 }
 
-/* Móbil: iconos máis grandes */
+/* Móbil: iconos máis grandes e mellor encaixe do ollo */
 @media (max-width: 480px) {
   .icon-24 { width: 28px; height: 28px; }
-  .eye-btn { width: 36px; height: 36px; }
-  .input-row { gap: 14px; }
+  .eye-btn { width: 30px; height: 30px; }   /* lixeiramente máis pequeno para caber mellor */
+  .input-row { gap: 10px; padding: 0 10px; }/* máis espazo útil dentro do campo */
   .input-row input { font-size: 16px; }
 }
