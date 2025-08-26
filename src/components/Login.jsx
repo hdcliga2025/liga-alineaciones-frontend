@@ -1,9 +1,8 @@
 // src/components/Login.jsx
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
+import { route } from 'preact-router';
 import { supabase } from '../lib/supabaseClient.js';
-// Si prefires forzar a ruta tras login, descomenta:
-// import { route } from 'preact-router';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -15,26 +14,21 @@ export default function Login() {
     e.preventDefault();
     setErr('');
     setLoading(true);
-
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password
       });
-
       if (error) {
         setErr(error.message || 'Erro iniciando sesión.');
         return;
       }
-
-      // Éxito: AuthWatcher detectará a sesión e redirixirá a /dashboard.
-      // Se queres redirixir aquí manualmente, descomenta:
-      // route('/dashboard', true);
+      // Redirección FORZADA: evita depender de otro componente
+      route('/dashboard', true);
     } catch (e2) {
-      setErr('Erro inesperado iniciando sesión.');
       console.error(e2);
+      setErr('Erro inesperado iniciando sesión.');
     } finally {
-      // Asegura que o botón non quede en "Accedendo…"
       setLoading(false);
     }
   }
@@ -46,29 +40,29 @@ export default function Login() {
         <p style="margin-top:0;opacity:.8">Benvidxs á vosa comunidade celeste</p>
 
         <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.06);">
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} noValidate>
             <div style="margin-bottom:12px;">
-              <label for="email" style="display:block;margin-bottom:6px;">Correo electrónico</label>
+              <label htmlFor="email" style="display:block;margin-bottom:6px;">Correo electrónico</label>
               <input
                 id="email"
                 type="email"
                 value={email}
                 onInput={(e) => setEmail(e.currentTarget.value)}
                 required
-                autocomplete="username"
+                autoComplete="username"
                 style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px;"
               />
             </div>
 
             <div style="margin-bottom:12px;">
-              <label for="password" style="display:block;margin-bottom:6px;">Contrasinal</label>
+              <label htmlFor="password" style="display:block;margin-bottom:6px;">Contrasinal</label>
               <input
                 id="password"
                 type="password"
                 value={password}
                 onInput={(e) => setPassword(e.currentTarget.value)}
                 required
-                autocomplete="current-password"
+                autoComplete="current-password"
                 style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px;"
               />
             </div>
