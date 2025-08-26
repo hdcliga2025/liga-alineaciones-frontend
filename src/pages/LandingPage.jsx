@@ -42,7 +42,6 @@ export default function LandingPage() {
         </div>
       </main>
 
-      {/* Footer restaurado */}
       <Footer />
     </div>
   );
