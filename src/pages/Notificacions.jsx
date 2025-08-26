@@ -14,7 +14,7 @@ export default function Notificacions() {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
-  const [feedbackResult, setFeedbackResult] = useState(null); // {ok, msg}
+  const [feedbackResult, setFeedbackResult] = useState(null);
 
   const [sessionUser, setSessionUser] = useState(null);
 
@@ -102,7 +102,7 @@ export default function Notificacions() {
           As mensaxes foron visualizadas
         </button>
 
-        {/* Ligazón único de contacto coas dúas contas */}
+        {/* Ligazón curto de contacto coas dúas contas */}
         <a
           href={`mailto:HDCLiga@gmail.com,HDCLiga2@gmail.com?subject=${encodeURIComponent('Contacto desde HDC Liga')}`}
           style="text-decoration:none;padding:8px 12px;border:1px solid #cbd5e1;border-radius:9999px;"

@@ -18,6 +18,7 @@ import Perfil from "./pages/Perfil.jsx";
 import Partidos from "./pages/Partidos.jsx";
 import HazTu11 from "./pages/HazTu11.jsx";
 import Clasificacion from "./pages/Clasificacion.jsx";
+import Admin from "./pages/Admin.jsx";
 
 /* 404 */
 const NotFound = () => (
@@ -54,6 +55,7 @@ export default function App() {
         <Partidos path="/partidos" />
         <HazTu11 path="/haz-tu-11" />
         <Clasificacion path="/clasificacion" />
+        <Admin path="/admin" />
 
         {/* 404 */}
         <NotFound default />
@@ -61,5 +63,4 @@ export default function App() {
     </>
   );
 }
-
 
