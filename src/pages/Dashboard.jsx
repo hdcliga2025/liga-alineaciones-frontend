@@ -1,214 +1,179 @@
 // src/pages/Dashboard.jsx
-import { h } from "preact";
-import { useEffect, useState } from "preact/hooks";
-import { supabase } from "../lib/supabaseClient";
-import "./Dashboard.css";
-
-/* Iconas grandes (cards nivel 1) */
-const IcoBall = () => (
-  <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <circle cx="12" cy="12" r="9"></circle>
-    <path d="M12 6l3 2-1 3h-4L9 8l3-2zM8 13l1 4m7-4l-1 4M6 11l2-2m10 2l-2-2"></path>
-  </svg>
-);
-const IcoShirt = () => (
-  <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M7 5l3-2h4l3 2 3 2-2 3-3-2v11H9V8L6 10 4 7l3-2z"></path>
-  </svg>
-);
-const IcoTrophy = () => (
-  <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M7 6h10v2a5 5 0 01-10 0V6z"></path>
-    <path d="M5 6h2v1a3 3 0 01-3 3H3V8a2 2 0 012-2zm14 0a2 2 0 012 2v2h-1a3 3 0 01-3-3V6h2z"></path>
-    <path d="M12 13v3M8 20h8"></path>
-  </svg>
-);
-
-/* Sub-iconas (nivel 2) */
-const IcoCalendar = () => (
-  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <rect x="4" y="6" width="16" height="14" rx="2"></rect>
-    <path d="M8 4v4M16 4v4M4 10h16"></path>
-  </svg>
-);
-const IcoFlag = () => (
-  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M5 4v16M5 5h10l-2 2 2 2H5z"></path>
-  </svg>
-);
-const IcoMegaphone = () => (
-  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M3 12h4l9-4v8l-9-4H3z"></path>
-    <path d="M7 16l1.2 2.4A2 2 0 0010 19h1"></path>
-  </svg>
-);
-const IcoClipboard = () => (
-  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <rect x="6" y="7" width="12" height="13" rx="2"></rect>
-    <rect x="9" y="4" width="6" height="4" rx="1"></rect>
-  </svg>
-);
-const IcoBook = () => (
-  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M5 5h7a3 3 0 013 3v11H8a3 3 0 00-3 3V5z"></path>
-    <path d="M12 5h7a3 3 0 013 3v11h-7"></path>
-  </svg>
-);
-const IcoTarget = () => (
-  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <circle cx="12" cy="12" r="8"></circle>
-    <circle cx="12" cy="12" r="4"></circle>
-  </svg>
-);
+import { h } from 'preact';
+import { useEffect, useState } from 'preact/hooks';
+import { route } from 'preact-router';
+import { supabase } from '../lib/supabaseClient.js';
+import './Dashboard.css';
 
 export default function Dashboard() {
-  const [firstName, setFirstName] = useState("");
-  const [open, setOpen] = useState({
-    partidos: false,
-    alineacions: false,
-    clasificacions: false,
-  });
+  const [name, setName] = useState('');
+  const [now, setNow] = useState('');
 
+  // Nome do perfil
   useEffect(() => {
+    let mounted = true;
     (async () => {
-      const { data } = await supabase.auth.getUser();
-      const full = data?.user?.user_metadata?.full_name || "";
-      setFirstName(full.trim().split(/\s+/)[0] || "");
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
+      if (!user || !mounted) return;
+
+      // Tenta obter do perfil (máis fiable que metadata)
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('first_name, full_name')
+        .eq('id', user.id)
+        .single();
+
+      const fallback = (user.email || '').split('@')[0] || 'amigx';
+      const first = prof?.first_name?.trim();
+      const full = prof?.full_name?.trim();
+      const shown = first || (full ? full.split(' ')[0] : '') || fallback;
+      if (mounted) setName(shown);
     })();
+    return () => { mounted = false; };
   }, []);
 
-  // Acordeón: abre unha e pecha as demais
-  const toggle = (key) =>
-    setOpen((s) => ({
-      partidos: key === "partidos" ? !s.partidos : false,
-      alineacions: key === "alineacions" ? !s.alineacions : false,
-      clasificacions: key === "clasificacions" ? !s.clasificacions : false,
-    }));
+  // Hora de referencia en Madrid (actualización en vivo)
+  useEffect(() => {
+    const fmt = () =>
+      new Intl.DateTimeFormat('gl-ES', {
+        dateStyle: 'full',
+        timeStyle: 'medium',
+        timeZone: 'Europe/Madrid',
+      }).format(new Date());
+    setNow(fmt());
+    const t = setInterval(() => setNow(fmt()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  // Acordeón das cards
+  const [open, setOpen] = useState(null); // 'partidos' | 'alineacions' | 'clasificacions' | null
+  const toggle = (key) => setOpen((prev) => (prev === key ? null : key));
 
   return (
-    <main class="dash-wrap">
-      {/* Hero */}
-      <div class="dash-hero two-cols center-hero">
-        <div class="dash-hero-col">
-          <img src="/logoHDC.jpg" alt="Logo HDC" class="dash-hero-img fill-col" />
-        </div>
-        <div class="dash-hero-center">
+    <div class="dash-wrap">
+      {/* HERO */}
+      <div class="dash-hero two-cols">
+        {/* Logo (ajusta o src se o teu ficheiro é outro) */}
+        <img class="dash-hero-img fill-col" src="/HDCLogo.png" alt="HDC Liga" />
+        <div>
           <p class="dash-greet">
-            Boas <span class="dash-name">{firstName}</span>, benvidx á Liga das Aliñacións
+            Boas <span class="dash-name">{name}</span>, benvidx á Liga das Aliñacións
+          </p>
+          <p class="dash-time">
+            Hora de referencia (Madrid): {now}
           </p>
         </div>
       </div>
 
-      {/* GRID principal: 3 cards nivel 1 */}
+      {/* GRID PRINCIPAL */}
       <section class="dash-grid dash-grid--main">
-        {/* 1) Calendario */}
-        <div class={`main-block ${open.partidos ? "open open--partidos" : ""}`}>
-          <button class="main-card" onClick={() => toggle("partidos")} aria-expanded={open.partidos} aria-controls="sub-partidos">
-            <div class="dash-icon dash-icon--ball"><IcoBall /></div>
+        {/* Calendario */}
+        <article class={`main-block ${open==='partidos' ? 'open--partidos' : ''}`}>
+          <a class="main-card" onClick={() => toggle('partidos')}>
+            <div class="dash-icon dash-icon--ball">⚽</div>
             <div class="dash-text">
-              <h2 class="dash-card-header">Calendario</h2>
-              <p class="dash-card-desc">Todos os partidos axendados do Celta</p>
+              <h3 class="dash-card-header">Calendario</h3>
+              <p class="dash-card-desc">Próximos, Vindeiros, Finalizados</p>
             </div>
-            <span class={`chev ${open.partidos ? "open" : ""}`} aria-hidden="true">▾</span>
-          </button>
-
-          <div id="sub-partidos" class={`subgrid ${open.partidos ? "open" : ""}`}>
-            <a class="subcard" href="/proximo-partido" aria-label="Próximo partido">
-              <div class="sub-ico sub-ico--calendar"><IcoCalendar /></div>
+            <span class={`chev ${open==='partidos' ? 'open' : ''}`}>⌄</span>
+          </a>
+          <div id="sub-partidos" class={`subgrid ${open==='partidos' ? 'open' : ''}`}>
+            <a href="/partidos" class="subcard">
+              <div class="sub-ico sub-ico--calendar">🗓️</div>
               <div class="sub-texts">
-                <div class="sub-title">Próximo partido</div>
-                <div class="sub-desc">Detalle do seguinte encontro</div>
+                <p class="sub-title">Próximos partidos</p>
+                <p class="sub-desc">Datas e horarios máis próximos</p>
               </div>
             </a>
-            <a class="subcard" href="/vindeiros-partidos" aria-label="Vindeiros partidos">
-              <div class="sub-ico sub-ico--calendar"><IcoCalendar /></div>
+            <a href="/partidos" class="subcard">
+              <div class="sub-ico sub-ico--flag">🏁</div>
               <div class="sub-texts">
-                <div class="sub-title">Vindeiros partidos</div>
-                <div class="sub-desc">Axenda dos seguintes partidos</div>
+                <p class="sub-title">Vindeiros</p>
+                <p class="sub-desc">Máis aló da próxima xornada</p>
               </div>
             </a>
-            <a class="subcard" href="/partidos-finalizados" aria-label="Partidos finalizados">
-              <div class="sub-ico sub-ico--flag"><IcoFlag /></div>
+            <a href="/partidos" class="subcard">
+              <div class="sub-ico sub-ico--book">📘</div>
               <div class="sub-texts">
-                <div class="sub-title">Partidos finalizados</div>
-                <div class="sub-desc">Resultados e incidencias</div>
+                <p class="sub-title">Finalizados</p>
+                <p class="sub-desc">Histórico e resultados</p>
               </div>
             </a>
           </div>
-        </div>
+        </article>
 
-        {/* 2) Xogar ás Aliñacións */}
-        <div class={`main-block ${open.alineacions ? "open open--alineacions" : ""}`}>
-          <button class="main-card" onClick={() => toggle("alineacions")} aria-expanded={open.alineacions} aria-controls="sub-alineacions">
-            <div class="dash-icon dash-icon--shirt"><IcoShirt /></div>
+        {/* Xogar ás Aliñacións */}
+        <article class={`main-block ${open==='alineacions' ? 'open--alineacions' : ''}`}>
+          <a class="main-card" onClick={() => toggle('alineacions')}>
+            <div class="dash-icon dash-icon--shirt">👕</div>
             <div class="dash-text">
-              <h2 class="dash-card-header">Xogar ás Aliñacións</h2>
-              <p class="dash-card-desc">Aquí é onde demostras o Claudio que levas dentro</p>
+              <h3 class="dash-card-header">Xogar ás Aliñacións</h3>
+              <p class="dash-card-desc">Convocatoria, Fai o teu 11, Aliñación oficial, Normas</p>
             </div>
-            <span class={`chev ${open.alineacions ? "open" : ""}`} aria-hidden="true">▾</span>
-          </button>
-
-          <div id="sub-alineacions" class={`subgrid ${open.alineacions ? "open" : ""}`}>
-            <a class="subcard" href="/convocatoria-proximo" aria-label="Convocatoria próximo partido">
-              <div class="sub-ico sub-ico--meg"><IcoMegaphone /></div>
+            <span class={`chev ${open==='alineacions' ? 'open' : ''}`}>⌄</span>
+          </a>
+          <div id="sub-alineacions" class={`subgrid ${open==='alineacions' ? 'open' : ''}`}>
+            <a href="/haz-tu-11" class="subcard">
+              <div class="sub-ico sub-ico--tgt">🎯</div>
               <div class="sub-texts">
-                <div class="sub-title">Convocatoria próximo partido</div>
-                <div class="sub-desc">Lista oficial de convocados</div>
+                <p class="sub-title">Fai o teu 11</p>
+                <p class="sub-desc">Escolle a túa aliñación</p>
               </div>
             </a>
-            <a class="subcard" href="/haz-tu-11" aria-label="Fai o teu 11">
-              <div class="sub-ico sub-ico--clip"><IcoClipboard /></div>
+            <a href="/haz-tu-11" class="subcard">
+              <div class="sub-ico sub-ico--meg">📣</div>
               <div class="sub-texts">
-                <div class="sub-title">Fai o teu 11</div>
-                <div class="sub-desc">Escolle a túa aliñación</div>
+                <p class="sub-title">Convocatoria</p>
+                <p class="sub-desc">Lista dispoñible de xogadores</p>
               </div>
             </a>
-            <a class="subcard" href="/alineacion-oficial" aria-label="Aliñación oficial">
-              <div class="sub-ico sub-ico--shirt"><IcoShirt /></div>
+            <a href="/haz-tu-11" class="subcard">
+              <div class="sub-ico sub-ico--clip">📎</div>
               <div class="sub-texts">
-                <div class="sub-title">Aliñación oficial</div>
-                <div class="sub-desc">Once confirmado polo club</div>
+                <p class="sub-title">Aliñación oficial</p>
+                <p class="sub-desc">Publicación do 11 do club</p>
               </div>
             </a>
-            <a class="subcard" href="/instruccions" aria-label="Normas do concurso">
-              <div class="sub-ico sub-ico--book"><IcoBook /></div>
+            <a href="/haz-tu-11" class="subcard">
+              <div class="sub-ico sub-ico--book">📘</div>
               <div class="sub-texts">
-                <div class="sub-title">Normas do concurso</div>
-                <div class="sub-desc">Regras e funcionamento</div>
+                <p class="sub-title">Normas</p>
+                <p class="sub-desc">Como se xoga e puntos</p>
               </div>
             </a>
           </div>
-        </div>
+        </article>
 
-        {/* 3) Clasificacións */}
-        <div class={`main-block ${open.clasificacions ? "open open--clasificacions" : ""}`}>
-          <button class="main-card" onClick={() => toggle("clasificacions")} aria-expanded={open.clasificacions} aria-controls="sub-clasificacions">
-            <div class="dash-icon dash-icon--trophy"><IcoTrophy /></div>
+        {/* Clasificacións */}
+        <article class={`main-block ${open==='clasificacions' ? 'open--clasificacions' : ''}`}>
+          <a class="main-card" onClick={() => toggle('clasificacions')}>
+            <div class="dash-icon dash-icon--trophy">🏆</div>
             <div class="dash-text">
-              <h2 class="dash-card-header">Clasificacións</h2>
-              <p class="dash-card-desc">Os resultados do xogo de todos e cada quen</p>
+              <h3 class="dash-card-header">Clasificacións</h3>
+              <p class="dash-card-desc">Último partido e Xeral</p>
             </div>
-            <span class={`chev ${open.clasificacions ? "open" : ""}`} aria-hidden="true">▾</span>
-          </button>
-
-          <div id="sub-clasificacions" class={`subgrid ${open.clasificacions ? "open" : ""}`}>
-            <a class="subcard" href="/clasificacion?tipo=ultimo" aria-label="Clasificación último partido">
-              <div class="sub-ico sub-ico--tgt"><IcoTarget /></div>
+            <span class={`chev ${open==='clasificacions' ? 'open' : ''}`}>⌄</span>
+          </a>
+          <div id="sub-clasificacions" class={`subgrid ${open==='clasificacions' ? 'open' : ''}`}>
+            <a href="/clasificacion" class="subcard">
+              <div class="sub-ico sub-ico--flag">🏁</div>
               <div class="sub-texts">
-                <div class="sub-title">Clasificación último partido</div>
-                <div class="sub-desc">Puntuación por última xornada</div>
+                <p class="sub-title">Último partido</p>
+                <p class="sub-desc">Puntuacións da última xornada</p>
               </div>
             </a>
-            <a class="subcard" href="/clasificacion?tipo=xeral" aria-label="Clasificación xeral">
-              <div class="sub-ico sub-ico--trophy"><IcoTrophy /></div>
+            <a href="/clasificacion" class="subcard">
+              <div class="sub-ico sub-ico--tgt">🎯</div>
               <div class="sub-texts">
-                <div class="sub-title">Clasificación xeral</div>
-                <div class="sub-desc">Acumulado da tempada</div>
+                <p class="sub-title">Xeral</p>
+                <p class="sub-desc">Clasificación acumulada</p>
               </div>
             </a>
           </div>
-        </div>
+        </article>
       </section>
-    </main>
+    </div>
   );
 }
+
