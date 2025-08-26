@@ -98,32 +98,40 @@ body {
   font-family: var(--font-sans); font-size: 15px; line-height: 1.25;
 }
 
-/* Iconos */
-.icon-24 { width: 24px; height: 24px; opacity: .85; }
-.eye-btn { width: 32px; height: 32px; display: grid; place-items: center; background: transparent; border: 0; cursor: pointer; opacity: .9; }
+/* Iconos (no se encogen en móvil) */
+.icon-24 { width: 24px; height: 24px; opacity: .85; flex: 0 0 auto; }
+.eye-btn { width: 32px; height: 32px; display: grid; place-items: center; background: transparent; border: 0; cursor: pointer; opacity: .9; flex: 0 0 auto; }
 .eye-btn:hover { opacity: 1; }
 
-/* Botón principal — borde/sombra igual a tabs (con !important para ganar especificidad) */
+/* Envoltura del botón — IGUAL a la caja de los tabs */
+.cta-wrap{
+  background:#f7fafc;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:6px;
+  margin-top:10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+
+/* Botón principal dentro de la caja (como tab activo) */
 .auth-card button[type="submit"] {
   width: 100%;
   height: var(--auth-row-h);
-  margin-top: 14px;
   padding: 0 16px;
-  border: 1px solid var(--border) !important;           /* marco gris visible */
-  border-radius: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
   background: #ffffff;
   color: var(--celeste);
   font-weight: 600;
-  font-size: 16px;                                       /* +1 punto */
+  font-size: 17px; /* un poco más grande */
   cursor: pointer;
   transition: background .18s, color .18s, box-shadow .18s, transform .06s;
   font-family: var(--font-sans);
-  box-shadow: 0 2px 10px rgba(0,0,0,0.04) !important;    /* sombra como tabs */
 }
 .auth-card button[type="submit"]:hover {
   background: var(--celeste);
   color: #ffffff;
-  box-shadow: 0 12px 34px rgba(0,163,224,.20) !important;
+  box-shadow: 0 12px 34px rgba(0,163,224,.20);
 }
 
 /* Footer */
@@ -135,7 +143,7 @@ body {
   font-size: 12px;
   color: #64748b;
   border-top: 1px solid var(--border);
-  background: #ffffff; /* asegura branco baixo */
+  background: #ffffff;
 }
 
 /* Móbil: iconos máis grandes */

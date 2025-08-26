@@ -89,10 +89,12 @@ export default function Login() {
 
       {err && <p style={{ margin: '8px 0 0', color: '#b91c1c' }}>{err}</p>}
 
-      {/* Herda os estilos do botón de LandingPage.css (borde/sombra tipo tabs) */}
-      <button type="submit" disabled={loading}>
-        {loading ? 'Accedendo…' : 'Fillos dunha paixón, imos!!'}
-      </button>
+      {/* Envoltura igual a la caja de Tabs */}
+      <div class="cta-wrap">
+        <button type="submit" disabled={loading}>
+          {loading ? 'Accedendo…' : 'Fillos dunha paixón, imos!!'}
+        </button>
+      </div>
     </form>
   );
 }
