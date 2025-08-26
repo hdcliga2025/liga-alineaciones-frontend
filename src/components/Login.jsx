@@ -39,71 +39,67 @@ export default function Login() {
       "
     >
       <style>{`
+        /* Fondo branco */
         html, body, #app { background:#ffffff !important; }
 
-        #login-root { --blue:#3892ff; --h:44px; } /* mesma altura inputs e botón */
+        /* Altura comum */
+        #login-root { --h: 50px; --blue:#3892ff; }
 
-        /* Panel principal (unha soa caixa) */
+        /* Panel principal (coincide co contedor dos tabs) */
         #login-root .panel{
           background:#fff;border:1px solid #e5e7eb;border-radius:16px;
           padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.06);
           max-width:760px;width:100%;
         }
 
-        /* Márxenes laterais máis amplos para campos e botón */
-        #login-root .form-wrap{ margin: 0 40px; }
-        @media (max-width: 480px){ #login-root .form-wrap{ margin: 0 20px; } }
+        /* O formulario ocupa o mesmo ancho interno que os tabs: padding horizontal = 16px */
+        #login-root .auth-form{ padding:0 16px; margin:0; }
 
-        #login-root .group{ margin:12px 0; }
+        .group{ margin:12px 0; }
 
-        /* Campo fino e longo (alto = 44px) */
-        #login-root .field{
+        /* Campos finos e longos, mesma altura ca o botón */
+        .field{
           display:flex;align-items:center;gap:12px;
-          border:1px solid #d1d5db !important; border-radius:12px !important;
-          background:#fff !important; padding:6px 16px !important;
-          min-height:var(--h) !important;
+          border:1px solid #d1d5db; border-radius:12px;
+          background:#fff; padding:0 16px; height:var(--h);
           transition:border-color .15s, box-shadow .15s;
+          width:100%;
         }
-        #login-root .field:focus-within{
-          border-color:var(--blue) !important;
-          box-shadow:0 0 0 3px rgba(56,146,255,.16) !important;
+        .field:focus-within{ border-color:var(--blue); box-shadow:0 0 0 3px rgba(56,146,255,.16); }
+        .input{
+          border:none;outline:none;flex:1;background:transparent;
+          font: 1rem/1.2 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
         }
-        #login-root .input{
-          border:none !important; outline:none !important; flex:1;
-          background:transparent !important; font-size:1rem; line-height:1.2;
-        }
-        #login-root .icon{ width:24px;height:24px;opacity:.85 }
+        .icon{ width:24px;height:24px;opacity:.85 }
 
         /* Ollo SVG co mesmo trazo */
-        #login-root .eye-btn{
-          width:28px;height:28px;display:grid;place-items:center;
+        .eye-btn{
+          width:32px;height:32px;display:grid;place-items:center;
           background:transparent;border:0;cursor:pointer;opacity:.9;
         }
-        #login-root .eye-btn:hover{ opacity:1 }
+        .eye-btn:hover{ opacity:1 }
 
-        /* Botón “Imos!!” = estilo “Entra”: branco, texto azul, borde gris suave, sombra; hover invertido */
-        #login-root .cta{
-          width:100%; min-height:var(--h); padding:0 20px;
-          border:1px solid #e6e9f0 !important;               /* SIN borde celeste */
-          border-radius:12px !important;
-          background:#ffffff !important; color:var(--blue) !important;
-          font-weight:700; cursor:pointer;
-          box-shadow:0 8px 26px rgba(0,0,0,.06);              /* sombra suave tipo tab */
+        /* Botón igual a “Entra”: branco, borde gris suave, sombra; hover invertido; ancho 100% */
+        .cta{
+          width:100%; height:var(--h);
+          border:1px solid #e6e9f0; border-radius:12px;
+          background:#ffffff; color:var(--blue); font-weight:700; cursor:pointer;
+          box-shadow:0 8px 26px rgba(0,0,0,.06);
           transition:background .18s,color .18s,box-shadow .18s,transform .06s;
           display:flex;align-items:center;justify-content:center;
-          margin-top:12px;                                    /* centrado por width:100% */
+          margin-top:12px;
         }
-        #login-root .cta:hover{
-          background:var(--blue) !important; color:#ffffff !important;
-          box-shadow:0 12px 34px rgba(56,146,255,.22) !important;
+        .cta:hover{
+          background:var(--blue); color:#ffffff;
+          box-shadow:0 12px 34px rgba(56,146,255,.22);
         }
-        #login-root .cta:active{ transform:translateY(1px) }
+        .cta:active{ transform:translateY(1px); }
 
-        #login-root .err{ margin:8px 0 0; color:#b91c1c }
+        .err{ margin:8px 0 0; color:#b91c1c; }
       `}</style>
 
       <div class="panel">
-        <form onSubmit={handleSubmit} noValidate class="form-wrap">
+        <form class="auth-form" onSubmit={handleSubmit} noValidate>
           {/* Email */}
           <div class="group">
             <div class="field" aria-label="Email">
@@ -156,12 +152,13 @@ export default function Login() {
           {err && <p class="err">{err}</p>}
 
           <button type="submit" class="cta" disabled={loading}>
-            {loading ? 'Accedendo…' : 'Imos!!'}
+            {loading ? 'Accedendo…' : 'Veña, dálle!!'}
           </button>
         </form>
       </div>
     </main>
   );
 }
+
 
 
