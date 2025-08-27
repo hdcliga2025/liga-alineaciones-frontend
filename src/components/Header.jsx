@@ -1,7 +1,6 @@
 // src/components/Header.jsx
 import { h } from "preact";
 import { useEffect, useState } from "preact/hooks";
-import { Link } from "preact-router/match";
 
 export default function Header() {
   const [now, setNow] = useState("");
@@ -24,65 +23,43 @@ export default function Header() {
     return () => clearInterval(t);
   }, []);
 
-  const wrap = {
-    position: "relative",
-    padding: "8px 14px",
-    background: "rgba(0, 64, 128, 0.10)", // ~90% transparente
-    color: "white",
+  const bar = {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    height: 52,
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: "16px",
+    padding: "8px 12px",
+    background: "rgba(0, 64, 128, 0.10)", // ~90% transparente
     backdropFilter: "saturate(120%) blur(2px)",
     WebkitBackdropFilter: "saturate(120%) blur(2px)",
-    borderBottom: "1px solid rgba(255,255,255,0.10)",
+    borderBottom: "1px solid rgba(0,0,0,0.06)",
   };
 
-  const left = {
-    fontFamily: "'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
-    fontWeight: 600,
-    fontSize: "13px",
-    opacity: 0.95,
+  const clock = {
+    fontFamily:
+      "'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif",
+    fontWeight: 700,
+    fontSize: 13,
+    color: "#0f172a", // negro/azul muy oscuro para contraste
     whiteSpace: "nowrap",
-  };
-
-  const nav = { display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" };
-  const link = {
-    color: "white",
-    textDecoration: "none",
-    fontWeight: 600,
-    padding: "6px 8px",
-    borderRadius: "8px",
-  };
-  const linkActive = {
-    ...link,
-    background: "rgba(255,255,255,0.18)",
+    opacity: 0.95,
   };
 
   return (
-    <header style={wrap}>
-      {/* Reloxo á esquerda */}
-      <div style={left}>{now}</div>
-
-      {/* Ligazóns simples (axusta rutas reais) */}
-      <nav style={nav}>
-        <Link activeClassName="active" href="/" style={link} activeStyle={linkActive}>
-          Inicio
-        </Link>
-        <span style={{ opacity: 0.35 }}>|</span>
-        <Link activeClassName="active" href="/partidos" style={link} activeStyle={linkActive}>
-          Partidos
-        </Link>
-        <span style={{ opacity: 0.35 }}>|</span>
-        <Link activeClassName="active" href="/haz-tu-11" style={link} activeStyle={linkActive}>
-          Fai o teu 11
-        </Link>
-        <span style={{ opacity: 0.35 }}>|</span>
-        <Link activeClassName="active" href="/clasificacion" style={link} activeStyle={linkActive}>
-          Clasificación
-        </Link>
-      </nav>
-    </header>
+    <>
+      <header style={bar}>
+        <div style={clock}>{now}</div>
+        {/* No links aquí: el header sólo muestra el reloj. 
+            Los botones (campá, perfil, pechar) se colocan con NavBar, fijados arriba a la derecha. */}
+      </header>
+      {/* Espaciador para que o contido non quede cuberto polo header fixo */}
+      <div style={{ height: 52 }} />
+    </>
   );
 }
 

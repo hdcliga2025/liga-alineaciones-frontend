@@ -4,6 +4,7 @@ import { useEffect, useState } from "preact/hooks";
 import { route } from "preact-router";
 import { supabase } from "../lib/supabaseClient.js";
 
+/* Iconos outline, coherentes con login/registro */
 const IcoBell = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -27,7 +28,6 @@ const IcoClose = () => (
 );
 
 export default function NavBar({ currentPath }) {
-  // Ocultar en públicas
   const isPublic = ["/", "/login", "/register"].includes(currentPath);
   const [unread, setUnread] = useState(0);
 
@@ -55,16 +55,16 @@ export default function NavBar({ currentPath }) {
     };
   }, []);
 
+  /* Fijamos los botones en la esquina superior derecha — visualmente dentro del Header */
   const wrap = {
     display: isPublic ? "none" : "flex",
     gap: "10px",
-    position: "sticky",
-    top: 0,
-    justifyContent: "flex-end",
-    alignItems: "center",
-    padding: "8px 12px",
+    position: "fixed",
+    top: 7,
+    right: 12,
+    zIndex: 1100,
     background: "transparent",
-    zIndex: 10,
+    alignItems: "center",
   };
 
   const btn = {
@@ -76,14 +76,14 @@ export default function NavBar({ currentPath }) {
     borderRadius: 12,
     border: "1px solid #e5e7eb",
     background: "#ffffff",
-    color: "#0ea5e9", // celeste-500
+    color: "#0ea5e9", /* celeste-500 */
     boxShadow: "0 2px 8px rgba(0,0,0,.06)",
     cursor: "pointer",
   };
 
   const btnClose = {
     ...btn,
-    color: "#ef4444", // vermello para pechar
+    color: "#ef4444",
   };
 
   const badge = {
@@ -106,18 +106,15 @@ export default function NavBar({ currentPath }) {
 
   return (
     <div style={wrap}>
-      {/* Notificacións */}
       <button title="Notificacións" style={btn} onClick={() => route("/notificacions")}>
         <IcoBell />
         <span style={badge}>{unread}</span>
       </button>
 
-      {/* Perfil */}
       <button title="Perfil" style={btn} onClick={() => route("/perfil")}>
         <IcoUser />
       </button>
 
-      {/* Pechar sesión */}
       <button
         title="Pechar sesión"
         style={btnClose}
@@ -131,3 +128,4 @@ export default function NavBar({ currentPath }) {
     </div>
   );
 }
+
