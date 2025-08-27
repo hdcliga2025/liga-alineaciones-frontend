@@ -33,15 +33,18 @@ export default function App() {
     typeof window !== "undefined" ? window.location.pathname : "/"
   );
 
+  const publicPaths = ["/", "/login", "/register"];
+  const isPublic = publicPaths.includes(currentPath);
+
   return (
     <>
       {/* Sincroniza auth e crea/actualiza o perfil */}
       <AuthWatcher />
 
-      {/* Header global (moi transparente) + reloxo */}
-      <Header />
+      {/* Header global só en rutas privadas */}
+      {!isPublic && <Header />}
 
-      {/* Barra superior privada (notis, perfil, pechar). Xa oculta en públicas. */}
+      {/* Barra superior privada (notis, perfil, pechar) */}
       <NavBar currentPath={currentPath} />
 
       {/* Rutas */}

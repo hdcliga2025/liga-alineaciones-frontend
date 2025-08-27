@@ -4,7 +4,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { supabase } from '../lib/supabaseClient.js';
 import './Dashboard.css';
 
-/* ICONOS outline (coherencia cos formularios) */
+/* ICONOS outline */
 const IcoBall = () => (
   <svg class="ico-svg" viewBox="0 0 24 24" fill="none">
     <circle cx="12" cy="12" r="9"/>
@@ -60,23 +60,6 @@ const IcoClipboard = () => (
   </svg>
 );
 
-function pickFirstNameLike({ first_name, full_name, email }) {
-  if (first_name && String(first_name).trim()) {
-    const s = String(first_name).trim();
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
-  if (full_name && String(full_name).trim()) {
-    const first = String(full_name).trim().split(/\s+/)[0];
-    if (first) return first.charAt(0).toUpperCase() + first.slice(1);
-  }
-  if (email && String(email).includes('@')) {
-    const local = String(email).split('@')[0];
-    const token = local.split(/[._-]/)[0] || local;
-    if (token) return token.charAt(0).toUpperCase() + token.slice(1);
-  }
-  return 'Amigx';
-}
-
 export default function Dashboard() {
   const [name, setName] = useState('Amigx');
 
@@ -90,23 +73,17 @@ export default function Dashboard() {
       try {
         const { data: prof } = await supabase
           .from('profiles')
-          .select('first_name, full_name, email')
+          .select('first_name')
           .eq('id', user.id)
           .single();
 
-        const shown = pickFirstNameLike({
-          first_name: prof?.first_name,
-          full_name: prof?.full_name,
-          email: prof?.email || user.email
-        });
+        const shown = prof?.first_name && String(prof.first_name).trim()
+          ? String(prof.first_name).trim()
+          : 'Amigx';
+
         if (mounted) setName(shown);
       } catch {
-        const shown = pickFirstNameLike({
-          first_name: undefined,
-          full_name: user.user_metadata?.full_name,
-          email: user.email
-        });
-        if (mounted) setName(shown);
+        if (mounted) setName('Amigx');
       }
     })();
     return () => { mounted = false; };
@@ -127,7 +104,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* GRID PRINCIPAL */}
+      {/* GRID PRINCIPAL (todas pechadas ao cargar) */}
       <section class="dash-grid dash-grid--main">
         {/* Calendario */}
         <article class={`main-block ${open==='partidos' ? 'open--partidos' : ''}`}>
