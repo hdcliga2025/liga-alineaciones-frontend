@@ -4,65 +4,85 @@ import { useEffect, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 import "./Dashboard.css";
 
+function Block({ id, color, iconClass, title, desc, children }) {
+  const [open, setOpen] = useState(false);
+  const wrapCls = `main-block ${open ? `open--${id}` : ""}`;
+  return (
+    <div class={wrapCls}>
+      <a class="main-card" onClick={() => setOpen(v => !v)}>
+        <div class={`dash-icon ${iconClass}`} />
+        <div class="dash-text">
+          <h3 class="dash-card-header">{title}</h3>
+          <p class="dash-card-desc">{desc}</p>
+        </div>
+        <div class={`chev ${open ? "open" : ""}`}>⌃</div>
+      </a>
+      <div id={`sub-${id}`} class={`subgrid ${open ? "open" : ""}`}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+const Sub = ({ className, title, desc }) => (
+  <a class={`subcard ${className || ""}`}>
+    <div class="sub-ico sub-ico--calendar" />
+    <div class="sub-texts">
+      <div class="sub-title"><strong>{title}</strong></div>
+      <div class="sub-desc">{desc}</div>
+    </div>
+  </a>
+);
+
 export default function Dashboard() {
-  const [firstName, setFirstName] = useState("");
+  const [nome, setNome] = useState("");
 
   useEffect(() => {
-    let mounted = true;
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       const uid = session?.user?.id;
       if (!uid) return;
       const { data } = await supabase
         .from("profiles")
-        .select("first_name")
-        .eq("id", uid)
-        .maybeSingle();
-      if (mounted) setFirstName((data?.first_name || "").trim());
+        .select("first_name,full_name")
+        .eq("id", uid).maybeSingle();
+      const first = (data?.first_name || "").trim();
+      const full  = (data?.full_name  || "").trim();
+      const greet = first || (full ? full.split(" ")[0] : "");
+      setNome(greet || "amigx");
     })();
-    return () => { mounted = false; };
   }, []);
 
-  const nome = firstName || "amig@";
-
   return (
-    <main class="dash-wrap">
-      <div class="dash-hero two-cols">
-        <img class="dash-hero-img fill-col" src="/logoHDC.jpg" alt="HDC" />
+    <main class="dash-wrap" style={{ paddingTop: 70 }}>
+      <section class="dash-hero two-cols">
+        <img src="/logoHDC.jpg" alt="HDC" class="dash-hero-img fill-col" />
         <h2 class="dash-greet">
           Boas <span class="dash-name">{nome}</span>, benvidx á Liga das Aliñacións
         </h2>
-      </div>
+      </section>
 
-      {/* Aquí va tu grid/cards existente */}
-      <div class="dash-grid dash-grid--main">
-        <a class="main-block open--partidos main-card" href="/partidos">
-          <div class="dash-icon dash-icon--ball"><span>⚽</span></div>
-          <div class="dash-text">
-            <p class="dash-card-header"><b>Calendario</b></p>
-            <p class="dash-card-desc">Próximo • Vindeiros • Finalizados</p>
-          </div>
-          <div class="chev">⌄</div>
-        </a>
+      <section class="dash-grid dash-grid--main">
+        <Block id="partidos" iconClass="dash-icon--ball"
+               title="Calendario" desc="Próximos, Vindeiros, Finalizados">
+          <Sub title="Próximos partidos" desc="Datas e horarios máis próximos" />
+          <Sub title="Vindeiros" desc="Máis aló da próxima xornada" />
+          <Sub title="Finalizados" desc="Histórico e resultados" />
+        </Block>
 
-        <a class="main-block open--alineacions main-card" href="/haz-tu-11">
-          <div class="dash-icon dash-icon--shirt"><span>👕</span></div>
-          <div class="dash-text">
-            <p class="dash-card-header"><b>Xogar ás Aliñacións</b></p>
-            <p class="dash-card-desc">Convocatoria • Fai o teu 11 • Oficial • Normas</p>
-          </div>
-          <div class="chev">⌄</div>
-        </a>
+        <Block id="alineacions" iconClass="dash-icon--shirt"
+               title="Xogar ás Aliñacións" desc="Convocatoria, Fai o teu 11, Aliñación oficial, Normas">
+          <Sub title="Convocatoria" desc="Lista de xogadoras/es" />
+          <Sub title="Fai o teu 11" desc="Escolle a túa aliñación" />
+          <Sub title="Normas" desc="Como se puntúa" />
+        </Block>
 
-        <a class="main-block open--clasificacions main-card" href="/clasificacion">
-          <div class="dash-icon dash-icon--trophy"><span>🏆</span></div>
-          <div class="dash-text">
-            <p class="dash-card-header"><b>Clasificacións</b></p>
-            <p class="dash-card-desc">Último partido • Xeral</p>
-          </div>
-          <div class="chev">⌄</div>
-        </a>
-      </div>
+        <Block id="clasificacions" iconClass="dash-icon--trophy"
+               title="Clasificacións" desc="Último partido e Xeral">
+          <Sub title="Último partido" desc="Puntos e posto" />
+          <Sub title="Xeral" desc="Acumulado da tempada" />
+        </Block>
+      </section>
     </main>
   );
 }
