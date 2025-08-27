@@ -4,7 +4,7 @@ import { useState } from "preact/hooks";
 import { Router } from "preact-router";
 
 import AuthWatcher from "./components/AuthWatcher.jsx";
-import NavBar from "./components/NavBar.jsx";
+import Header from "./components/Header.jsx";
 
 /* PÁXINAS PÚBLICAS */
 import LandingPage from "./pages/LandingPage.jsx";
@@ -34,13 +34,9 @@ export default function App() {
 
   return (
     <>
-      {/* Sincroniza auth e crea/actualiza o perfil */}
       <AuthWatcher />
+      <Header currentPath={currentPath} />
 
-      {/* Barra superior (non se amosa en /, /login, /register) */}
-      <NavBar currentPath={currentPath} />
-
-      {/* Rutas */}
       <Router onChange={(e) => setCurrentPath(e.url)}>
         {/* Públicas */}
         <LandingPage path="/" />

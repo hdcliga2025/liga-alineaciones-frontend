@@ -1,14 +1,13 @@
 // src/pages/Dashboard.jsx
 import { h } from "preact";
 import { useEffect, useState } from "preact/hooks";
-import { supabase } from "../lib/supabaseClient.js";
+import { supabase } from "../lib/supabaseClient";
 import "./Dashboard.css";
 
-function Block({ id, color, iconClass, title, desc, children }) {
+function Block({ id, iconClass, title, desc, children }) {
   const [open, setOpen] = useState(false);
-  const wrapCls = `main-block ${open ? `open--${id}` : ""}`;
   return (
-    <div class={wrapCls}>
+    <div class={`main-block ${open ? `open--${id}` : ""}`}>
       <a class="main-card" onClick={() => setOpen(v => !v)}>
         <div class={`dash-icon ${iconClass}`} />
         <div class="dash-text">
@@ -24,9 +23,9 @@ function Block({ id, color, iconClass, title, desc, children }) {
   );
 }
 
-const Sub = ({ className, title, desc }) => (
-  <a class={`subcard ${className || ""}`}>
-    <div class="sub-ico sub-ico--calendar" />
+const Sub = ({ title, desc, iclass = "sub-ico--calendar" }) => (
+  <a class="subcard">
+    <div class={`sub-ico ${iclass}`} />
     <div class="sub-texts">
       <div class="sub-title"><strong>{title}</strong></div>
       <div class="sub-desc">{desc}</div>
@@ -35,7 +34,7 @@ const Sub = ({ className, title, desc }) => (
 );
 
 export default function Dashboard() {
-  const [nome, setNome] = useState("");
+  const [nome, setNome] = useState("amigx");
 
   useEffect(() => {
     (async () => {
@@ -48,8 +47,7 @@ export default function Dashboard() {
         .eq("id", uid).maybeSingle();
       const first = (data?.first_name || "").trim();
       const full  = (data?.full_name  || "").trim();
-      const greet = first || (full ? full.split(" ")[0] : "");
-      setNome(greet || "amigx");
+      setNome(first || (full ? full.split(" ")[0] : "amigx"));
     })();
   }, []);
 
@@ -64,26 +62,25 @@ export default function Dashboard() {
 
       <section class="dash-grid dash-grid--main">
         <Block id="partidos" iconClass="dash-icon--ball"
-               title="Calendario" desc="Próximos, Vindeiros, Finalizados">
-          <Sub title="Próximos partidos" desc="Datas e horarios máis próximos" />
-          <Sub title="Vindeiros" desc="Máis aló da próxima xornada" />
-          <Sub title="Finalizados" desc="Histórico e resultados" />
+          title="Calendario" desc="Próximos, Vindeiros, Finalizados">
+          <Sub title="Próximos partidos" desc="Datas e horarios máis próximos" iclass="sub-ico--calendar" />
+          <Sub title="Vindeiros" desc="Máis aló da próxima xornada" iclass="sub-ico--tgt" />
+          <Sub title="Finalizados" desc="Histórico e resultados" iclass="sub-ico--book" />
         </Block>
 
         <Block id="alineacions" iconClass="dash-icon--shirt"
-               title="Xogar ás Aliñacións" desc="Convocatoria, Fai o teu 11, Aliñación oficial, Normas">
-          <Sub title="Convocatoria" desc="Lista de xogadoras/es" />
-          <Sub title="Fai o teu 11" desc="Escolle a túa aliñación" />
-          <Sub title="Normas" desc="Como se puntúa" />
+          title="Xogar ás Aliñacións" desc="Convocatoria, Fai o teu 11, Aliñación oficial, Normas">
+          <Sub title="Convocatoria" desc="Lista de xogadoras/es" iclass="sub-ico--flag" />
+          <Sub title="Fai o teu 11" desc="Escolle a túa aliñación" iclass="sub-ico--meg" />
+          <Sub title="Normas" desc="Como se puntúa" iclass="sub-ico--clip" />
         </Block>
 
         <Block id="clasificacions" iconClass="dash-icon--trophy"
-               title="Clasificacións" desc="Último partido e Xeral">
-          <Sub title="Último partido" desc="Puntos e posto" />
-          <Sub title="Xeral" desc="Acumulado da tempada" />
+          title="Clasificacións" desc="Último partido e Xeral">
+          <Sub title="Último partido" desc="Puntos e posto" iclass="sub-ico--tgt" />
+          <Sub title="Xeral" desc="Acumulado da tempada" iclass="sub-ico--book" />
         </Block>
       </section>
     </main>
   );
 }
-

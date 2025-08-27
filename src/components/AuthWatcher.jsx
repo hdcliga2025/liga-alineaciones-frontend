@@ -4,7 +4,7 @@ import { useEffect } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient";
 import { route } from "preact-router";
 
-const PUBLIC_PATHS = ["/", "/login", "/register"];
+const PUBLIC = ["/", "/login", "/register"];
 
 export default function AuthWatcher() {
   useEffect(() => {
@@ -21,20 +21,25 @@ export default function AuthWatcher() {
         .eq("id", user.id)
         .maybeSingle();
 
-      const metaFirst = user.user_metadata?.first_name || "";
-      const metaLast  = user.user_metadata?.last_name  || "";
-      const first_name = metaFirst || existing?.first_name || "";
-      const last_name  = metaLast  || existing?.last_name  || "";
-      const full_name  =
-        (first_name || last_name)
-          ? `${first_name} ${last_name}`.trim()
-          : (existing?.full_name || user.user_metadata?.full_name || "");
+      const first = user.user_metadata?.first_name || existing?.first_name || "";
+      const last  = user.user_metadata?.last_name  || existing?.last_name  || "";
+      const full  = (first || last)
+        ? `${first} ${last}`.trim()
+        : (existing?.full_name || user.user_metadata?.full_name || "");
 
-      const email = user.email || existing?.email || "";
       const phone = existing?.phone || user.user_metadata?.phone || "";
+      const email = user.email || existing?.email || "";
 
       await supabase.from("profiles").upsert(
-        { id: user.id, first_name, last_name, full_name, phone, email, updated_at: new Date().toISOString() },
+        {
+          id: user.id,
+          first_name: first,
+          last_name:  last,
+          full_name:  full,
+          phone,
+          email,
+          updated_at: new Date().toISOString(),
+        },
         { onConflict: "id" }
       );
     };
@@ -43,19 +48,19 @@ export default function AuthWatcher() {
       const sess = data?.session;
       if (sess) {
         await ensureProfile();
-        if (PUBLIC_PATHS.includes(location.pathname)) route("/dashboard");
-      } else {
-        if (!PUBLIC_PATHS.includes(location.pathname)) route("/login");
+        if (PUBLIC.includes(location.pathname)) route("/dashboard");
+      } else if (!PUBLIC.includes(location.pathname)) {
+        route("/login");
       }
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange(async (event) => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (ev) => {
       if (!alive) return;
-      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+      if (ev === "SIGNED_IN" || ev === "TOKEN_REFRESHED") {
         await ensureProfile();
-        if (PUBLIC_PATHS.includes(location.pathname)) route("/dashboard");
+        if (PUBLIC.includes(location.pathname)) route("/dashboard");
       }
-      if (event === "SIGNED_OUT" || event === "USER_DELETED") {
+      if (ev === "SIGNED_OUT" || ev === "USER_DELETED") {
         route("/login");
       }
     });
@@ -65,4 +70,3 @@ export default function AuthWatcher() {
 
   return null;
 }
-
