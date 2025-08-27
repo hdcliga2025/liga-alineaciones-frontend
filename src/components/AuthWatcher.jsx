@@ -44,16 +44,19 @@ export default function AuthWatcher() {
       );
     };
 
+    // Estado inicial
     supabase.auth.getSession().then(async ({ data }) => {
       const sess = data?.session;
       if (sess) {
         await ensureProfile();
+        // Sólo saltamos a /dashboard si está en una pública
         if (PUBLIC.includes(location.pathname)) route("/dashboard");
       } else if (!PUBLIC.includes(location.pathname)) {
         route("/login");
       }
     });
 
+    // Cambios de auth
     const { data: sub } = supabase.auth.onAuthStateChange(async (ev) => {
       if (!alive) return;
       if (ev === "SIGNED_IN" || ev === "TOKEN_REFRESHED") {

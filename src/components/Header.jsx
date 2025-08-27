@@ -35,18 +35,16 @@ export default function Header({ currentPath }) {
   useEffect(() => {
     if (isPublic) return;
     const t = setInterval(() => {
-      setClock(
-        new Date().toLocaleString("gl-ES", {
-          timeZone: "Europe/Madrid",
-          weekday: "long", day: "2-digit", month: "long", year: "numeric",
-          hour: "2-digit", minute: "2-digit", second: "2-digit",
-        })
-      );
+      setClock(new Date().toLocaleString("gl-ES", {
+        timeZone: "Europe/Madrid",
+        weekday: "long", day: "2-digit", month: "long", year: "numeric",
+        hour: "2-digit", minute: "2-digit", second: "2-digit",
+      }));
     }, 1000);
     return () => clearInterval(t);
   }, [isPublic]);
 
-  // Contador de notificacións
+  // Contador de non lidas
   useEffect(() => {
     if (isPublic) return;
     const refresh = async () => {
@@ -84,7 +82,6 @@ export default function Header({ currentPath }) {
   };
   const left = { color: "#0ea5e9", fontWeight: 700, fontSize: 13 };
   const right = { display: "flex", gap: 10 };
-
   const btn = {
     position: "relative",
     width: 36, height: 36, borderRadius: 12,

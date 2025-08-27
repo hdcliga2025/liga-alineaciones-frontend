@@ -9,6 +9,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    flowType: "pkce", // clave para evitar “Accedendo…” en móbil
+    flowType: "pkce", // login fiable en móbil
   },
 });

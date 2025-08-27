@@ -44,7 +44,9 @@ export default function Dashboard() {
       const { data } = await supabase
         .from("profiles")
         .select("first_name,full_name")
-        .eq("id", uid).maybeSingle();
+        .eq("id", uid)
+        .maybeSingle();
+
       const first = (data?.first_name || "").trim();
       const full  = (data?.full_name  || "").trim();
       setNome(first || (full ? full.split(" ")[0] : "amigx"));
