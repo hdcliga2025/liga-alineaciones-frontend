@@ -13,7 +13,6 @@ export default function AuthWatcher() {
       const user = u?.user;
       if (!user) return;
 
-      // Metadata esperada do rexistro
       const first_name = user.user_metadata?.first_name || user.user_metadata?.full_name || "";
       const last_name  = user.user_metadata?.last_name  || "";
       const phone      = user.user_metadata?.phone      || "";
@@ -36,19 +35,19 @@ export default function AuthWatcher() {
     });
 
     // Cambios de sesión
-    const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event) => {
       if (!active) return;
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
         await ensureProfile();
         if (["/login", "/register", "/"].includes(location.pathname)) route("/dashboard");
       }
       if (event === "SIGNED_OUT") {
-        // navegación dura para romper estados atascados
-        window.location.replace("/login");
+        try { window.location.replace("/login"); } catch {}
+        setTimeout(() => { try { window.location.href = "/login"; } catch {} }, 50);
       }
     });
 
-    // Fallback por se queda colgado
+    // Fallback por si queda colgado
     const fallback = setTimeout(async () => {
       const { data } = await supabase.auth.getSession();
       const has = !!data?.session;

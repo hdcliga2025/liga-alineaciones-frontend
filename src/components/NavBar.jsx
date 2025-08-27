@@ -104,8 +104,9 @@ export default function NavBar({ currentPath }) {
         onClick={async () => {
           try { await supabase.auth.signOut(); } catch {}
           try { localStorage.clear(); sessionStorage.clear(); } catch {}
-          // navegación dura para evitar estados atascados en móvil
-          window.location.replace("/login");
+          // doble intento de navegación "dura" para iOS/Android
+          try { window.location.replace("/login"); } catch {}
+          setTimeout(() => { try { window.location.href = "/login"; } catch {} }, 50);
         }}
       >
         <IcoClose />

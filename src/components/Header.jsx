@@ -20,12 +20,10 @@ const IcoShield = () => (
 
 export default function Header() {
   const [now, setNow] = useState("");
-  const [celeste, setCeleste] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    // reloj
     const fmt = () =>
       new Intl.DateTimeFormat("gl-ES", {
         weekday: "long", day: "numeric", month: "long", year: "numeric",
@@ -34,18 +32,14 @@ export default function Header() {
       }).format(new Date());
     setNow(fmt());
     const t1 = setInterval(() => setNow(fmt()), 1000);
-
-    // alterna color cada 10s y lo mantiene 10s
-    const t2 = setInterval(() => setCeleste((v) => !v), 10000);
-
-    return () => { clearInterval(t1); clearInterval(t2); };
+    return () => clearInterval(t1);
   }, []);
 
   useEffect(() => {
     (async () => {
       try {
         const { data: rpc } = await supabase.rpc("is_admin");
-        if (rpc === true) { setIsAdmin(true); return; }
+        if (rpc === true) return setIsAdmin(true);
       } catch {}
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -69,10 +63,9 @@ export default function Header() {
   const clock = {
     fontFamily: "'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif",
     fontWeight: 800,
-    fontSize: 17, // un poco mayor
-    color: celeste ? "#0ea5e9" : "#0f172a",
+    fontSize: 17,
+    color: "#0ea5e9", // SIEMPRE celeste
     whiteSpace: "nowrap",
-    transition: "color .25s ease",
     opacity: 0.96,
   };
 

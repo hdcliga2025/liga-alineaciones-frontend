@@ -1,100 +1,97 @@
 // src/components/Login.jsx
-import { h } from 'preact';
-import { useState } from 'preact/hooks';
-import { route } from 'preact-router';
-import { supabase } from '../lib/supabaseClient.js';
+import { h } from "preact";
+import { useState } from "preact/hooks";
+import { supabase } from "../lib/supabaseClient";
+import { route } from "preact-router";
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPwd, setShowPwd] = useState(false);
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
   const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState('');
+  const [msg, setMsg] = useState(null);
 
-  async function handleSubmit(e) {
+  async function onSubmit(e) {
     e.preventDefault();
-    setErr('');
+    setMsg(null);
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error, data } = await supabase.auth.signInWithPassword({
         email: email.trim(),
-        password,
+        password: pass,
       });
-      if (error) return setErr(error.message || 'Erro iniciando sesión.');
-      route('/dashboard', true);
-    } catch (e2) {
-      console.error(e2);
-      setErr('Erro inesperado iniciando sesión.');
+      if (error) {
+        if (error.message?.toLowerCase().includes("email not confirmed")) {
+          setMsg("Debe confirmar o seu correo antes de acceder.");
+        } else {
+          setMsg("Credenciais incorrectas ou conta non confirmada.");
+        }
+        return;
+      }
+      if (data?.user) {
+        route("/dashboard");
+      } else {
+        setMsg("Non se puido iniciar sesión. Téntao de novo.");
+      }
+    } catch (err) {
+      setMsg("Erro de conexión. Comproba a túa rede.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
-      {/* Email */}
-      <div class="input-row" aria-label="Email" style={{ marginBottom: '10px' }}>
-        <svg class="icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <rect x="3" y="5" width="18" height="14" rx="2" stroke="#6b7280" stroke-width="1.5" />
-          <path d="M3 6l9 7 9-7" stroke="#6b7280" stroke-width="1.5" />
-        </svg>
+    <form onSubmit={onSubmit}>
+      <div style={{ position: "relative", marginBottom: 10 }}>
+        <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#0ea5e9" }}>
+          {/* sobre */}
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="5" width="18" height="14" rx="2"/>
+            <path d="M3 7l9 6 9-6"/>
+          </svg>
+        </div>
         <input
-          id="email"
           type="email"
           placeholder="Email"
           value={email}
-          onInput={(e) => setEmail(e.currentTarget.value)}
-          autoComplete="username"
+          onInput={(e)=>setEmail(e.currentTarget.value)}
           required
+          style={{ width: "100%", padding: "12px 14px 12px 42px", border: "1px solid #e5e7eb", borderRadius: 10 }}
         />
       </div>
 
-      {/* Contrasinal */}
-      <div class="input-row" aria-label="Contrasinal">
-        <svg class="icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <rect x="5" y="10" width="14" height="10" rx="2" stroke="#6b7280" stroke-width="1.5" />
-          <path d="M8 10V7a4 4 0 118 0v3" stroke="#6b7280" stroke-width="1.5" />
-        </svg>
-        <input
-          id="password"
-          type={showPwd ? 'text' : 'password'}
-          placeholder="Contrasinal"
-          value={password}
-          onInput={(e) => setPassword(e.currentTarget.value)}
-          autoComplete="current-password"
-          required
-        />
-        <button
-          type="button"
-          class="eye-btn"
-          aria-label={showPwd ? 'Ocultar contrasinal' : 'Amosar contrasinal'}
-          onClick={() => setShowPwd((s) => !s)}
-          title={showPwd ? 'Ocultar' : 'Amosar'}
-        >
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
-            {showPwd ? (
-              <g stroke="#6b7280" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 12s4.5-7 10-7 10 7 10 7-4.5 7-10 7S2 12 2 12Z" />
-                <circle cx="12" cy="12" r="3.2" />
-              </g>
-            ) : (
-              <g stroke="#6b7280" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 12s4.5-7 10-7 10 7 10 7-4.5 7-10 7S2 12 2 12Z" />
-                <path d="M6 6l12 12" />
-              </g>
-            )}
+      <div style={{ position: "relative", marginBottom: 6 }}>
+        <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#0ea5e9" }}>
+          {/* candado */}
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="10" rx="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
           </svg>
-        </button>
+        </div>
+        <input
+          type="password"
+          placeholder="Contrasinal"
+          value={pass}
+          onInput={(e)=>setPass(e.currentTarget.value)}
+          required
+          style={{ width: "100%", padding: "12px 14px 12px 42px", border: "1px solid #e5e7eb", borderRadius: 10 }}
+        />
       </div>
 
-      {err && <p style={{ margin: '8px 0 0', color: '#b91c1c' }}>{err}</p>}
+      {msg && <p style={{ color: "#ef4444", margin: "6px 0 8px", fontWeight: 600 }}>{msg}</p>}
 
-      {/* Envoltura igual a la caja de Tabs */}
-      <div class="cta-wrap">
-        <button type="submit" disabled={loading}>
-          {loading ? 'Accedendo…' : 'Fillos dunha paixón, imos!!'}
-        </button>
-      </div>
+      <button
+        type="submit"
+        disabled={loading}
+        style={{
+          width: "100%", padding: "12px", borderRadius: 12, background: "#fff",
+          border: "1px solid #e5e7eb", boxShadow: "0 2px 10px rgba(0,0,0,.08)",
+          fontWeight: 800, color: "#0ea5e9", cursor: "pointer"
+        }}
+      >
+        {loading ? "Accedendo..." : "Veña, dálle!!"}
+      </button>
     </form>
   );
 }
