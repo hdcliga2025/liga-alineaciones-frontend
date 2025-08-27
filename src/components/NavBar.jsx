@@ -1,80 +1,127 @@
-// src/components/AuthWatcher.jsx
+// src/components/NavBar.jsx
 import { h } from "preact";
-import { useEffect } from "preact/hooks";
-import { supabase } from "../lib/supabaseClient";
+import { useEffect, useState } from "preact/hooks";
 import { route } from "preact-router";
+import { supabase } from "../lib/supabaseClient.js";
 
-const PUBLIC_PATHS = ["/", "/login", "/register"];
+const IcoBell = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 8a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9"/>
+    <path d="M10 21a2 2 0 0 0 4 0"/>
+  </svg>
+);
 
-export default function AuthWatcher() {
+const IcoUser = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="7" r="4"/>
+    <path d="M6 21v-2a6 6 0 0 1 12 0v2"/>
+  </svg>
+);
+
+const IcoClose = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="9"/>
+    <path d="M15 9l-6 6M9 9l6 6"/>
+  </svg>
+);
+
+export default function NavBar({ currentPath }) {
+  const isPublic = ["/", "/login", "/register"].includes(currentPath);
+  const [unread, setUnread] = useState(0);
+  const [clock, setClock] = useState("");
+
   useEffect(() => {
-    let alive = true;
+    if (isPublic) return;
+    const t = setInterval(() => {
+      const now = new Date();
+      const fmt = now.toLocaleString("gl-ES", {
+        timeZone: "Europe/Madrid",
+        weekday: "long", day: "2-digit", month: "long", year: "numeric",
+        hour: "2-digit", minute: "2-digit", second: "2-digit",
+      });
+      setClock(fmt);
+    }, 1000);
+    return () => clearInterval(t);
+  }, [isPublic]);
 
-    const ensureProfile = async () => {
-      const { data: u } = await supabase.auth.getUser();
-      const user = u?.user;
-      if (!user) return;
-
-      // Lee perfil existente (por se hai valores xa gardados)
-      const { data: existing } = await supabase
-        .from("profiles")
-        .select("first_name,last_name,full_name,phone,email")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      const metaFirst = user.user_metadata?.first_name || "";
-      const metaLast  = user.user_metadata?.last_name  || "";
-      const first_name = metaFirst || existing?.first_name || "";
-      const last_name  = metaLast  || existing?.last_name  || "";
-      const full_name  =
-        (first_name || last_name) ?
-          `${first_name} ${last_name}`.trim() :
-          (existing?.full_name || user.user_metadata?.full_name || "");
-
-      const email = user.email || existing?.email || "";
-      const phone = existing?.phone || user.user_metadata?.phone || "";
-
-      await supabase
-        .from("profiles")
-        .upsert(
-          { id: user.id, first_name, last_name, full_name, phone, email, updated_at: new Date().toISOString() },
-          { onConflict: "id" }
-        );
+  useEffect(() => {
+    if (isPublic) return;
+    const refreshCount = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const uid = session?.user?.id;
+      if (!uid) return setUnread(0);
+      const { count } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", uid)
+        .eq("is_read", false);
+      setUnread(count || 0);
     };
+    refreshCount();
+    const onFocus = () => refreshCount();
+    const onVisible = () => document.visibilityState === "visible" && refreshCount();
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [isPublic]);
 
-    // Estado inicial
-    supabase.auth.getSession().then(async ({ data }) => {
-      const sess = data?.session;
-      if (sess) {
-        await ensureProfile();
-        if (PUBLIC_PATHS.includes(location.pathname)) {
-          try { route("/dashboard"); } catch {}
-        }
-      } else {
-        // Sen sesión, fóra das públicas → a login
-        if (!PUBLIC_PATHS.includes(location.pathname)) {
-          route("/login");
-        }
-      }
-    });
+  if (isPublic) return null;
 
-    // Listener de cambios
-    const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!alive) return;
-      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        await ensureProfile();
-        if (PUBLIC_PATHS.includes(location.pathname)) {
-          try { route("/dashboard"); } catch {}
-        }
-      }
-      if (event === "SIGNED_OUT" || event === "USER_DELETED") {
-        try { route("/login"); } catch {}
-      }
-    });
+  const bar = {
+    position: "fixed", top: 0, left: 0, right: 0, height: 46,
+    display: "flex", alignItems: "center", justifyContent: "space-between",
+    padding: "0 10px", backdropFilter: "saturate(180%) blur(8px)",
+    background: "rgba(255,255,255,0.9)", borderBottom: "1px solid #eef2ff",
+    zIndex: 1200,
+  };
+  const left = { display: "flex", alignItems: "center", gap: 8, color: "#0ea5e9", fontWeight: 700, fontSize: 13 };
+  const right = { display: "flex", alignItems: "center", gap: 10 };
 
-    return () => { alive = false; sub?.subscription?.unsubscribe?.(); };
-  }, []);
+  const btn = {
+    position: "relative", display: "grid", placeItems: "center",
+    width: 36, height: 36, borderRadius: 12,
+    border: "1px solid #e5e7eb", background: "#fff", color: "#0ea5e9",
+    boxShadow: "0 2px 8px rgba(0,0,0,.06)", cursor: "pointer",
+  };
+  const btnClose = { ...btn, color: "#ef4444" };
 
-  return null;
+  const hardRedirectLogin = () => {
+    try { route("/login"); } catch {}
+    try { window.location.replace("/login"); } catch {}
+    setTimeout(() => { try { window.location.href = "/login"; } catch {} }, 30);
+  };
+
+  const onSignOut = async () => {
+    try { await supabase.auth.signOut(); } catch {}
+    try { localStorage.clear(); sessionStorage.clear(); } catch {}
+    hardRedirectLogin();
+  };
+
+  return (
+    <div style={bar}>
+      <div style={left}><span>{clock}</span></div>
+      <div style={right}>
+        <button title="Mensaxes" style={btn} onClick={() => route("/mensaxes")}>
+          <IcoBell />
+          {unread > 0 && (
+            <span style={{
+              position: "absolute", top: -4, right: -4, minWidth: 18, height: 18, padding: "0 4px",
+              borderRadius: 10, background: "#ef4444", color: "#fff", fontSize: 11, fontWeight: 700,
+              display: "grid", placeItems: "center", lineHeight: 1, boxShadow: "0 1px 4px rgba(0,0,0,.2)",
+            }}>{unread}</span>
+          )}
+        </button>
+        <button title="Perfil" style={btn} onClick={() => route("/perfil")}><IcoUser /></button>
+        <button title="Pechar sesión" style={btnClose} onClick={onSignOut}><IcoClose /></button>
+      </div>
+    </div>
+  );
 }
+
 
