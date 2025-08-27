@@ -4,6 +4,7 @@ import { useState } from "preact/hooks";
 import { Router } from "preact-router";
 
 import AuthWatcher from "./components/AuthWatcher.jsx";
+import Header from "./components/Header.jsx";
 import NavBar from "./components/NavBar.jsx";
 
 /* PÁXINAS PÚBLICAS */
@@ -18,7 +19,6 @@ import Perfil from "./pages/Perfil.jsx";
 import Partidos from "./pages/Partidos.jsx";
 import HazTu11 from "./pages/HazTu11.jsx";
 import Clasificacion from "./pages/Clasificacion.jsx";
-import Admin from "./pages/Admin.jsx";
 
 /* 404 */
 const NotFound = () => (
@@ -38,7 +38,10 @@ export default function App() {
       {/* Sincroniza auth e crea/actualiza o perfil */}
       <AuthWatcher />
 
-      {/* Barra superior (non se amosa en /, /login, /register) */}
+      {/* Header global (moi transparente) + reloxo */}
+      <Header />
+
+      {/* Barra superior privada (notis, perfil, pechar). Xa oculta en públicas. */}
       <NavBar currentPath={currentPath} />
 
       {/* Rutas */}
@@ -55,7 +58,6 @@ export default function App() {
         <Partidos path="/partidos" />
         <HazTu11 path="/haz-tu-11" />
         <Clasificacion path="/clasificacion" />
-        <Admin path="/admin" />
 
         {/* 404 */}
         <NotFound default />

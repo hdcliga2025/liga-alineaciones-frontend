@@ -4,7 +4,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { supabase } from '../lib/supabaseClient.js';
 import './Dashboard.css';
 
-/* --------- NOVOS ICONOS (outline, redondeados e máis grandes) ---------- */
+/* ICONOS outline (coherencia cos formularios) */
 const IcoBall = () => (
   <svg class="ico-svg" viewBox="0 0 24 24" fill="none">
     <circle cx="12" cy="12" r="9"/>
@@ -60,7 +60,6 @@ const IcoClipboard = () => (
   </svg>
 );
 
-/* ----------------- helpers ------------------ */
 function pickFirstNameLike({ first_name, full_name, email }) {
   if (first_name && String(first_name).trim()) {
     const s = String(first_name).trim();
@@ -80,9 +79,7 @@ function pickFirstNameLike({ first_name, full_name, email }) {
 
 export default function Dashboard() {
   const [name, setName] = useState('Amigx');
-  const [now, setNow] = useState('');
 
-  /* Nome curto desde profiles */
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -115,42 +112,18 @@ export default function Dashboard() {
     return () => { mounted = false; };
   }, []);
 
-  /* Hora Madrid (sen etiqueta) */
-  useEffect(() => {
-    const fmt = () =>
-      new Intl.DateTimeFormat('gl-ES', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false,
-        timeZone: 'Europe/Madrid'
-      }).format(new Date());
-    setNow(fmt());
-    const t = setInterval(() => setNow(fmt()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  /* Acordeón: pechado por defecto */
   const [open, setOpen] = useState(null);
   const toggle = (key) => setOpen((prev) => (prev === key ? null : key));
 
   return (
     <div class="dash-wrap">
-      {/* HERO arriba de todo */}
+      {/* HERO */}
       <div class="dash-hero two-cols">
-        {/* Ruta pública a /public/logoHDC.jpg */}
         <img class="dash-hero-img fill-col" src="/logoHDC.jpg" alt="HDC Liga" />
         <div>
           <p class="dash-greet">
             Boas <span class="dash-name">{name}</span>, benvidx á Liga das Aliñacións
           </p>
-          <div class="dash-time-wrap">
-            <span class="dash-time">{now}</span>
-          </div>
         </div>
       </div>
 

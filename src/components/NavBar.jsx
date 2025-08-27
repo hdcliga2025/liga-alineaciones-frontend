@@ -2,96 +2,132 @@
 import { h } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { route } from "preact-router";
-import { supabase } from "../lib/supabaseClient";
+import { supabase } from "../lib/supabaseClient.js";
 
-export default function NavBar({ currentPath = "" }) {
+const IcoBell = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 8a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9"/>
+    <path d="M10 21a2 2 0 0 0 4 0"/>
+  </svg>
+);
+const IcoUser = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="7" r="4"/>
+    <path d="M6 21v-2a6 6 0 0 1 12 0v2"/>
+  </svg>
+);
+const IcoClose = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9"/>
+    <path d="M15 9l-6 6M9 9l6 6"/>
+  </svg>
+);
+
+export default function NavBar({ currentPath }) {
+  // Ocultar en públicas
   const isPublic = ["/", "/login", "/register"].includes(currentPath);
   const [unread, setUnread] = useState(0);
 
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const { data: u } = await supabase.auth.getUser();
-      const uid = u?.user?.id;
-      if (!uid) return;
-      const { count } = await supabase
-        .from("notifications")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", uid)
-        .eq("is_read", false);
-      if (active) setUnread(count || 0);
-    })();
-    return () => { active = false; };
-  }, [currentPath]);
+  async function refreshCount() {
+    const { data: { session } } = await supabase.auth.getSession();
+    const uid = session?.user?.id;
+    if (!uid) return setUnread(0);
+    const { count } = await supabase
+      .from("notifications")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", uid)
+      .eq("is_read", false);
+    setUnread(count || 0);
+  }
 
-  if (isPublic) return null;
+  useEffect(() => {
+    refreshCount();
+    const onFocus = () => refreshCount();
+    const onVisible = () => document.visibilityState === "visible" && refreshCount();
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
 
   const wrap = {
-    position: "sticky", top: 0, zIndex: 40,
-    background: "rgba(255,255,255,.75)", backdropFilter: "blur(8px)",
-    borderBottom: "1px solid #eef2ff",
+    display: isPublic ? "none" : "flex",
+    gap: "10px",
+    position: "sticky",
+    top: 0,
+    justifyContent: "flex-end",
+    alignItems: "center",
+    padding: "8px 12px",
+    background: "transparent",
+    zIndex: 10,
   };
-  const bar = {
-    maxWidth: 1080, margin: "0 auto", padding: "10px 12px",
-    display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10,
-  };
-  const round = {
-    width: 40, height: 40, borderRadius: "50%", display: "grid", placeItems: "center",
-    boxShadow: "0 4px 12px rgba(0,0,0,.12)", cursor: "pointer", border: "1px solid #e5e7eb",
-    position: "relative"
-  };
-  const whiteBtn = { ...round, background: "#fff", color: "#0f172a" };
-  const exitBtn = { ...round, background: "#fff", border: "1px solid #fecaca" };
-  const ico = { fontSize: 18, fontWeight: 800, lineHeight: 1 };
-  const redX = { ...ico, color: "#ef4444", fontSize: 20, fontWeight: 900 };
 
-  const doLogout = async () => {
-    await supabase.auth.signOut();
-    route("/login");
+  const btn = {
+    position: "relative",
+    display: "grid",
+    placeItems: "center",
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    border: "1px solid #e5e7eb",
+    background: "#ffffff",
+    color: "#0ea5e9", // celeste-500
+    boxShadow: "0 2px 8px rgba(0,0,0,.06)",
+    cursor: "pointer",
+  };
+
+  const btnClose = {
+    ...btn,
+    color: "#ef4444", // vermello para pechar
+  };
+
+  const badge = {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    padding: "0 4px",
+    borderRadius: 10,
+    background: "#ef4444",
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: 700,
+    display: unread > 0 ? "grid" : "none",
+    placeItems: "center",
+    lineHeight: 1,
+    boxShadow: "0 1px 4px rgba(0,0,0,.2)",
   };
 
   return (
     <div style={wrap}>
-      <div style={bar}>
-        {/* Notificacións */}
-        <button
-          style={whiteBtn}
-          title="Notificacións"
-          aria-label="Notificacións"
-          onClick={() => route("/notificacions")}
-        >
-          <span style={ico}>🔔</span>
-          {unread > 0 && (
-            <span
-              style={{
-                position: "absolute", top: 6, right: 6, width: 10, height: 10,
-                background: "#ef4444", borderRadius: "50%", boxShadow: "0 0 0 2px #fff"
-              }}
-              aria-hidden="true"
-            />
-          )}
-        </button>
+      {/* Notificacións */}
+      <button title="Notificacións" style={btn} onClick={() => route("/notificacions")}>
+        <IcoBell />
+        <span style={badge}>{unread}</span>
+      </button>
 
-        {/* Perfil */}
-        <button
-          style={whiteBtn}
-          title="Perfil (editar datos / solicitar borrado)"
-          aria-label="Perfil"
-          onClick={() => route("/perfil")}
-        >
-          <span style={ico}>👤</span>
-        </button>
+      {/* Perfil */}
+      <button title="Perfil" style={btn} onClick={() => route("/perfil")}>
+        <IcoUser />
+      </button>
 
-        {/* Saír */}
-        <button
-          style={exitBtn}
-          title="Pechar sesión"
-          aria-label="Pechar sesión"
-          onClick={doLogout}
-        >
-          <span style={redX}>✖</span>
-        </button>
-      </div>
+      {/* Pechar sesión */}
+      <button
+        title="Pechar sesión"
+        style={btnClose}
+        onClick={async () => {
+          await supabase.auth.signOut();
+          route("/login");
+        }}
+      >
+        <IcoClose />
+      </button>
     </div>
   );
 }
