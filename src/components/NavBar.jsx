@@ -4,7 +4,6 @@ import { useEffect, useState } from "preact/hooks";
 import { route } from "preact-router";
 import { supabase } from "../lib/supabaseClient.js";
 
-/* Iconos outline coherentes co resto da UI */
 const IcoBell = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -55,7 +54,6 @@ export default function NavBar({ currentPath }) {
     };
   }, []);
 
-  /* Posicionámolos “dentro” do Header fixo */
   const wrap = {
     display: isPublic ? "none" : "flex",
     gap: "10px",
@@ -120,7 +118,8 @@ export default function NavBar({ currentPath }) {
         style={btnClose}
         onClick={async () => {
           await supabase.auth.signOut();
-          route("/login"); // SIEMPRE a /login
+          // redirigir de forma fuerte para evitar estados atascados en móvil
+          window.location.assign("/login");
         }}
       >
         <IcoClose />

@@ -10,7 +10,6 @@ const IcoBack = () => (
     <path d="M15 18l-6-6 6-6"/>
   </svg>
 );
-
 const IcoShield = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -21,7 +20,7 @@ const IcoShield = () => (
 
 export default function Header() {
   const [now, setNow] = useState("");
-  const [blink, setBlink] = useState(false);
+  const [celeste, setCeleste] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -35,12 +34,14 @@ export default function Header() {
       }).format(new Date());
     setNow(fmt());
     const t1 = setInterval(() => setNow(fmt()), 1000);
-    const t2 = setInterval(() => { setBlink(true); setTimeout(() => setBlink(false), 600); }, 5000);
+
+    // alterna color cada 10s y lo mantiene 10s
+    const t2 = setInterval(() => setCeleste((v) => !v), 10000);
+
     return () => { clearInterval(t1); clearInterval(t2); };
   }, []);
 
   useEffect(() => {
-    // comprobar admin (rpc is_admin ou role no perfil)
     (async () => {
       try {
         const { data: rpc } = await supabase.rpc("is_admin");
@@ -60,7 +61,7 @@ export default function Header() {
     position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000, height: 52,
     display: "flex", alignItems: "center", justifyContent: "center",
     padding: "8px 12px",
-    background: "rgba(0, 64, 128, 0.10)", // ~90% transparente
+    background: "rgba(0, 64, 128, 0.10)",
     backdropFilter: "saturate(120%) blur(2px)", WebkitBackdropFilter: "saturate(120%) blur(2px)",
     borderBottom: "1px solid rgba(0,0,0,0.06)",
   };
@@ -68,8 +69,8 @@ export default function Header() {
   const clock = {
     fontFamily: "'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif",
     fontWeight: 800,
-    fontSize: 16, // un poco mayor
-    color: blink ? "#0ea5e9" : "#0f172a",
+    fontSize: 17, // un poco mayor
+    color: celeste ? "#0ea5e9" : "#0f172a",
     whiteSpace: "nowrap",
     transition: "color .25s ease",
     opacity: 0.96,

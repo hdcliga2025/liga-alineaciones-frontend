@@ -3,7 +3,7 @@ import { h } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
-/* ===== Icons (outline, coherentes coa UI) ===== */
+/* ===== Icons ===== */
 const IcoUser = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -41,7 +41,6 @@ const IcoId = () => (
     <path d="M13 9h6M13 12h6M13 15h4"/>
   </svg>
 );
-/* Carnet Celta distinto (tarxeta con estrela) */
 const IcoCardStar = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -51,7 +50,7 @@ const IcoCardStar = () => (
   </svg>
 );
 
-/* ===== Campo con icono dentro ===== */
+/* ===== Field ===== */
 function Field({ type="text", value, onInput, placeholder, disabled=false, required=false, pattern, name, icon }) {
   return (
     <div style={{ position: "relative", marginBottom: 12 }}>
@@ -147,7 +146,7 @@ export default function Perfil() {
     return () => { mounted = false; };
   }, []);
 
-  /* Botón styles (Gardar verde, Modificar celeste, Baixa rojo borde/texto) */
+  /* Botón styles — marco negro nos tres */
   const btnBase = {
     width: "100%",
     padding: "12px",
@@ -156,10 +155,11 @@ export default function Perfil() {
     fontWeight: 800,
     boxShadow: "0 2px 10px rgba(0,0,0,.08)",
     cursor: "pointer",
+    border: "1px solid #0f172a", // marco negro
   };
-  const btnSave   = { ...btnBase, border: "1px solid #22c55e", color: "#22c55e" };
-  const btnEdit   = { ...btnBase, border: "1px solid #0ea5e9", color: "#0ea5e9" };
-  const btnDanger = { ...btnBase, border: "1px solid #ef4444", color: "#ef4444" };
+  const btnSave   = { ...btnBase, color: "#22c55e" }; // texto verde
+  const btnEdit   = { ...btnBase, color: "#0ea5e9" }; // texto celeste
+  const btnDanger = { ...btnBase, color: "#ef4444" }; // texto rojo
 
   async function handleSave() {
     setMsg(null);
@@ -242,18 +242,16 @@ export default function Perfil() {
 
   return (
     <main style={{ maxWidth: 720, margin: "0 auto", padding: "14px 16px" }}>
-      {/* Grid botóns: 1 col móbil, 3 col escritorio */}
       <style>{`
         .perfil-actions { display: grid; grid-template-columns: 1fr; gap: 10px; }
         @media (min-width: 680px) { .perfil-actions { grid-template-columns: 1fr 1fr 1fr; } }
       `}</style>
 
-      {/* Encabezado solicitado */}
       <h1 style={{ fontWeight: 800, fontSize: 18, margin: "6px 0 4px" }}>
         Comunicación
       </h1>
       <p style={{ margin: "0 0 12px", fontSize: 15 }}>
-        Comunicación: Mantén actualizados os teus datos
+        Mantén actualizados os teus datos
       </p>
 
       <section
