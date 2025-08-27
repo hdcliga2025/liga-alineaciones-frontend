@@ -3,7 +3,7 @@ import { h } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
-/* ===== Icons (outline) ===== */
+/* ===== Icons (outline, coherentes coa UI) ===== */
 const IcoUser = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -41,6 +41,15 @@ const IcoId = () => (
     <path d="M13 9h6M13 12h6M13 15h4"/>
   </svg>
 );
+/* Carnet Celta distinto (tarxeta con estrela) */
+const IcoCardStar = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="5" width="18" height="14" rx="2"/>
+    <path d="M7 11h6M7 15h4"/>
+    <path d="M18 11l1.2 2.4 2.6.38-1.9 1.85.45 2.57-2.35-1.24-2.35 1.24.45-2.57-1.9-1.85 2.6-.38L18 11z"/>
+  </svg>
+);
 
 /* ===== Campo con icono dentro ===== */
 function Field({ type="text", value, onInput, placeholder, disabled=false, required=false, pattern, name, icon }) {
@@ -69,33 +78,25 @@ function Field({ type="text", value, onInput, placeholder, disabled=false, requi
   );
 }
 
-/* DateField con placeholder overlay */
-function DateField({ value, onInput, placeholder, disabled=false, name }) {
+/* Date field SEN texto (só icona + control nativo) */
+function DateField({ value, onInput, disabled=false, name }) {
   return (
     <div style={{ position: "relative", marginBottom: 12 }}>
       <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#0ea5e9" }}>
         <IcoCake />
       </div>
-      {!value && (
-        <span style={{
-          position: "absolute", left: 42, top: "50%", transform: "translateY(-50%)",
-          color: "#94a3b8", pointerEvents: "none", fontSize: 15
-        }}>
-          {placeholder}
-        </span>
-      )}
       <input
         type="date"
         name={name}
         value={value || ""}
         onInput={(e) => onInput?.(e.currentTarget.value)}
         disabled={disabled}
+        lang="gl-ES"
         style={{
           width: "100%", padding: "12px 14px 12px 42px",
           border: "1px solid #e5e7eb", borderRadius: 10,
           fontFamily: "inherit", fontSize: 15,
           background: disabled ? "#f8fafc" : "#fff",
-          color: value ? "inherit" : "transparent", // para que non tape o placeholder overlay
         }}
       />
     </div>
@@ -146,20 +147,19 @@ export default function Perfil() {
     return () => { mounted = false; };
   }, []);
 
+  /* Botón styles solicitados */
   const btnBase = {
-    width: "100%", padding: "12px",
-    border: "1px solid #e5e7eb", borderRadius: 12,
-    background: "#fff", color: "#0ea5e9",
-    fontWeight: 800, boxShadow: "0 2px 10px rgba(0,0,0,.08)",
+    width: "100%",
+    padding: "12px",
+    borderRadius: 12,
+    background: "#fff",
+    fontWeight: 800,
+    boxShadow: "0 2px 10px rgba(0,0,0,.08)",
     cursor: "pointer",
   };
-
-  const btnDanger = {
-    ...btnBase,
-    background: "#fca5a5",     // rojo degradado (más suave)
-    color: "#fff",
-    border: "1px solid #ef4444",
-  };
+  const btnSave = { ...btnBase, border: "1px solid #22c55e", color: "#22c55e" }; // verde
+  const btnEdit = { ...btnBase, border: "1px solid #0ea5e9", color: "#0ea5e9" }; // celeste
+  const btnDanger = { ...btnBase, border: "1px solid #ef4444", color: "#ef4444" }; // rojo, fondo blanco
 
   async function handleSave() {
     setMsg(null);
@@ -221,7 +221,7 @@ export default function Perfil() {
     });
     if (error) { setMsg({ type: "err", text: "Non se puido rexistrar a solicitude." }); return; }
 
-    // 2) Deixar constancia en feedback para admins
+    // 2) Aviso interno
     await supabase.from("feedback").insert({
       user_id: uid,
       subject: "Solicitude de baixa",
@@ -229,22 +229,25 @@ export default function Perfil() {
       created_at: new Date().toISOString(),
     });
 
-    // 3) Abrir cliente de correo para avisar a admins
-    const adminMails = ["HDCLiga@gmail.com","HDCLiga2@gmail.com"];
-    const subject = encodeURIComponent("[HDC Liga] Solicitude de baixa");
-    const body = encodeURIComponent(
-      "Solicito a miña baixa da plataforma HDC Liga.\n\nGrazas."
-    );
-    window.location.href = `mailto:${adminMails.join(",")}?subject=${subject}&body=${body}`;
-
-    setMsg({
-      type: "ok",
-      text: "Solicitude rexistrada. Abriuse o teu correo para avisar a administración.",
-    });
+    // 3) Email automático (Edge Function se a configurades)
+    try {
+      await supabase.functions.invoke("mail-notify", {
+        body: { type: "delete_requested", to: email, name: firstName || "soci@" },
+      });
+      setMsg({ type: "ok", text: "Solicitude rexistrada. Enviouse un correo de confirmación." });
+    } catch {
+      setMsg({ type: "ok", text: "Solicitude rexistrada. (Correo non enviado automaticamente)" });
+    }
   }
 
   return (
     <main style={{ maxWidth: 720, margin: "0 auto", padding: "14px 16px" }}>
+      {/* CSS: 1 columna en móbil, 3 en escritorio */}
+      <style>{`
+        .perfil-actions { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        @media (min-width: 680px) { .perfil-actions { grid-template-columns: 1fr 1fr 1fr; } }
+      `}</style>
+
       <h1 style={{ fontWeight: 800, fontSize: 18, margin: "6px 0 12px" }}>
         Comunicación: Mantén actualizados os teus datos
       </h1>
@@ -261,13 +264,12 @@ export default function Perfil() {
         <Field icon={<IcoMail />}   placeholder="Email"       value={email}     onInput={setEmail}     disabled={!editable} required name="email" type="email" />
         <Field icon={<IcoMobile />} placeholder="Móbil"       value={phone}     onInput={setPhone}     disabled={!editable} required name="phone" type="tel" pattern="^\+?\d{9,15}$" />
 
-        {/* Separador + Opcionais */}
         <hr style={{ border: 0, borderTop: "1px solid #e5e7eb", margin: "14px 0" }} />
         <p style={{ margin: "0 0 8px", fontWeight: 700, color: "#334155" }}>Datos opcionais</p>
 
-        <DateField value={birthDate} onInput={setBirthDate} placeholder="Data de nacemento (dd/mm/aaaa)" disabled={!editable} name="birth_date" />
-        <Field icon={<IcoId />} placeholder="DNI" value={dni} onInput={setDni} disabled={!editable} name="dni" />
-        <Field icon={<IcoId />} placeholder="ID Carnet Celta" value={carnetId} onInput={setCarnetId} disabled={!editable} name="carnet_celta_id" />
+        <DateField value={birthDate} onInput={setBirthDate} disabled={!editable} name="birth_date" />
+        <Field icon={<IcoId />}       placeholder="DNI"             value={dni}      onInput={setDni}      disabled={!editable} name="dni" />
+        <Field icon={<IcoCardStar />} placeholder="ID Carnet Celta" value={carnetId} onInput={setCarnetId} disabled={!editable} name="carnet_celta_id" />
 
         {msg && (
           <p style={{ margin: "4px 0 10px", color: msg.type === "ok" ? "#16a34a" : "#ef4444", fontWeight: 600 }}>
@@ -275,38 +277,10 @@ export default function Perfil() {
           </p>
         )}
 
-        {/* Botóns: 3 columnas */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr",
-            gap: 10,
-          }}
-        >
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr",
-              gap: 10,
-            }}
-          >
-            {/* En pantallas medias/grandes mostramos 3 columnas */}
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
-              gap: 10,
-            }}>
-              <button type="button" style={btnBase} onClick={handleSave} disabled={!editable || loading} title="Gardar cambios">
-                Gardar
-              </button>
-              <button type="button" style={btnBase} onClick={() => { setEditable((e) => !e); setMsg(null); }} title="Editar datos">
-                {editable ? "Cancelar" : "Modificar"}
-              </button>
-              <button type="button" style={btnDanger} onClick={handleRequestDelete} title="Solicitar baixa">
-                Solicitar baixa
-              </button>
-            </div>
-          </div>
+        <div className="perfil-actions">
+          <button type="button" style={btnSave}   onClick={handleSave}            disabled={!editable || loading} title="Gardar cambios">Gardar</button>
+          <button type="button" style={btnEdit}   onClick={() => { setEditable((e) => !e); setMsg(null); }} title="Editar datos">{editable ? "Cancelar" : "Modificar"}</button>
+          <button type="button" style={btnDanger} onClick={handleRequestDelete}   title="Solicitar baixa">Solicitar baixa</button>
         </div>
       </section>
     </main>
