@@ -4,7 +4,6 @@ import { useEffect, useState } from "preact/hooks";
 import { route } from "preact-router";
 import { supabase } from "../lib/supabaseClient.js";
 
-/* Iconos outline, coherentes con login/registro */
 const IcoBell = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -55,7 +54,6 @@ export default function NavBar({ currentPath }) {
     };
   }, []);
 
-  /* Fijamos los botones en la esquina superior derecha — visualmente dentro del Header */
   const wrap = {
     display: isPublic ? "none" : "flex",
     gap: "10px",
@@ -76,7 +74,7 @@ export default function NavBar({ currentPath }) {
     borderRadius: 12,
     border: "1px solid #e5e7eb",
     background: "#ffffff",
-    color: "#0ea5e9", /* celeste-500 */
+    color: "#0ea5e9",
     boxShadow: "0 2px 8px rgba(0,0,0,.06)",
     cursor: "pointer",
   };
@@ -106,7 +104,7 @@ export default function NavBar({ currentPath }) {
 
   return (
     <div style={wrap}>
-      <button title="Notificacións" style={btn} onClick={() => route("/notificacions")}>
+      <button title="Mensaxes" style={btn} onClick={() => route("/mensaxes")}>
         <IcoBell />
         <span style={badge}>{unread}</span>
       </button>
@@ -116,16 +114,5 @@ export default function NavBar({ currentPath }) {
       </button>
 
       <button
-        title="Pechar sesión"
-        style={btnClose}
-        onClick={async () => {
-          await supabase.auth.signOut();
-          route("/login");
-        }}
-      >
-        <IcoClose />
-      </button>
-    </div>
-  );
-}
+        titl
 

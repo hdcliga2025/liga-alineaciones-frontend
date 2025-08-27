@@ -8,77 +8,72 @@ export default function AuthWatcher() {
   useEffect(() => {
     let active = true;
 
-    const upsertOwnProfile = async () => {
+    const deduceFirstName = (meta) => {
+      const fn = meta?.first_name;
+      if (fn && String(fn).trim()) return String(fn).trim();
+      const full = meta?.full_name || "";
+      if (full && String(full).trim()) {
+        const first = String(full).trim().split(/\s+/)[0];
+        if (first) return first;
+      }
+      const email = meta?.email || meta?.user_email || "";
+      if (email && typeof email === "string") return email.split("@")[0];
+      return "Amigx";
+    };
+
+    const ensureProfile = async () => {
       const { data: u } = await supabase.auth.getUser();
       const user = u?.user;
       if (!user) return;
 
-      const md = user.user_metadata || {};
-      const first_name = (md.first_name || "").trim();
-      const last_name  = (md.last_name  || "").trim();
-      const full_name  = (md.full_name  || `${first_name} ${last_name}`).trim();
-      const phone = md.phone || "";
-      const email = user.email || "";
+      const meta = {
+        email: user.email || user.user_metadata?.email || "",
+        phone: user.user_metadata?.phone || "",
+        first_name: deduceFirstName({ ...user.user_metadata, email: user.email }),
+        last_name: user.user_metadata?.last_name || user.user_metadata?.apelidos || "",
+      };
 
-      // Crea/actualiza o teu perfil (RLS: id = auth.uid())
-      await supabase
+      // Intenta ler perfil existente para non pisar datos
+      const { data: existing } = await supabase
         .from("profiles")
-        .upsert(
-          {
-            id: user.id,
-            first_name,
-            last_name,
-            full_name,
-            phone,
-            email,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "id" }
-        );
-    };
+        .select("id, first_name, last_name, phone, email, role")
+        .eq("id", user.id)
+        .maybeSingle();
 
-    const goDashboardIfAuthOnPublic = (sess) => {
-      const p = location.pathname;
-      const isPublic = p === "/" || p === "/login" || p === "/register";
-      if (sess && isPublic) route("/dashboard");
-    };
+      const payload = {
+        id: user.id,
+        email: meta.email || existing?.email || user.email || "",
+        phone: meta.phone || existing?.phone || "",
+        first_name: existing?.first_name && String(existing.first_name).trim()
+          ? existing.first_name
+          : meta.first_name,
+        last_name: existing?.last_name ?? meta.last_name ?? "",
+        role: existing?.role || "user",
+        updated_at: new Date().toISOString(),
+      };
 
-    const goLoginIfNoAuthOnPrivate = (sess) => {
-      if (sess) return;
-      const p = location.pathname;
-      const privatePrefixes = [
-        "/dashboard",
-        "/notificacions",
-        "/perfil",
-        "/partidos",
-        "/haz-tu-11",
-        "/clasificacion",
-        "/admin",
-      ];
-      if (privatePrefixes.some((pre) => p.startsWith(pre))) {
-        route("/login");
-      }
+      if (!existing) payload.created_at = new Date().toISOString();
+
+      await supabase.from("profiles").upsert(payload, { onConflict: "id" });
     };
 
     // Estado inicial
     supabase.auth.getSession().then(({ data }) => {
-      const sess = data?.session || null;
-      if (sess) upsertOwnProfile();
-      goDashboardIfAuthOnPublic(sess);
-      goLoginIfNoAuthOnPrivate(sess);
+      const sess = data?.session;
+      if (sess) ensureProfile();
+      if (location.pathname === "/login" && sess) route("/dashboard");
     });
 
     // Listener de cambios
     const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!active) return;
-
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        await upsertOwnProfile();
-        goDashboardIfAuthOnPublic(session);
+        await ensureProfile();
+        if (location.pathname === "/login") route("/dashboard");
       }
-
       if (event === "SIGNED_OUT") {
-        goLoginIfNoAuthOnPrivate(null);
+        // Sempre á landing de login
+        route("/login");
       }
     });
 

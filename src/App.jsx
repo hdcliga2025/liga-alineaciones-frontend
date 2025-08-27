@@ -19,6 +19,7 @@ import Perfil from "./pages/Perfil.jsx";
 import Partidos from "./pages/Partidos.jsx";
 import HazTu11 from "./pages/HazTu11.jsx";
 import Clasificacion from "./pages/Clasificacion.jsx";
+import Mensaxes from "./pages/Mensaxes.jsx";
 
 /* 404 */
 const NotFound = () => (
@@ -38,31 +39,21 @@ export default function App() {
 
   return (
     <>
-      {/* Sincroniza auth e crea/actualiza o perfil */}
       <AuthWatcher />
-
-      {/* Header global só en rutas privadas */}
       {!isPublic && <Header />}
-
-      {/* Barra superior privada (notis, perfil, pechar) */}
       <NavBar currentPath={currentPath} />
 
-      {/* Rutas */}
       <Router onChange={(e) => setCurrentPath(e.url)}>
-        {/* Públicas */}
         <LandingPage path="/" />
         <Login path="/login" />
         <Register path="/register" />
-
-        {/* Privadas */}
         <Dashboard path="/dashboard" />
         <Notificacions path="/notificacions" />
+        <Mensaxes path="/mensaxes" />
         <Perfil path="/perfil" />
         <Partidos path="/partidos" />
         <HazTu11 path="/haz-tu-11" />
         <Clasificacion path="/clasificacion" />
-
-        {/* 404 */}
         <NotFound default />
       </Router>
     </>
