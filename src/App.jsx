@@ -8,6 +8,8 @@ import NavBar from "./components/NavBar.jsx";
 
 /* PÁXINAS PÚBLICAS */
 import LandingPage from "./pages/LandingPage.jsx";
+import Login from "./components/Login.jsx";
+import Register from "./components/Register.jsx";
 
 /* PÁXINAS PRIVADAS */
 import Dashboard from "./pages/Dashboard.jsx";
@@ -32,15 +34,18 @@ export default function App() {
 
   return (
     <>
+      {/* Sincroniza auth e crea/actualiza o perfil */}
       <AuthWatcher />
-      {/* Barra superior só en privadas */}
+
+      {/* Barra superior (non se amosa en /, /login, /register) */}
       <NavBar currentPath={currentPath} />
 
+      {/* Rutas */}
       <Router onChange={(e) => setCurrentPath(e.url)}>
         {/* Públicas */}
         <LandingPage path="/" />
-        <LandingPage path="/login" />
-        <LandingPage path="/register" />
+        <Login path="/login" />
+        <Register path="/register" />
 
         {/* Privadas */}
         <Dashboard path="/dashboard" />
@@ -50,9 +55,11 @@ export default function App() {
         <HazTu11 path="/haz-tu-11" />
         <Clasificacion path="/clasificacion" />
 
+        {/* 404 */}
         <NotFound default />
       </Router>
     </>
   );
 }
+
 
