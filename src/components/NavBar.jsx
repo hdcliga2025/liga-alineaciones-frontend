@@ -79,34 +79,19 @@ export default function NavBar({ currentPath }) {
     cursor: "pointer",
   };
 
-  const btnClose = {
-    ...btn,
-    color: "#ef4444",
-  };
-
-  const badge = {
-    position: "absolute",
-    top: -4,
-    right: -4,
-    minWidth: 18,
-    height: 18,
-    padding: "0 4px",
-    borderRadius: 10,
-    background: "#ef4444",
-    color: "#fff",
-    fontSize: 11,
-    fontWeight: 700,
-    display: unread > 0 ? "grid" : "none",
-    placeItems: "center",
-    lineHeight: 1,
-    boxShadow: "0 1px 4px rgba(0,0,0,.2)",
-  };
+  const btnClose = { ...btn, color: "#ef4444" };
 
   return (
     <div style={wrap}>
       <button title="Mensaxes" style={btn} onClick={() => route("/mensaxes")}>
         <IcoBell />
-        <span style={badge}>{unread}</span>
+        {unread > 0 && (
+          <span style={{
+            position: "absolute", top: -4, right: -4, minWidth: 18, height: 18, padding: "0 4px",
+            borderRadius: 10, background: "#ef4444", color: "#fff", fontSize: 11, fontWeight: 700,
+            display: "grid", placeItems: "center", lineHeight: 1, boxShadow: "0 1px 4px rgba(0,0,0,.2)",
+          }}>{unread}</span>
+        )}
       </button>
 
       <button title="Perfil" style={btn} onClick={() => route("/perfil")}>
@@ -117,9 +102,10 @@ export default function NavBar({ currentPath }) {
         title="Pechar sesión"
         style={btnClose}
         onClick={async () => {
-          await supabase.auth.signOut();
-          // redirigir de forma fuerte para evitar estados atascados en móvil
-          window.location.assign("/login");
+          try { await supabase.auth.signOut(); } catch {}
+          try { localStorage.clear(); sessionStorage.clear(); } catch {}
+          // navegación dura para evitar estados atascados en móvil
+          window.location.replace("/login");
         }}
       >
         <IcoClose />
@@ -127,4 +113,3 @@ export default function NavBar({ currentPath }) {
     </div>
   );
 }
-
