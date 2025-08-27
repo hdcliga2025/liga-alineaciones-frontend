@@ -1,37 +1,30 @@
-/* src/pages/Dashboard.css */
 :root{
   --dash-shadow: rgba(0,0,0,.06);
   --dash-shadow-strong: rgba(0,0,0,.12);
 
-  /* Cores seccións */
   --green-300:#86efac; --green-500:#22c55e;
   --amber-400:#fbbf24; --amber-500:#f59e0b;
   --violet-400:#d8b4fe; --violet-500:#a78bfa;
 
   --celeste:#38bdf8;
-  --celeste-500:#0ea5e9;
-  --border:#eef2ff;
 }
 
-/* Arriba (o Header fixo xa deixa 52px cando existe) */
-.dash-wrap{max-width:1080px;margin:0 auto;padding:8px 16px 20px}
+.dash-wrap{max-width:1080px;margin:0 auto;padding:60px 16px 24px}
 
-/* HERO */
 .dash-hero.two-cols{
   width:min(92vw,380px);
-  margin:0 auto 16px;
-  display:grid;grid-template-columns:1fr 1fr;align-items:center;justify-items:center;gap:8px;
+  margin:12px auto 32px;
+  display:grid;grid-template-columns:1fr 1fr;align-items:center;justify-items:center;gap:2px;
 }
-@media(min-width:560px){.dash-hero.two-cols{width:min(92vw,760px);gap:10px;margin:2px auto 24px}}
-@media(min-width:960px){.dash-hero.two-cols{grid-template-columns:1fr;gap:22px;margin:6px auto 36px}}
+@media(min-width:560px){.dash-hero.two-cols{width:min(92vw,760px);gap:4px;margin:12px auto 36px}}
+@media(min-width:960px){.dash-hero.two-cols{grid-template-columns:1fr;gap:28px;margin:16px auto 56px}}
 .dash-hero-img.fill-col{width:100%;height:100%;max-height:136px;object-fit:contain}
 @media(min-width:960px){.dash-hero-img.fill-col{max-height:220px}}
-
 .dash-greet{font:400 22px/1.22 'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--celeste);text-align:center;margin:0;padding-right:18px}
 @media(min-width:960px){.dash-greet{font-size:26px}}
 .dash-name{color:#111;text-decoration:none}
 
-/* Grid principal */
+/* Grid */
 .dash-grid.dash-grid--main{
   width:min(92vw,380px);margin:0 auto;
   display:grid;grid-template-columns:1fr;gap:14px;justify-items:stretch;
@@ -39,47 +32,38 @@
 @media(min-width:560px){.dash-grid.dash-grid--main{width:min(92vw,760px);grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(min-width:960px){.dash-grid.dash-grid--main{width:min(92vw,1080px);grid-template-columns:repeat(3,minmax(0,1fr))}}
 
-/* Cards principais — máis compactas e icono menor */
+/* Cards principais (como antes) */
 .main-block{display:block}
 .main-card{
   width:100%;display:flex;align-items:center;gap:12px;
-  background:#fff;border:1px solid var(--border);border-radius:20px;
+  background:#fff;border:1px solid #eef2ff;border-radius:20px;
   padding:14px 14px;text-align:left;color:inherit;text-decoration:none;cursor:pointer;
   box-shadow:0 2px 8px var(--dash-shadow);
   transition:transform .15s, box-shadow .15s, border-color .15s;
-  min-height:94px;
+  min-height:104px;
 }
-@media(max-width:559px){.main-card{min-height:100px}}
+@media(max-width:559px){.main-card{min-height:118px}}
 .main-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px var(--dash-shadow-strong);border-color:#dbeafe}
 
-/* Bordo color ao abrir */
+/* Contorno coloreado ao abrir */
 .main-block.open--partidos .main-card{ border-color:var(--green-500); border-width:2px; }
 .main-block.open--alineacions .main-card{ border-color:var(--amber-500); border-width:2px; }
 .main-block.open--clasificacions .main-card{ border-color:var(--violet-500); border-width:2px; }
 
-/* Icono bloque — máis pequeno */
+/* Icono bloque (tamaño original) */
 .dash-icon{
-  flex:0 0 80px;
-  width:80px;height:80px;border-radius:14px;overflow:hidden;
-  display:grid;place-items:center;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 10px rgba(0,0,0,.10);
-  color:var(--celeste-500);
-  border:1px solid transparent;
+  flex:0 0 72px;width:72px;height:72px;border-radius:16px;overflow:hidden;
+  display:grid;place-items:center;box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 10px rgba(0,0,0,.10)
 }
-@media(min-width:960px){.dash-icon{flex:0 0 88px;width:88px;height:88px;border-radius:16px}}
-.dash-icon--ball{   background:linear-gradient(135deg,#dcfce7,#86efac); border-color:var(--green-500); }
-.dash-icon--shirt{  background:linear-gradient(135deg,#fde68a,#f59e0b); border-color:var(--amber-500); }
-.dash-icon--trophy{ background:linear-gradient(135deg,#fae8ff,#d8b4fe); border-color:var(--violet-500); }
+@media(min-width:960px){.dash-icon{flex:0 0 84px;width:84px;height:84px;border-radius:18px}}
+.dash-icon--ball{   background:linear-gradient(135deg,#dcfce7,#86efac) }
+.dash-icon--shirt{  background:linear-gradient(135deg,#fde68a,#f59e0b) }
+.dash-icon--trophy{ background:linear-gradient(135deg,#fae8ff,#d8b4fe) }
 
-/* SVG interior do icono */
-.ico-svg{ width:40px;height:40px; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
-
-/* Textos card */
 .dash-text{display:grid;align-content:center;gap:4px}
 .dash-card-header{font:700 18px/1.15 'Montserrat',system-ui,sans-serif;margin:0}
 .dash-card-desc{font:400 14px/1.25 'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}
 
-/* Chevron */
 .chev{margin-left:auto;font-size:22px;line-height:1;font-weight:800;color:#0f172a;transition:transform .15s ease,color .15s ease}
 .chev.open{transform:rotate(180deg)}
 @media(min-width:960px){.chev{font-size:26px}}
@@ -89,25 +73,50 @@
 
 /* Subgrid */
 .subgrid{overflow:hidden;max-height:0;opacity:.0;transform:translateY(-6px);transition:max-height .25s ease,opacity .2s ease,transform .25s ease}
-.subgrid.open{max-height:600px;opacity:1;transform:translateY(0);margin-top:12px}
+.subgrid.open{max-height:600px;opacity:1;transform:translateY(0);margin-top:10px}
 
-/* Subcards base */
+/* Subcards orixinais */
+#sub-partidos.open .subcard{
+  background:linear-gradient(0deg, rgba(34,197,94,.10), rgba(34,197,94,.10)), #fff;
+  border-color: var(--green-300);
+}
+#sub-partidos.open .subcard:hover{
+  border-color: var(--green-500);
+  background:linear-gradient(0deg, rgba(34,197,94,.16), rgba(34,197,94,.16)), #fff;
+}
+
+#sub-alineacions.open .subcard{
+  background:linear-gradient(0deg, rgba(245,158,11,.10), rgba(245,158,11,.10)), #fff;
+  border-color:#fcd34d;
+}
+#sub-alineacions.open .subcard:hover{
+  border-color: var(--amber-500);
+  background:linear-gradient(0deg, rgba(245,158,11,.16), rgba(245,158,11,.16)), #fff;
+}
+
+#sub-clasificacions.open .subcard{
+  background:linear-gradient(0deg, rgba(167,139,250,.10), rgba(167,139,250,.10)), #fff;
+  border-color: var(--violet-400);
+}
+#sub-clasificacions.open .subcard:hover{
+  border-color: var(--violet-500);
+  background:linear-gradient(0deg, rgba(167,139,250,.16), rgba(167,139,250,.16)), #fff;
+}
+
 .subcard{
   display:flex;align-items:center;gap:10px;
-  background:#fff;border:1px solid var(--border);border-radius:16px;
+  background:#fff;border:1px solid #eef2ff;border-radius:16px;
   padding:12px 12px;margin-bottom:10px;text-decoration:none;color:inherit;
-  box-shadow:none;transition:transform .12s, border-color .12s, background .12s;
-  min-height:76px;
+  box-shadow:none;
+  transition:transform .12s, border-color .12s, background .12s;
+  min-height:72px;
 }
 @media(max-width:559px){.subcard{min-height:84px}}
 .subcard:hover{ transform:translateY(-1px); }
 
-/* Icono subcard */
 .sub-ico{
   flex:0 0 56px;width:56px;height:56px;border-radius:14px;display:grid;place-items:center;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 8px rgba(0,0,0,.10);
-  color:var(--celeste-500);
-  border:1px solid var(--border);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 8px rgba(0,0,0,.10)
 }
 .sub-ico--calendar{background:linear-gradient(135deg,#dcfce7,#86efac)}
 .sub-ico--flag{background:linear-gradient(135deg,#e5e7eb,#cbd5e1)}
@@ -115,19 +124,8 @@
 .sub-ico--clip{background:linear-gradient(135deg,#fee2e2,#fca5a5)}
 .sub-ico--book{background:linear-gradient(135deg,#e0e7ff,#a5b4fc)}
 .sub-ico--tgt{background:linear-gradient(135deg,#dbeafe,#93c5fd)}
-
 .sub-texts{display:grid;gap:2px}
 .sub-title{font:700 16px/1.15 'Montserrat',system-ui,sans-serif;margin:0}
-.sub-desc{font:400 12px/1.3 'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}
-
-/* Estado despregado: só borde coloreado, SEN recheo */
-#sub-partidos.open .subcard{border-color: var(--green-500)!important;background:#fff;border-width:2px}
-#sub-partidos.open .sub-ico{border-color: var(--green-500);color: var(--green-500)}
-
-#sub-alineacions.open .subcard{border-color: var(--amber-500)!important;background:#fff;border-width:2px}
-#sub-alineacions.open .sub-ico{border-color: var(--amber-500);color: var(--amber-500)}
-
-#sub-clasificacions.open .subcard{border-color: var(--violet-500)!important;background:#fff;border-width:2px}
-#sub-clasificacions.open .sub-ico{border-color: var(--violet-500);color: var(--violet-500)}
+.sub-desc{font:400 13px/1.25 'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}
 
 

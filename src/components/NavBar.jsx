@@ -81,6 +81,32 @@ export default function NavBar({ currentPath }) {
 
   const btnClose = { ...btn, color: "#ef4444" };
 
+  const hardRedirectLogin = () => {
+    // 1) Router por si estamos en SPA
+    try { route("/login"); } catch {}
+    // 2) Reemplazo de historial
+    try { window.location.replace("/login"); } catch {}
+    // 3) Asignación directa
+    setTimeout(() => { try { window.location.href = "/login"; } catch {} }, 30);
+    // 4) Ancla invisible por si navegadores antiguos/WebView
+    setTimeout(() => {
+      try {
+        const a = document.createElement("a");
+        a.href = "/login";
+        a.style.display = "none";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      } catch {}
+    }, 60);
+  };
+
+  const onSignOut = async () => {
+    try { await supabase.auth.signOut(); } catch {}
+    try { localStorage.clear(); sessionStorage.clear(); } catch {}
+    hardRedirectLogin();
+  };
+
   return (
     <div style={wrap}>
       <button title="Mensaxes" style={btn} onClick={() => route("/mensaxes")}>
@@ -98,17 +124,7 @@ export default function NavBar({ currentPath }) {
         <IcoUser />
       </button>
 
-      <button
-        title="Pechar sesión"
-        style={btnClose}
-        onClick={async () => {
-          try { await supabase.auth.signOut(); } catch {}
-          try { localStorage.clear(); sessionStorage.clear(); } catch {}
-          // doble intento de navegación "dura" para iOS/Android
-          try { window.location.replace("/login"); } catch {}
-          setTimeout(() => { try { window.location.href = "/login"; } catch {} }, 50);
-        }}
-      >
+      <button title="Pechar sesión" style={btnClose} onClick={onSignOut}>
         <IcoClose />
       </button>
     </div>
