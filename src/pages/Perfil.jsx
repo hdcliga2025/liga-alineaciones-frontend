@@ -147,7 +147,7 @@ export default function Perfil() {
     return () => { mounted = false; };
   }, []);
 
-  /* Botón styles solicitados */
+  /* Botón styles (Gardar verde, Modificar celeste, Baixa rojo borde/texto) */
   const btnBase = {
     width: "100%",
     padding: "12px",
@@ -157,9 +157,9 @@ export default function Perfil() {
     boxShadow: "0 2px 10px rgba(0,0,0,.08)",
     cursor: "pointer",
   };
-  const btnSave = { ...btnBase, border: "1px solid #22c55e", color: "#22c55e" }; // verde
-  const btnEdit = { ...btnBase, border: "1px solid #0ea5e9", color: "#0ea5e9" }; // celeste
-  const btnDanger = { ...btnBase, border: "1px solid #ef4444", color: "#ef4444" }; // rojo, fondo blanco
+  const btnSave   = { ...btnBase, border: "1px solid #22c55e", color: "#22c55e" };
+  const btnEdit   = { ...btnBase, border: "1px solid #0ea5e9", color: "#0ea5e9" };
+  const btnDanger = { ...btnBase, border: "1px solid #ef4444", color: "#ef4444" };
 
   async function handleSave() {
     setMsg(null);
@@ -242,15 +242,19 @@ export default function Perfil() {
 
   return (
     <main style={{ maxWidth: 720, margin: "0 auto", padding: "14px 16px" }}>
-      {/* CSS: 1 columna en móbil, 3 en escritorio */}
+      {/* Grid botóns: 1 col móbil, 3 col escritorio */}
       <style>{`
         .perfil-actions { display: grid; grid-template-columns: 1fr; gap: 10px; }
         @media (min-width: 680px) { .perfil-actions { grid-template-columns: 1fr 1fr 1fr; } }
       `}</style>
 
-      <h1 style={{ fontWeight: 800, fontSize: 18, margin: "6px 0 12px" }}>
-        Comunicación: Mantén actualizados os teus datos
+      {/* Encabezado solicitado */}
+      <h1 style={{ fontWeight: 800, fontSize: 18, margin: "6px 0 4px" }}>
+        Comunicación
       </h1>
+      <p style={{ margin: "0 0 12px", fontSize: 15 }}>
+        Comunicación: Mantén actualizados os teus datos
+      </p>
 
       <section
         style={{
