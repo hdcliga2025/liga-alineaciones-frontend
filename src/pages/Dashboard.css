@@ -2,46 +2,41 @@
 :root{
   --dash-shadow: rgba(0,0,0,.06);
   --dash-shadow-strong: rgba(0,0,0,.12);
-
-  /* Cores seccións */
   --green-300:#86efac; --green-500:#22c55e;
   --amber-400:#fbbf24; --amber-500:#f59e0b;
   --violet-400:#d8b4fe; --violet-500:#a78bfa;
-
   --celeste:#38bdf8;
-  --celeste-500:#0ea5e9;
-  --border:#eef2ff;
 }
 
-/* Conxunto arriba */
-.dash-wrap{max-width:1080px;margin:0 auto;padding:12px 16px 20px}
+.dash-wrap{max-width:1080px;margin:0 auto;padding:60px 16px 24px}
 
-/* HERO */
+/* Hero (móbil máis espazo logo→primeira card) */
 .dash-hero.two-cols{
   width:min(92vw,380px);
-  margin:0 auto 16px;
-  display:grid;grid-template-columns:1fr 1fr;align-items:center;justify-items:center;gap:8px;
+  margin:12px auto 32px;
+  display:grid;grid-template-columns:1fr 1fr;align-items:center;justify-items:center;gap:2px;
 }
-@media(min-width:560px){.dash-hero.two-cols{width:min(92vw,760px);gap:10px;margin:2px auto 24px}}
-@media(min-width:960px){.dash-hero.two-cols{grid-template-columns:1fr;gap:22px;margin:6px auto 36px}}
+/* === NUEVO: intercambiar orde en móbil (logo á dereita, texto á esquerda) === */
+.hero-greet{order:1}
+.hero-logo{order:2}
+
+@media(min-width:560px){
+  .dash-hero.two-cols{width:min(92vw,760px);gap:4px;margin:12px auto 36px}
+}
+@media(min-width:960px){
+  .dash-hero.two-cols{grid-template-columns:1fr;gap:28px;margin:16px auto 56px}
+  /* En escritorio non fai falta forzar orde */
+  .hero-greet{order:initial}
+  .hero-logo{order:initial}
+}
+
 .dash-hero-img.fill-col{width:100%;height:100%;max-height:136px;object-fit:contain}
 @media(min-width:960px){.dash-hero-img.fill-col{max-height:220px}}
-
 .dash-greet{font:400 22px/1.22 'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--celeste);text-align:center;margin:0;padding-right:18px}
 @media(min-width:960px){.dash-greet{font-size:26px}}
-
 .dash-name{color:#111;text-decoration:none}
 
-/* Hora en caixiña */
-.dash-time-wrap{text-align:center;margin-top:6px}
-.dash-time{
-  display:inline-block;padding:6px 12px;border-radius:12px;
-  background:rgba(56,189,248,.08);border:1px solid var(--border);color:#0f172a;
-  font:500 18px/1.25 'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-}
-@media(min-width:960px){.dash-time{font-size:20px}}
-
-/* Grid principal */
+/* Grid */
 .dash-grid.dash-grid--main{
   width:min(92vw,380px);margin:0 auto;
   display:grid;grid-template-columns:1fr;gap:14px;justify-items:stretch;
@@ -53,11 +48,11 @@
 .main-block{display:block}
 .main-card{
   width:100%;display:flex;align-items:center;gap:12px;
-  background:#fff;border:1px solid var(--border);border-radius:20px;
+  background:#fff;border:1px solid #eef2ff;border-radius:20px;
   padding:14px 14px;text-align:left;color:inherit;text-decoration:none;cursor:pointer;
   box-shadow:0 2px 8px var(--dash-shadow);
   transition:transform .15s, box-shadow .15s, border-color .15s;
-  min-height:112px;
+  min-height:104px;
 }
 @media(max-width:559px){.main-card{min-height:118px}}
 .main-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px var(--dash-shadow-strong);border-color:#dbeafe}
@@ -67,23 +62,16 @@
 .main-block.open--alineacions .main-card{ border-color:var(--amber-500); border-width:2px; }
 .main-block.open--clasificacions .main-card{ border-color:var(--violet-500); border-width:2px; }
 
-/* Icono bloque — contorno fino e elegante */
+/* Icono bloque */
 .dash-icon{
-  flex:0 0 120px;width:120px;height:120px;border-radius:20px;overflow:hidden;
-  display:grid;place-items:center;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 10px rgba(0,0,0,.10);
-  color:var(--celeste-500);
-  border:2px solid transparent; /* antes 4px */
+  flex:0 0 72px;width:72px;height:72px;border-radius:16px;overflow:hidden;
+  display:grid;place-items:center;box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 10px rgba(0,0,0,.10)
 }
-@media(min-width:960px){.dash-icon{flex:0 0 128px;width:128px;height:128px;border-radius:22px}}
-.dash-icon--ball{   background:linear-gradient(135deg,#dcfce7,#86efac); border-color:var(--green-500); }
-.dash-icon--shirt{  background:linear-gradient(135deg,#fde68a,#f59e0b); border-color:var(--amber-500); }
-.dash-icon--trophy{ background:linear-gradient(135deg,#fae8ff,#d8b4fe); border-color:var(--violet-500); }
+@media(min-width:960px){.dash-icon{flex:0 0 84px;width:84px;height:84px;border-radius:18px}}
+.dash-icon--ball{   background:linear-gradient(135deg,#dcfce7,#86efac) }
+.dash-icon--shirt{  background:linear-gradient(135deg,#fde68a,#f59e0b) }
+.dash-icon--trophy{ background:linear-gradient(135deg,#fae8ff,#d8b4fe) }
 
-/* Tamaño dos SVGs de icono */
-.ico-svg{ width:52px;height:52px; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
-
-/* Textos card principal */
 .dash-text{display:grid;align-content:center;gap:4px}
 .dash-card-header{font:700 18px/1.15 'Montserrat',system-ui,sans-serif;margin:0}
 .dash-card-desc{font:400 14px/1.25 'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}
@@ -98,25 +86,51 @@
 
 /* Subgrid */
 .subgrid{overflow:hidden;max-height:0;opacity:.0;transform:translateY(-6px);transition:max-height .25s ease,opacity .2s ease,transform .25s ease}
-.subgrid.open{max-height:600px;opacity:1;transform:translateY(0);margin-top:12px}
+.subgrid.open{max-height:600px;opacity:1;transform:translateY(0);margin-top:10px}
 
-/* Subcards */
+/* Subcards — sen sombra */
+#sub-partidos.open .subcard{
+  background:linear-gradient(0deg, rgba(34,197,94,.10), rgba(34,197,94,.10)), #fff;
+  border-color: var(--green-300);
+}
+#sub-partidos.open .subcard:hover{
+  border-color: var(--green-500);
+  background:linear-gradient(0deg, rgba(34,197,94,.16), rgba(34,197,94,.16)), #fff;
+}
+
+#sub-alineacions.open .subcard{
+  background:linear-gradient(0deg, rgba(245,158,11,.10), rgba(245,158,11,.10)), #fff;
+  border-color:#fcd34d;
+}
+#sub-alineacions.open .subcard:hover{
+  border-color: var(--amber-500);
+  background:linear-gradient(0deg, rgba(245,158,11,.16), rgba(245,158,11,.16)), #fff;
+}
+
+#sub-clasificacions.open .subcard{
+  background:linear-gradient(0deg, rgba(167,139,250,.10), rgba(167,139,250,.10)), #fff;
+  border-color: var(--violet-400);
+}
+#sub-clasificacions.open .subcard:hover{
+  border-color: var(--violet-500);
+  background:linear-gradient(0deg, rgba(167,139,250,.16), rgba(167,139,250,.16)), #fff;
+}
+
+/* Base subcards (sen sombra) */
 .subcard{
   display:flex;align-items:center;gap:10px;
-  background:#fff;border:1px solid var(--border);border-radius:16px;
+  background:#fff;border:1px solid #eef2ff;border-radius:16px;
   padding:12px 12px;margin-bottom:10px;text-decoration:none;color:inherit;
-  box-shadow:none;transition:transform .12s, border-color .12s, background .12s;
-  min-height:76px;
+  box-shadow:none;
+  transition:transform .12s, border-color .12s, background .12s;
+  min-height:72px;
 }
 @media(max-width:559px){.subcard{min-height:84px}}
 .subcard:hover{ transform:translateY(-1px); }
 
-/* Icono das subcards — contorno máis fino */
 .sub-ico{
   flex:0 0 56px;width:56px;height:56px;border-radius:14px;display:grid;place-items:center;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 8px rgba(0,0,0,.10);
-  color:var(--celeste-500);
-  border:2px solid var(--border); /* antes 3px */
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 8px rgba(0,0,0,.10)
 }
 .sub-ico--calendar{background:linear-gradient(135deg,#dcfce7,#86efac)}
 .sub-ico--flag{background:linear-gradient(135deg,#e5e7eb,#cbd5e1)}
@@ -125,39 +139,7 @@
 .sub-ico--book{background:linear-gradient(135deg,#e0e7ff,#a5b4fc)}
 .sub-ico--tgt{background:linear-gradient(135deg,#dbeafe,#93c5fd)}
 
-/* Tipografía das subcards: títulos fortes e descrición máis pequena */
 .sub-texts{display:grid;gap:2px}
 .sub-title{font:700 16px/1.15 'Montserrat',system-ui,sans-serif;margin:0}
-.sub-desc{font:400 12px/1.3  'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}
-
-/* —— ESTADO DESPREGADO: subcards adoptan a cor da sección —— */
-#sub-partidos.open .subcard{
-  border-color: var(--green-500) !important;
-  background: linear-gradient(0deg, rgba(34,197,94,.10), rgba(34,197,94,.10)), #fff;
-  border-width: 2px;
-}
-#sub-partidos.open .sub-ico{
-  border-color: var(--green-500);
-  color: var(--green-500);
-}
-
-#sub-alineacions.open .subcard{
-  border-color: var(--amber-500) !important;
-  background: linear-gradient(0deg, rgba(245,158,11,.10), rgba(245,158,11,.10)), #fff;
-  border-width: 2px;
-}
-#sub-alineacions.open .sub-ico{
-  border-color: var(--amber-500);
-  color: var(--amber-500);
-}
-
-#sub-clasificacions.open .subcard{
-  border-color: var(--violet-500) !important;
-  background: linear-gradient(0deg, rgba(167,139,250,.10), rgba(167,139,250,.10)), #fff;
-  border-width: 2px;
-}
-#sub-clasificacions.open .sub-ico{
-  border-color: var(--violet-500);
-  color: var(--violet-500);
-}
+.sub-desc{font:400 13px/1.25 'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}
 

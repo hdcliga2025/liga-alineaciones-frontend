@@ -42,23 +42,23 @@ export default function Dashboard() {
 
   return (
     <div class="dash-wrap">
-      {/* Hero: logo + saludo (SIN fecha/hora) */}
+      {/* Hero — en móbil: saludo esquerda, logo dereita */}
       <section class="dash-hero two-cols">
+        <p class="dash-greet hero-greet">
+          Boas <a class="dash-name">{nome}</a>, benvidx á Liga das Aliñacións
+        </p>
+
         <img
           src="/logoHDC.jpg"
           alt="HDC Logo"
-          class="dash-hero-img fill-col"
+          class="dash-hero-img fill-col hero-logo"
           decoding="async"
           loading="eager"
         />
-        <p class="dash-greet">
-          Boas <a class="dash-name">{nome}</a>, benvidx á Liga das Aliñacións
-        </p>
       </section>
 
-      {/* Grid principal de cards */}
+      {/* Grid principal de cards (intacta) */}
       <section class="dash-grid dash-grid--main">
-        {/* Calendario */}
         <a href="/partidos" class="main-card">
           <div class="dash-icon dash-icon--ball">⚽️</div>
           <div class="dash-text">
@@ -68,7 +68,6 @@ export default function Dashboard() {
           <span class="chev">›</span>
         </a>
 
-        {/* Xogar ás Aliñacións */}
         <a href="/haz-tu-11" class="main-card">
           <div class="dash-icon dash-icon--shirt">👕</div>
           <div class="dash-text">
@@ -80,7 +79,6 @@ export default function Dashboard() {
           <span class="chev">›</span>
         </a>
 
-        {/* Clasificacións */}
         <a href="/clasificacion" class="main-card">
           <div class="dash-icon dash-icon--trophy">🏆</div>
           <div class="dash-text">

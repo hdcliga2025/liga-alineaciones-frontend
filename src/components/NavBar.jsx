@@ -3,18 +3,17 @@ import { h } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 
 export default function NavBar({ currentPath = "" }) {
-  // Ocultar en públicas
+  // Ocultar en páxinas públicas
   const isPublic = ["/", "/login", "/register"].includes(currentPath || "/");
   if (isPublic) return null;
 
-  // Reloj Europe/Madrid
+  // Reloj Europe/Madrid centrado
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
 
-  // Responsive (para agrupar iconos a la derecha en móvil)
   const [isNarrow, setIsNarrow] = useState(
     typeof window !== "undefined" ? window.innerWidth <= 480 : false
   );
@@ -61,12 +60,17 @@ export default function NavBar({ currentPath = "" }) {
       margin: "0 auto",
       padding: "8px 12px",
       display: "grid",
-      // en móvil dejamos la misma rejilla pero reducimos tipografía del reloj
-      gridTemplateColumns: "auto 1fr auto",
+      gridTemplateColumns: "auto 1fr auto", // izq (back+bell) | centro (reloj) | dcha (perfil+pechar)
       alignItems: "center",
       gap: isNarrow ? 6 : 8,
     },
-    left: { display: "flex", alignItems: "center" },
+    leftGroup: {
+      display: "flex",
+      alignItems: "center",
+      gap: isNarrow ? 8 : 10,
+      flexWrap: "nowrap",
+      whiteSpace: "nowrap",
+    },
     centerClock: {
       justifySelf: "center",
       textAlign: "center",
@@ -78,12 +82,12 @@ export default function NavBar({ currentPath = "" }) {
     },
     date: { fontWeight: 600, fontSize: isNarrow ? 12 : 14, margin: 0 },
     time: { fontWeight: 700, fontSize: isNarrow ? 16 : 18, margin: 0 },
-    actions: {
+    rightGroup: {
       justifySelf: "end",
       display: "flex",
       alignItems: "center",
       gap: isNarrow ? 8 : 10,
-      flexWrap: "nowrap", // → que no salten de línea en móvil
+      flexWrap: "nowrap",
       whiteSpace: "nowrap",
     },
     iconBtn: {
@@ -135,8 +139,8 @@ export default function NavBar({ currentPath = "" }) {
     <>
       <header style={styles.header}>
         <div style={styles.container}>
-          {/* Atrás */}
-          <div style={styles.left}>
+          {/* IZQUIERDA: Atrás + Notificacións */}
+          <div style={styles.leftGroup}>
             <a
               href="/dashboard"
               title="Atrás"
@@ -151,17 +155,7 @@ export default function NavBar({ currentPath = "" }) {
                 <path d="M10 6l-6 6 6 6" />
               </svg>
             </a>
-          </div>
 
-          {/* Reloj (centro) */}
-          <div style={styles.centerClock} aria-label="Hora de referencia (Madrid)">
-            <p style={styles.date}>{dateText}</p>
-            <p style={styles.time}>{timeText}</p>
-          </div>
-
-          {/* Acciones (derecha, juntos en móvil) */}
-          <div style={styles.actions}>
-            {/* Notificacións */}
             <a
               href="/notificacions"
               title="Notificacións"
@@ -175,8 +169,16 @@ export default function NavBar({ currentPath = "" }) {
                 <path d="M9.5 18a2.5 2.5 0 005 0" />
               </svg>
             </a>
+          </div>
 
-            {/* Perfil */}
+          {/* CENTRO: Reloj */}
+          <div style={styles.centerClock} aria-label="Hora de referencia (Madrid)">
+            <p style={styles.date}>{dateText}</p>
+            <p style={styles.time}>{timeText}</p>
+          </div>
+
+          {/* DERECHA: Perfil + Pechar */}
+          <div style={styles.rightGroup}>
             <a
               href="/perfil"
               title="Perfil"
@@ -191,7 +193,6 @@ export default function NavBar({ currentPath = "" }) {
               </svg>
             </a>
 
-            {/* Pechar → logout a Landing */}
             <a
               href="/logout?to=/"
               title="Pechar sesión"
@@ -213,5 +214,6 @@ export default function NavBar({ currentPath = "" }) {
     </>
   );
 }
+
 
 
