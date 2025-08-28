@@ -2,9 +2,12 @@
 :root{
   --dash-shadow: rgba(0,0,0,.06);
   --dash-shadow-strong: rgba(0,0,0,.12);
+
+  /* Cores seccións */
   --green-300:#86efac; --green-500:#22c55e;
   --amber-400:#fbbf24; --amber-500:#f59e0b;
   --violet-400:#d8b4fe; --violet-500:#a78bfa;
+
   --celeste:#38bdf8;
 }
 
@@ -16,20 +19,8 @@
   margin:12px auto 32px;
   display:grid;grid-template-columns:1fr 1fr;align-items:center;justify-items:center;gap:2px;
 }
-/* === NUEVO: intercambiar orde en móbil (logo á dereita, texto á esquerda) === */
-.hero-greet{order:1}
-.hero-logo{order:2}
-
-@media(min-width:560px){
-  .dash-hero.two-cols{width:min(92vw,760px);gap:4px;margin:12px auto 36px}
-}
-@media(min-width:960px){
-  .dash-hero.two-cols{grid-template-columns:1fr;gap:28px;margin:16px auto 56px}
-  /* En escritorio non fai falta forzar orde */
-  .hero-greet{order:initial}
-  .hero-logo{order:initial}
-}
-
+@media(min-width:560px){.dash-hero.two-cols{width:min(92vw,760px);gap:4px;margin:12px auto 36px}}
+@media(min-width:960px){.dash-hero.two-cols{grid-template-columns:1fr;gap:28px;margin:16px auto 56px}}
 .dash-hero-img.fill-col{width:100%;height:100%;max-height:136px;object-fit:contain}
 @media(min-width:960px){.dash-hero-img.fill-col{max-height:220px}}
 .dash-greet{font:400 22px/1.22 'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--celeste);text-align:center;margin:0;padding-right:18px}
@@ -76,7 +67,7 @@
 .dash-card-header{font:700 18px/1.15 'Montserrat',system-ui,sans-serif;margin:0}
 .dash-card-desc{font:400 14px/1.25 'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}
 
-/* Chevron */
+/* Chevron (máis grande + cor por sección cando aberto) */
 .chev{margin-left:auto;font-size:22px;line-height:1;font-weight:800;color:#0f172a;transition:transform .15s ease,color .15s ease}
 .chev.open{transform:rotate(180deg)}
 @media(min-width:960px){.chev{font-size:26px}}
@@ -88,7 +79,7 @@
 .subgrid{overflow:hidden;max-height:0;opacity:.0;transform:translateY(-6px);transition:max-height .25s ease,opacity .2s ease,transform .25s ease}
 .subgrid.open{max-height:600px;opacity:1;transform:translateY(0);margin-top:10px}
 
-/* Subcards — sen sombra */
+/* Subcards — sen sombra en ningún estado */
 #sub-partidos.open .subcard{
   background:linear-gradient(0deg, rgba(34,197,94,.10), rgba(34,197,94,.10)), #fff;
   border-color: var(--green-300);
@@ -126,8 +117,9 @@
   min-height:72px;
 }
 @media(max-width:559px){.subcard{min-height:84px}}
-.subcard:hover{ transform:translateY(-1px); }
-
+.subcard:hover{
+  transform:translateY(-1px);
+}
 .sub-ico{
   flex:0 0 56px;width:56px;height:56px;border-radius:14px;display:grid;place-items:center;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 8px rgba(0,0,0,.10)
@@ -138,7 +130,6 @@
 .sub-ico--clip{background:linear-gradient(135deg,#fee2e2,#fca5a5)}
 .sub-ico--book{background:linear-gradient(135deg,#e0e7ff,#a5b4fc)}
 .sub-ico--tgt{background:linear-gradient(135deg,#dbeafe,#93c5fd)}
-
 .sub-texts{display:grid;gap:2px}
 .sub-title{font:700 16px/1.15 'Montserrat',system-ui,sans-serif;margin:0}
 .sub-desc{font:400 13px/1.25 'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}

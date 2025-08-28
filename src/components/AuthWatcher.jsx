@@ -15,37 +15,44 @@ export default function AuthWatcher() {
 
       const md = user.user_metadata || {};
       const email = user.email || "";
-
-      const fullByMd = (md.full_name || "").trim();
-      const fnByMd = (md.first_name || "").trim();
-      const lnByMd = (md.last_name || "").trim();
-
-      let first_name =
-        fnByMd ||
-        (fullByMd ? fullByMd.split(" ")[0] : "") ||
-        (email.includes("@") ? email.split("@")[0] : "amig@");
-
-      let last_name = lnByMd || "";
-      let full_name =
-        fullByMd ||
-        `${first_name}${last_name ? " " + last_name : ""}`.trim();
-
       const phone = md.phone || "";
 
-      await supabase
+      // Lee perfil existente para NO machacar el 'first_name' guardado en el registro
+      const { data: existing } = await supabase
         .from("profiles")
-        .upsert(
-          {
-            id: user.id,
-            first_name,
-            last_name,
-            full_name,
-            phone,
-            email,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "id" }
-        );
+        .select("first_name,last_name,full_name,phone,email")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      // Sólo tomar del metadata si existe explícitamente
+      const mdFirst = (md.first_name || "").trim();
+      const mdLast  = (md.last_name  || "").trim();
+      const mdFull  = (md.full_name  || "").trim();
+
+      const nextFirst = existing?.first_name?.trim()
+        ? existing.first_name.trim()
+        : (mdFirst || ""); // si no había perfil previo, intenta metadata; jamás email-prefix
+
+      const nextLast = existing?.last_name?.trim()
+        ? existing.last_name.trim()
+        : (mdLast || "");
+
+      const nextFull = existing?.full_name?.trim()
+        ? existing.full_name.trim()
+        : (mdFull || (nextFirst || nextLast ? `${nextFirst}${nextLast ? " " + nextLast : ""}`.trim() : ""));
+
+      // Construye payload sólo con lo que sabemos sin inventar
+      const payload = {
+        id: user.id,
+        email,
+        phone: phone || existing?.phone || null,
+        updated_at: new Date().toISOString(),
+      };
+      if (nextFirst) payload.first_name = nextFirst;
+      if (nextLast)  payload.last_name = nextLast;
+      if (nextFull)  payload.full_name = nextFull;
+
+      await supabase.from("profiles").upsert(payload, { onConflict: "id" });
     };
 
     const goDashboardIfAuthOnPublic = (sess) => {
@@ -71,6 +78,7 @@ export default function AuthWatcher() {
       }
     };
 
+    // Estado inicial
     supabase.auth.getSession().then(({ data }) => {
       const sess = data?.session || null;
       if (sess) upsertOwnProfile();
@@ -78,25 +86,21 @@ export default function AuthWatcher() {
       goLoginIfNoAuthOnPrivate(sess);
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!active) return;
-
-        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-          await upsertOwnProfile();
-          goDashboardIfAuthOnPublic(session);
-        }
-        if (event === "SIGNED_OUT") {
-          goLoginIfNoAuthOnPrivate(null);
-        }
+    // Listener auth
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!active) return;
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        await upsertOwnProfile();
+        goDashboardIfAuthOnPublic(session);
       }
-    );
+      if (event === "SIGNED_OUT") {
+        goLoginIfNoAuthOnPrivate(null);
+      }
+    });
 
-    return () => {
-      active = false;
-      sub?.subscription?.unsubscribe?.();
-    };
+    return () => { active = false; sub?.subscription?.unsubscribe?.(); };
   }, []);
 
   return null;
 }
+

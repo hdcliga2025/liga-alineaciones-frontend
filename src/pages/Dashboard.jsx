@@ -13,51 +13,41 @@ export default function Dashboard() {
     (async () => {
       const { data: s } = await supabase.auth.getSession();
       const uid = s?.session?.user?.id || null;
-      const email = s?.session?.user?.email || "";
-
-      let friendly =
-        email && email.includes("@") ? email.split("@")[0] : "amig@";
 
       if (uid) {
         const { data: prof } = await supabase
           .from("profiles")
-          .select("first_name, full_name")
+          .select("first_name")
           .eq("id", uid)
           .maybeSingle();
 
-        const first =
-          prof?.first_name?.trim() ||
-          prof?.full_name?.split(" ")?.[0]?.trim() ||
-          "";
-        if (first) friendly = first;
+        const first = (prof?.first_name || "").trim();
+        if (alive) setNome(first || "amig@");
+      } else {
+        if (alive) setNome("amig@");
       }
-
-      if (alive) setNome(friendly);
     })();
 
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, []);
 
   return (
     <div class="dash-wrap">
-      {/* Hero — en móbil: saludo esquerda, logo dereita */}
+      {/* Hero — orden original: logo a la izquierda, saludo a la derecha en móvil */}
       <section class="dash-hero two-cols">
-        <p class="dash-greet hero-greet">
-          Boas <a class="dash-name">{nome}</a>, benvidx á Liga das Aliñacións
-        </p>
-
         <img
           src="/logoHDC.jpg"
           alt="HDC Logo"
-          class="dash-hero-img fill-col hero-logo"
+          class="dash-hero-img fill-col"
           decoding="async"
           loading="eager"
         />
+        <p class="dash-greet">
+          Boas <a class="dash-name">{nome}</a>, benvidx á Liga das Aliñacións
+        </p>
       </section>
 
-      {/* Grid principal de cards (intacta) */}
+      {/* Grid principal de cards */}
       <section class="dash-grid dash-grid--main">
         <a href="/partidos" class="main-card">
           <div class="dash-icon dash-icon--ball">⚽️</div>
@@ -91,3 +81,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
