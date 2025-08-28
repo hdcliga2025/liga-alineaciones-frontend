@@ -44,10 +44,10 @@ export default function NavBar({ currentPath = "" }) {
     return () => window.removeEventListener("resize", onR);
   }, []);
 
-  // Ajustes pedidos: PC semibold y más alargado; móvil regular, algo más alto y más estrecho
-  const fw = isNarrow ? 400 : 600;               // móvil: regular (sin bold) | PC: semibold
-  const fz = isNarrow ? 17 : 20;                 // móvil un poco más alto | PC un poco mayor
-  const sx = isNarrow ? 1.04 : 1.34;             // móvil más estrecho | PC más alargado
+  // Ajustes: PC semibold y más alargado; móvil regular y MÁS ESTRECHO
+  const fw = isNarrow ? 400 : 600;                 // móvil: regular | PC: semibold
+  const fz = isNarrow ? 17 : 20;                   // móvil un pelín más alto | PC un poco mayor
+  const sx = isNarrow ? 0.88 : 1.34;               // móvil más estrecho (<1) | PC más ancho
 
   const styles = {
     header: {
@@ -168,7 +168,7 @@ export default function NavBar({ currentPath = "" }) {
             </a>
           </div>
 
-          {/* CENTRO: Sólo contador (sin texto extra) */}
+          {/* CENTRO: Só contador */}
           <div style={styles.centerClock} aria-label="Peche das aliñacións">
             <p style={styles.time}>{remainStr}</p>
           </div>
@@ -210,6 +210,7 @@ export default function NavBar({ currentPath = "" }) {
     </>
   );
 }
+
 
 
 
