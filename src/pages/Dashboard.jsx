@@ -4,6 +4,59 @@ import { useEffect, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient";
 import "./Dashboard.css";
 
+/* ===== Icons outline coherentes con el header/login (stroke) ===== */
+const IconBall = ({ color = "#22c55e", size = 28 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    aria-hidden="true"
+    stroke={color}
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
+    <path d="M7 7l3 2M17 7l-3 2M7 17l3-2M17 17l-3-2" />
+  </svg>
+);
+
+const IconShirt = ({ color = "#f59e0b", size = 28 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    aria-hidden="true"
+    stroke={color}
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M8 4l4 2 4-2 3 3-3 2v9a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V9L5 7 8 4z" />
+  </svg>
+);
+
+const IconTrophy = ({ color = "#a78bfa", size = 28 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    aria-hidden="true"
+    stroke={color}
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M8 4h8v3a4 4 0 0 1-4 4 4 4 0 0 1-4-4V4z" />
+    <path d="M16 7h3a3 3 0 0 1-3 3M8 7H5a3 3 0 0 0 3 3" />
+    <path d="M12 11v4M9 20h6M10 18h4" />
+  </svg>
+);
+
 export default function Dashboard() {
   const [nome, setNome] = useState("amig@");
 
@@ -33,7 +86,7 @@ export default function Dashboard() {
 
   return (
     <div class="dash-wrap">
-      {/* Hero — orden original: logo a la izquierda, saludo a la derecha en móvil */}
+      {/* Hero — orden original. En móvil se reduce el padding superior vía CSS */}
       <section class="dash-hero two-cols">
         <img
           src="/logoHDC.jpg"
@@ -49,8 +102,11 @@ export default function Dashboard() {
 
       {/* Grid principal de cards */}
       <section class="dash-grid dash-grid--main">
+        {/* Calendario */}
         <a href="/partidos" class="main-card">
-          <div class="dash-icon dash-icon--ball">⚽️</div>
+          <div class="dash-icon" style="border-color: var(--green-500);">
+            <IconBall color="#22c55e" />
+          </div>
           <div class="dash-text">
             <h3 class="dash-card-header">Calendario</h3>
             <p class="dash-card-desc">Próximos, Vindeiros, Finalizados</p>
@@ -58,8 +114,11 @@ export default function Dashboard() {
           <span class="chev">›</span>
         </a>
 
+        {/* Xogar ás Aliñacións */}
         <a href="/haz-tu-11" class="main-card">
-          <div class="dash-icon dash-icon--shirt">👕</div>
+          <div class="dash-icon" style="border-color: var(--amber-500);">
+            <IconShirt color="#f59e0b" />
+          </div>
           <div class="dash-text">
             <h3 class="dash-card-header">Xogar ás Aliñacións</h3>
             <p class="dash-card-desc">
@@ -69,8 +128,11 @@ export default function Dashboard() {
           <span class="chev">›</span>
         </a>
 
+        {/* Clasificacións */}
         <a href="/clasificacion" class="main-card">
-          <div class="dash-icon dash-icon--trophy">🏆</div>
+          <div class="dash-icon" style="border-color: var(--violet-500);">
+            <IconTrophy color="#a78bfa" />
+          </div>
           <div class="dash-text">
             <h3 class="dash-card-header">Clasificacións</h3>
             <p class="dash-card-desc">Último partido e Xeral</p>

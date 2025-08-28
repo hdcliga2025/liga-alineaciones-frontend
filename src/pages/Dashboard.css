@@ -2,72 +2,94 @@
 :root{
   --dash-shadow: rgba(0,0,0,.06);
   --dash-shadow-strong: rgba(0,0,0,.12);
-
-  /* Cores seccións */
   --green-300:#86efac; --green-500:#22c55e;
   --amber-400:#fbbf24; --amber-500:#f59e0b;
   --violet-400:#d8b4fe; --violet-500:#a78bfa;
-
   --celeste:#38bdf8;
 }
 
-.dash-wrap{max-width:1080px;margin:0 auto;padding:60px 16px 24px}
+/* Menos padding superior (queda pegado al header fijo) */
+.dash-wrap{
+  max-width:1080px;
+  margin:0 auto;
+  padding:16px 12px 18px; /* antes 60px top */
+}
+@media(min-width:560px){
+  .dash-wrap{ padding:24px 16px 22px; }
+}
+@media(min-width:960px){
+  .dash-wrap{ padding:28px 16px 26px; }
+}
 
 /* Hero (móbil máis espazo logo→primeira card) */
 .dash-hero.two-cols{
   width:min(92vw,380px);
-  margin:12px auto 32px;
+  margin:6px auto 22px; /* ligeramente más arriba */
   display:grid;grid-template-columns:1fr 1fr;align-items:center;justify-items:center;gap:2px;
 }
-@media(min-width:560px){.dash-hero.two-cols{width:min(92vw,760px);gap:4px;margin:12px auto 36px}}
-@media(min-width:960px){.dash-hero.two-cols{grid-template-columns:1fr;gap:28px;margin:16px auto 56px}}
-.dash-hero-img.fill-col{width:100%;height:100%;max-height:136px;object-fit:contain}
-@media(min-width:960px){.dash-hero-img.fill-col{max-height:220px}}
-.dash-greet{font:400 22px/1.22 'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--celeste);text-align:center;margin:0;padding-right:18px}
+@media(min-width:560px){
+  .dash-hero.two-cols{width:min(92vw,760px);gap:4px;margin:10px auto 28px}
+}
+@media(min-width:960px){
+  .dash-hero.two-cols{grid-template-columns:1fr;gap:22px;margin:12px auto 40px}
+}
+
+/* Logo más grande en desktop */
+.dash-hero-img.fill-col{
+  width:100%;height:100%;
+  max-height:136px;object-fit:contain
+}
+@media(min-width:960px){
+  .dash-hero-img.fill-col{ max-height:260px; } /* ↑ antes 220px */
+}
+
+.dash-greet{
+  font:400 22px/1.22 'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  color:var(--celeste);text-align:center;margin:0;padding-right:18px
+}
 @media(min-width:960px){.dash-greet{font-size:26px}}
 .dash-name{color:#111;text-decoration:none}
 
 /* Grid */
 .dash-grid.dash-grid--main{
   width:min(92vw,380px);margin:0 auto;
-  display:grid;grid-template-columns:1fr;gap:14px;justify-items:stretch;
+  display:grid;grid-template-columns:1fr;gap:12px;justify-items:stretch; /* gap algo menor */
 }
 @media(min-width:560px){.dash-grid.dash-grid--main{width:min(92vw,760px);grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(min-width:960px){.dash-grid.dash-grid--main{width:min(92vw,1080px);grid-template-columns:repeat(3,minmax(0,1fr))}}
 
-/* Cards principais */
+/* Cards principais — menos altas y marco discreto */
 .main-block{display:block}
 .main-card{
-  width:100%;display:flex;align-items:center;gap:12px;
-  background:#fff;border:1px solid #eef2ff;border-radius:20px;
-  padding:14px 14px;text-align:left;color:inherit;text-decoration:none;cursor:pointer;
+  width:100%;display:flex;align-items:center;gap:10px;
+  background:#fff;border:1px solid #eef2ff;border-radius:18px; /* ligeramente menos radio */
+  padding:12px 12px;text-align:left;color:inherit;text-decoration:none;cursor:pointer;
   box-shadow:0 2px 8px var(--dash-shadow);
   transition:transform .15s, box-shadow .15s, border-color .15s;
-  min-height:104px;
+  min-height:92px; /* ↓ antes 104/118 */
 }
-@media(max-width:559px){.main-card{min-height:118px}}
-.main-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px var(--dash-shadow-strong);border-color:#dbeafe}
+@media(max-width:559px){.main-card{min-height:100px}}
+.main-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px var(--dash-shadow-strong);border-color:#e2e8f0}
 
-/* Contorno coloreado ao abrir (sen recheo) */
-.main-block.open--partidos .main-card{ border-color:var(--green-500); border-width:2px; }
-.main-block.open--alineacions .main-card{ border-color:var(--amber-500); border-width:2px; }
-.main-block.open--clasificacions .main-card{ border-color:var(--violet-500); border-width:2px; }
+/* Contorno coloreado ao abrir (sen recheo) — mantenemos finito */
+.main-block.open--partidos .main-card{ border-color:var(--green-500); }
+.main-block.open--alineacions .main-card{ border-color:var(--amber-500); }
+.main-block.open--clasificacions .main-card{ border-color:var(--violet-500); }
 
-/* Icono bloque */
+/* Icono bloque — compacto, fondo branco, borde fino co color da sección */
 .dash-icon{
-  flex:0 0 72px;width:72px;height:72px;border-radius:16px;overflow:hidden;
-  display:grid;place-items:center;box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 10px rgba(0,0,0,.10)
+  flex:0 0 64px;width:64px;height:64px;border-radius:14px;
+  background:#fff;border:1px solid #e5e7eb;
+  display:grid;place-items:center;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 8px rgba(0,0,0,.08);
 }
-@media(min-width:960px){.dash-icon{flex:0 0 84px;width:84px;height:84px;border-radius:18px}}
-.dash-icon--ball{   background:linear-gradient(135deg,#dcfce7,#86efac) }
-.dash-icon--shirt{  background:linear-gradient(135deg,#fde68a,#f59e0b) }
-.dash-icon--trophy{ background:linear-gradient(135deg,#fae8ff,#d8b4fe) }
+@media(min-width:960px){.dash-icon{flex:0 0 72px;width:72px;height:72px;border-radius:16px}}
 
 .dash-text{display:grid;align-content:center;gap:4px}
 .dash-card-header{font:700 18px/1.15 'Montserrat',system-ui,sans-serif;margin:0}
 .dash-card-desc{font:400 14px/1.25 'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}
 
-/* Chevron (máis grande + cor por sección cando aberto) */
+/* Chevron */
 .chev{margin-left:auto;font-size:22px;line-height:1;font-weight:800;color:#0f172a;transition:transform .15s ease,color .15s ease}
 .chev.open{transform:rotate(180deg)}
 @media(min-width:960px){.chev{font-size:26px}}
@@ -79,7 +101,7 @@
 .subgrid{overflow:hidden;max-height:0;opacity:.0;transform:translateY(-6px);transition:max-height .25s ease,opacity .2s ease,transform .25s ease}
 .subgrid.open{max-height:600px;opacity:1;transform:translateY(0);margin-top:10px}
 
-/* Subcards — sen sombra en ningún estado */
+/* Subcards — sen sombra (igual que antes) */
 #sub-partidos.open .subcard{
   background:linear-gradient(0deg, rgba(34,197,94,.10), rgba(34,197,94,.10)), #fff;
   border-color: var(--green-300);
@@ -88,7 +110,6 @@
   border-color: var(--green-500);
   background:linear-gradient(0deg, rgba(34,197,94,.16), rgba(34,197,94,.16)), #fff;
 }
-
 #sub-alineacions.open .subcard{
   background:linear-gradient(0deg, rgba(245,158,11,.10), rgba(245,158,11,.10)), #fff;
   border-color:#fcd34d;
@@ -97,7 +118,6 @@
   border-color: var(--amber-500);
   background:linear-gradient(0deg, rgba(245,158,11,.16), rgba(245,158,11,.16)), #fff;
 }
-
 #sub-clasificacions.open .subcard{
   background:linear-gradient(0deg, rgba(167,139,250,.10), rgba(167,139,250,.10)), #fff;
   border-color: var(--violet-400);
@@ -117,9 +137,8 @@
   min-height:72px;
 }
 @media(max-width:559px){.subcard{min-height:84px}}
-.subcard:hover{
-  transform:translateY(-1px);
-}
+.subcard:hover{ transform:translateY(-1px); }
+
 .sub-ico{
   flex:0 0 56px;width:56px;height:56px;border-radius:14px;display:grid;place-items:center;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 8px rgba(0,0,0,.10)
@@ -130,6 +149,7 @@
 .sub-ico--clip{background:linear-gradient(135deg,#fee2e2,#fca5a5)}
 .sub-ico--book{background:linear-gradient(135deg,#e0e7ff,#a5b4fc)}
 .sub-ico--tgt{background:linear-gradient(135deg,#dbeafe,#93c5fd)}
+
 .sub-texts{display:grid;gap:2px}
 .sub-title{font:700 16px/1.15 'Montserrat',system-ui,sans-serif;margin:0}
 .sub-desc{font:400 13px/1.25 'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}
