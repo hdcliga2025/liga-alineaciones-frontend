@@ -4,6 +4,14 @@ import { useState } from 'preact/hooks';
 import { route } from 'preact-router';
 import { supabase } from '../lib/supabaseClient.js';
 
+function withTimeout(promise, ms = 10000) {
+  let id;
+  const timeout = new Promise((_, reject) => {
+    id = setTimeout(() => reject(new Error('timeout')), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(id));
+}
+
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -13,18 +21,29 @@ export default function Login() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (loading) return;          // evita doble submit
     setErr('');
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-      if (error) return setErr(error.message || 'Erro iniciando sesión.');
+      const { error } = await withTimeout(
+        supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        }),
+        10000 // 10s de seguridad
+      );
+      if (error) {
+        const msg = error.message || 'Erro iniciando sesión.';
+        return setErr(msg);
+      }
       route('/dashboard', true);
     } catch (e2) {
-      console.error(e2);
-      setErr('Erro inesperado iniciando sesión.');
+      if (e2?.message === 'timeout') {
+        setErr('A conexión tardou demasiado. Téntao de novo.');
+      } else {
+        setErr('Erro inesperado iniciando sesión.');
+        console.error(e2);
+      }
     } finally {
       setLoading(false);
     }
