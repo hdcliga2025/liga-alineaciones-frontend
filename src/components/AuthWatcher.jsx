@@ -1,4 +1,4 @@
-// src/components/AuthWatcher.jsx
+﻿// src/components/AuthWatcher.jsx
 import { h } from "preact";
 import { useEffect } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient";
@@ -6,85 +6,64 @@ import { route } from "preact-router";
 
 export default function AuthWatcher() {
   useEffect(() => {
-    let active = true;
+    let alive = true;
+    const PUBLIC = ["/", "/login", "/register"];
 
     const upsertOwnProfile = async () => {
-      const { data: u } = await supabase.auth.getUser();
-      const user = u?.user;
+      const { data } = await supabase.auth.getUser();
+      const user = data?.user;
       if (!user) return;
-
       const md = user.user_metadata || {};
       const first_name = (md.first_name || "").trim();
       const last_name  = (md.last_name  || "").trim();
       const full_name  = (md.full_name  || `${first_name} ${last_name}`).trim();
       const phone = md.phone || "";
       const email = user.email || "";
-
-      // Crea/actualiza o teu perfil (RLS: id = auth.uid())
-      await supabase
-        .from("profiles")
-        .upsert(
-          {
-            id: user.id,
-            first_name,
-            last_name,
-            full_name,
-            phone,
-            email,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "id" }
-        );
+      await supabase.from("profiles").upsert(
+        {
+          id: user.id, first_name, last_name, full_name, phone, email,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "id" }
+      );
     };
 
-    const goDashboardIfAuthOnPublic = (sess) => {
-      const p = location.pathname;
-      const isPublic = p === "/" || p === "/login" || p === "/register";
-      if (sess && isPublic) route("/dashboard");
+    const goDashboardIfAuthOnPublic = async () => {
+      const path = location.pathname;
+      if (!PUBLIC.includes(path)) return;
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) route("/dashboard");
     };
 
-    const goLoginIfNoAuthOnPrivate = (sess) => {
-      if (sess) return;
-      const p = location.pathname;
-      const privatePrefixes = [
-        "/dashboard",
-        "/notificacions",
-        "/perfil",
-        "/partidos",
-        "/haz-tu-11",
-        "/clasificacion",
-        "/admin",
-      ];
-      if (privatePrefixes.some((pre) => p.startsWith(pre))) {
-        route("/login");
-      }
+    const goLoginIfNoAuthOnPrivate = async () => {
+      const path = location.pathname;
+      if (PUBLIC.includes(path)) return;
+      const { data } = await supabase.auth.getUser();
+      if (!data?.user) route("/login");
     };
 
     // Estado inicial
-    supabase.auth.getSession().then(({ data }) => {
-      const sess = data?.session || null;
-      if (sess) upsertOwnProfile();
-      goDashboardIfAuthOnPublic(sess);
-      goLoginIfNoAuthOnPrivate(sess);
-    });
+    (async () => {
+      await goDashboardIfAuthOnPublic();
+      await goLoginIfNoAuthOnPrivate();
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) await upsertOwnProfile();
+    })();
 
-    // Listener de cambios
-    const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!active) return;
-
+    // Listener cambios
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event) => {
+      if (!alive) return;
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
         await upsertOwnProfile();
-        goDashboardIfAuthOnPublic(session);
+        await goDashboardIfAuthOnPublic();
       }
-
-      if (event === "SIGNED_OUT") {
-        goLoginIfNoAuthOnPrivate(null);
+      if (event === "SIGNED_OUT" || event === "USER_DELETED") {
+        await goLoginIfNoAuthOnPrivate();
       }
     });
 
-    return () => { active = false; sub?.subscription?.unsubscribe?.(); };
+    return () => { alive = false; sub?.subscription?.unsubscribe?.(); };
   }, []);
 
   return null;
 }
-

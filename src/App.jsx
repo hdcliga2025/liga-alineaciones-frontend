@@ -1,4 +1,4 @@
-// src/App.jsx
+﻿// src/App.jsx
 import { h } from "preact";
 import { useState } from "preact/hooks";
 import { Router } from "preact-router";
@@ -19,6 +19,7 @@ import Partidos from "./pages/Partidos.jsx";
 import HazTu11 from "./pages/HazTu11.jsx";
 import Clasificacion from "./pages/Clasificacion.jsx";
 import Admin from "./pages/Admin.jsx";
+import ForceLogout from "./pages/ForceLogout.jsx"; // <— NOVA
 
 /* 404 */
 const NotFound = () => (
@@ -35,13 +36,9 @@ export default function App() {
 
   return (
     <>
-      {/* Sincroniza auth e crea/actualiza o perfil */}
       <AuthWatcher />
-
-      {/* Barra superior (non se amosa en /, /login, /register) */}
       <NavBar currentPath={currentPath} />
 
-      {/* Rutas */}
       <Router onChange={(e) => setCurrentPath(e.url)}>
         {/* Públicas */}
         <LandingPage path="/" />
@@ -56,6 +53,7 @@ export default function App() {
         <HazTu11 path="/haz-tu-11" />
         <Clasificacion path="/clasificacion" />
         <Admin path="/admin" />
+        <ForceLogout path="/logout" />  {/* ← Peche duro de sesión */}
 
         {/* 404 */}
         <NotFound default />
@@ -63,4 +61,3 @@ export default function App() {
     </>
   );
 }
-

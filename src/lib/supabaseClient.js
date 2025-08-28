@@ -1,4 +1,4 @@
-// src/lib/supabaseClient.js
+﻿// src/lib/supabaseClient.js
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -9,6 +9,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    flowType: "pkce", // mayor fiabilidad en móvil
+    flowType: "pkce", // login máis fiable en móbil
   },
 });

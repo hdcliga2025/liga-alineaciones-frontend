@@ -1,4 +1,4 @@
-// src/components/Login.jsx
+﻿// src/components/Login.jsx
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import { route } from 'preact-router';
@@ -21,20 +21,17 @@ export default function Login() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (loading) return;          // evita doble submit
+    if (loading) return;
     setErr('');
     setLoading(true);
     try {
       const { error } = await withTimeout(
-        supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        }),
-        10000 // 10s de seguridad
+        supabase.auth.signInWithPassword({ email: email.trim(), password }),
+        10000
       );
       if (error) {
-        const msg = error.message || 'Erro iniciando sesión.';
-        return setErr(msg);
+        setErr(error.message || 'Erro iniciando sesión.');
+        return;
       }
       route('/dashboard', true);
     } catch (e2) {
@@ -108,7 +105,6 @@ export default function Login() {
 
       {err && <p style={{ margin: '8px 0 0', color: '#b91c1c' }}>{err}</p>}
 
-      {/* Envoltura igual a la caja de Tabs */}
       <div class="cta-wrap">
         <button type="submit" disabled={loading}>
           {loading ? 'Accedendo…' : 'Fillos dunha paixón, imos!!'}
@@ -117,6 +113,3 @@ export default function Login() {
     </form>
   );
 }
-
-
-
