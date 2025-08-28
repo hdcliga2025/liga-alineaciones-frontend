@@ -19,13 +19,17 @@ import Partidos from "./pages/Partidos.jsx";
 import HazTu11 from "./pages/HazTu11.jsx";
 import Clasificacion from "./pages/Clasificacion.jsx";
 import Admin from "./pages/Admin.jsx";
-import ForceLogout from "./pages/ForceLogout.jsx"; // <— NOVA
+
+/* UTILIDADE */
+import ForceLogout from "./pages/ForceLogout.jsx";
 
 /* 404 */
 const NotFound = () => (
   <main style={{ padding: "1rem" }}>
     <h2>Páxina non atopada</h2>
-    <p>Volver ao <a href="/login">login</a></p>
+    <p>
+      Volver ao <a href="/login">login</a>
+    </p>
   </main>
 );
 
@@ -34,16 +38,26 @@ export default function App() {
     typeof window !== "undefined" ? window.location.pathname : "/"
   );
 
+  // Rutas onde NON amosar a NavBar
+  const HIDE_NAV_ON = new Set(["/", "/login", "/register", "/logout"]);
+
   return (
     <>
+      {/* Sincroniza auth e crea/actualiza o perfil */}
       <AuthWatcher />
-      <NavBar currentPath={currentPath} />
 
+      {/* Barra superior: ocúltase en públicas e en /logout */}
+      {!HIDE_NAV_ON.has(currentPath) && <NavBar currentPath={currentPath} />}
+
+      {/* Rutas */}
       <Router onChange={(e) => setCurrentPath(e.url)}>
         {/* Públicas */}
         <LandingPage path="/" />
         <Login path="/login" />
         <Register path="/register" />
+
+        {/* Utilidade */}
+        <ForceLogout path="/logout" />
 
         {/* Privadas */}
         <Dashboard path="/dashboard" />
@@ -53,7 +67,6 @@ export default function App() {
         <HazTu11 path="/haz-tu-11" />
         <Clasificacion path="/clasificacion" />
         <Admin path="/admin" />
-        <ForceLogout path="/logout" />  {/* ← Peche duro de sesión */}
 
         {/* 404 */}
         <NotFound default />
