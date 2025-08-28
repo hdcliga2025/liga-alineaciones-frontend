@@ -3,11 +3,11 @@ import { h } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 
 export default function NavBar({ currentPath = "" }) {
-  // Ocultar en rutas públicas
+  // No mostrar en rutas públicas
   const isPublic = ["/", "/login", "/register"].includes(currentPath || "/");
   if (isPublic) return null;
 
-  // Reloj Europe/Madrid
+  // ===== Reloj Europe/Madrid =====
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
@@ -16,31 +16,30 @@ export default function NavBar({ currentPath = "" }) {
 
   const { dateText, timeText } = useMemo(() => {
     const tz = "Europe/Madrid";
-    // intenta gl-ES; si no, usa es-ES
-    const dateFmt =
-      new Intl.DateTimeFormat("gl-ES", {
-        weekday: "long",
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-        timeZone: tz,
-      }) || new Intl.DateTimeFormat("es-ES", { timeZone: tz });
-    const timeFmt = new Intl.DateTimeFormat("gl-ES", {
+
+    // Formato dd.MM.yyyy
+    const d = new Date(
+      now.toLocaleString("en-US", { timeZone: tz }) // asegura TZ
+    );
+    const pad = (n) => String(n).padStart(2, "0");
+    const dd = pad(d.getDate());
+    const mm = pad(d.getMonth() + 1);
+    const yyyy = d.getFullYear();
+    const dateTextFormatted = `${dd}.${mm}.${yyyy}`;
+
+    // Hora HH:MM:SS 24h
+    const timeTextFormatted = new Intl.DateTimeFormat("gl-ES", {
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
       hour12: false,
       timeZone: tz,
-    });
+    }).format(d);
 
-    const d = dateFmt.format(now);
-    const t = timeFmt.format(now);
-    // Capitaliza primera letra de la fecha
-    const cap = d.charAt(0).toUpperCase() + d.slice(1);
-    return { dateText: cap, timeText: t };
+    return { dateText: dateTextFormatted, timeText: timeTextFormatted };
   }, [now]);
 
-  // Estilos inline (sin dependencias externas)
+  // ===== Estilos =====
   const styles = {
     header: {
       position: "fixed",
@@ -48,7 +47,6 @@ export default function NavBar({ currentPath = "" }) {
       left: 0,
       right: 0,
       zIndex: 50,
-      // fondo muy transparente + blur
       background: "rgba(255,255,255,0.9)",
       backdropFilter: "saturate(180%) blur(8px)",
       borderBottom: "1px solid #e5e7eb",
@@ -62,15 +60,17 @@ export default function NavBar({ currentPath = "" }) {
       alignItems: "center",
       gap: 8,
     },
+    left: { display: "flex", alignItems: "center", gap: 8 },
     centerClock: {
       justifySelf: "center",
       textAlign: "center",
       lineHeight: 1.05,
-      color: "#0ea5e9", // celeste
-      fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
+      color: "#0ea5e9",
+      fontFamily:
+        "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
       userSelect: "none",
     },
-    date: { fontWeight: 600, fontSize: 14, opacity: 0.95, margin: 0 },
+    date: { fontWeight: 600, fontSize: 14, margin: 0 },
     time: { fontWeight: 700, fontSize: 18, margin: 0 },
     actions: {
       justifySelf: "end",
@@ -90,29 +90,66 @@ export default function NavBar({ currentPath = "" }) {
       textDecoration: "none",
       outline: "none",
       transition: "transform .15s ease, box-shadow .15s ease",
+      cursor: "pointer",
     },
     iconBtnHover: {
       transform: "translateY(-1px)",
       boxShadow: "0 8px 22px rgba(0,0,0,.10)",
     },
-    spacer: { height: 56 }, // altura aproximada del header
+    spacer: { height: 56 },
   };
 
-  // Pequeño efecto hover sin CSS global
+  // Pequeño efecto hover
   const [hover, setHover] = useState("");
   const btnStyle = (k) =>
     hover === k ? { ...styles.iconBtn, ...styles.iconBtnHover } : styles.iconBtn;
 
-  // Iconos estilo línea, coherentes con los del login/registro
-  const stroke = "#0ea5e9"; // celeste
+  // Iconos outline coherentes con los de los inputs
+  const stroke = "#0ea5e9";
   const strokeW = 1.8;
-  const common = { fill: "none", stroke: stroke, strokeWidth: strokeW, strokeLinecap: "round", strokeLinejoin: "round" };
+  const common = {
+    fill: "none",
+    stroke,
+    strokeWidth: strokeW,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+  };
+
+  // Click en “atrás”: si hay historial, back; si no, dashboard
+  const onBack = (e) => {
+    e.preventDefault();
+    try {
+      if (history.length > 1) {
+        history.back();
+      } else {
+        location.href = "/dashboard";
+      }
+    } catch {
+      location.href = "/dashboard";
+    }
+  };
 
   return (
     <>
       <header style={styles.header}>
         <div style={styles.container}>
-          <div /> {/* hueco lado izquierdo (logo si lo quisieras en el futuro) */}
+          {/* Flecha “atrás” (lado izquierdo) */}
+          <div style={styles.left}>
+            <a
+              href="/dashboard"
+              title="Atrás"
+              style={btnStyle("back")}
+              onMouseEnter={() => setHover("back")}
+              onMouseLeave={() => setHover("")}
+              onClick={onBack}
+              aria-label="Volver á páxina anterior"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" {...common}>
+                <path d="M4 12h16" />
+                <path d="M10 6l-6 6 6 6" />
+              </svg>
+            </a>
+          </div>
 
           {/* Reloj centrado */}
           <div style={styles.centerClock} aria-label="Hora de referencia (Madrid)">
@@ -120,9 +157,9 @@ export default function NavBar({ currentPath = "" }) {
             <p style={styles.time}>{timeText}</p>
           </div>
 
-          {/* Acciones derecha */}
+          {/* Acciones dereita */}
           <div style={styles.actions}>
-            {/* Notificación */}
+            {/* Notificacións */}
             <a
               href="/notificacions"
               title="Notificacións"
@@ -152,7 +189,7 @@ export default function NavBar({ currentPath = "" }) {
               </svg>
             </a>
 
-            {/* Pechar (X) → logout a Landing */}
+            {/* Pechar → logout a Landing */}
             <a
               href="/logout?to=/"
               title="Pechar sesión"
@@ -169,8 +206,9 @@ export default function NavBar({ currentPath = "" }) {
         </div>
       </header>
 
-      {/* Empuje para que o contido non quede tapado polo header fixo */}
+      {/* Empuxe para non tapar contido */}
       <div style={styles.spacer} />
     </>
   );
 }
+
