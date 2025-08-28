@@ -1,16 +1,23 @@
+// src/pages/ForceLogout.jsx
 import { h } from "preact";
 import { useEffect } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+function getParam(name) {
+  if (typeof window === "undefined") return null;
+  const url = new URL(window.location.href);
+  return url.searchParams.get(name);
+}
+
 export default function ForceLogout() {
   useEffect(() => {
     let cancelled = false;
 
-    const hardRedirectToLogin = () => {
+    const hardRedirect = () => {
+      const to = getParam("to") || "/"; // ← por defecto, a la Landing
       try {
-        // Limpieza agresiva de storage
         if (typeof localStorage !== "undefined") {
           Object.keys(localStorage).forEach((k) => {
             if (k.startsWith("sb-") || k.includes("supabase")) localStorage.removeItem(k);
@@ -22,32 +29,24 @@ export default function ForceLogout() {
           });
         }
       } catch {}
-      // Redirección dura (evita quedarse en SPA)
-      window.location.replace("/login");
+      window.location.replace(to);
     };
 
     (async () => {
       try {
-        // 1) Cerrar sesión global y local
         try { await supabase.auth.signOut({ scope: "global" }); } catch {}
         try { await supabase.auth.signOut({ scope: "local"  }); } catch {}
-
-        // 2) Espera breve para que se invalide el estado auth
         await sleep(250);
       } finally {
-        if (!cancelled) hardRedirectToLogin();
+        if (!cancelled) hardRedirect();
       }
     })();
 
-    // Safety net: si por lo que sea seguimos aquí, nos vamos igualmente
     const failSafe = setTimeout(() => {
-      if (!cancelled) window.location.replace("/login");
+      if (!cancelled) hardRedirect();
     }, 2000);
 
-    return () => {
-      cancelled = true;
-      clearTimeout(failSafe);
-    };
+    return () => { cancelled = true; clearTimeout(failSafe); };
   }, []);
 
   return (
