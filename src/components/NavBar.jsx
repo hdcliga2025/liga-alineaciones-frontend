@@ -3,31 +3,36 @@ import { h } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 
 export default function NavBar({ currentPath = "" }) {
-  // No mostrar en rutas públicas
+  // Ocultar en públicas
   const isPublic = ["/", "/login", "/register"].includes(currentPath || "/");
   if (isPublic) return null;
 
-  // ===== Reloj Europe/Madrid =====
+  // Reloj Europe/Madrid
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
 
+  // Responsive (para agrupar iconos a la derecha en móvil)
+  const [isNarrow, setIsNarrow] = useState(
+    typeof window !== "undefined" ? window.innerWidth <= 480 : false
+  );
+  useEffect(() => {
+    const onR = () => setIsNarrow(window.innerWidth <= 480);
+    window.addEventListener("resize", onR);
+    return () => window.removeEventListener("resize", onR);
+  }, []);
+
   const { dateText, timeText } = useMemo(() => {
     const tz = "Europe/Madrid";
-
-    // Formato dd.MM.yyyy
-    const d = new Date(
-      now.toLocaleString("en-US", { timeZone: tz }) // asegura TZ
-    );
+    const d = new Date(now.toLocaleString("en-US", { timeZone: tz }));
     const pad = (n) => String(n).padStart(2, "0");
     const dd = pad(d.getDate());
     const mm = pad(d.getMonth() + 1);
     const yyyy = d.getFullYear();
     const dateTextFormatted = `${dd}.${mm}.${yyyy}`;
 
-    // Hora HH:MM:SS 24h
     const timeTextFormatted = new Intl.DateTimeFormat("gl-ES", {
       hour: "2-digit",
       minute: "2-digit",
@@ -56,31 +61,34 @@ export default function NavBar({ currentPath = "" }) {
       margin: "0 auto",
       padding: "8px 12px",
       display: "grid",
-      gridTemplateColumns: "1fr auto 1fr",
+      // en móvil dejamos la misma rejilla pero reducimos tipografía del reloj
+      gridTemplateColumns: "auto 1fr auto",
       alignItems: "center",
-      gap: 8,
+      gap: isNarrow ? 6 : 8,
     },
-    left: { display: "flex", alignItems: "center", gap: 8 },
+    left: { display: "flex", alignItems: "center" },
     centerClock: {
       justifySelf: "center",
       textAlign: "center",
-      lineHeight: 1.05,
       color: "#0ea5e9",
+      userSelect: "none",
       fontFamily:
         "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
-      userSelect: "none",
+      lineHeight: 1.05,
     },
-    date: { fontWeight: 600, fontSize: 14, margin: 0 },
-    time: { fontWeight: 700, fontSize: 18, margin: 0 },
+    date: { fontWeight: 600, fontSize: isNarrow ? 12 : 14, margin: 0 },
+    time: { fontWeight: 700, fontSize: isNarrow ? 16 : 18, margin: 0 },
     actions: {
       justifySelf: "end",
       display: "flex",
-      gap: 10,
       alignItems: "center",
+      gap: isNarrow ? 8 : 10,
+      flexWrap: "nowrap", // → que no salten de línea en móvil
+      whiteSpace: "nowrap",
     },
     iconBtn: {
-      width: 38,
-      height: 38,
+      width: isNarrow ? 36 : 38,
+      height: isNarrow ? 36 : 38,
       display: "grid",
       placeItems: "center",
       borderRadius: 12,
@@ -99,12 +107,10 @@ export default function NavBar({ currentPath = "" }) {
     spacer: { height: 56 },
   };
 
-  // Pequeño efecto hover
   const [hover, setHover] = useState("");
   const btnStyle = (k) =>
     hover === k ? { ...styles.iconBtn, ...styles.iconBtnHover } : styles.iconBtn;
 
-  // Iconos outline coherentes con los de los inputs
   const stroke = "#0ea5e9";
   const strokeW = 1.8;
   const common = {
@@ -115,15 +121,11 @@ export default function NavBar({ currentPath = "" }) {
     strokeLinejoin: "round",
   };
 
-  // Click en “atrás”: si hay historial, back; si no, dashboard
   const onBack = (e) => {
     e.preventDefault();
     try {
-      if (history.length > 1) {
-        history.back();
-      } else {
-        location.href = "/dashboard";
-      }
+      if (history.length > 1) history.back();
+      else location.href = "/dashboard";
     } catch {
       location.href = "/dashboard";
     }
@@ -133,7 +135,7 @@ export default function NavBar({ currentPath = "" }) {
     <>
       <header style={styles.header}>
         <div style={styles.container}>
-          {/* Flecha “atrás” (lado izquierdo) */}
+          {/* Atrás */}
           <div style={styles.left}>
             <a
               href="/dashboard"
@@ -151,13 +153,13 @@ export default function NavBar({ currentPath = "" }) {
             </a>
           </div>
 
-          {/* Reloj centrado */}
+          {/* Reloj (centro) */}
           <div style={styles.centerClock} aria-label="Hora de referencia (Madrid)">
             <p style={styles.date}>{dateText}</p>
             <p style={styles.time}>{timeText}</p>
           </div>
 
-          {/* Acciones dereita */}
+          {/* Acciones (derecha, juntos en móvil) */}
           <div style={styles.actions}>
             {/* Notificacións */}
             <a
@@ -206,9 +208,10 @@ export default function NavBar({ currentPath = "" }) {
         </div>
       </header>
 
-      {/* Empuxe para non tapar contido */}
+      {/* Empuje para no tapar contenido */}
       <div style={styles.spacer} />
     </>
   );
 }
+
 
