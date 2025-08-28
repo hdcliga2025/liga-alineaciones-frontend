@@ -20,9 +20,7 @@ export default function NavBar({ currentPath = "" }) {
 
   const { remainStr } = useMemo(() => {
     let diff = TARGET_UTC_MS - now;
-    if (diff <= 0) {
-      return { remainStr: "00D-00H-00M-00S" };
-    }
+    if (diff <= 0) return { remainStr: "00D-00H-00M-00S" };
     const totalSec = Math.floor(diff / 1000);
     const days = Math.floor(totalSec / 86400);
     const h = Math.floor((totalSec % 86400) / 3600);
@@ -32,9 +30,9 @@ export default function NavBar({ currentPath = "" }) {
     return { remainStr: `${pad(days)}D-${pad(h)}H-${pad(m)}M-${pad(s)}S` };
   }, [now]);
 
-  // Blink cada 15s: celeste ↔ negro
-  const blinkPhase = Math.floor(now / 15000) % 2; // 0/1 cada 15s
-  const colorNow = blinkPhase === 0 ? "#0ea5e9" : "#0f172a"; // celeste / negro
+  // Parpadeo cada 15s: celeste ↔ negro
+  const blinkPhase = Math.floor(now / 15000) % 2;
+  const colorNow = blinkPhase === 0 ? "#0ea5e9" : "#0f172a";
 
   // ===== Estilos =====
   const [isNarrow, setIsNarrow] = useState(
@@ -45,6 +43,11 @@ export default function NavBar({ currentPath = "" }) {
     window.addEventListener("resize", onR);
     return () => window.removeEventListener("resize", onR);
   }, []);
+
+  // Ajustes pedidos: PC semibold y más alargado; móvil regular, algo más alto y más estrecho
+  const fw = isNarrow ? 400 : 600;               // móvil: regular (sin bold) | PC: semibold
+  const fz = isNarrow ? 17 : 20;                 // móvil un poco más alto | PC un poco mayor
+  const sx = isNarrow ? 1.04 : 1.34;             // móvil más estrecho | PC más alargado
 
   const styles = {
     header: {
@@ -60,7 +63,7 @@ export default function NavBar({ currentPath = "" }) {
       margin: "0 auto",
       padding: "8px 12px",
       display: "grid",
-      gridTemplateColumns: "auto 1fr auto", // izq | centro | dcha
+      gridTemplateColumns: "auto 1fr auto",
       alignItems: "center",
       gap: isNarrow ? 6 : 8,
     },
@@ -76,15 +79,14 @@ export default function NavBar({ currentPath = "" }) {
         "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
       lineHeight: 1.0,
     },
-    // Sólo una línea (sin "Pechan en")
     time: {
       margin: 0,
       color: colorNow,
-      fontWeight: isNarrow ? 600 : 800,          // móvil semibold; desktop bold
-      fontSize: isNarrow ? 15 : 19,              // móvil un poco menor; PC un poco mayor
-      transform: `scaleX(${isNarrow ? 1.08 : 1.22})`, // estirado horizontal sin crecer en alto
+      fontWeight: fw,
+      fontSize: fz,
+      transform: `scaleX(${sx})`,
       transformOrigin: "center",
-      letterSpacing: isNarrow ? "0.4px" : "0.6px",
+      letterSpacing: isNarrow ? "0.35px" : "0.6px",
     },
     rightGroup: {
       justifySelf: "end",

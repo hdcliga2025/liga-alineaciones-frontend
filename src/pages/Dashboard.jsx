@@ -4,53 +4,36 @@ import { useEffect, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient";
 import "./Dashboard.css";
 
-/* Icons outline — un poco más grandes dentro del mismo marco */
+/* Icons outline coherentes — aumentamos tamaño interno y cambiamos “aliñacións” por xogador con balón */
 const IconBall = ({ color = "#22c55e", size = 40 }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    aria-hidden="true"
-    stroke={color}
-    stroke-width="1.8"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  >
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke={color} stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="12" cy="12" r="9" />
     <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
     <path d="M7 7l3 2M17 7l-3 2M7 17l3-2M17 17l-3-2" />
   </svg>
 );
 
-const IconShirt = ({ color = "#f59e0b", size = 40 }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    aria-hidden="true"
-    stroke={color}
-    stroke-width="1.8"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  >
-    <path d="M8 4l4 2 4-2 3 3-3 2v9a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V9L5 7 8 4z" />
+/* Novo icono: xogador con balón (outline) */
+const IconPlayerBall = ({ color = "#f59e0b", size = 40 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke={color} stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    {/* cabeza */}
+    <circle cx="9" cy="5.5" r="2.2" />
+    {/* tronco y brazo */}
+    <path d="M10 8l2.5 2.5" />
+    <path d="M12.5 10.5l3-1.5" />
+    {/* pierna de apoio e equilibrio */}
+    <path d="M10 8l-2 4-3 2" />
+    {/* perna que vai ao balón */}
+    <path d="M12.5 10.5l2.5 4.5" />
+    {/* balón */}
+    <circle cx="18" cy="18" r="1.8" />
+    {/* golpeo/pe: unión ó balón */}
+    <path d="M15 15.2l2.7 1.8" />
   </svg>
 );
 
 const IconTrophy = ({ color = "#a78bfa", size = 40 }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    aria-hidden="true"
-    stroke={color}
-    stroke-width="1.8"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  >
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke={color} stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
     <path d="M8 4h8v3a4 4 0 0 1-4 4 4 4 0 0 1-4-4V4z" />
     <path d="M16 7h3a3 3 0 0 1-3 3M8 7H5a3 3 0 0 0 3 3" />
     <path d="M12 11v4M9 20h6M10 18h4" />
@@ -111,7 +94,7 @@ export default function Dashboard() {
 
         <a href="/haz-tu-11" class="main-card">
           <div class="dash-icon" style="border:1px solid rgba(245,158,11,.55);">
-            <IconShirt color="#f59e0b" />
+            <IconPlayerBall color="#f59e0b" />
           </div>
           <div class="dash-text">
             <h3 class="dash-card-header">Xogar ás Aliñacións</h3>
