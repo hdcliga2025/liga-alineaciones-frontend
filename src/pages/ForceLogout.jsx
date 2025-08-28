@@ -1,21 +1,35 @@
 // src/pages/ForceLogout.jsx
 import { h } from "preact";
 import { useEffect } from "preact/hooks";
-import { route } from "preact-router";
 import { supabase } from "../lib/supabaseClient";
 
 export default function ForceLogout() {
   useEffect(() => {
-    let cancelled = false;
+    let done = false;
+
+    const hardGoto = (path) => {
+      try {
+        // 1º intento
+        window.location.replace(path);
+        // 2º intento de seguridad
+        setTimeout(() => {
+          if (location.pathname !== "/login") {
+            window.location.href = path;
+          }
+        }, 600);
+      } catch {
+        // 3º intento definitivo
+        window.location.href = path;
+      }
+    };
 
     (async () => {
       try {
-        // Cerrar sesión local (tokens do dispositivo)
-        await supabase.auth.signOut({ scope: "local" });
-      } catch (_) {}
+        // Cerramos sesión en servidor y cliente (por si acaso)
+        try { await supabase.auth.signOut({ scope: "global" }); } catch {}
+        try { await supabase.auth.signOut({ scope: "local"  }); } catch {}
 
-      // Limpieza de posibles claves sb-* en storage
-      try {
+        // Limpiar posibles restos de claves sb-* (tokens de Supabase)
         const zap = (store) => {
           if (!store) return;
           const rm = [];
@@ -27,23 +41,16 @@ export default function ForceLogout() {
         };
         zap(window.localStorage);
         zap(window.sessionStorage);
-      } catch (_) {}
+      } catch {}
 
-      if (!cancelled) {
-        // SPA redirect
-        route("/login", true);
-        // Fallback duro por se o SPA non navega (garantía)
-        setTimeout(() => {
-          try {
-            if (location.pathname !== "/login") {
-              window.location.replace("/login");
-            }
-          } catch (_) {}
-        }, 200);
+      if (!done) {
+        const bust = `?t=${Date.now()}`;
+        hardGoto(`/login${bust}`);
+        done = true;
       }
     })();
 
-    return () => { cancelled = true; };
+    return () => { done = true; };
   }, []);
 
   return (

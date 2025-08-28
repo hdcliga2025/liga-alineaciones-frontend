@@ -1,16 +1,7 @@
 ﻿// src/components/Login.jsx
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
-import { route } from 'preact-router';
 import { supabase } from '../lib/supabaseClient.js';
-
-function withTimeout(promise, ms = 10000) {
-  let id;
-  const timeout = new Promise((_, reject) => {
-    id = setTimeout(() => reject(new Error('timeout')), ms);
-  });
-  return Promise.race([promise, timeout]).finally(() => clearTimeout(id));
-}
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -19,29 +10,47 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
 
+  const goHard = (path) => {
+    const url = `${path}${path.includes('?') ? '&' : '?'}t=${Date.now()}`;
+    try {
+      window.location.replace(url);
+      setTimeout(() => {
+        if (location.pathname !== '/dashboard') window.location.href = url;
+      }, 600);
+    } catch {
+      window.location.href = url;
+    }
+  };
+
   async function handleSubmit(e) {
     e.preventDefault();
-    if (loading) return;
     setErr('');
     setLoading(true);
     try {
-      const { error } = await withTimeout(
-        supabase.auth.signInWithPassword({ email: email.trim(), password }),
-        10000
-      );
+      // Evita estados “zombie” de sesión (muy típico en móvil)
+      try { await supabase.auth.signOut({ scope: 'local' }); } catch {}
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
       if (error) {
         setErr(error.message || 'Erro iniciando sesión.');
         return;
       }
-      route('/dashboard', true);
-    } catch (e2) {
-      if (e2?.message === 'timeout') {
-        setErr('A conexión tardou demasiado. Téntao de novo.');
-      } else {
-        setErr('Erro inesperado iniciando sesión.');
-        console.error(e2);
+      if (!data || !data.user) {
+        setErr('Non foi posible iniciar a sesión (sen usuario).');
+        return;
       }
+
+      // Redirección dura para esquivar cualquier bug de navegación en móbil
+      goHard('/dashboard');
+    } catch (e2) {
+      console.error(e2);
+      setErr('Erro inesperado iniciando sesión.');
     } finally {
+      // En redirección dura non o verás, pero evita quedar en “Accedendo…”
       setLoading(false);
     }
   }
@@ -105,6 +114,7 @@ export default function Login() {
 
       {err && <p style={{ margin: '8px 0 0', color: '#b91c1c' }}>{err}</p>}
 
+      {/* Envoltura tipo tabs */}
       <div class="cta-wrap">
         <button type="submit" disabled={loading}>
           {loading ? 'Accedendo…' : 'Fillos dunha paixón, imos!!'}
