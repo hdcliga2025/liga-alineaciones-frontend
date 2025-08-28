@@ -3,14 +3,14 @@ import { h } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 
 export default function NavBar({ currentPath = "" }) {
-  // Ocultar en públicas
+  // Ocultar en páxinas públicas
   const isPublic = ["/", "/login", "/register"].includes(currentPath || "/");
   if (isPublic) return null;
 
   // ===== Contador regresivo: peche aliñacións =====
   // Partido: 31/08/2025 17:00 (Europe/Madrid, CEST)
   // Peche:   2h antes => 31/08/2025 15:00 CEST = 13:00 UTC
-  const TARGET_UTC_MS = Date.UTC(2025, 7, 31, 13, 0, 0); // meses 0-index → 7 = agosto
+  const TARGET_UTC_MS = Date.UTC(2025, 7, 31, 13, 0, 0); // 7 = agosto
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -18,22 +18,27 @@ export default function NavBar({ currentPath = "" }) {
     return () => clearInterval(id);
   }, []);
 
-  const { label, remain } = useMemo(() => {
+  const { label, remainStr, isClosed } = useMemo(() => {
     let diff = TARGET_UTC_MS - now;
-    if (diff < 0) {
-      return { label: "Aliñacións pechadas", remain: null };
+    if (diff <= 0) {
+      return { label: "Peche", remainStr: "00D-00H-00M-00S", isClosed: true };
     }
-    const sec = Math.floor(diff / 1000);
-    const days = Math.floor(sec / 86400);
-    const h = Math.floor((sec % 86400) / 3600);
-    const m = Math.floor((sec % 3600) / 60);
-    const s = sec % 60;
+    const totalSec = Math.floor(diff / 1000);
+    const days = Math.floor(totalSec / 86400);
+    const h = Math.floor((totalSec % 86400) / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
     const pad = (n) => String(n).padStart(2, "0");
     return {
       label: "Pechan en",
-      remain: `${days}d ${pad(h)}:${pad(m)}:${pad(s)}`,
+      remainStr: `${pad(days)}D-${pad(h)}H-${pad(m)}M-${pad(s)}S`,
+      isClosed: false,
     };
   }, [now]);
+
+  // Blink cada 15s: celeste ↔ negro
+  const blinkPhase = Math.floor(now / 15000) % 2; // 0/1 cada 15s
+  const colorNow = blinkPhase === 0 ? "#0ea5e9" : "#0f172a"; // celeste / negro
 
   // ===== Estilos =====
   const [isNarrow, setIsNarrow] = useState(
@@ -61,7 +66,7 @@ export default function NavBar({ currentPath = "" }) {
       margin: "0 auto",
       padding: "8px 12px",
       display: "grid",
-      gridTemplateColumns: "auto 1fr auto", // izq (back+bell) | centro (contador) | dcha (perfil+pechar)
+      gridTemplateColumns: "auto 1fr auto", // izq | centro | dcha
       alignItems: "center",
       gap: isNarrow ? 6 : 8,
     },
@@ -74,14 +79,26 @@ export default function NavBar({ currentPath = "" }) {
     centerClock: {
       justifySelf: "center",
       textAlign: "center",
-      color: "#0ea5e9",
       userSelect: "none",
       fontFamily:
         "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
       lineHeight: 1.05,
     },
-    date: { fontWeight: 600, fontSize: isNarrow ? 12 : 14, margin: 0 },
-    time: { fontWeight: 700, fontSize: isNarrow ? 16 : 18, margin: 0 },
+    date: {
+      fontWeight: 600,
+      fontSize: isNarrow ? 12 : 14,
+      margin: 0,
+      color: "#64748b",
+    },
+    time: {
+      fontWeight: 800,
+      fontSize: isNarrow ? 16 : 18,
+      margin: 0,
+      color: colorNow,
+      transform: "scaleX(1.12)",        // formato "estirado" horizontal
+      transformOrigin: "center",
+      letterSpacing: "0.5px",
+    },
     rightGroup: {
       justifySelf: "end",
       display: "flex",
@@ -138,7 +155,7 @@ export default function NavBar({ currentPath = "" }) {
     <>
       <header style={styles.header}>
         <div style={styles.container}>
-          {/* IZQUIERDA: Atrás + Notificacións */}
+          {/* IZQ: Atrás + Notificacións */}
           <div style={styles.leftGroup}>
             <a
               href="/dashboard"
@@ -172,11 +189,11 @@ export default function NavBar({ currentPath = "" }) {
 
           {/* CENTRO: Contador regresivo */}
           <div style={styles.centerClock} aria-label="Peche das aliñacións">
-            <p style={styles.date}>{label}</p>
-            <p style={styles.time}>{remain ?? "00:00:00"}</p>
+            <p style={styles.date}>{isClosed ? "Aliñacións pechadas" : "Pechan en"}</p>
+            <p style={styles.time}>{remainStr}</p>
           </div>
 
-          {/* DERECHA: Perfil + Pechar */}
+          {/* DCHA: Perfil + Pechar */}
           <div style={styles.rightGroup}>
             <a
               href="/perfil"
@@ -208,7 +225,7 @@ export default function NavBar({ currentPath = "" }) {
         </div>
       </header>
 
-      {/* Empuje para no tapar contenido */}
+      {/* Empuje para non tapar contido */}
       <div style={styles.spacer} />
     </>
   );

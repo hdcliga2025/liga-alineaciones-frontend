@@ -1,5 +1,7 @@
-﻿import { h } from 'preact';
+﻿// src/components/Login.jsx
+import { h } from 'preact';
 import { useState } from 'preact/hooks';
+import { route } from 'preact-router';
 import { supabase } from '../lib/supabaseClient.js';
 
 export default function Login() {
@@ -13,36 +15,18 @@ export default function Login() {
     e.preventDefault();
     setErr('');
     setLoading(true);
-
     try {
-      // Safari/WebView: limpia cualquier sesión previa para evitar “atascos”
-      try { await supabase.auth.signOut({ scope: 'local'  }); } catch {}
-      try { await supabase.auth.signOut({ scope: 'global' }); } catch {}
-
       const { error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
-
-      if (error) {
-        setErr(error.message || 'Erro iniciando sesión.');
-        return;
-      }
-
-      // Redirect duro (evita quedarse en “Accedendo…” en móbil)
-      window.location.assign('/dashboard');
-      // Failsafe por si el navegador ignora la primera navegación
-      setTimeout(() => {
-        if (window.location.pathname !== '/dashboard') {
-          window.location.href = '/dashboard?t=' + Date.now();
-        }
-      }, 500);
+      if (error) return setErr(error.message || 'Erro iniciando sesión.');
+      route('/dashboard', true);
     } catch (e2) {
       console.error(e2);
       setErr('Erro inesperado iniciando sesión.');
     } finally {
-      // Mostramos “Accedendo…” até que o redirect salte
-      setLoading(true);
+      setLoading(false);
     }
   }
 
@@ -105,6 +89,7 @@ export default function Login() {
 
       {err && <p style={{ margin: '8px 0 0', color: '#b91c1c' }}>{err}</p>}
 
+      {/* Botón principal */}
       <div class="cta-wrap">
         <button type="submit" disabled={loading}>
           {loading ? 'Accedendo…' : 'Fillos dunha paixón, imos!!'}
