@@ -1,68 +1,58 @@
-// src/pages/ForceLogout.jsx
 import { h } from "preact";
 import { useEffect } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient";
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
 export default function ForceLogout() {
   useEffect(() => {
-    let done = false;
+    let cancelled = false;
 
-    const hardGoto = (path) => {
+    const hardRedirectToLogin = () => {
       try {
-        // 1º intento
-        window.location.replace(path);
-        // 2º intento de seguridad
-        setTimeout(() => {
-          if (location.pathname !== "/login") {
-            window.location.href = path;
-          }
-        }, 600);
-      } catch {
-        // 3º intento definitivo
-        window.location.href = path;
-      }
+        // Limpieza agresiva de storage
+        if (typeof localStorage !== "undefined") {
+          Object.keys(localStorage).forEach((k) => {
+            if (k.startsWith("sb-") || k.includes("supabase")) localStorage.removeItem(k);
+          });
+        }
+        if (typeof sessionStorage !== "undefined") {
+          Object.keys(sessionStorage).forEach((k) => {
+            if (k.startsWith("sb-") || k.includes("supabase")) sessionStorage.removeItem(k);
+          });
+        }
+      } catch {}
+      // Redirección dura (evita quedarse en SPA)
+      window.location.replace("/login");
     };
 
     (async () => {
       try {
-        // Cerramos sesión en servidor y cliente (por si acaso)
+        // 1) Cerrar sesión global y local
         try { await supabase.auth.signOut({ scope: "global" }); } catch {}
         try { await supabase.auth.signOut({ scope: "local"  }); } catch {}
 
-        // Limpiar posibles restos de claves sb-* (tokens de Supabase)
-        const zap = (store) => {
-          if (!store) return;
-          const rm = [];
-          for (let i = 0; i < store.length; i++) {
-            const k = store.key(i);
-            if (k && k.startsWith("sb-")) rm.push(k);
-          }
-          rm.forEach((k) => store.removeItem(k));
-        };
-        zap(window.localStorage);
-        zap(window.sessionStorage);
-      } catch {}
-
-      if (!done) {
-        const bust = `?t=${Date.now()}`;
-        hardGoto(`/login${bust}`);
-        done = true;
+        // 2) Espera breve para que se invalide el estado auth
+        await sleep(250);
+      } finally {
+        if (!cancelled) hardRedirectToLogin();
       }
     })();
 
-    return () => { done = true; };
+    // Safety net: si por lo que sea seguimos aquí, nos vamos igualmente
+    const failSafe = setTimeout(() => {
+      if (!cancelled) window.location.replace("/login");
+    }, 2000);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(failSafe);
+    };
   }, []);
 
   return (
-    <main style={{ padding: "36px 16px", textAlign: "center" }}>
-      <p
-        style={{
-          font: "600 18px/1.2 Montserrat, system-ui, sans-serif",
-          color: "#0ea5e9",
-        }}
-      >
-        Pechando sesión…
-      </p>
+    <main style={{ padding: "32px", textAlign: "center" }}>
+      <h2 style={{ color: "#0ea5e9", fontWeight: 700, margin: 0 }}>Pechando sesión…</h2>
     </main>
   );
 }

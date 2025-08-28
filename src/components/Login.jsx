@@ -1,5 +1,4 @@
-﻿// src/components/Login.jsx
-import { h } from 'preact';
+﻿import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import { supabase } from '../lib/supabaseClient.js';
 
@@ -10,27 +9,17 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
 
-  const goHard = (path) => {
-    const url = `${path}${path.includes('?') ? '&' : '?'}t=${Date.now()}`;
-    try {
-      window.location.replace(url);
-      setTimeout(() => {
-        if (location.pathname !== '/dashboard') window.location.href = url;
-      }, 600);
-    } catch {
-      window.location.href = url;
-    }
-  };
-
   async function handleSubmit(e) {
     e.preventDefault();
     setErr('');
     setLoading(true);
-    try {
-      // Evita estados “zombie” de sesión (muy típico en móvil)
-      try { await supabase.auth.signOut({ scope: 'local' }); } catch {}
 
-      const { data, error } = await supabase.auth.signInWithPassword({
+    try {
+      // Safari/WebView: limpia cualquier sesión previa para evitar “atascos”
+      try { await supabase.auth.signOut({ scope: 'local'  }); } catch {}
+      try { await supabase.auth.signOut({ scope: 'global' }); } catch {}
+
+      const { error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
@@ -39,19 +28,21 @@ export default function Login() {
         setErr(error.message || 'Erro iniciando sesión.');
         return;
       }
-      if (!data || !data.user) {
-        setErr('Non foi posible iniciar a sesión (sen usuario).');
-        return;
-      }
 
-      // Redirección dura para esquivar cualquier bug de navegación en móbil
-      goHard('/dashboard');
+      // Redirect duro (evita quedarse en “Accedendo…” en móbil)
+      window.location.assign('/dashboard');
+      // Failsafe por si el navegador ignora la primera navegación
+      setTimeout(() => {
+        if (window.location.pathname !== '/dashboard') {
+          window.location.href = '/dashboard?t=' + Date.now();
+        }
+      }, 500);
     } catch (e2) {
       console.error(e2);
       setErr('Erro inesperado iniciando sesión.');
     } finally {
-      // En redirección dura non o verás, pero evita quedar en “Accedendo…”
-      setLoading(false);
+      // Mostramos “Accedendo…” até que o redirect salte
+      setLoading(true);
     }
   }
 
@@ -114,7 +105,6 @@ export default function Login() {
 
       {err && <p style={{ margin: '8px 0 0', color: '#b91c1c' }}>{err}</p>}
 
-      {/* Envoltura tipo tabs */}
       <div class="cta-wrap">
         <button type="submit" disabled={loading}>
           {loading ? 'Accedendo…' : 'Fillos dunha paixón, imos!!'}
