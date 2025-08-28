@@ -4,8 +4,8 @@ import { useEffect, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient";
 import "./Dashboard.css";
 
-/* ===== Icons outline coherentes con el header/login (stroke) ===== */
-const IconBall = ({ color = "#22c55e", size = 28 }) => (
+/* Icons outline — aumentamos tamaño (no cambia card ni marco) */
+const IconBall = ({ color = "#22c55e", size = 36 }) => (
   <svg
     width={size}
     height={size}
@@ -23,7 +23,7 @@ const IconBall = ({ color = "#22c55e", size = 28 }) => (
   </svg>
 );
 
-const IconShirt = ({ color = "#f59e0b", size = 28 }) => (
+const IconShirt = ({ color = "#f59e0b", size = 36 }) => (
   <svg
     width={size}
     height={size}
@@ -39,7 +39,7 @@ const IconShirt = ({ color = "#f59e0b", size = 28 }) => (
   </svg>
 );
 
-const IconTrophy = ({ color = "#a78bfa", size = 28 }) => (
+const IconTrophy = ({ color = "#a78bfa", size = 36 }) => (
   <svg
     width={size}
     height={size}
@@ -62,31 +62,27 @@ export default function Dashboard() {
 
   useEffect(() => {
     let alive = true;
-
     (async () => {
       const { data: s } = await supabase.auth.getSession();
       const uid = s?.session?.user?.id || null;
-
       if (uid) {
         const { data: prof } = await supabase
           .from("profiles")
           .select("first_name")
           .eq("id", uid)
           .maybeSingle();
-
         const first = (prof?.first_name || "").trim();
         if (alive) setNome(first || "amig@");
       } else {
         if (alive) setNome("amig@");
       }
     })();
-
     return () => { alive = false; };
   }, []);
 
   return (
     <div class="dash-wrap">
-      {/* Hero — orden original. En móvil se reduce el padding superior vía CSS */}
+      {/* Hero */}
       <section class="dash-hero two-cols">
         <img
           src="/logoHDC.jpg"
@@ -100,11 +96,10 @@ export default function Dashboard() {
         </p>
       </section>
 
-      {/* Grid principal de cards */}
+      {/* Cards */}
       <section class="dash-grid dash-grid--main">
-        {/* Calendario */}
         <a href="/partidos" class="main-card">
-          <div class="dash-icon" style="border-color: var(--green-500);">
+          <div class="dash-icon" style="border:1px solid rgba(34,197,94,.55);">
             <IconBall color="#22c55e" />
           </div>
           <div class="dash-text">
@@ -114,9 +109,8 @@ export default function Dashboard() {
           <span class="chev">›</span>
         </a>
 
-        {/* Xogar ás Aliñacións */}
         <a href="/haz-tu-11" class="main-card">
-          <div class="dash-icon" style="border-color: var(--amber-500);">
+          <div class="dash-icon" style="border:1px solid rgba(245,158,11,.55);">
             <IconShirt color="#f59e0b" />
           </div>
           <div class="dash-text">
@@ -128,9 +122,8 @@ export default function Dashboard() {
           <span class="chev">›</span>
         </a>
 
-        {/* Clasificacións */}
         <a href="/clasificacion" class="main-card">
-          <div class="dash-icon" style="border-color: var(--violet-500);">
+          <div class="dash-icon" style="border:1px solid rgba(167,139,250,.55);">
             <IconTrophy color="#a78bfa" />
           </div>
           <div class="dash-text">

@@ -3,17 +3,39 @@ import { h } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 
 export default function NavBar({ currentPath = "" }) {
-  // Ocultar en páxinas públicas
+  // Ocultar en públicas
   const isPublic = ["/", "/login", "/register"].includes(currentPath || "/");
   if (isPublic) return null;
 
-  // Reloj Europe/Madrid centrado
-  const [now, setNow] = useState(() => new Date());
+  // ===== Contador regresivo: peche aliñacións =====
+  // Partido: 31/08/2025 17:00 (Europe/Madrid, CEST)
+  // Peche:   2h antes => 31/08/2025 15:00 CEST = 13:00 UTC
+  const TARGET_UTC_MS = Date.UTC(2025, 7, 31, 13, 0, 0); // meses 0-index → 7 = agosto
+  const [now, setNow] = useState(() => Date.now());
+
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000);
+    const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
 
+  const { label, remain } = useMemo(() => {
+    let diff = TARGET_UTC_MS - now;
+    if (diff < 0) {
+      return { label: "Aliñacións pechadas", remain: null };
+    }
+    const sec = Math.floor(diff / 1000);
+    const days = Math.floor(sec / 86400);
+    const h = Math.floor((sec % 86400) / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    const pad = (n) => String(n).padStart(2, "0");
+    return {
+      label: "Pechan en",
+      remain: `${days}d ${pad(h)}:${pad(m)}:${pad(s)}`,
+    };
+  }, [now]);
+
+  // ===== Estilos =====
   const [isNarrow, setIsNarrow] = useState(
     typeof window !== "undefined" ? window.innerWidth <= 480 : false
   );
@@ -23,27 +45,6 @@ export default function NavBar({ currentPath = "" }) {
     return () => window.removeEventListener("resize", onR);
   }, []);
 
-  const { dateText, timeText } = useMemo(() => {
-    const tz = "Europe/Madrid";
-    const d = new Date(now.toLocaleString("en-US", { timeZone: tz }));
-    const pad = (n) => String(n).padStart(2, "0");
-    const dd = pad(d.getDate());
-    const mm = pad(d.getMonth() + 1);
-    const yyyy = d.getFullYear();
-    const dateTextFormatted = `${dd}.${mm}.${yyyy}`;
-
-    const timeTextFormatted = new Intl.DateTimeFormat("gl-ES", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-      timeZone: tz,
-    }).format(d);
-
-    return { dateText: dateTextFormatted, timeText: timeTextFormatted };
-  }, [now]);
-
-  // ===== Estilos =====
   const styles = {
     header: {
       position: "fixed",
@@ -60,7 +61,7 @@ export default function NavBar({ currentPath = "" }) {
       margin: "0 auto",
       padding: "8px 12px",
       display: "grid",
-      gridTemplateColumns: "auto 1fr auto", // izq (back+bell) | centro (reloj) | dcha (perfil+pechar)
+      gridTemplateColumns: "auto 1fr auto", // izq (back+bell) | centro (contador) | dcha (perfil+pechar)
       alignItems: "center",
       gap: isNarrow ? 6 : 8,
     },
@@ -68,7 +69,6 @@ export default function NavBar({ currentPath = "" }) {
       display: "flex",
       alignItems: "center",
       gap: isNarrow ? 8 : 10,
-      flexWrap: "nowrap",
       whiteSpace: "nowrap",
     },
     centerClock: {
@@ -87,7 +87,6 @@ export default function NavBar({ currentPath = "" }) {
       display: "flex",
       alignItems: "center",
       gap: isNarrow ? 8 : 10,
-      flexWrap: "nowrap",
       whiteSpace: "nowrap",
     },
     iconBtn: {
@@ -171,10 +170,10 @@ export default function NavBar({ currentPath = "" }) {
             </a>
           </div>
 
-          {/* CENTRO: Reloj */}
-          <div style={styles.centerClock} aria-label="Hora de referencia (Madrid)">
-            <p style={styles.date}>{dateText}</p>
-            <p style={styles.time}>{timeText}</p>
+          {/* CENTRO: Contador regresivo */}
+          <div style={styles.centerClock} aria-label="Peche das aliñacións">
+            <p style={styles.date}>{label}</p>
+            <p style={styles.time}>{remain ?? "00:00:00"}</p>
           </div>
 
           {/* DERECHA: Perfil + Pechar */}

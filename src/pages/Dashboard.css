@@ -8,11 +8,10 @@
   --celeste:#38bdf8;
 }
 
-/* Menos padding superior (queda pegado al header fijo) */
 .dash-wrap{
   max-width:1080px;
   margin:0 auto;
-  padding:16px 12px 18px; /* antes 60px top */
+  padding:16px 12px 18px;
 }
 @media(min-width:560px){
   .dash-wrap{ padding:24px 16px 22px; }
@@ -21,10 +20,10 @@
   .dash-wrap{ padding:28px 16px 26px; }
 }
 
-/* Hero (móbil máis espazo logo→primeira card) */
+/* Hero */
 .dash-hero.two-cols{
   width:min(92vw,380px);
-  margin:6px auto 22px; /* ligeramente más arriba */
+  margin:6px auto 22px;
   display:grid;grid-template-columns:1fr 1fr;align-items:center;justify-items:center;gap:2px;
 }
 @media(min-width:560px){
@@ -34,13 +33,12 @@
   .dash-hero.two-cols{grid-template-columns:1fr;gap:22px;margin:12px auto 40px}
 }
 
-/* Logo más grande en desktop */
 .dash-hero-img.fill-col{
   width:100%;height:100%;
   max-height:136px;object-fit:contain
 }
 @media(min-width:960px){
-  .dash-hero-img.fill-col{ max-height:260px; } /* ↑ antes 220px */
+  .dash-hero-img.fill-col{ max-height:260px; }
 }
 
 .dash-greet{
@@ -53,30 +51,25 @@
 /* Grid */
 .dash-grid.dash-grid--main{
   width:min(92vw,380px);margin:0 auto;
-  display:grid;grid-template-columns:1fr;gap:12px;justify-items:stretch; /* gap algo menor */
+  display:grid;grid-template-columns:1fr;gap:12px;justify-items:stretch;
 }
 @media(min-width:560px){.dash-grid.dash-grid--main{width:min(92vw,760px);grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(min-width:960px){.dash-grid.dash-grid--main{width:min(92vw,1080px);grid-template-columns:repeat(3,minmax(0,1fr))}}
 
-/* Cards principais — menos altas y marco discreto */
+/* Cards principais — SIN aumentar altura ni marco */
 .main-block{display:block}
 .main-card{
   width:100%;display:flex;align-items:center;gap:10px;
-  background:#fff;border:1px solid #eef2ff;border-radius:18px; /* ligeramente menos radio */
+  background:#fff;border:1px solid #eef2ff;border-radius:18px;
   padding:12px 12px;text-align:left;color:inherit;text-decoration:none;cursor:pointer;
   box-shadow:0 2px 8px var(--dash-shadow);
   transition:transform .15s, box-shadow .15s, border-color .15s;
-  min-height:92px; /* ↓ antes 104/118 */
+  min-height:92px;
 }
 @media(max-width:559px){.main-card{min-height:100px}}
 .main-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px var(--dash-shadow-strong);border-color:#e2e8f0}
 
-/* Contorno coloreado ao abrir (sen recheo) — mantenemos finito */
-.main-block.open--partidos .main-card{ border-color:var(--green-500); }
-.main-block.open--alineacions .main-card{ border-color:var(--amber-500); }
-.main-block.open--clasificacions .main-card{ border-color:var(--violet-500); }
-
-/* Icono bloque — compacto, fondo branco, borde fino co color da sección */
+/* Icono bloque — mismo marco, icono interno más grande via SVG size (no cambiamos estas medidas) */
 .dash-icon{
   flex:0 0 64px;width:64px;height:64px;border-radius:14px;
   background:#fff;border:1px solid #e5e7eb;
@@ -97,11 +90,10 @@
 .main-block.open--alineacions .chev{ color: var(--amber-500); }
 .main-block.open--clasificacions .chev{ color: var(--violet-500); }
 
-/* Subgrid */
+/* Subgrid y subcards (como estaban) */
 .subgrid{overflow:hidden;max-height:0;opacity:.0;transform:translateY(-6px);transition:max-height .25s ease,opacity .2s ease,transform .25s ease}
 .subgrid.open{max-height:600px;opacity:1;transform:translateY(0);margin-top:10px}
 
-/* Subcards — sen sombra (igual que antes) */
 #sub-partidos.open .subcard{
   background:linear-gradient(0deg, rgba(34,197,94,.10), rgba(34,197,94,.10)), #fff;
   border-color: var(--green-300);
@@ -127,7 +119,6 @@
   background:linear-gradient(0deg, rgba(167,139,250,.16), rgba(167,139,250,.16)), #fff;
 }
 
-/* Base subcards (sen sombra) */
 .subcard{
   display:flex;align-items:center;gap:10px;
   background:#fff;border:1px solid #eef2ff;border-radius:16px;
