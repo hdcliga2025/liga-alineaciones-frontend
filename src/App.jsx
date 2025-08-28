@@ -35,21 +35,21 @@ const NotFound = () => (
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(
-    typeof window !== "undefined" ? window.location.pathname : "/"
+    typeof window !== "undefined" ? window.location.pathname + window.location.search : "/"
   );
 
-  // Rutas onde NON amosar a NavBar
+  // Normaliza (sen query nin hash)
+  const pathOnly = currentPath.split("?")[0].split("#")[0];
+
+  // Rutas onde NON amosar NavBar
   const HIDE_NAV_ON = new Set(["/", "/login", "/register", "/logout"]);
 
   return (
     <>
-      {/* Sincroniza auth e crea/actualiza o perfil */}
       <AuthWatcher />
 
-      {/* Barra superior: ocúltase en públicas e en /logout */}
-      {!HIDE_NAV_ON.has(currentPath) && <NavBar currentPath={currentPath} />}
+      {!HIDE_NAV_ON.has(pathOnly) && <NavBar />}
 
-      {/* Rutas */}
       <Router onChange={(e) => setCurrentPath(e.url)}>
         {/* Públicas */}
         <LandingPage path="/" />

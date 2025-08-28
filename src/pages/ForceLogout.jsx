@@ -1,44 +1,49 @@
 // src/pages/ForceLogout.jsx
 import { h } from "preact";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect } from "preact/hooks";
 import { route } from "preact-router";
 import { supabase } from "../lib/supabaseClient";
 
 export default function ForceLogout() {
-  const [msg] = useState("Pechando sesión…");
-
   useEffect(() => {
     let cancelled = false;
 
     (async () => {
       try {
-        // Cerrar sesión local (borra tokens del dispositivo)
+        // Cerrar sesión local (tokens do dispositivo)
         await supabase.auth.signOut({ scope: "local" });
       } catch (_) {}
 
-      // Limpieza dura de claves sb-* que pueda deixar o SDK
+      // Limpieza de posibles claves sb-* en storage
       try {
-        const clear = (store) => {
+        const zap = (store) => {
           if (!store) return;
-          const keys = [];
+          const rm = [];
           for (let i = 0; i < store.length; i++) {
             const k = store.key(i);
-            if (k && k.startsWith("sb-")) keys.push(k);
+            if (k && k.startsWith("sb-")) rm.push(k);
           }
-          keys.forEach((k) => store.removeItem(k));
+          rm.forEach((k) => store.removeItem(k));
         };
-        clear(window.localStorage);
-        clear(window.sessionStorage);
+        zap(window.localStorage);
+        zap(window.sessionStorage);
       } catch (_) {}
 
       if (!cancelled) {
+        // SPA redirect
         route("/login", true);
+        // Fallback duro por se o SPA non navega (garantía)
+        setTimeout(() => {
+          try {
+            if (location.pathname !== "/login") {
+              window.location.replace("/login");
+            }
+          } catch (_) {}
+        }, 200);
       }
     })();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   return (
@@ -49,7 +54,7 @@ export default function ForceLogout() {
           color: "#0ea5e9",
         }}
       >
-        {msg}
+        Pechando sesión…
       </p>
     </main>
   );
