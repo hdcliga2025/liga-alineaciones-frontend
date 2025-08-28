@@ -4,8 +4,8 @@ import { useEffect, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient";
 import "./Dashboard.css";
 
-/* Icons outline — aumentamos tamaño (no cambia card ni marco) */
-const IconBall = ({ color = "#22c55e", size = 36 }) => (
+/* Icons outline — un poco más grandes dentro del mismo marco */
+const IconBall = ({ color = "#22c55e", size = 40 }) => (
   <svg
     width={size}
     height={size}
@@ -23,7 +23,7 @@ const IconBall = ({ color = "#22c55e", size = 36 }) => (
   </svg>
 );
 
-const IconShirt = ({ color = "#f59e0b", size = 36 }) => (
+const IconShirt = ({ color = "#f59e0b", size = 40 }) => (
   <svg
     width={size}
     height={size}
@@ -39,7 +39,7 @@ const IconShirt = ({ color = "#f59e0b", size = 36 }) => (
   </svg>
 );
 
-const IconTrophy = ({ color = "#a78bfa", size = 36 }) => (
+const IconTrophy = ({ color = "#a78bfa", size = 40 }) => (
   <svg
     width={size}
     height={size}

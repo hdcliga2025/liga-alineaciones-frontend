@@ -18,10 +18,10 @@ export default function NavBar({ currentPath = "" }) {
     return () => clearInterval(id);
   }, []);
 
-  const { label, remainStr, isClosed } = useMemo(() => {
+  const { remainStr } = useMemo(() => {
     let diff = TARGET_UTC_MS - now;
     if (diff <= 0) {
-      return { label: "Peche", remainStr: "00D-00H-00M-00S", isClosed: true };
+      return { remainStr: "00D-00H-00M-00S" };
     }
     const totalSec = Math.floor(diff / 1000);
     const days = Math.floor(totalSec / 86400);
@@ -29,11 +29,7 @@ export default function NavBar({ currentPath = "" }) {
     const m = Math.floor((totalSec % 3600) / 60);
     const s = totalSec % 60;
     const pad = (n) => String(n).padStart(2, "0");
-    return {
-      label: "Pechan en",
-      remainStr: `${pad(days)}D-${pad(h)}H-${pad(m)}M-${pad(s)}S`,
-      isClosed: false,
-    };
+    return { remainStr: `${pad(days)}D-${pad(h)}H-${pad(m)}M-${pad(s)}S` };
   }, [now]);
 
   // Blink cada 15s: celeste ↔ negro
@@ -53,9 +49,7 @@ export default function NavBar({ currentPath = "" }) {
   const styles = {
     header: {
       position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
+      top: 0, left: 0, right: 0,
       zIndex: 50,
       background: "rgba(255,255,255,0.9)",
       backdropFilter: "saturate(180%) blur(8px)",
@@ -71,10 +65,8 @@ export default function NavBar({ currentPath = "" }) {
       gap: isNarrow ? 6 : 8,
     },
     leftGroup: {
-      display: "flex",
-      alignItems: "center",
-      gap: isNarrow ? 8 : 10,
-      whiteSpace: "nowrap",
+      display: "flex", alignItems: "center",
+      gap: isNarrow ? 8 : 10, whiteSpace: "nowrap",
     },
     centerClock: {
       justifySelf: "center",
@@ -82,48 +74,35 @@ export default function NavBar({ currentPath = "" }) {
       userSelect: "none",
       fontFamily:
         "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
-      lineHeight: 1.05,
+      lineHeight: 1.0,
     },
-    date: {
-      fontWeight: 600,
-      fontSize: isNarrow ? 12 : 14,
-      margin: 0,
-      color: "#64748b",
-    },
+    // Sólo una línea (sin "Pechan en")
     time: {
-      fontWeight: 800,
-      fontSize: isNarrow ? 16 : 18,
       margin: 0,
       color: colorNow,
-      transform: "scaleX(1.12)",        // formato "estirado" horizontal
+      fontWeight: isNarrow ? 600 : 800,          // móvil semibold; desktop bold
+      fontSize: isNarrow ? 15 : 19,              // móvil un poco menor; PC un poco mayor
+      transform: `scaleX(${isNarrow ? 1.08 : 1.22})`, // estirado horizontal sin crecer en alto
       transformOrigin: "center",
-      letterSpacing: "0.5px",
+      letterSpacing: isNarrow ? "0.4px" : "0.6px",
     },
     rightGroup: {
       justifySelf: "end",
-      display: "flex",
-      alignItems: "center",
-      gap: isNarrow ? 8 : 10,
-      whiteSpace: "nowrap",
+      display: "flex", alignItems: "center",
+      gap: isNarrow ? 8 : 10, whiteSpace: "nowrap",
     },
     iconBtn: {
       width: isNarrow ? 36 : 38,
       height: isNarrow ? 36 : 38,
-      display: "grid",
-      placeItems: "center",
-      borderRadius: 12,
-      background: "#fff",
+      display: "grid", placeItems: "center",
+      borderRadius: 12, background: "#fff",
       border: "1px solid #eef2ff",
       boxShadow: "0 4px 14px rgba(0,0,0,.06)",
-      textDecoration: "none",
-      outline: "none",
+      textDecoration: "none", outline: "none",
       transition: "transform .15s ease, box-shadow .15s ease",
       cursor: "pointer",
     },
-    iconBtnHover: {
-      transform: "translateY(-1px)",
-      boxShadow: "0 8px 22px rgba(0,0,0,.10)",
-    },
+    iconBtnHover: { transform: "translateY(-1px)", boxShadow: "0 8px 22px rgba(0,0,0,.10)" },
     spacer: { height: 56 },
   };
 
@@ -187,9 +166,8 @@ export default function NavBar({ currentPath = "" }) {
             </a>
           </div>
 
-          {/* CENTRO: Contador regresivo */}
+          {/* CENTRO: Sólo contador (sin texto extra) */}
           <div style={styles.centerClock} aria-label="Peche das aliñacións">
-            <p style={styles.date}>{isClosed ? "Aliñacións pechadas" : "Pechan en"}</p>
             <p style={styles.time}>{remainStr}</p>
           </div>
 
