@@ -23,7 +23,7 @@ const IconCalendar = ({ color = "#22c55e", size = 40 }) => (
   </svg>
 );
 
-/* Icono xogador con balón (más grande y de silueta clara) */
+/* Icono xogador con balón (perna de chut máis estendida e balón máis separado) */
 const IconPlayerBall = ({ color = "#f59e0b", size = 48 }) => (
   <svg
     width={size}
@@ -38,19 +38,19 @@ const IconPlayerBall = ({ color = "#f59e0b", size = 48 }) => (
   >
     {/* cabeza */}
     <circle cx="9.6" cy="5.2" r="2.2" />
-    {/* tronco inclinado (carrera) */}
+    {/* tronco inclinado (carreira) */}
     <path d="M9.6 7.8L12.3 11.2" />
     {/* brazos */}
     <path d="M10.9 9.4l3.2-1.4" />
     <path d="M9.9 9.6L7.1 8.6" />
     {/* perna de apoio */}
     <path d="M12.3 11.2L10.5 16.8" />
-    {/* perna que chuta (estirada cara ao balón) */}
-    <path d="M12.3 11.2L17.1 14.6" />
-    {/* balón */}
-    <circle cx="19.1" cy="15.6" r="2.2" />
-    {/* contacto pé-balón */}
-    <path d="M16.7 13.8l1.6 1.6" />
+    {/* perna que chuta — máis longa cara ao balón */}
+    <path d="M12.3 11.2L18.2 13.6" />
+    {/* balón máis separado */}
+    <circle cx="20.2" cy="14.6" r="2.1" />
+    {/* contacto pé-balón (suxestión de movemento) */}
+    <path d="M17.4 12.9l1.8 1.7" />
   </svg>
 );
 
@@ -126,7 +126,7 @@ export default function Dashboard() {
           </div>
           <div class="dash-text">
             <h3 class="dash-card-header">Calendario</h3>
-            <p class="dash-card-desc">Próximos, Vindeiros, Finalizados</p>
+            <p class="dash-card-desc">Todos os partidos do Celta na tempada 2025/2026</p>
           </div>
           <span class="chev">›</span>
         </a>
