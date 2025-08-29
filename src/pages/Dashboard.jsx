@@ -99,7 +99,7 @@ export default function Dashboard() {
             <div class="dash-icon" style="border:1px solid rgba(34,197,94,.55);">
               <IconCalendar color="#22c55e" />
             </div>
-            {/* Flecha ▾ á esquerda, cor da card; xira cara arriba ao abrir */}
+            {/* Flecha ▾ á esquerda; xira ao abrir */}
             <span class={`chev chev-left ${open==='partidos' ? 'open' : ''}`} style="color:#22c55e">▾</span>
             <div class="dash-text">
               <h3 class="dash-card-header">Calendario</h3>
@@ -107,14 +107,16 @@ export default function Dashboard() {
             </div>
           </a>
 
-          {/* Subgrid de Calendario — sen fondos, títulos co ton da card */}
+          {/* Subgrid Calendario */}
           <div id="sub-partidos" class={`subgrid ${open==='partidos' ? 'open' : ''}`}>
             <a href="/partidos?view=proximo" class="subcard">
               <div class="sub-ico">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
                      stroke="#22c55e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="4.5" width="18" height="16" rx="2" />
-                  <path d="M7 2.5v4M17 2.5v4M3 9h18" />
+                  <rect x="3" y="4.5" width="12" height="10" rx="2" />
+                  <path d="M6 2.5v3M12 2.5v3M3 8.5h12" />
+                  <circle cx="18.5" cy="14.5" r="4" />
+                  <path d="M18.5 12.5v2l1.4 1" />
                 </svg>
               </div>
               <div class="sub-texts">
@@ -125,10 +127,11 @@ export default function Dashboard() {
 
             <a href="/partidos?view=proximos" class="subcard">
               <div class="sub-ico">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
                      stroke="#22c55e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="4.5" width="18" height="16" rx="2" />
-                  <path d="M7 2.5v4M17 2.5v4M3 9h18" />
+                  <rect x="3" y="4.5" width="12" height="10" rx="2" />
+                  <path d="M6 2.5v3M12 2.5v3M3 8.5h12" />
+                  <path d="M18 8l3 3-3 3M15 8l3 3-3 3" />
                 </svg>
               </div>
               <div class="sub-texts">
@@ -139,10 +142,11 @@ export default function Dashboard() {
 
             <a href="/partidos?view=finalizados" class="subcard">
               <div class="sub-ico">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
                      stroke="#22c55e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M6 3v18" />
-                  <path d="M6 4h10l-2 4 2 4H6" />
+                  <rect x="3" y="4.5" width="12" height="10" rx="2" />
+                  <path d="M6 2.5v3M12 2.5v3M3 8.5h12" />
+                  <path d="M16 14l2 2 3-3" />
                 </svg>
               </div>
               <div class="sub-texts">
@@ -173,7 +177,7 @@ export default function Dashboard() {
           <div id="sub-alineacions" class={`subgrid ${open==='alineacions' ? 'open' : ''}`}>
             <a href="/haz-tu-11?view=convocatoria" class="subcard">
               <div class="sub-ico">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
                      stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="6.5" y="5.5" width="11" height="14" rx="2" />
                   <path d="M9 5.5h6" />
@@ -188,11 +192,11 @@ export default function Dashboard() {
 
             <a href="/haz-tu-11" class="subcard">
               <div class="sub-ico">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
                      stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="5" />
+                  <rect x="4" y="5" width="16" height="14" rx="2" />
+                  <path d="M12 5v14" />
                   <circle cx="12" cy="12" r="2" />
-                  <path d="M12 2v3M22 12h-3M12 22v-3M2 12h3" />
                 </svg>
               </div>
               <div class="sub-texts">
@@ -201,10 +205,9 @@ export default function Dashboard() {
               </div>
             </a>
 
-            {/* Nova subcard intermedia */}
             <a href="/haz-tu-11?view=oficial" class="subcard">
               <div class="sub-ico">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
                      stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M7 5l2-2h6l2 2 2 2v12H5V7z" />
                   <path d="M10 7v4M14 7v4" />
@@ -218,7 +221,7 @@ export default function Dashboard() {
 
             <a href="/haz-tu-11?view=normas" class="subcard">
               <div class="sub-ico">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
                      stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M4.5 5.5h10a2.5 2.5 0 012.5 2.5v10h-10A2.5 2.5 0 014.5 15V5.5z" />
                   <path d="M7.5 8.5h7M7.5 11.5h7" />
@@ -250,12 +253,14 @@ export default function Dashboard() {
           </a>
 
           <div id="sub-clasificacions" class={`subgrid ${open==='clasificacions' ? 'open' : ''}`}>
-            <a href="/clasificacion?view=ultimo" class="subcard">
+            {/* ENLACES ACTUALIZADOS A RUTAS BONITAS */}
+            <a href="/resultados-ultima-alineacion" class="subcard">
               <div class="sub-ico">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
                      stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="6" />
-                  <path d="M12 8v8M8 12h8" />
+                  <path d="M12 12l3-3" />
+                  <path d="M15 9l2 2" />
                 </svg>
               </div>
               <div class="sub-texts">
@@ -264,9 +269,9 @@ export default function Dashboard() {
               </div>
             </a>
 
-            <a href="/clasificacion?view=xeral" class="subcard">
+            <a href="/taboa-acertos-acumulados" class="subcard">
               <div class="sub-ico">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
                      stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M5 19V9M10 19V5M15 19v-7M20 19v-4" />
                 </svg>
@@ -283,4 +288,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
