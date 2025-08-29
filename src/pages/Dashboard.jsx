@@ -23,7 +23,7 @@ const IconCalendar = ({ color = "#22c55e", size = 40 }) => (
   </svg>
 );
 
-/* Icono xogador con balón (máis dinámico: perna estendida, balón separado e liñas de movemento) */
+/* Icono xogador con balón — perna dobrada (muslo+tibia) e balón máis separado */
 const IconPlayerBall = ({ color = "#f59e0b", size = 48 }) => (
   <svg
     width={size}
@@ -37,21 +37,22 @@ const IconPlayerBall = ({ color = "#f59e0b", size = 48 }) => (
     stroke-linejoin="round"
   >
     {/* cabeza */}
-    <circle cx="9.4" cy="5.2" r="2.2" />
+    <circle cx="9.4" cy="5.1" r="2.2" />
     {/* tronco lixeiramente curvado (carreira) */}
-    <path d="M9.4 7.8C10.6 9.2 11.1 9.9 12.1 11.3" />
-    {/* brazos */}
-    <path d="M10.8 9.4l3.4-1.5" />
-    <path d="M9.6 9.6L7 8.6" />
+    <path d="M9.4 7.6C10.5 9 11 9.7 12 11.1" />
+    {/* brazos (equilibrio) */}
+    <path d="M10.7 9.2l3.4-1.5" />
+    <path d="M9.5 9.4L7.0 8.5" />
     {/* perna de apoio */}
-    <path d="M12.1 11.3L10.3 17.2" />
-    {/* perna que chuta — longa e estirada cara ao balón */}
-    <path d="M12.1 11.3L19.4 13.6" />
-    {/* balón máis separado */}
-    <circle cx="21.4" cy="14.2" r="2.0" />
-    {/* liñas de movemento do balón (sutil, mesmo trazo) */}
-    <path d="M20.6 12.6l2.1 .6" />
-    <path d="M19.9 11.8l1.6 .5" />
+    <path d="M12.0 11.1L10.2 17.2" />
+    {/* perna que chuta — dobrada: muslo + tibia */}
+    <path d="M12.0 11.1L15.4 12.8" />      {/* muslo */}
+    <path d="M15.4 12.8L20.8 13.9" />      {/* tibia/pe */}
+    {/* balón máis separado do pe */}
+    <circle cx="22.0" cy="14.2" r="1.9" />
+    {/* liñas de movemento do balón (sutiles) */}
+    <path d="M20.2 12.6l2.2 .6" />
+    <path d="M19.5 11.8l1.7 .5" />
   </svg>
 );
 
@@ -119,10 +120,7 @@ export default function Dashboard() {
       <section class="dash-grid dash-grid--main">
         {/* Calendario */}
         <a href="/partidos" class="main-card">
-          <div
-            class="dash-icon"
-            style="border:1px solid rgba(34,197,94,.55);"
-          >
+          <div class="dash-icon" style="border:1px solid rgba(34,197,94,.55);">
             <IconCalendar color="#22c55e" />
           </div>
           <div class="dash-text">
@@ -134,27 +132,19 @@ export default function Dashboard() {
 
         {/* Xogar ás Aliñacións */}
         <a href="/haz-tu-11" class="main-card">
-          <div
-            class="dash-icon"
-            style="border:1px solid rgba(245,158,11,.55);"
-          >
+          <div class="dash-icon" style="border:1px solid rgba(245,158,11,.55);">
             <IconPlayerBall color="#f59e0b" />
           </div>
           <div class="dash-text">
             <h3 class="dash-card-header">Xogar ás Aliñacións</h3>
-            <p class="dash-card-desc">
-              Aquí é onde demostras o Claudio que levas dentro
-            </p>
+            <p class="dash-card-desc">Aquí é onde demostras o Claudio que levas dentro</p>
           </div>
           <span class="chev">›</span>
         </a>
 
         {/* Clasificacións */}
         <a href="/clasificacion" class="main-card">
-          <div
-            class="dash-icon"
-            style="border:1px solid rgba(167,139,250,.55);"
-          >
+          <div class="dash-icon" style="border:1px solid rgba(167,139,250,.55);">
             <IconTrophy color="#a78bfa" />
           </div>
           <div class="dash-text">
@@ -167,6 +157,5 @@ export default function Dashboard() {
     </div>
   );
 }
-
 
 
