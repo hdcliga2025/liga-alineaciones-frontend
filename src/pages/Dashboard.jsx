@@ -22,19 +22,13 @@ const IconPlayerShot = ({ color = "#f59e0b", size = 48 }) => (
     width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"
     stroke={color} stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
   >
-    {/* cabeza */}
     <circle cx="9.2" cy="5.1" r="2.1" />
-    {/* tronco inclinado (remate) */}
     <path d="M9.2 7.4L12.6 10.8" />
-    {/* brazos */}
     <path d="M11.2 9.2l3.2-1.4" />
     <path d="M9.6 9.4L7.2 8.6" />
-    {/* perna de apoio */}
     <path d="M12.6 10.8L10.8 16.6" />
-    {/* perna de remate */}
     <path d="M12.6 10.8L16.2 12.4" />
     <path d="M16.2 12.4L18.0 13.6" />
-    {/* balón separado, seguro de marxes */}
     <circle cx="20.1" cy="13.2" r="2.0" />
   </svg>
 );
@@ -105,7 +99,7 @@ export default function Dashboard() {
             <div class="dash-icon" style="border:1px solid rgba(34,197,94,.55);">
               <IconCalendar color="#22c55e" />
             </div>
-            {/* Flecha (▾) diante do texto, cor da card */}
+            {/* Flecha ▾ á esquerda, cor da card */}
             <span class="chev chev-left" style="color:#22c55e">▾</span>
             <div class="dash-text">
               <h3 class="dash-card-header">Calendario</h3>
@@ -113,12 +107,13 @@ export default function Dashboard() {
             </div>
           </a>
 
-          {/* Subgrid de Calendario — sen flechas nas subcards */}
+          {/* Subgrid de Calendario — sen fondos, títulos co ton da card */}
           <div id="sub-partidos" class={`subgrid ${open==='partidos' ? 'open' : ''}`}>
             <a href="/partidos?view=proximo" class="subcard">
-              <div class="sub-ico sub-ico--calendar">
+              <div class="sub-ico">
+                {/* calendario outline homoxéneo */}
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                     stroke="#166534" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                     stroke="#16a34a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="4.5" width="18" height="16" rx="2" />
                   <path d="M7 2.5v4M17 2.5v4M3 9h18" />
                 </svg>
@@ -130,9 +125,9 @@ export default function Dashboard() {
             </a>
 
             <a href="/partidos?view=proximos" class="subcard">
-              <div class="sub-ico sub-ico--calendar">
+              <div class="sub-ico">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                     stroke="#166534" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                     stroke="#16a34a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="4.5" width="18" height="16" rx="2" />
                   <path d="M7 2.5v4M17 2.5v4M3 9h18" />
                 </svg>
@@ -144,9 +139,10 @@ export default function Dashboard() {
             </a>
 
             <a href="/partidos?view=finalizados" class="subcard">
-              <div class="sub-ico sub-ico--flag">
+              <div class="sub-ico">
+                {/* bandeira outline */}
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                     stroke="#166534" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                     stroke="#16a34a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M6 3v18" />
                   <path d="M6 4h10l-2 4 2 4H6" />
                 </svg>
@@ -178,8 +174,8 @@ export default function Dashboard() {
 
           <div id="sub-alineacions" class={`subgrid ${open==='alineacions' ? 'open' : ''}`}>
             <a href="/haz-tu-11?view=convocatoria" class="subcard">
-              <div class="sub-ico sub-ico--flag">
-                {/* Clipboard */}
+              <div class="sub-ico">
+                {/* clipboard outline */}
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                      stroke="#92400e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="6.5" y="5.5" width="11" height="14" rx="2" />
@@ -194,8 +190,8 @@ export default function Dashboard() {
             </a>
 
             <a href="/haz-tu-11" class="subcard">
-              <div class="sub-ico sub-ico--tgt">
-                {/* Dardo */}
+              <div class="sub-ico">
+                {/* diana outline */}
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                      stroke="#92400e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="5" />
@@ -209,9 +205,25 @@ export default function Dashboard() {
               </div>
             </a>
 
+            {/* NOVA subcard intermedia */}
+            <a href="/haz-tu-11?view=oficial" class="subcard">
+              <div class="sub-ico">
+                {/* camiseta/once inicial outline */}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                     stroke="#92400e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M7 5l2-2h6l2 2 2 2v12H5V7z" />
+                  <path d="M10 7v4M14 7v4" />
+                </svg>
+              </div>
+              <div class="sub-texts">
+                <p class="sub-title">Aliñación oficial do partido</p>
+                <p class="sub-desc">O once inicial que cruza automaticamente coa túa aliñación</p>
+              </div>
+            </a>
+
             <a href="/haz-tu-11?view=normas" class="subcard">
-              <div class="sub-ico sub-ico--book">
-                {/* Libro */}
+              <div class="sub-ico">
+                {/* libro outline */}
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                      stroke="#92400e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M4.5 5.5h10a2.5 2.5 0 012.5 2.5v10h-10A2.5 2.5 0 014.5 15V5.5z" />
@@ -245,32 +257,31 @@ export default function Dashboard() {
 
           <div id="sub-clasificacions" class={`subgrid ${open==='clasificacions' ? 'open' : ''}`}>
             <a href="/clasificacion?view=ultimo" class="subcard">
-              <div class="sub-ico sub-ico--tgt">
-                {/* Dardo */}
+              <div class="sub-ico">
+                {/* checkboard/target outline */}
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                      stroke="#6d28d9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="5" />
-                  <circle cx="12" cy="12" r="2" />
-                  <path d="M12 2v3M22 12h-3M12 22v-3M2 12h3" />
+                  <circle cx="12" cy="12" r="6" />
+                  <path d="M12 8v8M8 12h8" />
                 </svg>
               </div>
               <div class="sub-texts">
-                <p class="sub-title">Último partido</p>
-                <p class="sub-desc">Resultados e ranking da última xornada</p>
+                <p class="sub-title">Resultados da última aliñación</p>
+                <p class="sub-desc">Aquí é onde comprobas os teus acertos e os das túas rivais...</p>
               </div>
             </a>
 
             <a href="/clasificacion?view=xeral" class="subcard">
-              <div class="sub-ico sub-ico--book">
-                {/* Barras/xeral */}
+              <div class="sub-ico">
+                {/* barras outline */}
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                      stroke="#6d28d9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M5 19V9M10 19V5M15 19v-7M20 19v-4" />
                 </svg>
               </div>
               <div class="sub-texts">
-                <p class="sub-title">Xeral</p>
-                <p class="sub-desc">Clasificación acumulada da tempada</p>
+                <p class="sub-title">Táboa de acertos acumulada</p>
+                <p class="sub-desc">Clasificación xeral tras os partidos rematados</p>
               </div>
             </a>
           </div>
