@@ -4,21 +4,29 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient";
 
 /** Campo de texto con icono dentro */
-function Field({ id, type = "text", placeholder, value, onInput, ariaLabel, icon, rightSlot, inputProps = {} }) {
-  const wrap = {
-    position: "relative",
-    marginBottom: 12,
-  };
+function Field({
+  id,
+  type = "text",
+  placeholder,
+  value,
+  onInput,
+  ariaLabel,
+  icon,
+  rightSlot,
+  inputProps = {},
+}) {
+  const wrap = { position: "relative", marginBottom: 12 };
   const input = {
     width: "100%",
-    height: 52,
-    padding: "12px 48px 12px 48px",
+    height: 46,                            // un pouco menos alto
+    padding: "10px 46px 10px 48px",
     borderRadius: 14,
     border: "1px solid #e5e7eb",
     background: "#fff",
-    fontFamily: "Montserrat,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif",
+    fontFamily:
+      "Montserrat,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif",
     fontSize: 15,
-    boxShadow: "0 3px 10px rgba(0,0,0,.05) inset",
+    boxShadow: "inset 0 2px 6px rgba(0,0,0,.05)",
     outline: "none",
   };
   const iconBox = {
@@ -103,10 +111,13 @@ export default function Perfil() {
         email: (data?.email || "")?.trim(),
         phone: allowed.has("phone") ? (data?.phone || "") : "",
         dni: allowed.has("dni") ? (data?.dni || "") : "",
-        carnet_celta_id: allowed.has("carnet_celta_id") ? (data?.carnet_celta_id || "") : "",
-        birth_date: allowed.has("birth_date") && data?.birth_date
-          ? String(data.birth_date).slice(0, 10)
+        carnet_celta_id: allowed.has("carnet_celta_id")
+          ? (data?.carnet_celta_id || "")
           : "",
+        birth_date:
+          allowed.has("birth_date") && data?.birth_date
+            ? String(data.birth_date).slice(0, 10)
+            : "",
       });
     })();
   }, []);
@@ -129,7 +140,7 @@ export default function Perfil() {
   }
 
   async function saveProfile(e) {
-    e.preventDefault();
+    e?.preventDefault?.();
     setInfo("");
     setErr("");
     const v = validate();
@@ -145,22 +156,25 @@ export default function Perfil() {
     };
     if (allowed.has("phone")) payload.phone = form.phone.trim() || null;
     if (allowed.has("dni")) payload.dni = form.dni.trim() || null;
-    if (allowed.has("carnet_celta_id")) payload.carnet_celta_id = form.carnet_celta_id.trim() || null;
+    if (allowed.has("carnet_celta_id"))
+      payload.carnet_celta_id = form.carnet_celta_id.trim() || null;
     if (allowed.has("birth_date")) payload.birth_date = form.birth_date || null;
     if (allowed.has("nombre")) payload.nombre = form.first_name.trim();
     if (allowed.has("apellidos")) payload.apellidos = form.last_name.trim();
 
-    const { error } = await supabase.from("profiles").upsert(payload, { onConflict: "id" });
+    const { error } = await supabase
+      .from("profiles")
+      .upsert(payload, { onConflict: "id" });
     if (error) setErr(error.message);
     else setInfo("Datos actualizados.");
   }
 
-  async function changePassword(e) {
-    e.preventDefault();
+  async function changePassword() {
     setPwdErr("");
     setPwdInfo("");
     const pwd = newPwd || "";
-    if (pwd.length < 8) return setPwdErr("O contrasinal debe ter polo menos 8 caracteres.");
+    if (pwd.length < 8)
+      return setPwdErr("O contrasinal debe ter polo menos 8 caracteres.");
     const { error } = await supabase.auth.updateUser({ password: pwd });
     if (error) setPwdErr(error.message || "Erro ao cambiar o contrasinal.");
     else {
@@ -176,13 +190,20 @@ export default function Perfil() {
     const { data: u } = await supabase.auth.getUser();
     const uid = u?.user?.id;
     if (!uid) return;
-    const { error } = await supabase.from("delete_requests").insert({ user_id: uid });
+    const { error } = await supabase
+      .from("delete_requests")
+      .insert({ user_id: uid });
     if (error) setErr(error.message);
     else setInfo("Solicitude de borrado rexistrada. O equipo revisaraa.");
   }
 
-  // estilos base
-  const box = { maxWidth: 640, margin: "18px auto 40px", padding: "0 16px", textAlign: "center" };
+  // estilos
+  const box = {
+    maxWidth: 640,
+    margin: "18px auto 40px",
+    padding: "0 16px",
+    textAlign: "center",
+  };
   const secTitle = {
     margin: "18px 0 8px",
     fontWeight: 700,
@@ -191,13 +212,12 @@ export default function Perfil() {
     color: "#0f172a",
     textAlign: "left",
   };
-
   const btnBase = {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 50,
-    padding: "12px 20px",
+    minHeight: 46,                          // menos alto
+    padding: "10px 18px",
     borderRadius: 16,
     border: "1px solid transparent",
     fontWeight: 700,
@@ -205,60 +225,73 @@ export default function Perfil() {
     fontSize: 15,
     color: "#fff",
     cursor: "pointer",
-    boxShadow: "0 10px 24px rgba(0,0,0,.12)",
+    boxShadow: "0 8px 20px rgba(0,0,0,.12)", // sombra suave
   };
   const btnCeleste = { ...btnBase, background: "#0ea5e9", borderColor: "#7dd3fc" };
   const btnRojo = { ...btnBase, background: "#ef4444", borderColor: "#fecaca" };
 
-  const iconStroke = "#6b7280";
+  const stroke = "#6b7280";
   const IconUser = (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke={iconStroke} stroke-width="1.6" />
-      <path d="M4 20a8 8 0 1 1 16 0" stroke={iconStroke} stroke-width="1.6" />
+      <path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke={stroke} stroke-width="1.6" />
+      <path d="M4 20a8 8 0 1 1 16 0" stroke={stroke} stroke-width="1.6" />
     </svg>
   );
   const IconMail = (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="3" y="5" width="18" height="14" rx="2" stroke={iconStroke} stroke-width="1.6" />
-      <path d="M3 6l9 7 9-7" stroke={iconStroke} stroke-width="1.6" />
+      <rect x="3" y="5" width="18" height="14" rx="2" stroke={stroke} stroke-width="1.6" />
+      <path d="M3 6l9 7 9-7" stroke={stroke} stroke-width="1.6" />
     </svg>
   );
   const IconPhone = (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="7" y="2.5" width="10" height="19" rx="2.5" stroke={iconStroke} stroke-width="1.6" />
-      <path d="M12 5.2h0.01" stroke={iconStroke} stroke-width="1.6" />
-      <circle cx="12" cy="18.5" r="1" fill={iconStroke} />
+      <rect x="7" y="2.5" width="10" height="19" rx="2.5" stroke={stroke} stroke-width="1.6" />
+      <path d="M12 5.2h0.01" stroke={stroke} stroke-width="1.6" />
+      <circle cx="12" cy="18.5" r="1" fill={stroke} />
+    </svg>
+  );
+  // Icono tarta con velas (data de nacemento)
+  const IconCake = (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      {/* velas */}
+      <path d="M8 6v3M12 6v3M16 6v3" stroke={stroke} stroke-width="1.6" stroke-linecap="round"/>
+      {/* llamas */}
+      <path d="M8 5l0-.5M12 5l0-.5M16 5l0-.5" stroke={stroke} stroke-width="1.6" stroke-linecap="round"/>
+      {/* tarta */}
+      <rect x="5" y="9" width="14" height="6" rx="1.5" stroke={stroke} stroke-width="1.6"/>
+      {/* plato */}
+      <path d="M4 17h16" stroke={stroke} stroke-width="1.6" stroke-linecap="round"/>
+      {/* glaseado ondulado */}
+      <path d="M6 12c1 .8 2-.8 3 0s2-.8 3 0 2-.8 3 0 2-.8 3 0" stroke={stroke} stroke-width="1.6" stroke-linecap="round"/>
     </svg>
   );
   const IconID = (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="3" y="4" width="18" height="14" rx="2" stroke={iconStroke} stroke-width="1.6" />
-      <circle cx="7.5" cy="9" r="1.6" stroke={iconStroke} stroke-width="1.6" />
-      <path d="M11 8.5h6M11 11h6" stroke={iconStroke} stroke-width="1.6" />
+      <rect x="3" y="4" width="18" height="14" rx="2" stroke={stroke} stroke-width="1.6" />
+      <circle cx="7.5" cy="9" r="1.6" stroke={stroke} stroke-width="1.6" />
+      <path d="M11 8.5h6M11 11h6" stroke={stroke} stroke-width="1.6" />
     </svg>
   );
   const IconCard = (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="3" y="4" width="18" height="14" rx="2" stroke={iconStroke} stroke-width="1.6" />
-      <path d="M6 9h12M6 12h8" stroke={iconStroke} stroke-width="1.6" />
-    </svg>
-  );
-  const IconCalendar = (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="3" y="5" width="18" height="14" rx="2" stroke={iconStroke} stroke-width="1.6" />
-      <path d="M7 3.5v3M17 3.5v3M3 9h18" stroke={iconStroke} stroke-width="1.6" />
+      <rect x="3" y="4" width="18" height="14" rx="2" stroke={stroke} stroke-width="1.6" />
+      <path d="M6 9h12M6 12h8" stroke={stroke} stroke-width="1.6" />
     </svg>
   );
   const IconLock = (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="5" y="10" width="14" height="10" rx="2" stroke={iconStroke} stroke-width="1.6" />
-      <path d="M8 10V7a4 4 0 1 1 8 0v3" stroke={iconStroke} stroke-width="1.6" />
+      <rect x="5" y="10" width="14" height="10" rx="2" stroke={stroke} stroke-width="1.6" />
+      <path d="M8 10V7a4 4 0 1 1 8 0v3" stroke={stroke} stroke-width="1.6" />
     </svg>
   );
 
   return (
     <main style={box}>
-      <form onSubmit={saveProfile} noValidate style={{ textAlign: "left", margin: "0 auto", maxWidth: 520 }}>
+      <form
+        onSubmit={saveProfile}
+        noValidate
+        style={{ textAlign: "left", margin: "0 auto", maxWidth: 520 }}
+      >
         {/* === Datos necesarios de xestión === */}
         <h3 style={secTitle}>Datos necesarios de xestión</h3>
 
@@ -300,11 +333,6 @@ export default function Perfil() {
           />
         )}
 
-        {/* Botón ACTUALIZAR centrado */}
-        <div style={{ display: "flex", justifyContent: "center", margin: "8px 0 6px" }}>
-          <button type="submit" style={btnCeleste}>Actualizar</button>
-        </div>
-
         {/* === Datos opcionais === */}
         <h3 style={secTitle}>Datos opcionais para evolución de funcionalidades</h3>
 
@@ -338,15 +366,11 @@ export default function Perfil() {
             value={form.birth_date}
             onInput={onChange("birth_date")}
             ariaLabel="Data de nacemento"
-            icon={IconCalendar}
+            icon={IconCake}
           />
         )}
 
-        {/* Mensaxes perfil */}
-        {info && <p style={{ color: "#065f46", margin: "8px 0" }}>{info}</p>}
-        {err && <p style={{ color: "#b91c1c", margin: "8px 0" }}>{err}</p>}
-
-        {/* === Seguridade: cambio de contrasinal === */}
+        {/* === Seguridade: novo contrasinal === */}
         <h3 style={secTitle}>Seguridade</h3>
         <Field
           id="new_pwd"
@@ -382,7 +406,25 @@ export default function Perfil() {
           }
         />
 
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 6 }}>
+        {/* Mensaxes */}
+        {info && <p style={{ color: "#065f46", margin: "8px 0" }}>{info}</p>}
+        {err && <p style={{ color: "#b91c1c", margin: "8px 0" }}>{err}</p>}
+        {pwdInfo && <p style={{ color: "#065f46", margin: "8px 0" }}>{pwdInfo}</p>}
+        {pwdErr && <p style={{ color: "#b91c1c", margin: "8px 0" }}>{pwdErr}</p>}
+
+        {/* === Botóns finais: todos xuntos e en orde === */}
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 10,
+            justifyContent: "center",
+            marginTop: 8,
+          }}
+        >
+          <button type="submit" style={btnCeleste} onClick={saveProfile}>
+            Actualizar
+          </button>
           <button type="button" style={btnCeleste} onClick={changePassword}>
             Cambiar contrasinal
           </button>
@@ -390,14 +432,17 @@ export default function Perfil() {
             Solicitar borrado
           </button>
         </div>
-        {pwdInfo && <p style={{ color: "#065f46", margin: "8px 0" }}>{pwdInfo}</p>}
-        {pwdErr && <p style={{ color: "#b91c1c", margin: "8px 0" }}>{pwdErr}</p>}
       </form>
 
       {/* Logo HDC debaixo */}
       <div style={{ marginTop: 20 }}>
-        <img src="/logoHDC.jpg" alt="HDC Logo" style={{ width: 160, height: "auto", opacity: 0.92 }} />
+        <img
+          src="/logoHDC.jpg"
+          alt="HDC Logo"
+          style={{ width: 160, height: "auto", opacity: 0.92 }}
+        />
       </div>
     </main>
   );
 }
+
