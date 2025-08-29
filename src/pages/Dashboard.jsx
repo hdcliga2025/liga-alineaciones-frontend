@@ -16,30 +16,31 @@ const IconCalendar = ({ color = "#22c55e", size = 40 }) => (
   </svg>
 );
 
-/* Icono xogador (chut): balón afastado das pernas, sen achegarse ao bordo do icono */
-const IconPlayerBall = ({ color = "#f59e0b", size = 48 }) => (
+/* Icono xogador rematando — balón afastado das pernas e sen tocar nin bordes */
+const IconPlayerShot = ({ color = "#f59e0b", size = 48 }) => (
   <svg
     width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"
     stroke={color} stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
   >
     {/* cabeza */}
-    <circle cx="9.4" cy="5.1" r="2.2" />
-    {/* tronco inclinado (carreira) */}
-    <path d="M9.4 7.6C10.5 9 11 9.7 12 11.1" />
-    {/* brazos */}
-    <path d="M10.8 9.2l3.4-1.5" />
-    <path d="M9.5 9.4L7.0 8.5" />
-    {/* perna de apoio */}
-    <path d="M12.0 11.1L10.4 16.8" />
-    {/* perna que chuta (estirada cara adiante) */}
-    <path d="M12.0 11.1L16.9 13.9" />
-    {/* balón separado das pernas e lonxe dos bordes */}
-    <circle cx="19.2" cy="14.6" r="2.0" />
-    {/* pequeno trazo de movemento */}
-    <path d="M17.4 13.0l1.2 1.0" />
+    <circle cx="9.2" cy="5.1" r="2.1" />
+    {/* tronco inclinado (remate) */}
+    <path d="M9.2 7.4L12.6 10.8" />
+    {/* brazo dianteiro */}
+    <path d="M11.2 9.2l3.2-1.4" />
+    {/* brazo traseiro */}
+    <path d="M9.6 9.4L7.2 8.6" />
+    {/* perna de apoio (esquerda) */}
+    <path d="M12.6 10.8L10.8 16.6" />
+    {/* perna de remate (dereita) — xeonllo e tibia estendidos cara adiante */}
+    <path d="M12.6 10.8L16.2 12.4" />  {/* coxa */}
+    <path d="M16.2 12.4L18.0 13.6" />  {/* tibia/pé */}
+    {/* balón separado, centrado no terzo dereito, sen tocar pernas nin marco */}
+    <circle cx="20.1" cy="13.2" r="2.0" />
   </svg>
 );
 
+/* Icono trofeo (outline) */
 const IconTrophy = ({ color = "#a78bfa", size = 40 }) => (
   <svg
     width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"
@@ -109,10 +110,11 @@ export default function Dashboard() {
               <h3 class="dash-card-header">Calendario</h3>
               <p class="dash-card-desc">Todos os partidos do Celta na tempada 2025/2026</p>
             </div>
-            <span class={`chev ${open==='partidos' ? 'open' : ''}`}>›</span>
+            {/* Flecha hacia abajo por defecto; ao abrir, xira (CSS .chev.open) */}
+            <span class={`chev ${open==='partidos' ? 'open' : ''}`}>˅</span>
           </a>
 
-          {/* Subgrid de Calendario — colores ya definidos en Dashboard.css (#sub-partidos.open ...) */}
+          {/* Subgrid de Calendario — sen flechas nas subcards */}
           <div id="sub-partidos" class={`subgrid ${open==='partidos' ? 'open' : ''}`}>
             <a href="/partidos?view=proximo" class="subcard">
               <div class="sub-ico sub-ico--calendar">
@@ -126,7 +128,6 @@ export default function Dashboard() {
                 <p class="sub-title">Próximo partido</p>
                 <p class="sub-desc">Seguinte encontro con horario confirmado para xogar a HDC Liga</p>
               </div>
-              <span class="chev">›</span>
             </a>
 
             <a href="/partidos?view=proximos" class="subcard">
@@ -138,10 +139,9 @@ export default function Dashboard() {
                 </svg>
               </div>
               <div class="sub-texts">
-                <p class="sub-title">Próximos partidos</p>
+                <p class="sub-title">Vindeiros encontros</p>
                 <p class="sub-desc">Partidos de calquera competición establecidos no calendario</p>
               </div>
-              <span class="chev">›</span>
             </a>
 
             <a href="/partidos?view=finalizados" class="subcard">
@@ -156,7 +156,6 @@ export default function Dashboard() {
                 <p class="sub-title">Partidos finalizados</p>
                 <p class="sub-desc">Histórico de partidos finalizados con resultado</p>
               </div>
-              <span class="chev">›</span>
             </a>
           </div>
         </div>
@@ -169,16 +168,15 @@ export default function Dashboard() {
             onClick={(e)=>{e.preventDefault(); toggle('alineacions');}}
           >
             <div class="dash-icon" style="border:1px solid rgba(245,158,11,.55);">
-              <IconPlayerBall color="#f59e0b" />
+              <IconPlayerShot color="#f59e0b" />
             </div>
             <div class="dash-text">
               <h3 class="dash-card-header">Xogar ás Aliñacións</h3>
               <p class="dash-card-desc">Aquí é onde demostras o Claudio que levas dentro</p>
             </div>
-            <span class={`chev ${open==='alineacions' ? 'open' : ''}`}>›</span>
+            <span class={`chev ${open==='alineacions' ? 'open' : ''}`}>˅</span>
           </a>
 
-          {/* Subgrid Alineacións — colores ámbar via #sub-alineacions.open */}
           <div id="sub-alineacions" class={`subgrid ${open==='alineacions' ? 'open' : ''}`}>
             <a href="/haz-tu-11?view=convocatoria" class="subcard">
               <div class="sub-ico sub-ico--flag"></div>
@@ -186,7 +184,6 @@ export default function Dashboard() {
                 <p class="sub-title">Convocatoria</p>
                 <p class="sub-desc">Lista oficial para a xornada</p>
               </div>
-              <span class="chev">›</span>
             </a>
 
             <a href="/haz-tu-11" class="subcard">
@@ -195,7 +192,6 @@ export default function Dashboard() {
                 <p class="sub-title">Fai o teu 11</p>
                 <p class="sub-desc">Escolle o teu once antes do peche</p>
               </div>
-              <span class="chev">›</span>
             </a>
 
             <a href="/haz-tu-11?view=oficial" class="subcard">
@@ -204,7 +200,6 @@ export default function Dashboard() {
                 <p class="sub-title">Aliñación oficial</p>
                 <p class="sub-desc">Once confirmado polo club</p>
               </div>
-              <span class="chev">›</span>
             </a>
 
             <a href="/haz-tu-11?view=normas" class="subcard">
@@ -213,7 +208,6 @@ export default function Dashboard() {
                 <p class="sub-title">Normas</p>
                 <p class="sub-desc">Como xogar e puntuación</p>
               </div>
-              <span class="chev">›</span>
             </a>
           </div>
         </div>
@@ -232,10 +226,9 @@ export default function Dashboard() {
               <h3 class="dash-card-header">Clasificacións</h3>
               <p class="dash-card-desc">Resultados por partido e xerais de cada quen</p>
             </div>
-            <span class={`chev ${open==='clasificacions' ? 'open' : ''}`}>›</span>
+            <span class={`chev ${open==='clasificacions' ? 'open' : ''}`}>˅</span>
           </a>
 
-          {/* Subgrid Clasificacións — cores violeta via #sub-clasificacions.open */}
           <div id="sub-clasificacions" class={`subgrid ${open==='clasificacions' ? 'open' : ''}`}>
             <a href="/clasificacion?view=ultimo" class="subcard">
               <div class="sub-ico sub-ico--tgt"></div>
@@ -243,7 +236,6 @@ export default function Dashboard() {
                 <p class="sub-title">Último partido</p>
                 <p class="sub-desc">Resultados e ranking da última xornada</p>
               </div>
-              <span class="chev">›</span>
             </a>
 
             <a href="/clasificacion?view=xeral" class="subcard">
@@ -252,7 +244,6 @@ export default function Dashboard() {
                 <p class="sub-title">Xeral</p>
                 <p class="sub-desc">Clasificación acumulada da tempada</p>
               </div>
-              <span class="chev">›</span>
             </a>
           </div>
         </div>
@@ -261,5 +252,4 @@ export default function Dashboard() {
     </div>
   );
 }
-
 
