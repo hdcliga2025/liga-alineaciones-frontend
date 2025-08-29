@@ -16,27 +16,27 @@ const IconCalendar = ({ color = "#22c55e", size = 40 }) => (
   </svg>
 );
 
-/* Icono xogador con balón (outline, máis recoñecible e coherente co trazo) */
-const IconPlayerBall = ({ color = "#f59e0b", size = 40 }) => (
+/* Icono xogador con balón (más grande y de silueta clara) */
+const IconPlayerBall = ({ color = "#f59e0b", size = 44 }) => (
   <svg
     width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"
     stroke={color} stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
   >
     {/* cabeza */}
-    <circle cx="9" cy="5.2" r="2" />
-    {/* tronco inclinado (postura de carreira) */}
-    <path d="M9 7.6l2 3" />
+    <circle cx="9.5" cy="5.2" r="2.2" />
+    {/* tronco inclinado */}
+    <path d="M9.5 7.8L12.2 11.3" />
     {/* brazos */}
-    <path d="M10.2 9.4l2.8-1.2" />
-    <path d="M9.6 9.6L7 8.6" />
+    <path d="M10.8 9.4l3.2-1.4" />
+    <path d="M9.8 9.6L7 8.6" />
     {/* perna de apoio */}
-    <path d="M11 10.6l-2 5.2" />
-    {/* perna que chuta */}
-    <path d="M11 10.6l4 2.9" />
-    {/* balón */}
-    <circle cx="17" cy="16.2" r="2" />
-    {/* contacto pe-ballón */}
-    <path d="M15 13.5l1.2 1.5" />
+    <path d="M12.2 11.3L10.4 16.8" />
+    {/* perna que chuta (estirada cara ao balón) */}
+    <path d="M12.2 11.3L17 14.6" />
+    {/* balón máis grande */}
+    <circle cx="19" cy="15.6" r="2.2" />
+    {/* contacto pé-balón */}
+    <path d="M16.6 13.8l1.6 1.6" />
   </svg>
 );
 
@@ -62,76 +62,7 @@ export default function Dashboard() {
       if (uid) {
         const { data: prof } = await supabase
           .from("profiles")
-          .select("first_name")
-          .eq("id", uid)
-          .maybeSingle();
-        const first = (prof?.first_name || "").trim();
-        if (alive) setNome(first || "amig@");
-      } else {
-        if (alive) setNome("amig@");
-      }
-    })();
-    return () => { alive = false; };
-  }, []);
+          .s
 
-  return (
-    <div class="dash-wrap">
-      {/* Hero */}
-      <section class="dash-hero two-cols">
-        <img
-          src="/logoHDC.jpg"
-          alt="HDC Logo"
-          class="dash-hero-img fill-col"
-          decoding="async"
-          loading="eager"
-        />
-        <p class="dash-greet">
-          Boas <a class="dash-name">{nome}</a>, benvidx á Liga das Aliñacións
-        </p>
-      </section>
-
-      {/* Cards */}
-      <section class="dash-grid dash-grid--main">
-        {/* Calendario */}
-        <a href="/partidos" class="main-card">
-          <div class="dash-icon" style="border:1px solid rgba(34,197,94,.55);">
-            <IconCalendar color="#22c55e" />
-          </div>
-          <div class="dash-text">
-            <h3 class="dash-card-header">Calendario</h3>
-            <p class="dash-card-desc">Próximos, Vindeiros, Finalizados</p>
-          </div>
-          <span class="chev">›</span>
-        </a>
-
-        {/* Xogar ás Aliñacións */}
-        <a href="/haz-tu-11" class="main-card">
-          <div class="dash-icon" style="border:1px solid rgba(245,158,11,.55);">
-            <IconPlayerBall color="#f59e0b" />
-          </div>
-          <div class="dash-text">
-            <h3 class="dash-card-header">Xogar ás Aliñacións</h3>
-            <p class="dash-card-desc">
-              Convocatoria, Fai o teu 11, Aliñación oficial, Normas
-            </p>
-          </div>
-          <span class="chev">›</span>
-        </a>
-
-        {/* Clasificacións */}
-        <a href="/clasificacion" class="main-card">
-          <div class="dash-icon" style="border:1px solid rgba(167,139,250,.55);">
-            <IconTrophy color="#a78bfa" />
-          </div>
-          <div class="dash-text">
-            <h3 class="dash-card-header">Clasificacións</h3>
-            <p class="dash-card-desc">Último partido e Xeral</p>
-          </div>
-          <span class="chev">›</span>
-        </a>
-      </section>
-    </div>
-  );
-}
 
 
