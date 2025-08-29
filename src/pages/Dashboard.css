@@ -17,11 +17,25 @@
   width:min(92vw,380px);margin:6px auto 22px;
   display:grid;grid-template-columns:1fr 1fr;align-items:center;justify-items:center;gap:2px;
 }
-@media(min-width:560px){.dash-hero.two-cols{width:min(92vw,760px);gap:4px;margin:10px auto 28px}}
-@media(min-width:960px){.dash-hero.two-cols{grid-template-columns:1fr;gap:22px;margin:12px auto 40px}}
+@media(min-width:560px){
+  .dash-hero.two-cols{width:min(92vw,760px);gap:4px;margin:10px auto 28px}
+}
+@media(min-width:960px){
+  /* PC: logo máis arriba e texto máis preto do logo */
+  .dash-hero.two-cols{
+    grid-template-columns:1fr;
+    gap:12px;                 /* antes 22px */
+    margin:4px auto 36px;     /* antes 12px auto 40px */
+  }
+}
 
-.dash-hero-img.fill-col{width:100%;height:100%;max-height:136px;object-fit:contain}
-@media(min-width:960px){.dash-hero-img.fill-col{max-height:260px}}
+.dash-hero-img.fill-col{
+  width:100%;height:100%;
+  max-height:136px;object-fit:contain
+}
+@media(min-width:960px){
+  .dash-hero-img.fill-col{ max-height:260px; }
+}
 
 .dash-greet{
   font:400 22px/1.22 'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
@@ -64,10 +78,11 @@
 .dash-card-header{font:700 18px/1.15 'Montserrat',system-ui,sans-serif;margin:0}
 .dash-card-desc{font:400 14px/1.25 'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}
 
-/* Chevron (principal) — un pouco máis grande, á esquerda do texto */
-.chev{font-weight:800;line-height:1}
-.chev-left{font-size:18px;margin:0 10px 0 6px}
-@media(min-width:960px){.chev-left{font-size:20px}}
+/* Chevron — máis grande; xira cara arriba ao abrir */
+.chev{font-weight:800;line-height:1;transition:transform .15s ease,color .15s ease}
+.chev-left{font-size:20px;margin:0 10px 0 6px}
+.chev.open{transform:rotate(180deg)}
+@media(min-width:960px){.chev-left{font-size:22px}}
 
 /* Subgrid e subcards */
 .subgrid{
@@ -76,7 +91,10 @@
 }
 .subgrid.open{
   max-height:600px;opacity:1;transform:translateY(0);
-  margin-top:24px; /* máis separación coa card principal */
+  margin-top:24px; /* base (móbil/tablet) */
+}
+@media(min-width:960px){
+  .subgrid.open{ margin-top:30px; } /* PC: máis espazo entre card e subgrid */
 }
 
 /* Sen fondos ao abrir; só borde e título coas cores da card raíz */
@@ -113,11 +131,7 @@
 #sub-alineacions .sub-ico{ border:1px solid var(--amber-500); }
 #sub-clasificacions .sub-ico{ border:1px solid var(--violet-500); }
 
-/* Eliminamos antigos fondos degradados das sub-ico */
-.sub-ico--calendar,.sub-ico--flag,.sub-ico--meg,.sub-ico--clip,.sub-ico--book,.sub-ico--tgt{
-  background:#fff;
-}
-
+/* Títulos e textos subcards */
 .sub-texts{display:grid;gap:2px}
 .sub-title{font:700 16px/1.15 'Montserrat',system-ui,sans-serif;margin:0}
 .sub-desc{font:400 13px/1.25 'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}

@@ -99,8 +99,8 @@ export default function Dashboard() {
             <div class="dash-icon" style="border:1px solid rgba(34,197,94,.55);">
               <IconCalendar color="#22c55e" />
             </div>
-            {/* Flecha ▾ á esquerda, cor da card */}
-            <span class="chev chev-left" style="color:#22c55e">▾</span>
+            {/* Flecha ▾ á esquerda, cor da card; xira cara arriba ao abrir */}
+            <span class={`chev chev-left ${open==='partidos' ? 'open' : ''}`} style="color:#22c55e">▾</span>
             <div class="dash-text">
               <h3 class="dash-card-header">Calendario</h3>
               <p class="dash-card-desc">Todos os partidos do Celta na tempada 2025/2026</p>
@@ -111,9 +111,8 @@ export default function Dashboard() {
           <div id="sub-partidos" class={`subgrid ${open==='partidos' ? 'open' : ''}`}>
             <a href="/partidos?view=proximo" class="subcard">
               <div class="sub-ico">
-                {/* calendario outline homoxéneo */}
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                     stroke="#16a34a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                     stroke="#22c55e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="4.5" width="18" height="16" rx="2" />
                   <path d="M7 2.5v4M17 2.5v4M3 9h18" />
                 </svg>
@@ -126,8 +125,8 @@ export default function Dashboard() {
 
             <a href="/partidos?view=proximos" class="subcard">
               <div class="sub-ico">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                     stroke="#16a34a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                     stroke="#22c55e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="4.5" width="18" height="16" rx="2" />
                   <path d="M7 2.5v4M17 2.5v4M3 9h18" />
                 </svg>
@@ -140,9 +139,8 @@ export default function Dashboard() {
 
             <a href="/partidos?view=finalizados" class="subcard">
               <div class="sub-ico">
-                {/* bandeira outline */}
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                     stroke="#16a34a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                     stroke="#22c55e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M6 3v18" />
                   <path d="M6 4h10l-2 4 2 4H6" />
                 </svg>
@@ -165,7 +163,7 @@ export default function Dashboard() {
             <div class="dash-icon" style="border:1px solid rgba(245,158,11,.55);">
               <IconPlayerShot color="#f59e0b" />
             </div>
-            <span class="chev chev-left" style="color:#f59e0b">▾</span>
+            <span class={`chev chev-left ${open==='alineacions' ? 'open' : ''}`} style="color:#f59e0b">▾</span>
             <div class="dash-text">
               <h3 class="dash-card-header">Xogar ás Aliñacións</h3>
               <p class="dash-card-desc">Aquí é onde demostras o Claudio que levas dentro</p>
@@ -175,9 +173,8 @@ export default function Dashboard() {
           <div id="sub-alineacions" class={`subgrid ${open==='alineacions' ? 'open' : ''}`}>
             <a href="/haz-tu-11?view=convocatoria" class="subcard">
               <div class="sub-ico">
-                {/* clipboard outline */}
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                     stroke="#92400e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                     stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="6.5" y="5.5" width="11" height="14" rx="2" />
                   <path d="M9 5.5h6" />
                   <path d="M9 9.5h6M9 12.5h6M9 15.5h6" />
@@ -191,9 +188,8 @@ export default function Dashboard() {
 
             <a href="/haz-tu-11" class="subcard">
               <div class="sub-ico">
-                {/* diana outline */}
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                     stroke="#92400e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                     stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="5" />
                   <circle cx="12" cy="12" r="2" />
                   <path d="M12 2v3M22 12h-3M12 22v-3M2 12h3" />
@@ -205,12 +201,11 @@ export default function Dashboard() {
               </div>
             </a>
 
-            {/* NOVA subcard intermedia */}
+            {/* Nova subcard intermedia */}
             <a href="/haz-tu-11?view=oficial" class="subcard">
               <div class="sub-ico">
-                {/* camiseta/once inicial outline */}
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                     stroke="#92400e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                     stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M7 5l2-2h6l2 2 2 2v12H5V7z" />
                   <path d="M10 7v4M14 7v4" />
                 </svg>
@@ -223,9 +218,8 @@ export default function Dashboard() {
 
             <a href="/haz-tu-11?view=normas" class="subcard">
               <div class="sub-ico">
-                {/* libro outline */}
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                     stroke="#92400e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                     stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M4.5 5.5h10a2.5 2.5 0 012.5 2.5v10h-10A2.5 2.5 0 014.5 15V5.5z" />
                   <path d="M7.5 8.5h7M7.5 11.5h7" />
                 </svg>
@@ -248,7 +242,7 @@ export default function Dashboard() {
             <div class="dash-icon" style="border:1px solid rgba(167,139,250,.55);">
               <IconTrophy color="#a78bfa" />
             </div>
-            <span class="chev chev-left" style="color:#a78bfa">▾</span>
+            <span class={`chev chev-left ${open==='clasificacions' ? 'open' : ''}`} style="color:#a78bfa">▾</span>
             <div class="dash-text">
               <h3 class="dash-card-header">Clasificacións</h3>
               <p class="dash-card-desc">Resultados por partido e xerais de cada quen</p>
@@ -258,9 +252,8 @@ export default function Dashboard() {
           <div id="sub-clasificacions" class={`subgrid ${open==='clasificacions' ? 'open' : ''}`}>
             <a href="/clasificacion?view=ultimo" class="subcard">
               <div class="sub-ico">
-                {/* checkboard/target outline */}
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                     stroke="#6d28d9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                     stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="6" />
                   <path d="M12 8v8M8 12h8" />
                 </svg>
@@ -273,9 +266,8 @@ export default function Dashboard() {
 
             <a href="/clasificacion?view=xeral" class="subcard">
               <div class="sub-ico">
-                {/* barras outline */}
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                     stroke="#6d28d9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                     stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M5 19V9M10 19V5M15 19v-7M20 19v-4" />
                 </svg>
               </div>
