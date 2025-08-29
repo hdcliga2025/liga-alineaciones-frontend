@@ -44,10 +44,12 @@ export default function NavBar({ currentPath = "" }) {
     return () => window.removeEventListener("resize", onR);
   }, []);
 
-  // Ajustes: PC semibold y más alargado; móvil regular y MÁS ESTRECHO
-  const fw = isNarrow ? 400 : 600;                 // móvil: regular | PC: semibold
-  const fz = isNarrow ? 17 : 20;                   // móvil un pelín más alto | PC un poco mayor
-  const sx = isNarrow ? 0.88 : 1.34;               // móvil más estrecho (<1) | PC más ancho
+  // Ajustes SOLO móvil (pedido):
+  // - Más estrecho (scaleX menor)
+  // - Un poco más alto (font-size mayor)
+  const fw = isNarrow ? 400 : 600;        // móvil: regular | PC: semibold
+  const fz = isNarrow ? 19 : 20;          // móvil +2 px (antes 17) | PC igual
+  const sx = isNarrow ? 0.82 : 1.34;      // móvil más estrecho (antes 0.88) | PC igual
 
   const styles = {
     header: {
