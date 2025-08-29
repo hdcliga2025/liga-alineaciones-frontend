@@ -7,8 +7,15 @@ import "./Dashboard.css";
 /* Icono calendario (outline) */
 const IconCalendar = ({ color = "#22c55e", size = 40 }) => (
   <svg
-    width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"
-    stroke={color} stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    aria-hidden="true"
+    stroke={color}
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
   >
     <rect x="3" y="4.5" width="18" height="16" rx="2" />
     <path d="M7 2.5v4M17 2.5v4M3 9h18" />
@@ -17,33 +24,48 @@ const IconCalendar = ({ color = "#22c55e", size = 40 }) => (
 );
 
 /* Icono xogador con balón (más grande y de silueta clara) */
-const IconPlayerBall = ({ color = "#f59e0b", size = 44 }) => (
+const IconPlayerBall = ({ color = "#f59e0b", size = 48 }) => (
   <svg
-    width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"
-    stroke={color} stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    aria-hidden="true"
+    stroke={color}
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
   >
     {/* cabeza */}
-    <circle cx="9.5" cy="5.2" r="2.2" />
-    {/* tronco inclinado */}
-    <path d="M9.5 7.8L12.2 11.3" />
+    <circle cx="9.6" cy="5.2" r="2.2" />
+    {/* tronco inclinado (carrera) */}
+    <path d="M9.6 7.8L12.3 11.2" />
     {/* brazos */}
-    <path d="M10.8 9.4l3.2-1.4" />
-    <path d="M9.8 9.6L7 8.6" />
+    <path d="M10.9 9.4l3.2-1.4" />
+    <path d="M9.9 9.6L7.1 8.6" />
     {/* perna de apoio */}
-    <path d="M12.2 11.3L10.4 16.8" />
+    <path d="M12.3 11.2L10.5 16.8" />
     {/* perna que chuta (estirada cara ao balón) */}
-    <path d="M12.2 11.3L17 14.6" />
-    {/* balón máis grande */}
-    <circle cx="19" cy="15.6" r="2.2" />
+    <path d="M12.3 11.2L17.1 14.6" />
+    {/* balón */}
+    <circle cx="19.1" cy="15.6" r="2.2" />
     {/* contacto pé-balón */}
-    <path d="M16.6 13.8l1.6 1.6" />
+    <path d="M16.7 13.8l1.6 1.6" />
   </svg>
 );
 
+/* Icono trofeo (outline) */
 const IconTrophy = ({ color = "#a78bfa", size = 40 }) => (
   <svg
-    width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"
-    stroke={color} stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    aria-hidden="true"
+    stroke={color}
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
   >
     <path d="M8 4h8v3a4 4 0 0 1-4 4 4 4 0 0 1-4-4V4z" />
     <path d="M16 7h3a3 3 0 0 1-3 3M8 7H5a3 3 0 0 0 3 3" />
@@ -62,7 +84,88 @@ export default function Dashboard() {
       if (uid) {
         const { data: prof } = await supabase
           .from("profiles")
-          .s
+          .select("first_name")
+          .eq("id", uid)
+          .maybeSingle();
+        const first = (prof?.first_name || "").trim();
+        if (alive) setNome(first || "amig@");
+      } else {
+        if (alive) setNome("amig@");
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  return (
+    <div class="dash-wrap">
+      {/* Hero */}
+      <section class="dash-hero two-cols">
+        <img
+          src="/logoHDC.jpg"
+          alt="HDC Logo"
+          class="dash-hero-img fill-col"
+          decoding="async"
+          loading="eager"
+        />
+        <p class="dash-greet">
+          Boas <a class="dash-name">{nome}</a>, benvidx á Liga das Aliñacións
+        </p>
+      </section>
+
+      {/* Cards */}
+      <section class="dash-grid dash-grid--main">
+        {/* Calendario */}
+        <a href="/partidos" class="main-card">
+          <div
+            class="dash-icon"
+            style="border:1px solid rgba(34,197,94,.55);"
+          >
+            <IconCalendar color="#22c55e" />
+          </div>
+          <div class="dash-text">
+            <h3 class="dash-card-header">Calendario</h3>
+            <p class="dash-card-desc">Próximos, Vindeiros, Finalizados</p>
+          </div>
+          <span class="chev">›</span>
+        </a>
+
+        {/* Xogar ás Aliñacións */}
+        <a href="/haz-tu-11" class="main-card">
+          <div
+            class="dash-icon"
+            style="border:1px solid rgba(245,158,11,.55);"
+          >
+            <IconPlayerBall color="#f59e0b" />
+          </div>
+          <div class="dash-text">
+            <h3 class="dash-card-header">Xogar ás Aliñacións</h3>
+            <p class="dash-card-desc">
+              Convocatoria, Fai o teu 11, Aliñación oficial, Normas
+            </p>
+          </div>
+          <span class="chev">›</span>
+        </a>
+
+        {/* Clasificacións */}
+        <a href="/clasificacion" class="main-card">
+          <div
+            class="dash-icon"
+            style="border:1px solid rgba(167,139,250,.55);"
+          >
+            <IconTrophy color="#a78bfa" />
+          </div>
+          <div class="dash-text">
+            <h3 class="dash-card-header">Clasificacións</h3>
+            <p class="dash-card-desc">Último partido e Xeral</p>
+          </div>
+          <span class="chev">›</span>
+        </a>
+      </section>
+    </div>
+  );
+}
 
 
 
