@@ -44,12 +44,12 @@ export default function NavBar({ currentPath = "" }) {
     return () => window.removeEventListener("resize", onR);
   }, []);
 
-  // Ajustes SOLO móvil (pedido):
-  // - Más estrecho (scaleX menor)
-  // - Un poco más alto (font-size mayor)
-  const fw = isNarrow ? 400 : 600;        // móvil: regular | PC: semibold
-  const fz = isNarrow ? 19 : 20;          // móvil +2 px (antes 17) | PC igual
-  const sx = isNarrow ? 0.82 : 1.34;      // móvil más estrecho (antes 0.88) | PC igual
+  // Ajustes:
+  // - MÓVIL: más estrecho (~2 caracteres menos de ancho) y algo más alto
+  // - ESCRITORIO: un poco menos bold
+  const fw = isNarrow ? 400 : 500;       // antes 600 en desktop -> 500
+  const fz = isNarrow ? 19 : 20;         // móvil algo más alto
+  const sx = isNarrow ? 0.72 : 1.34;     // móvil MUCHO más estrecho; desktop igual
 
   const styles = {
     header: {

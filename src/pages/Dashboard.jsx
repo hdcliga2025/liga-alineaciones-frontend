@@ -23,7 +23,7 @@ const IconCalendar = ({ color = "#22c55e", size = 40 }) => (
   </svg>
 );
 
-/* Icono xogador con balón — rodilla "cara dentro" e balón máis preto (sen tocar) */
+/* Icono xogador con balón — balón entre as pernas (sen tocar) e xeonllo cara dentro */
 const IconPlayerBall = ({ color = "#f59e0b", size = 48 }) => (
   <svg
     width={size}
@@ -40,23 +40,19 @@ const IconPlayerBall = ({ color = "#f59e0b", size = 48 }) => (
     <circle cx="9.4" cy="5.1" r="2.2" />
     {/* tronco lixeiramente curvado (carreira) */}
     <path d="M9.4 7.6C10.5 9 11 9.7 12 11.1" />
-    {/* brazos (equilibrio) */}
+    {/* brazos */}
     <path d="M10.7 9.2l3.4-1.5" />
     <path d="M9.5 9.4L7.0 8.5" />
-    {/* perna de apoio */}
-    <path d="M12.0 11.1L10.2 17.2" />
-    {/* perna que chuta — dobrada cara dentro: muslo -> tibia virando ao eixe */}
-    <path d="M12.0 11.1L15.3 12.3" />     {/* muslo */}
-    <path d="M15.3 12.3L18.4 13.2" />     {/* tibia/pe orientados cara dentro */}
-    {/* balón máis preto (sen tocar) */}
-    <circle cx="20.0" cy="14.0" r="1.9" />
-    {/* liñas de movemento sutiles */}
-    <path d="M19.2 12.6l1.6 .5" />
-    <path d="M18.7 11.9l1.2 .4" />
+    {/* perna de apoio (esquerda) */}
+    <path d="M12.0 11.1L11.2 17.2" />
+    {/* perna de chute (dereita) con xeonllo cara dentro: muslo + tibia */}
+    <path d="M12.0 11.1L15.0 13.0" />   {/* muslo */}
+    <path d="M15.0 13.0L16.6 16.2" />   {/* tibia/pe entrando cara o centro */}
+    {/* balón entre as pernas, sen tocar */}
+    <circle cx="14.0" cy="15.4" r="1.6" />
   </svg>
 );
 
-/* Icono trofeo (outline) */
 const IconTrophy = ({ color = "#a78bfa", size = 40 }) => (
   <svg
     width={size}
