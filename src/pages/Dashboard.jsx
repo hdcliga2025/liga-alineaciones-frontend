@@ -23,7 +23,7 @@ const IconCalendar = ({ color = "#22c55e", size = 40 }) => (
   </svg>
 );
 
-/* Icono xogador con balón (perna de chut máis estendida e balón máis separado) */
+/* Icono xogador con balón (máis dinámico: perna estendida, balón separado e liñas de movemento) */
 const IconPlayerBall = ({ color = "#f59e0b", size = 48 }) => (
   <svg
     width={size}
@@ -37,20 +37,21 @@ const IconPlayerBall = ({ color = "#f59e0b", size = 48 }) => (
     stroke-linejoin="round"
   >
     {/* cabeza */}
-    <circle cx="9.6" cy="5.2" r="2.2" />
-    {/* tronco inclinado (carreira) */}
-    <path d="M9.6 7.8L12.3 11.2" />
+    <circle cx="9.4" cy="5.2" r="2.2" />
+    {/* tronco lixeiramente curvado (carreira) */}
+    <path d="M9.4 7.8C10.6 9.2 11.1 9.9 12.1 11.3" />
     {/* brazos */}
-    <path d="M10.9 9.4l3.2-1.4" />
-    <path d="M9.9 9.6L7.1 8.6" />
+    <path d="M10.8 9.4l3.4-1.5" />
+    <path d="M9.6 9.6L7 8.6" />
     {/* perna de apoio */}
-    <path d="M12.3 11.2L10.5 16.8" />
-    {/* perna que chuta — máis longa cara ao balón */}
-    <path d="M12.3 11.2L18.2 13.6" />
+    <path d="M12.1 11.3L10.3 17.2" />
+    {/* perna que chuta — longa e estirada cara ao balón */}
+    <path d="M12.1 11.3L19.4 13.6" />
     {/* balón máis separado */}
-    <circle cx="20.2" cy="14.6" r="2.1" />
-    {/* contacto pé-balón (suxestión de movemento) */}
-    <path d="M17.4 12.9l1.8 1.7" />
+    <circle cx="21.4" cy="14.2" r="2.0" />
+    {/* liñas de movemento do balón (sutil, mesmo trazo) */}
+    <path d="M20.6 12.6l2.1 .6" />
+    <path d="M19.9 11.8l1.6 .5" />
   </svg>
 );
 
@@ -142,7 +143,7 @@ export default function Dashboard() {
           <div class="dash-text">
             <h3 class="dash-card-header">Xogar ás Aliñacións</h3>
             <p class="dash-card-desc">
-              Convocatoria, Fai o teu 11, Aliñación oficial, Normas
+              Aquí é onde demostras o Claudio que levas dentro
             </p>
           </div>
           <span class="chev">›</span>
@@ -158,7 +159,7 @@ export default function Dashboard() {
           </div>
           <div class="dash-text">
             <h3 class="dash-card-header">Clasificacións</h3>
-            <p class="dash-card-desc">Último partido e Xeral</p>
+            <p class="dash-card-desc">Resultados por partido e xerais de cada quen</p>
           </div>
           <span class="chev">›</span>
         </a>
