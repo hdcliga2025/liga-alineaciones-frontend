@@ -16,27 +16,27 @@ const IconCalendar = ({ color = "#22c55e", size = 40 }) => (
   </svg>
 );
 
-/* Icono xogador con balón (outline, máis recoñecible) */
+/* Icono xogador con balón (outline, máis recoñecible e coherente co trazo) */
 const IconPlayerBall = ({ color = "#f59e0b", size = 40 }) => (
   <svg
     width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"
     stroke={color} stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
   >
     {/* cabeza */}
-    <circle cx="8" cy="5.5" r="2.1" />
-    {/* tronco */}
-    <path d="M8 7.8V12.2" />
+    <circle cx="9" cy="5.2" r="2" />
+    {/* tronco inclinado (postura de carreira) */}
+    <path d="M9 7.6l2 3" />
     {/* brazos */}
-    <path d="M8 9.2l3-1.2" />
-    <path d="M8 9.2l-3-1.2" />
-    {/* perna apoio */}
-    <path d="M8 12.2l-2.2 3.4" />
+    <path d="M10.2 9.4l2.8-1.2" />
+    <path d="M9.6 9.6L7 8.6" />
+    {/* perna de apoio */}
+    <path d="M11 10.6l-2 5.2" />
     {/* perna que chuta */}
-    <path d="M8 12.2l4 2.6" />
+    <path d="M11 10.6l4 2.9" />
     {/* balón */}
-    <circle cx="15.8" cy="16.5" r="1.8" />
-    {/* contacto pe co balón */}
-    <path d="M12 14.8l2.8 1.7" />
+    <circle cx="17" cy="16.2" r="2" />
+    {/* contacto pe-ballón */}
+    <path d="M15 13.5l1.2 1.5" />
   </svg>
 );
 
@@ -133,4 +133,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
