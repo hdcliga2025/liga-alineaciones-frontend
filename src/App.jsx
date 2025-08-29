@@ -1,4 +1,5 @@
-﻿import { h } from "preact";
+﻿// src/App.jsx
+import { h } from "preact";
 import { useState } from "preact/hooks";
 import { Router } from "preact-router";
 
@@ -19,6 +20,10 @@ import HazTu11 from "./pages/HazTu11.jsx";
 import Clasificacion from "./pages/Clasificacion.jsx";
 import Admin from "./pages/Admin.jsx";
 
+/* Nuevas páginas dedicadas para subcards de Clasificacións */
+import ResultadosUltimaAlineacion from "./pages/ResultadosUltimaAlineacion.jsx";
+import TaboaAcertosAcumulados from "./pages/TaboaAcertosAcumulados.jsx";
+
 /* Logout forzado */
 import ForceLogout from "./pages/ForceLogout.jsx";
 
@@ -26,19 +31,24 @@ import ForceLogout from "./pages/ForceLogout.jsx";
 const NotFound = () => (
   <main style={{ padding: "1rem" }}>
     <h2>Páxina non atopada</h2>
-    <p>Volver ao <a href="/login">login</a></p>
+    <p>
+      Volver ao <a href="/login">login</a>
+    </p>
   </main>
 );
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(
-    typeof window !== "undefined" ? window.location.pathname + (window.location.search || "") : "/"
+    typeof window !== "undefined"
+      ? window.location.pathname + (window.location.search || "")
+      : "/"
   );
 
-  // Ocultar NavBar en portada y en cualquier variante de /login, /register, /logout (con o sen query)
+  // Ocultar NavBar en portada y en cualquier variante de /login, /register, /logout
   const hidePrefixes = ["/login", "/register", "/logout"];
   const shouldHideNav =
-    currentPath === "/" || hidePrefixes.some((p) => (currentPath || "").startsWith(p));
+    currentPath === "/" ||
+    hidePrefixes.some((p) => (currentPath || "").startsWith(p));
 
   return (
     <>
@@ -61,6 +71,10 @@ export default function App() {
         <HazTu11 path="/haz-tu-11" />
         <Clasificacion path="/clasificacion" />
         <Admin path="/admin" />
+
+        {/* Rutas dedicadas de Clasificacións (redirixen ás vistas internas) */}
+        <ResultadosUltimaAlineacion path="/resultados-ultima-alineacion" />
+        <TaboaAcertosAcumulados path="/taboa-acertos-acumulados" />
 
         {/* 404 */}
         <NotFound default />
