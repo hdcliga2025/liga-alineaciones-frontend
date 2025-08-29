@@ -23,7 +23,7 @@ const IconCalendar = ({ color = "#22c55e", size = 40 }) => (
   </svg>
 );
 
-/* Icono xogador con balón — balón entre as pernas (sen tocar) e xeonllo cara dentro */
+/* Icono xogador — pernas abertas en “V” e balón centrado entre elas, sen tocar */
 const IconPlayerBall = ({ color = "#f59e0b", size = 48 }) => (
   <svg
     width={size}
@@ -43,13 +43,14 @@ const IconPlayerBall = ({ color = "#f59e0b", size = 48 }) => (
     {/* brazos */}
     <path d="M10.7 9.2l3.4-1.5" />
     <path d="M9.5 9.4L7.0 8.5" />
-    {/* perna de apoio (esquerda) */}
-    <path d="M12.0 11.1L11.2 17.2" />
-    {/* perna de chute (dereita) con xeonllo cara dentro: muslo + tibia */}
-    <path d="M12.0 11.1L15.0 13.0" />   {/* muslo */}
-    <path d="M15.0 13.0L16.6 16.2" />   {/* tibia/pe entrando cara o centro */}
-    {/* balón entre as pernas, sen tocar */}
-    <circle cx="14.0" cy="15.4" r="1.6" />
+    {/* perna esquerda (apoio) en V */}
+    <path d="M12.0 11.1L10.1 13.3" />   {/* muslo */}
+    <path d="M10.1 13.3L8.6 16.6" />    {/* tibia cara fóra */}
+    {/* perna dereita (chute) abríndose cara fóra */}
+    <path d="M12.0 11.1L14.8 13.2" />   {/* muslo */}
+    <path d="M14.8 13.2L17.4 16.4" />   {/* tibia cara fóra */}
+    {/* balón centrado entre as dúas pernas, sen tocar */}
+    <circle cx="13.0" cy="15.2" r="1.6" />
   </svg>
 );
 

@@ -44,12 +44,10 @@ export default function NavBar({ currentPath = "" }) {
     return () => window.removeEventListener("resize", onR);
   }, []);
 
-  // Ajustes:
-  // - MÓVIL: más estrecho (~2 caracteres menos de ancho) y algo más alto
-  // - ESCRITORIO: un poco menos bold
-  const fw = isNarrow ? 400 : 500;       // antes 600 en desktop -> 500
-  const fz = isNarrow ? 19 : 20;         // móvil algo más alto
-  const sx = isNarrow ? 0.72 : 1.34;     // móvil MUCHO más estrecho; desktop igual
+  // MÓVIL: aún más estrecho (~2 chars menos), algo más alto; ESCRITORIO: menos bold
+  const fw = isNarrow ? 400 : 400;     // desktop aún menos bold
+  const fz = isNarrow ? 19 : 20;       // móvil un pelín más alto, desktop igual
+  const sx = isNarrow ? 0.66 : 1.34;   // móvil mucho más estrecho; desktop igual
 
   const styles = {
     header: {
@@ -88,7 +86,9 @@ export default function NavBar({ currentPath = "" }) {
       fontSize: fz,
       transform: `scaleX(${sx})`,
       transformOrigin: "center",
-      letterSpacing: isNarrow ? "0.35px" : "0.6px",
+      letterSpacing: isNarrow ? "0.25px" : "0.55px",
+      whiteSpace: "nowrap",          // <- no partir en 2 líneas
+      display: "inline-block",       // <- controlar el ancho real del texto
     },
     rightGroup: {
       justifySelf: "end",
