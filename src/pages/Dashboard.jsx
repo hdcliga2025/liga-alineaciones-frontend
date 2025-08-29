@@ -105,12 +105,12 @@ export default function Dashboard() {
             <div class="dash-icon" style="border:1px solid rgba(34,197,94,.55);">
               <IconCalendar color="#22c55e" />
             </div>
+            {/* Flecha (▾) diante do texto, cor da card */}
+            <span class="chev chev-left" style="color:#22c55e">▾</span>
             <div class="dash-text">
               <h3 class="dash-card-header">Calendario</h3>
               <p class="dash-card-desc">Todos os partidos do Celta na tempada 2025/2026</p>
             </div>
-            {/* Flecha máis pequena e sempre cara abaixo */}
-            <span class={`chev ${open==='partidos' ? 'open' : ''}`}>˅</span>
           </a>
 
           {/* Subgrid de Calendario — sen flechas nas subcards */}
@@ -169,17 +169,17 @@ export default function Dashboard() {
             <div class="dash-icon" style="border:1px solid rgba(245,158,11,.55);">
               <IconPlayerShot color="#f59e0b" />
             </div>
+            <span class="chev chev-left" style="color:#f59e0b">▾</span>
             <div class="dash-text">
               <h3 class="dash-card-header">Xogar ás Aliñacións</h3>
               <p class="dash-card-desc">Aquí é onde demostras o Claudio que levas dentro</p>
             </div>
-            <span class={`chev ${open==='alineacions' ? 'open' : ''}`}>˅</span>
           </a>
 
           <div id="sub-alineacions" class={`subgrid ${open==='alineacions' ? 'open' : ''}`}>
             <a href="/haz-tu-11?view=convocatoria" class="subcard">
               <div class="sub-ico sub-ico--flag">
-                {/* Clipboard/convocatoria */}
+                {/* Clipboard */}
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                      stroke="#92400e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="6.5" y="5.5" width="11" height="14" rx="2" />
@@ -188,14 +188,14 @@ export default function Dashboard() {
                 </svg>
               </div>
               <div class="sub-texts">
-                <p class="sub-title">Convocatoria</p>
-                <p class="sub-desc">Lista oficial para a xornada</p>
+                <p class="sub-title">Convocatoria oficial</p>
+                <p class="sub-desc">Lista comunicada polo club para o seguinte partido</p>
               </div>
             </a>
 
             <a href="/haz-tu-11" class="subcard">
               <div class="sub-ico sub-ico--tgt">
-                {/* Dardo/obxectivo */}
+                {/* Dardo */}
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                      stroke="#92400e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="5" />
@@ -204,23 +204,8 @@ export default function Dashboard() {
                 </svg>
               </div>
               <div class="sub-texts">
-                <p class="sub-title">Fai o teu 11</p>
+                <p class="sub-title">Fai aquí a túa aliñación</p>
                 <p class="sub-desc">Escolle o teu once antes do peche</p>
-              </div>
-            </a>
-
-            <a href="/haz-tu-11?view=oficial" class="subcard">
-              <div class="sub-ico sub-ico--meg">
-                {/* Megáfono */}
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                     stroke="#92400e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M3 11h5l8-4v10l-8-4H3z" />
-                  <path d="M8 14v3a2 2 0 0 0 2 2h1" />
-                </svg>
-              </div>
-              <div class="sub-texts">
-                <p class="sub-title">Aliñación oficial</p>
-                <p class="sub-desc">Once confirmado polo club</p>
               </div>
             </a>
 
@@ -234,8 +219,8 @@ export default function Dashboard() {
                 </svg>
               </div>
               <div class="sub-texts">
-                <p class="sub-title">Normas</p>
-                <p class="sub-desc">Como xogar e puntuación</p>
+                <p class="sub-title">Regulamento do xogo</p>
+                <p class="sub-desc">Todo o que tes que saber para pasalo ben sen cagala</p>
               </div>
             </a>
           </div>
@@ -251,17 +236,17 @@ export default function Dashboard() {
             <div class="dash-icon" style="border:1px solid rgba(167,139,250,.55);">
               <IconTrophy color="#a78bfa" />
             </div>
+            <span class="chev chev-left" style="color:#a78bfa">▾</span>
             <div class="dash-text">
               <h3 class="dash-card-header">Clasificacións</h3>
               <p class="dash-card-desc">Resultados por partido e xerais de cada quen</p>
             </div>
-            <span class={`chev ${open==='clasificacions' ? 'open' : ''}`}>˅</span>
           </a>
 
           <div id="sub-clasificacions" class={`subgrid ${open==='clasificacions' ? 'open' : ''}`}>
             <a href="/clasificacion?view=ultimo" class="subcard">
               <div class="sub-ico sub-ico--tgt">
-                {/* Dardo/último party */}
+                {/* Dardo */}
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                      stroke="#6d28d9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="5" />
