@@ -13,13 +13,10 @@ function Field({
   ariaLabel,
   icon = null,
   rightSlot,
-  hideNativeDateIcon = false, // tapa el icono nativo del date input
   inputProps = {},
 }) {
   const wrap = { position: "relative", marginBottom: 12 };
   const input = {
-    position: "relative",
-    zIndex: 1,
     width: "100%",
     height: 46,
     padding: `10px ${rightSlot ? "56px" : "14px"} 10px ${icon ? "54px" : "14px"}`,
@@ -35,7 +32,6 @@ function Field({
   const iconBox = {
     display: icon ? "grid" : "none",
     position: "absolute",
-    zIndex: 3, // por encima del input
     left: 10,
     top: "50%",
     transform: "translateY(-50%)",
@@ -46,29 +42,16 @@ function Field({
     boxShadow: "0 12px 28px rgba(14,165,233,.35)",
     placeItems: "center",
     pointerEvents: "none",
+    zIndex: 2,
   };
   const right = {
     position: "absolute",
-    zIndex: 4, // por encima del overlay
     right: 8,
     top: "50%",
     transform: "translateY(-50%)",
     display: rightSlot ? "grid" : "none",
     placeItems: "center",
-  };
-  // Overlay para tapar el icono nativo del date input
-  const hideBox = {
-    position: "absolute",
-    zIndex: 2,
-    right: 8,
-    top: "50%",
-    transform: "translateY(-50%)",
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    background: "#fff",
-    pointerEvents: "none",
-    display: hideNativeDateIcon ? "block" : "none",
+    zIndex: 3,
   };
 
   return (
@@ -85,9 +68,26 @@ function Field({
       />
       <div style={iconBox}>{icon}</div>
       <div style={right}>{rightSlot}</div>
-      <div style={hideBox} />
     </div>
   );
+}
+
+/* Utilidades de formato */
+function isoToDisplay(iso = "") {
+  if (!iso) return "";
+  // iso esperado: yyyy-mm-dd
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return "";
+  return `${m[3]}/${m[2]}/${m[1]}`;
+}
+function displayToIso(s = "") {
+  const v = s.replace(/\s+/g, "");
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(v);
+  if (!m) return null;
+  const dd = parseInt(m[1], 10), mm = parseInt(m[2], 10), yy = parseInt(m[3], 10);
+  if (mm < 1 || mm > 12 || dd < 1 || dd > 31 || yy < 1900) return null;
+  const iso = `${yy}-${String(mm).padStart(2,"0")}-${String(dd).padStart(2,"0")}`;
+  return iso;
 }
 
 export default function Perfil() {
@@ -98,8 +98,9 @@ export default function Perfil() {
     phone: "",
     dni: "",
     carnet_celta_id: "",
-    birth_date: "",
+    birth_date: "", // ISO yyyy-mm-dd
   });
+  const [birthDisplay, setBirthDisplay] = useState(""); // dd/mm/aaaa visible
   const [newPwd, setNewPwd] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [info, setInfo] = useState("");
@@ -107,7 +108,7 @@ export default function Perfil() {
   const [pwdErr, setPwdErr] = useState("");
 
   const existingCols = useRef(new Set());
-  const birthRef = useRef(null);
+  const hiddenDateRef = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -137,6 +138,7 @@ export default function Perfil() {
           (md.full_name || "").split(" ").slice(1).join(" ") ||
           "")?.trim();
 
+      const iso = data?.birth_date ? String(data.birth_date).slice(0, 10) : "";
       setForm({
         first_name: first,
         last_name: last,
@@ -144,8 +146,9 @@ export default function Perfil() {
         phone: (data?.phone || "").toString(),
         dni: (data?.dni || "").toString(),
         carnet_celta_id: (data?.carnet_celta_id || "").toString(),
-        birth_date: data?.birth_date ? String(data.birth_date).slice(0, 10) : "",
+        birth_date: iso,
       });
+      setBirthDisplay(isoToDisplay(iso));
     })();
   }, []);
 
@@ -173,6 +176,12 @@ export default function Perfil() {
     setInfo("");
     setErr("");
     setPwdErr("");
+
+    // sincroniza visual -> iso por si o usuario escribiu a man
+    if (birthDisplay) {
+      const iso = displayToIso(birthDisplay);
+      if (iso) setForm((f) => ({ ...f, birth_date: iso }));
+    }
 
     const v = validate();
     if (v) return setErr(v);
@@ -231,12 +240,10 @@ export default function Perfil() {
       const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || "HDCLiga@dmail.com";
       const { data: s } = await supabase.auth.getSession();
       const token = s?.session?.access_token;
-
       const headers = {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       };
-
       await fetch(`${baseUrl}/functions/v1/mail-send`, {
         method: "POST",
         headers,
@@ -246,7 +253,6 @@ export default function Perfil() {
           text: `O usuario ${nome} (${mail}) solicitou o borrado da súa conta.\nID: ${uid}\n\nAcción: validar e executar o borrado en Supabase.`,
         }),
       }).catch(console.error);
-
       await fetch(`${baseUrl}/functions/v1/mail-send`, {
         method: "POST",
         headers,
@@ -316,16 +322,16 @@ export default function Perfil() {
     </svg>
   );
 
-  // Botón calendario (derecha) que abre el picker nativo
+  // Botón calendario (abre el date-picker oculto)
   const CalendarButton = (
     <button
       type="button"
       onClick={() => {
         try {
-          if (birthRef.current?.showPicker) birthRef.current.showPicker();
-          else birthRef.current?.focus();
+          if (hiddenDateRef.current?.showPicker) hiddenDateRef.current.showPicker();
+          else hiddenDateRef.current?.focus();
         } catch {
-          birthRef.current?.focus();
+          hiddenDateRef.current?.focus();
         }
       }}
       title="Abrir calendario"
@@ -374,20 +380,6 @@ export default function Perfil() {
 
   return (
     <main class="profile-page" style={box}>
-      {/* Ocultar icono nativo del date input */}
-      <style>{`
-        .profile-page input[type="date"]{
-          appearance:none; -webkit-appearance:none; -moz-appearance:none;
-          background-image:none !important;
-          position:relative;
-        }
-        .profile-page input[type="date"]::-webkit-calendar-picker-indicator{ display:none !important; opacity:0 !important; }
-        .profile-page input[type="date"]::-webkit-clear-button{ display:none; }
-        .profile-page input[type="date"]::-webkit-inner-spin-button{ display:none; }
-        .profile-page input[type="date"]::-ms-clear{ display:none; }
-        .profile-page input[type="date"]::-moz-calendar-picker-indicator{ display:none; }
-      `}</style>
-
       <form
         onSubmit={saveAll}
         noValidate
@@ -451,17 +443,44 @@ export default function Perfil() {
           ariaLabel="ID Carnet Celta"
           icon={IconCard}
         />
+
+        {/* Fecha visible como texto dd/mm/aaaa + date picker oculto */}
         <Field
-          id="birth_date"
-          type="date"
+          id="birth_date_display"
+          type="text"
           placeholder="dd/mm/aaaa"
-          value={form.birth_date}
-          onInput={onChange("birth_date")}
+          value={birthDisplay}
+          onInput={(e) => {
+            const v = e.currentTarget.value;
+            setBirthDisplay(v);
+            const iso = displayToIso(v);
+            if (iso) setForm((f) => ({ ...f, birth_date: iso }));
+          }}
           ariaLabel="Data de nacemento"
-          icon={IconCake}                 // ← TARTA a la izquierda
-          rightSlot={CalendarButton}      // ← Botón calendario propio a la derecha
-          hideNativeDateIcon={true}       // ← tapar icono nativo
-          inputProps={{ ref: birthRef }}
+          icon={IconCake}
+          rightSlot={CalendarButton}
+          inputProps={{ inputMode: "numeric" }}
+        />
+        {/* Date input oculto: captura selección y la sincroniza */}
+        <input
+          ref={hiddenDateRef}
+          type="date"
+          value={form.birth_date || ""}
+          onInput={(e) => {
+            const iso = e.currentTarget.value;
+            setForm((f) => ({ ...f, birth_date: iso }));
+            setBirthDisplay(isoToDisplay(iso));
+          }}
+          style={{
+            position: "absolute",
+            left: "-9999px",
+            width: 0,
+            height: 0,
+            opacity: 0,
+            pointerEvents: "none",
+          }}
+          aria-hidden="true"
+          tabIndex={-1}
         />
 
         <h3 style={secTitle}>Seguridade</h3>
@@ -502,7 +521,6 @@ export default function Perfil() {
         {info && <p style={{ color: "#065f46", margin: "8px 0" }}>{info}</p>}
         {(err || pwdErr) && <p style={{ color: "#b91c1c", margin: "8px 0" }}>{err || pwdErr}</p>}
 
-        {/* Botones: SIN logo debajo */}
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 10 }}>
           <button
             type="submit"
