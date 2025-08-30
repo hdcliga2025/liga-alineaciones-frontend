@@ -3,7 +3,7 @@ import { h } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient";
 
-/** Campo con icono (izq) y opciones extra */
+/** Campo con icono (izq) y slot opcional (der) */
 function Field({
   id,
   type = "text",
@@ -13,11 +13,13 @@ function Field({
   ariaLabel,
   icon = null,
   rightSlot,
-  hideNativeDateIcon = false, // <- tapa el icono nativo del date input
+  hideNativeDateIcon = false, // tapa el icono nativo del date input
   inputProps = {},
 }) {
   const wrap = { position: "relative", marginBottom: 12 };
   const input = {
+    position: "relative",
+    zIndex: 1,
     width: "100%",
     height: 46,
     padding: `10px ${rightSlot ? "56px" : "14px"} 10px ${icon ? "54px" : "14px"}`,
@@ -33,6 +35,7 @@ function Field({
   const iconBox = {
     display: icon ? "grid" : "none",
     position: "absolute",
+    zIndex: 3, // por encima del input
     left: 10,
     top: "50%",
     transform: "translateY(-50%)",
@@ -46,15 +49,17 @@ function Field({
   };
   const right = {
     position: "absolute",
+    zIndex: 4, // por encima del overlay
     right: 8,
     top: "50%",
     transform: "translateY(-50%)",
     display: rightSlot ? "grid" : "none",
     placeItems: "center",
   };
-  // Pequeño parche visual para tapar el picker nativo (Chrome/Android, etc.)
+  // Overlay para tapar el icono nativo del date input
   const hideBox = {
     position: "absolute",
+    zIndex: 2,
     right: 8,
     top: "50%",
     transform: "translateY(-50%)",
@@ -68,7 +73,6 @@ function Field({
 
   return (
     <div style={wrap}>
-      <div style={iconBox}>{icon}</div>
       <input
         id={id}
         type={type}
@@ -79,6 +83,7 @@ function Field({
         style={input}
         {...inputProps}
       />
+      <div style={iconBox}>{icon}</div>
       <div style={right}>{rightSlot}</div>
       <div style={hideBox} />
     </div>
@@ -101,7 +106,6 @@ export default function Perfil() {
   const [err, setErr] = useState("");
   const [pwdErr, setPwdErr] = useState("");
 
-  // Mantengo este ref para construir payload sólo con columnas existentes
   const existingCols = useRef(new Set());
   const birthRef = useRef(null);
 
@@ -137,7 +141,6 @@ export default function Perfil() {
         first_name: first,
         last_name: last,
         email: (data?.email || u?.user?.email || "")?.trim(),
-        // mostramos SIEMPRE los campos; si la columna no existe, luego no la guardo
         phone: (data?.phone || "").toString(),
         dni: (data?.dni || "").toString(),
         carnet_celta_id: (data?.carnet_celta_id || "").toString(),
@@ -234,7 +237,6 @@ export default function Perfil() {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       };
 
-      // Admin
       await fetch(`${baseUrl}/functions/v1/mail-send`, {
         method: "POST",
         headers,
@@ -245,7 +247,6 @@ export default function Perfil() {
         }),
       }).catch(console.error);
 
-      // Usuario
       await fetch(`${baseUrl}/functions/v1/mail-send`, {
         method: "POST",
         headers,
@@ -315,6 +316,39 @@ export default function Perfil() {
     </svg>
   );
 
+  // Botón calendario (derecha) que abre el picker nativo
+  const CalendarButton = (
+    <button
+      type="button"
+      onClick={() => {
+        try {
+          if (birthRef.current?.showPicker) birthRef.current.showPicker();
+          else birthRef.current?.focus();
+        } catch {
+          birthRef.current?.focus();
+        }
+      }}
+      title="Abrir calendario"
+      aria-label="Abrir calendario"
+      style={{
+        width: 34,
+        height: 34,
+        borderRadius: 10,
+        border: "1px solid #e2e8f0",
+        background: "#fff",
+        boxShadow: "0 6px 18px rgba(0,0,0,.08)",
+        display: "grid",
+        placeItems: "center",
+        cursor: "pointer",
+      }}
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="3" y="4.5" width="18" height="16" rx="2" stroke="#0ea5e9" stroke-width="1.8" />
+        <path d="M7 2.5v4M17 2.5v4M3 9h18" stroke="#0ea5e9" stroke-width="1.8" />
+      </svg>
+    </button>
+  );
+
   const box = {
     maxWidth: 640,
     margin: "18px auto 28px",
@@ -340,7 +374,7 @@ export default function Perfil() {
 
   return (
     <main class="profile-page" style={box}>
-      {/* Oculta el icono nativo del date input, y además lo tapamos con overlay */}
+      {/* Ocultar icono nativo del date input */}
       <style>{`
         .profile-page input[type="date"]{
           appearance:none; -webkit-appearance:none; -moz-appearance:none;
@@ -424,8 +458,9 @@ export default function Perfil() {
           value={form.birth_date}
           onInput={onChange("birth_date")}
           ariaLabel="Data de nacemento"
-          icon={IconCake}                 // <- TARTA a la izquierda
-          hideNativeDateIcon={true}       // <- tapa el icono nativo a la derecha
+          icon={IconCake}                 // ← TARTA a la izquierda
+          rightSlot={CalendarButton}      // ← Botón calendario propio a la derecha
+          hideNativeDateIcon={true}       // ← tapar icono nativo
           inputProps={{ ref: birthRef }}
         />
 
@@ -467,87 +502,57 @@ export default function Perfil() {
         {info && <p style={{ color: "#065f46", margin: "8px 0" }}>{info}</p>}
         {(err || pwdErr) && <p style={{ color: "#b91c1c", margin: "8px 0" }}>{err || pwdErr}</p>}
 
-        {/* Botones + logo por detrás */}
-        <div style={{ position: "relative", marginTop: 10 }}>
-          <div
+        {/* Botones: SIN logo debajo */}
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 10 }}>
+          <button
+            type="submit"
+            onClick={saveAll}
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              gap: 12,
-              position: "relative",
-              zIndex: 2, // botones por encima
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: 44,
+              padding: "10px 20px",
+              borderRadius: 12,
+              border: "1px solid #7dd3fc",
+              background: "linear-gradient(135deg,#7dd3fc,#0ea5e9)",
+              color: "#fff",
+              fontWeight: 700,
+              fontFamily: "Montserrat,system-ui,sans-serif",
+              fontSize: 15,
+              boxShadow: "0 16px 30px rgba(14,165,233,.28)",
             }}
           >
-            <button
-              type="submit"
-              onClick={saveAll}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                minHeight: 44,
-                padding: "10px 20px",
-                borderRadius: 12,
-                border: "1px solid #7dd3fc",
-                background: "linear-gradient(135deg,#7dd3fc,#0ea5e9)",
-                color: "#fff",
-                fontWeight: 700,
-                fontFamily: "Montserrat,system-ui,sans-serif",
-                fontSize: 15,
-                boxShadow: "0 16px 30px rgba(14,165,233,.28)",
-              }}
-            >
-              Actualizar
-            </button>
+            Actualizar
+          </button>
 
-            <button
-              type="button"
-              onClick={requestDelete}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                minHeight: 44,
-                padding: "10px 20px",
-                borderRadius: 12,
-                border: "1px solid #fecaca",
-                background: "linear-gradient(135deg,#fca5a5,#ef4444)",
-                color: "#fff",
-                fontWeight: 700,
-                fontFamily: "Montserrat,system-ui,sans-serif",
-                fontSize: 15,
-                boxShadow: "0 16px 30px rgba(239,68,68,.28)",
-              }}
-            >
-              Solicitar borrado
-            </button>
-          </div>
-
-          {/* Logo por detrás, sin interferir */}
-          <div
+          <button
+            type="button"
+            onClick={requestDelete}
             style={{
-              textAlign: "center",
-              marginTop: -18,
-              pointerEvents: "none",
-              position: "relative",
-              zIndex: 1, // debajo de los botones
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: 44,
+              padding: "10px 20px",
+              borderRadius: 12,
+              border: "1px solid #fecaca",
+              background: "linear-gradient(135deg,#fca5a5,#ef4444)",
+              color: "#fff",
+              fontWeight: 700,
+              fontFamily: "Montserrat,system-ui,sans-serif",
+              fontSize: 15,
+              boxShadow: "0 16px 30px rgba(239,68,68,.28)",
             }}
           >
-            <img
-              src="/logoHDC.jpg"
-              alt="HDC Logo"
-              style={{
-                width: 170,
-                height: "auto",
-                filter: "drop-shadow(0 4px 12px rgba(0,0,0,.10))",
-              }}
-            />
-          </div>
+            Solicitar borrado
+          </button>
         </div>
       </form>
     </main>
   );
 }
+
 
 
 
