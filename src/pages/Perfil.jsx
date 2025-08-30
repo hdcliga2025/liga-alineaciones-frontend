@@ -3,7 +3,7 @@ import { h } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient";
 
-/** Campo con icono (izq) y slot opcional (der) */
+/** Campo con icono (izq) y opciones extra */
 function Field({
   id,
   type = "text",
@@ -13,6 +13,7 @@ function Field({
   ariaLabel,
   icon = null,
   rightSlot,
+  hideNativeDateIcon = false, // <- tapa el icono nativo del date input
   inputProps = {},
 }) {
   const wrap = { position: "relative", marginBottom: 12 };
@@ -51,6 +52,20 @@ function Field({
     display: rightSlot ? "grid" : "none",
     placeItems: "center",
   };
+  // Pequeño parche visual para tapar el picker nativo (Chrome/Android, etc.)
+  const hideBox = {
+    position: "absolute",
+    right: 8,
+    top: "50%",
+    transform: "translateY(-50%)",
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    background: "#fff",
+    pointerEvents: "none",
+    display: hideNativeDateIcon ? "block" : "none",
+  };
+
   return (
     <div style={wrap}>
       <div style={iconBox}>{icon}</div>
@@ -65,6 +80,7 @@ function Field({
         {...inputProps}
       />
       <div style={right}>{rightSlot}</div>
+      <div style={hideBox} />
     </div>
   );
 }
@@ -85,7 +101,8 @@ export default function Perfil() {
   const [err, setErr] = useState("");
   const [pwdErr, setPwdErr] = useState("");
 
-  const allowedColsRef = useRef(new Set());
+  // Mantengo este ref para construir payload sólo con columnas existentes
+  const existingCols = useRef(new Set());
   const birthRef = useRef(null);
 
   useEffect(() => {
@@ -101,7 +118,7 @@ export default function Perfil() {
         .eq("id", uid)
         .maybeSingle();
 
-      allowedColsRef.current = new Set(Object.keys(data || {}));
+      existingCols.current = new Set(Object.keys(data || {}));
 
       const first =
         (data?.first_name ||
@@ -120,15 +137,11 @@ export default function Perfil() {
         first_name: first,
         last_name: last,
         email: (data?.email || u?.user?.email || "")?.trim(),
-        phone: allowedColsRef.current.has("phone") ? (data?.phone || "") : "",
-        dni: allowedColsRef.current.has("dni") ? (data?.dni || "") : "",
-        carnet_celta_id: allowedColsRef.current.has("carnet_celta_id")
-          ? (data?.carnet_celta_id || "")
-          : "",
-        birth_date:
-          allowedColsRef.current.has("birth_date") && data?.birth_date
-            ? String(data.birth_date).slice(0, 10)
-            : "",
+        // mostramos SIEMPRE los campos; si la columna no existe, luego no la guardo
+        phone: (data?.phone || "").toString(),
+        dni: (data?.dni || "").toString(),
+        carnet_celta_id: (data?.carnet_celta_id || "").toString(),
+        birth_date: data?.birth_date ? String(data.birth_date).slice(0, 10) : "",
       });
     })();
   }, []);
@@ -145,7 +158,7 @@ export default function Perfil() {
       return "Completa nome e apelidos.";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((form.email || "").trim()))
       return "O email non é válido.";
-    if (allowedColsRef.current.has("phone") && form.phone && !/^\d{9,15}$/.test(form.phone))
+    if (form.phone && !/^\d{9,15}$/.test(form.phone))
       return "O móbil debe ter entre 9 e 15 díxitos.";
     if (newPwd && newPwd.length < 8)
       return "O novo contrasinal debe ter polo menos 8 caracteres.";
@@ -161,7 +174,7 @@ export default function Perfil() {
     const v = validate();
     if (v) return setErr(v);
 
-    const allowed = allowedColsRef.current;
+    const cols = existingCols.current;
     const uid = (await supabase.auth.getUser()).data.user.id;
 
     const payload = {
@@ -171,13 +184,13 @@ export default function Perfil() {
       email: form.email.trim(),
       updated_at: new Date().toISOString(),
     };
-    if (allowed.has("phone")) payload.phone = form.phone.trim() || null;
-    if (allowed.has("dni")) payload.dni = form.dni.trim() || null;
-    if (allowed.has("carnet_celta_id"))
+    if (cols.has("phone")) payload.phone = form.phone.trim() || null;
+    if (cols.has("dni")) payload.dni = form.dni.trim() || null;
+    if (cols.has("carnet_celta_id"))
       payload.carnet_celta_id = form.carnet_celta_id.trim() || null;
-    if (allowed.has("birth_date")) payload.birth_date = form.birth_date || null;
-    if (allowed.has("nombre")) payload.nombre = form.first_name.trim();
-    if (allowed.has("apellidos")) payload.apellidos = form.last_name.trim();
+    if (cols.has("birth_date")) payload.birth_date = form.birth_date || null;
+    if (cols.has("nombre")) payload.nombre = form.first_name.trim();
+    if (cols.has("apellidos")) payload.apellidos = form.last_name.trim();
 
     const { error: upErr } = await supabase
       .from("profiles")
@@ -221,6 +234,7 @@ export default function Perfil() {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       };
 
+      // Admin
       await fetch(`${baseUrl}/functions/v1/mail-send`, {
         method: "POST",
         headers,
@@ -231,6 +245,7 @@ export default function Perfil() {
         }),
       }).catch(console.error);
 
+      // Usuario
       await fetch(`${baseUrl}/functions/v1/mail-send`, {
         method: "POST",
         headers,
@@ -295,41 +310,9 @@ export default function Perfil() {
       <path d="M12 3v3" stroke={stroke} stroke-width="1.6" stroke-linecap="round" />
       <path d="M8 9h8a3 3 0 0 1 3 3v2H5v-2a3 3 0 0 1 3-3Z" stroke={stroke} stroke-width="1.6" />
       <path d="M5 16h14v3a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-3Z" stroke={stroke} stroke-width="1.6" />
-      <path d="M8.5 12c.6 0 1 .4 1 1s.4 1 1 1 1-.4 1-1 .4-1 1-1 1 .4 1 1 .4 1 1 1 1-.4 1-1" stroke={stroke} stroke-width="1.6" stroke-linecap="round" />
+      <path d="M8.5 12c.6 0 1 .4 1 1s.4 1 1 1 1-.4 1-1 .4-1 1-1 1 .4 1 1 .4 1 1 1 1-.4 1-1"
+        stroke={stroke} stroke-width="1.6" stroke-linecap="round" />
     </svg>
-  );
-
-  // Botón calendario (derecha) propio
-  const CalendarButton = (
-    <button
-      type="button"
-      onClick={() => {
-        try {
-          if (birthRef.current?.showPicker) birthRef.current.showPicker();
-          else birthRef.current?.focus();
-        } catch {
-          birthRef.current?.focus();
-        }
-      }}
-      title="Abrir calendario"
-      aria-label="Abrir calendario"
-      style={{
-        width: 34,
-        height: 34,
-        borderRadius: 10,
-        border: "1px solid #e2e8f0",
-        background: "#fff",
-        boxShadow: "0 6px 18px rgba(0,0,0,.08)",
-        display: "grid",
-        placeItems: "center",
-        cursor: "pointer",
-      }}
-    >
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <rect x="3" y="4.5" width="18" height="16" rx="2" stroke="#0ea5e9" stroke-width="1.8" />
-        <path d="M7 2.5v4M17 2.5v4M3 9h18" stroke="#0ea5e9" stroke-width="1.8" />
-      </svg>
-    </button>
   );
 
   const box = {
@@ -357,14 +340,14 @@ export default function Perfil() {
 
   return (
     <main class="profile-page" style={box}>
-      {/* Ocultar el icono nativo del date input en todos los navegadores */}
+      {/* Oculta el icono nativo del date input, y además lo tapamos con overlay */}
       <style>{`
         .profile-page input[type="date"]{
           appearance:none; -webkit-appearance:none; -moz-appearance:none;
           background-image:none !important;
           position:relative;
         }
-        .profile-page input[type="date"]::-webkit-calendar-picker-indicator{ display:none; opacity:0; }
+        .profile-page input[type="date"]::-webkit-calendar-picker-indicator{ display:none !important; opacity:0 !important; }
         .profile-page input[type="date"]::-webkit-clear-button{ display:none; }
         .profile-page input[type="date"]::-webkit-inner-spin-button{ display:none; }
         .profile-page input[type="date"]::-ms-clear{ display:none; }
@@ -404,55 +387,47 @@ export default function Perfil() {
           ariaLabel="Email"
           icon={IconMail}
         />
-        {allowedColsRef.current.has("phone") && (
-          <Field
-            id="phone"
-            type="tel"
-            placeholder="Móbil"
-            value={form.phone}
-            onInput={onChange("phone")}
-            ariaLabel="Móbil"
-            icon={IconPhone}
-            inputProps={{ inputMode: "numeric", pattern: "\\d{9,15}" }}
-          />
-        )}
+        <Field
+          id="phone"
+          type="tel"
+          placeholder="Móbil"
+          value={form.phone}
+          onInput={onChange("phone")}
+          ariaLabel="Móbil"
+          icon={IconPhone}
+          inputProps={{ inputMode: "numeric", pattern: "\\d{9,15}" }}
+        />
 
         <h3 style={secTitle}>Información complementaria</h3>
         <p style={subTitle}>Datos necesarios para ampliar funcionalidade</p>
 
-        {allowedColsRef.current.has("dni") && (
-          <Field
-            id="dni"
-            placeholder="DNI"
-            value={form.dni}
-            onInput={onChange("dni")}
-            ariaLabel="DNI"
-            icon={IconID}
-          />
-        )}
-        {allowedColsRef.current.has("carnet_celta_id") && (
-          <Field
-            id="carnet_celta_id"
-            placeholder="ID Carnet Celta"
-            value={form.carnet_celta_id}
-            onInput={onChange("carnet_celta_id")}
-            ariaLabel="ID Carnet Celta"
-            icon={IconCard}
-          />
-        )}
-        {allowedColsRef.current.has("birth_date") && (
-          <Field
-            id="birth_date"
-            type="date"
-            placeholder="dd/mm/aaaa"
-            value={form.birth_date}
-            onInput={onChange("birth_date")}
-            ariaLabel="Data de nacemento"
-            icon={IconCake}
-            rightSlot={CalendarButton}
-            inputProps={{ ref: birthRef }}
-          />
-        )}
+        <Field
+          id="dni"
+          placeholder="DNI"
+          value={form.dni}
+          onInput={onChange("dni")}
+          ariaLabel="DNI"
+          icon={IconID}
+        />
+        <Field
+          id="carnet_celta_id"
+          placeholder="ID Carnet Celta"
+          value={form.carnet_celta_id}
+          onInput={onChange("carnet_celta_id")}
+          ariaLabel="ID Carnet Celta"
+          icon={IconCard}
+        />
+        <Field
+          id="birth_date"
+          type="date"
+          placeholder="dd/mm/aaaa"
+          value={form.birth_date}
+          onInput={onChange("birth_date")}
+          ariaLabel="Data de nacemento"
+          icon={IconCake}                 // <- TARTA a la izquierda
+          hideNativeDateIcon={true}       // <- tapa el icono nativo a la derecha
+          inputProps={{ ref: birthRef }}
+        />
 
         <h3 style={secTitle}>Seguridade</h3>
         <p style={subTitle}>Cambio de contrasinal</p>
@@ -492,9 +467,17 @@ export default function Perfil() {
         {info && <p style={{ color: "#065f46", margin: "8px 0" }}>{info}</p>}
         {(err || pwdErr) && <p style={{ color: "#b91c1c", margin: "8px 0" }}>{err || pwdErr}</p>}
 
-        {/* Botones + logo asomando */}
+        {/* Botones + logo por detrás */}
         <div style={{ position: "relative", marginTop: 10 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 12,
+              position: "relative",
+              zIndex: 2, // botones por encima
+            }}
+          >
             <button
               type="submit"
               onClick={saveAll}
@@ -540,13 +523,31 @@ export default function Perfil() {
             </button>
           </div>
 
-          <div style={{ textAlign: "center", marginTop: -18, pointerEvents: "none" }}>
-            <img src="/logoHDC.jpg" alt="HDC Logo" style={{ width: 170, height: "auto", opacity: 0.95 }} />
+          {/* Logo por detrás, sin interferir */}
+          <div
+            style={{
+              textAlign: "center",
+              marginTop: -18,
+              pointerEvents: "none",
+              position: "relative",
+              zIndex: 1, // debajo de los botones
+            }}
+          >
+            <img
+              src="/logoHDC.jpg"
+              alt="HDC Logo"
+              style={{
+                width: 170,
+                height: "auto",
+                filter: "drop-shadow(0 4px 12px rgba(0,0,0,.10))",
+              }}
+            />
           </div>
         </div>
       </form>
     </main>
   );
 }
+
 
 
