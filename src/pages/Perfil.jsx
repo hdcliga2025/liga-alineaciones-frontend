@@ -72,10 +72,9 @@ function Field({
   );
 }
 
-/* Utilidades de formato */
+/* Utilidades formato fecha */
 function isoToDisplay(iso = "") {
   if (!iso) return "";
-  // iso esperado: yyyy-mm-dd
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
   if (!m) return "";
   return `${m[3]}/${m[2]}/${m[1]}`;
@@ -84,10 +83,9 @@ function displayToIso(s = "") {
   const v = s.replace(/\s+/g, "");
   const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(v);
   if (!m) return null;
-  const dd = parseInt(m[1], 10), mm = parseInt(m[2], 10), yy = parseInt(m[3], 10);
+  const dd = +m[1], mm = +m[2], yy = +m[3];
   if (mm < 1 || mm > 12 || dd < 1 || dd > 31 || yy < 1900) return null;
-  const iso = `${yy}-${String(mm).padStart(2,"0")}-${String(dd).padStart(2,"0")}`;
-  return iso;
+  return `${yy}-${String(mm).padStart(2,"0")}-${String(dd).padStart(2,"0")}`;
 }
 
 export default function Perfil() {
@@ -104,8 +102,8 @@ export default function Perfil() {
   const [newPwd, setNewPwd] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [info, setInfo] = useState("");
-  const [err, setErr] = useState("");
-  const [pwdErr, setPwdErr] = useState("");
+  const [err,   setErr] = useState("");
+  const [pwdErr,setPwdErr] = useState("");
 
   const existingCols = useRef(new Set());
   const hiddenDateRef = useRef(null);
@@ -114,7 +112,7 @@ export default function Perfil() {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       const uid = u?.user?.id;
-      const md = u?.user?.user_metadata || {};
+      const md  = u?.user?.user_metadata || {};
       if (!uid) return;
 
       const { data } = await supabase
@@ -126,23 +124,15 @@ export default function Perfil() {
       existingCols.current = new Set(Object.keys(data || {}));
 
       const first =
-        (data?.first_name ||
-          data?.nombre ||
-          md.first_name ||
-          (md.full_name || "").split(" ")[0] ||
-          "")?.trim();
-      const last =
-        (data?.last_name ||
-          data?.apellidos ||
-          md.last_name ||
-          (md.full_name || "").split(" ").slice(1).join(" ") ||
-          "")?.trim();
+        (data?.first_name || data?.nombre || md.first_name || (md.full_name || "").split(" ")[0] || "").trim();
+      const last  =
+        (data?.last_name || data?.apellidos || md.last_name  || (md.full_name || "").split(" ").slice(1).join(" ") || "").trim();
 
-      const iso = data?.birth_date ? String(data.birth_date).slice(0, 10) : "";
+      const iso = data?.birth_date ? String(data.birth_date).slice(0,10) : "";
       setForm({
         first_name: first,
-        last_name: last,
-        email: (data?.email || u?.user?.email || "")?.trim(),
+        last_name : last,
+        email: (data?.email || u?.user?.email || "").trim(),
         phone: (data?.phone || "").toString(),
         dni: (data?.dni || "").toString(),
         carnet_celta_id: (data?.carnet_celta_id || "").toString(),
@@ -160,24 +150,17 @@ export default function Perfil() {
     }));
 
   function validate() {
-    if (!form.first_name.trim() || !form.last_name.trim())
-      return "Completa nome e apelidos.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((form.email || "").trim()))
-      return "O email non é válido.";
-    if (form.phone && !/^\d{9,15}$/.test(form.phone))
-      return "O móbil debe ter entre 9 e 15 díxitos.";
-    if (newPwd && newPwd.length < 8)
-      return "O novo contrasinal debe ter polo menos 8 caracteres.";
+    if (!form.first_name.trim() || !form.last_name.trim()) return "Completa nome e apelidos.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((form.email || "").trim())) return "O email non é válido.";
+    if (form.phone && !/^\d{9,15}$/.test(form.phone)) return "O móbil debe ter entre 9 e 15 díxitos.";
+    if (newPwd && newPwd.length < 8) return "O novo contrasinal debe ter polo menos 8 caracteres.";
     return null;
   }
 
   async function saveAll(e) {
     e?.preventDefault?.();
-    setInfo("");
-    setErr("");
-    setPwdErr("");
+    setInfo(""); setErr(""); setPwdErr("");
 
-    // sincroniza visual -> iso por si o usuario escribiu a man
     if (birthDisplay) {
       const iso = displayToIso(birthDisplay);
       if (iso) setForm((f) => ({ ...f, birth_date: iso }));
@@ -192,21 +175,18 @@ export default function Perfil() {
     const payload = {
       id: uid,
       first_name: form.first_name.trim(),
-      last_name: form.last_name.trim(),
+      last_name : form.last_name.trim(),
       email: form.email.trim(),
       updated_at: new Date().toISOString(),
     };
-    if (cols.has("phone")) payload.phone = form.phone.trim() || null;
-    if (cols.has("dni")) payload.dni = form.dni.trim() || null;
-    if (cols.has("carnet_celta_id"))
-      payload.carnet_celta_id = form.carnet_celta_id.trim() || null;
-    if (cols.has("birth_date")) payload.birth_date = form.birth_date || null;
-    if (cols.has("nombre")) payload.nombre = form.first_name.trim();
-    if (cols.has("apellidos")) payload.apellidos = form.last_name.trim();
+    if (cols.has("phone"))           payload.phone = form.phone.trim() || null;
+    if (cols.has("dni"))             payload.dni   = form.dni.trim()   || null;
+    if (cols.has("carnet_celta_id")) payload.carnet_celta_id = form.carnet_celta_id.trim() || null;
+    if (cols.has("birth_date"))      payload.birth_date = form.birth_date || null;
+    if (cols.has("nombre"))          payload.nombre   = form.first_name.trim();
+    if (cols.has("apellidos"))       payload.apellidos= form.last_name.trim();
 
-    const { error: upErr } = await supabase
-      .from("profiles")
-      .upsert(payload, { onConflict: "id" });
+    const { error: upErr } = await supabase.from("profiles").upsert(payload, { onConflict: "id" });
     if (upErr) return setErr(upErr.message);
 
     if (newPwd) {
@@ -220,19 +200,15 @@ export default function Perfil() {
 
   async function requestDelete(e) {
     e?.preventDefault?.();
-    setInfo("");
-    setErr("");
-    setPwdErr("");
+    setInfo(""); setErr(""); setPwdErr("");
 
     const { data: u } = await supabase.auth.getUser();
-    const uid = u?.user?.id;
+    const uid  = u?.user?.id;
     const mail = u?.user?.email || "";
     const nome = `${form.first_name} ${form.last_name}`.trim() || mail;
     if (!uid) return setErr("Sesión non válida.");
 
-    const { error } = await supabase
-      .from("delete_requests")
-      .insert({ user_id: uid, reason: null });
+    const { error } = await supabase.from("delete_requests").insert({ user_id: uid, reason: null });
     if (error) return setErr(error.message);
 
     try {
@@ -240,29 +216,23 @@ export default function Perfil() {
       const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || "HDCLiga@dmail.com";
       const { data: s } = await supabase.auth.getSession();
       const token = s?.session?.access_token;
-      const headers = {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      };
+      const headers = { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+
       await fetch(`${baseUrl}/functions/v1/mail-send`, {
-        method: "POST",
-        headers,
+        method: "POST", headers,
         body: JSON.stringify({
           to: adminEmail,
           subject: "HDC Liga — Solicitude de borrado de conta",
           text: `O usuario ${nome} (${mail}) solicitou o borrado da súa conta.\nID: ${uid}\n\nAcción: validar e executar o borrado en Supabase.`,
         }),
       }).catch(console.error);
+
       await fetch(`${baseUrl}/functions/v1/mail-send`, {
-        method: "POST",
-        headers,
+        method: "POST", headers,
         body: JSON.stringify({
           to: mail,
           subject: "HDC Liga — Solicitude de borrado recibida",
-          text:
-            "Xestión da solicitude de borrado de conta en curso.\n" +
-            "Recibirás un correo de confirmación cando o administrador faga efectiva a túa petición.\n" +
-            "Grazas.",
+          text: "Xestión da solicitude de borrado de conta en curso.\nRecibirás un correo de confirmación cando o administrador faga efectiva a túa petición.\nGrazas.",
         }),
       }).catch(console.error);
     } catch (e2) {
@@ -272,7 +242,7 @@ export default function Perfil() {
     setInfo("Solicitude enviada. Revisa o teu correo.");
   }
 
-  // ===== Iconos (inclúe tarta) =====
+  /* Iconos */
   const stroke = "#ffffff";
   const IconUser = (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -337,15 +307,10 @@ export default function Perfil() {
       title="Abrir calendario"
       aria-label="Abrir calendario"
       style={{
-        width: 34,
-        height: 34,
-        borderRadius: 10,
-        border: "1px solid #e2e8f0",
-        background: "#fff",
+        width: 34, height: 34, borderRadius: 10,
+        border: "1px solid #e2e8f0", background: "#fff",
         boxShadow: "0 6px 18px rgba(0,0,0,.08)",
-        display: "grid",
-        placeItems: "center",
-        cursor: "pointer",
+        display: "grid", placeItems: "center", cursor: "pointer",
       }}
     >
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -355,96 +320,35 @@ export default function Perfil() {
     </button>
   );
 
-  const box = {
-    maxWidth: 640,
-    margin: "18px auto 28px",
-    padding: "0 16px",
-    textAlign: "center",
-  };
+  const box = { maxWidth: 640, margin: "18px auto 28px", padding: "0 16px", textAlign: "center" };
   const secTitle = {
-    margin: "18px 0 4px",
-    fontWeight: 700,
+    margin: "18px 0 4px", fontWeight: 700,
     fontFamily: "Montserrat,system-ui,sans-serif",
-    fontSize: 16,
-    color: "#0f172a",
-    textAlign: "left",
+    fontSize: 16, color: "#0f172a", textAlign: "left",
   };
   const subTitle = {
-    margin: "0 0 8px",
-    fontWeight: 400,
+    margin: "0 0 8px", fontWeight: 400,
     fontFamily: "Montserrat,system-ui,sans-serif",
-    fontSize: 13,
-    color: "#64748b",
-    textAlign: "left",
+    fontSize: 13, color: "#64748b", textAlign: "left",
   };
 
   return (
     <main class="profile-page" style={box}>
-      <form
-        onSubmit={saveAll}
-        noValidate
-        style={{ textAlign: "left", margin: "0 auto", maxWidth: 520 }}
-      >
+      <form onSubmit={saveAll} noValidate style={{ textAlign: "left", margin: "0 auto", maxWidth: 520 }}>
         <h3 style={secTitle}>Información de xestión</h3>
         <p style={subTitle}>Datos de acceso e mantemento de conta</p>
 
-        <Field
-          id="first_name"
-          placeholder="Nome"
-          value={form.first_name}
-          onInput={onChange("first_name")}
-          ariaLabel="Nome"
-          icon={IconUser}
-        />
-        <Field
-          id="last_name"
-          placeholder="Apelidos"
-          value={form.last_name}
-          onInput={onChange("last_name")}
-          ariaLabel="Apelidos"
-          icon={IconUser}
-        />
-        <Field
-          id="email"
-          type="email"
-          placeholder="Email"
-          value={form.email}
-          onInput={onChange("email")}
-          ariaLabel="Email"
-          icon={IconMail}
-        />
-        <Field
-          id="phone"
-          type="tel"
-          placeholder="Móbil"
-          value={form.phone}
-          onInput={onChange("phone")}
-          ariaLabel="Móbil"
-          icon={IconPhone}
-          inputProps={{ inputMode: "numeric", pattern: "\\d{9,15}" }}
-        />
+        <Field id="first_name" placeholder="Nome" value={form.first_name} onInput={onChange("first_name")} ariaLabel="Nome" icon={IconUser} />
+        <Field id="last_name"  placeholder="Apelidos" value={form.last_name}  onInput={onChange("last_name")}  ariaLabel="Apelidos" icon={IconUser} />
+        <Field id="email" type="email" placeholder="Email" value={form.email} onInput={onChange("email")} ariaLabel="Email" icon={IconMail} />
+        <Field id="phone" type="tel" placeholder="Móbil" value={form.phone} onInput={onChange("phone")} ariaLabel="Móbil" icon={IconPhone} inputProps={{ inputMode: "numeric", pattern: "\\d{9,15}" }} />
 
         <h3 style={secTitle}>Información complementaria</h3>
         <p style={subTitle}>Datos necesarios para ampliar funcionalidade</p>
+        <Field id="dni" placeholder="DNI" value={form.dni} onInput={onChange("dni")} ariaLabel="DNI" icon={IconID} />
+        <Field id="carnet_celta_id" placeholder="ID Carnet Celta" value={form.carnet_celta_id} onInput={onChange("carnet_celta_id")} ariaLabel="ID Carnet Celta" icon={IconCard} />
 
-        <Field
-          id="dni"
-          placeholder="DNI"
-          value={form.dni}
-          onInput={onChange("dni")}
-          ariaLabel="DNI"
-          icon={IconID}
-        />
-        <Field
-          id="carnet_celta_id"
-          placeholder="ID Carnet Celta"
-          value={form.carnet_celta_id}
-          onInput={onChange("carnet_celta_id")}
-          ariaLabel="ID Carnet Celta"
-          icon={IconCard}
-        />
-
-        {/* Fecha visible como texto dd/mm/aaaa + date picker oculto */}
+        {/* Fecha visible (dd/mm/aaaa) + date input oculto */}
         <Field
           id="birth_date_display"
           type="text"
@@ -461,7 +365,6 @@ export default function Perfil() {
           rightSlot={CalendarButton}
           inputProps={{ inputMode: "numeric" }}
         />
-        {/* Date input oculto: captura selección y la sincroniza */}
         <input
           ref={hiddenDateRef}
           type="date"
@@ -471,14 +374,7 @@ export default function Perfil() {
             setForm((f) => ({ ...f, birth_date: iso }));
             setBirthDisplay(isoToDisplay(iso));
           }}
-          style={{
-            position: "absolute",
-            left: "-9999px",
-            width: 0,
-            height: 0,
-            opacity: 0,
-            pointerEvents: "none",
-          }}
+          style={{ position: "absolute", left: "-9999px", width: 0, height: 0, opacity: 0, pointerEvents: "none" }}
           aria-hidden="true"
           tabIndex={-1}
         />
@@ -518,58 +414,52 @@ export default function Perfil() {
           }
         />
 
+        {/* Mensaxes */}
         {info && <p style={{ color: "#065f46", margin: "8px 0" }}>{info}</p>}
         {(err || pwdErr) && <p style={{ color: "#b91c1c", margin: "8px 0" }}>{err || pwdErr}</p>}
 
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 10 }}>
+        {/* Botón azul de actualización (único nesta fila) */}
+        <div style={{ display: "flex", justifyContent: "flex-start", gap: 12, marginTop: 10 }}>
           <button
             type="submit"
             onClick={saveAll}
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minHeight: 44,
-              padding: "10px 20px",
-              borderRadius: 12,
-              border: "1px solid #7dd3fc",
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              minHeight: 44, padding: "10px 20px",
+              borderRadius: 12, border: "1px solid #7dd3fc",
               background: "linear-gradient(135deg,#7dd3fc,#0ea5e9)",
-              color: "#fff",
-              fontWeight: 700,
-              fontFamily: "Montserrat,system-ui,sans-serif",
-              fontSize: 15,
+              color: "#fff", fontWeight: 700, fontFamily: "Montserrat,system-ui,sans-serif", fontSize: 15,
               boxShadow: "0 16px 30px rgba(14,165,233,.28)",
             }}
           >
             Actualizar
           </button>
+        </div>
 
+        {/* NOVA sección: Cancelación de conta */}
+        <h3 style={secTitle}>Cancelación de conta</h3>
+        <p style={subTitle}>Solicitude de baixa e borrado de todos os meus datos de conta en HDC.</p>
+        <div style={{ display: "flex", justifyContent: "flex-start", gap: 12, marginTop: 2 }}>
           <button
             type="button"
             onClick={requestDelete}
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minHeight: 44,
-              padding: "10px 20px",
-              borderRadius: 12,
-              border: "1px solid #fecaca",
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              minHeight: 44, padding: "10px 20px",
+              borderRadius: 12, border: "1px solid #fecaca",
               background: "linear-gradient(135deg,#fca5a5,#ef4444)",
-              color: "#fff",
-              fontWeight: 700,
-              fontFamily: "Montserrat,system-ui,sans-serif",
-              fontSize: 15,
+              color: "#fff", fontWeight: 700, fontFamily: "Montserrat,system-ui,sans-serif", fontSize: 15,
               boxShadow: "0 16px 30px rgba(239,68,68,.28)",
             }}
           >
-            Solicitar borrado
+            Eliminar
           </button>
         </div>
       </form>
     </main>
   );
 }
+
 
 
 

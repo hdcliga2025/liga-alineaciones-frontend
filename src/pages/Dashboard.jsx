@@ -11,7 +11,7 @@ import {
   Clipboard, Pitch, Shirt, Book, Target, Bars
 } from "../components/icons.jsx";
 
-/* Se o perfil non ten first_name, intenta obter un nome do email */
+/* Fallback: nome dende email */
 function nameFromEmail(email = "") {
   const raw = (email.split("@")[0] || "").replace(/[._-]+/g, " ").trim();
   if (!raw) return "";
@@ -27,50 +27,62 @@ export default function Dashboard() {
   useEffect(() => {
     let alive = true;
 
-    const resolveAndSetName = async () => {
-      const { data: s } = await supabase.auth.getSession();
-      const sess = s?.session;
-      const uid = sess?.user?.id || null;
-      const email = sess?.user?.email || "";
-      const md = sess?.user?.user_metadata || {};
+    const computeAndSetName = async () => {
+      try {
+        const [{ data: s }, { data: u }] = await Promise.all([
+          supabase.auth.getSession(),
+          supabase.auth.getUser(),
+        ]);
 
-      // Fallback inmediato con metadata/email (mejora UX en móvil)
-      const metaFirst =
-        (md.first_name || (md.full_name || "").split(" ")[0] || "").trim();
-      if (metaFirst && alive) setNome(metaFirst);
+        const session = s?.session || null;
+        const user    = u?.user || null;
+        const email   = session?.user?.email || user?.email || "";
 
-      if (!uid) {
-        if (alive) setNome(nameFromEmail(email) || "amig@");
-        return;
+        // Se hai sesión, tenta coller do perfil
+        const uid = session?.user?.id || user?.id || null;
+        if (uid) {
+          const { data: prof } = await supabase
+            .from("profiles")
+            .select("first_name, nombre, full_name, email")
+            .eq("id", uid)
+            .maybeSingle();
+
+          const first =
+            (prof?.first_name || "").trim() ||
+            (prof?.nombre || "").trim() ||
+            (prof?.full_name || "").trim().split(" ")[0] ||
+            (user?.user_metadata?.first_name || "").trim() ||
+            nameFromEmail(prof?.email || email) ||
+            "";
+
+          if (alive) setNome(first || "amig@");
+          return;
+        }
+
+        // Sen uid aínda: tenta dende metadata/email
+        const mdFirst = (user?.user_metadata?.first_name || "").trim();
+        if (alive) setNome(mdFirst || nameFromEmail(email) || "amig@");
+      } catch {
+        if (alive) setNome("amig@");
       }
-
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("first_name, nombre, full_name, email")
-        .eq("id", uid)
-        .maybeSingle();
-
-      const first =
-        (prof?.first_name || "").trim() ||
-        (prof?.nombre || "").trim() ||
-        (prof?.full_name || "").trim().split(" ")[0] ||
-        metaFirst ||
-        nameFromEmail(prof?.email || email) ||
-        "";
-
-      if (alive) setNome(first || "amig@");
     };
 
-    resolveAndSetName();
+    // 1) intento inmediato
+    computeAndSetName();
 
-    // Reescuchar eventos de auth (móvil a veces llega después)
-    const { data: sub } = supabase.auth.onAuthStateChange(async () => {
+    // 2) suscrición: cando cambie a auth (móbil tardío)
+    const { data: sub } = supabase.auth.onAuthStateChange((_evt, session) => {
       if (!alive) return;
-      await resolveAndSetName();
+      if (session) computeAndSetName();
     });
+
+    // 3) dous reintentos por se tarda en hidratar no móbil
+    const t1 = setTimeout(() => alive && computeAndSetName(), 800);
+    const t2 = setTimeout(() => alive && computeAndSetName(), 2500);
 
     return () => {
       alive = false;
+      clearTimeout(t1); clearTimeout(t2);
       sub?.subscription?.unsubscribe?.();
     };
   }, []);
@@ -99,12 +111,11 @@ export default function Dashboard() {
           <a
             href="#partidos"
             class="main-card"
-            onClick={(e) => { e.preventDefault(); toggle("partidos"); }}
+            onClick={(e) => { e.preventDefault(); setOpen(open === "partidos" ? "" : "partidos"); }}
           >
             <div class="dash-icon" style="border:1px solid rgba(34,197,94,.55);">
               <Calendar color="#22c55e" size={40} />
             </div>
-            {/* Flecha (chevron) grande e que xira ao abrir */}
             <span class={`chev ${open === "partidos" ? "open" : ""}`} style="color:#22c55e">▾</span>
             <div class="dash-text">
               <h3 class="dash-card-header">Calendario</h3>
@@ -112,7 +123,6 @@ export default function Dashboard() {
             </div>
           </a>
 
-          {/* Subgrid Calendario */}
           <div id="sub-partidos" class={`subgrid ${open === "partidos" ? "open" : ""}`}>
             <a href="/partidos?view=proximo" class="subcard">
               <div class="sub-ico" style="border:1px solid rgba(34,197,94,.55);">
@@ -151,7 +161,7 @@ export default function Dashboard() {
           <a
             href="#alineacions"
             class="main-card"
-            onClick={(e) => { e.preventDefault(); toggle("alineacions"); }}
+            onClick={(e) => { e.preventDefault(); setOpen(open === "alineacions" ? "" : "alineacions"); }}
           >
             <div class="dash-icon" style="border:1px solid rgba(245,158,11,.55);">
               <PlayerShot color="#f59e0b" size={46} />
@@ -211,7 +221,7 @@ export default function Dashboard() {
           <a
             href="#clasificacions"
             class="main-card"
-            onClick={(e) => { e.preventDefault(); toggle("clasificacions"); }}
+            onClick={(e) => { e.preventDefault(); setOpen(open === "clasificacions" ? "" : "clasificacions"); }}
           >
             <div class="dash-icon" style="border:1px solid rgba(167,139,250,.55);">
               <Trophy color="#a78bfa" size={40} />
