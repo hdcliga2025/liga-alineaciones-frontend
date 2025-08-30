@@ -85,7 +85,7 @@ export default function Perfil() {
   const [pwdErr, setPwdErr] = useState("");
 
   const allowedColsRef = useRef(new Set());
-  const birthRef = useRef(null); // para abrir el datepicker propio
+  const birthRef = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -100,10 +100,8 @@ export default function Perfil() {
         .eq("id", uid)
         .maybeSingle();
 
-      // columnas existentes (para no romper si faltan)
       allowedColsRef.current = new Set(Object.keys(data || {}));
 
-      // Prefills: primero BBDD, luego metadata de Auth
       const first =
         (data?.first_name || data?.nombre || md.first_name || (md.full_name || "").split(" ")[0] || "").trim();
       const last =
@@ -193,7 +191,6 @@ export default function Perfil() {
     const { error } = await supabase.from("delete_requests").insert({ user_id: uid, reason: null });
     if (error) return setErr(error.message);
 
-    // Intento de envío de emails (no bloquea si no está la función)
     try {
       const baseUrl = import.meta.env.VITE_SUPABASE_URL;
       const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || "HDCLiga@dmail.com";
@@ -205,7 +202,6 @@ export default function Perfil() {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       };
 
-      // Admin
       await fetch(`${baseUrl}/functions/v1/mail-send`, {
         method: "POST",
         headers,
@@ -216,7 +212,6 @@ export default function Perfil() {
         }),
       }).catch(console.error);
 
-      // Usuario (acuse)
       await fetch(`${baseUrl}/functions/v1/mail-send`, {
         method: "POST",
         headers,
@@ -236,7 +231,7 @@ export default function Perfil() {
     setInfo("Solicitude enviada. Revisa o teu correo.");
   }
 
-  // ===== Iconos (homoxéneos) =====
+  // ===== Iconos =====
   const stroke = "#ffffff";
   const IconUser = (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -285,7 +280,7 @@ export default function Perfil() {
     </svg>
   );
 
-  // Botón calendario (derecha), propio y pegado al valor
+  // Botón calendario (derecha) propio
   const CalendarButton = (
     <button
       type="button"
@@ -318,32 +313,29 @@ export default function Perfil() {
     </button>
   );
 
-  // —— Estilos de secciones ——
   const box = { maxWidth: 640, margin: "18px auto 28px", padding: "0 16px", textAlign: "center" };
-  const secTitle = {
-    margin: "18px 0 4px",
-    fontWeight: 700,
-    fontFamily: "Montserrat,system-ui,sans-serif",
-    fontSize: 16,
-    color: "#0f172a",
-    textAlign: "left",
-  };
-  const subTitle = {
-    margin: "0 0 8px",
-    fontWeight: 400,
-    fontFamily: "Montserrat,system-ui,sans-serif",
-    fontSize: 13,
-    color: "#64748b",
-    textAlign: "left",
-  };
+  const secTitle = { margin: "18px 0 4px", fontWeight: 700, fontFamily: "Montserrat,system-ui,sans-serif", fontSize: 16, color: "#0f172a", textAlign: "left" };
+  const subTitle = { margin: "0 0 8px", fontWeight: 400, fontFamily: "Montserrat,system-ui,sans-serif", fontSize: 13, color: "#64748b", textAlign: "left" };
 
   return (
     <main class="profile-page" style={box}>
-      {/* Ocultar icono nativo del date input */}
+      {/* Ocultar por completo el icono nativo del date input (Chrome/Edge/Safari/Firefox) */}
       <style>{`
-        .profile-page input[type="date"]::-webkit-calendar-picker-indicator{ display:none; }
+        .profile-page input[type="date"] {
+          appearance: none;
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          background-image: none !important;
+          position: relative;
+        }
+        .profile-page input[type="date"]::-webkit-calendar-picker-indicator{
+          display: none;
+          opacity: 0;
+          -webkit-appearance: none;
+        }
+        .profile-page input[type="date"]::-webkit-clear-button{ display:none; }
         .profile-page input[type="date"]::-webkit-inner-spin-button{ display:none; }
-        .profile-page input[type="date"]{ appearance:textfield; -moz-appearance:textfield; }
+        .profile-page input[type="date"]::-ms-clear{ display:none; }
       `}</style>
 
       <form onSubmit={saveAll} noValidate style={{ textAlign: "left", margin: "0 auto", maxWidth: 520 }}>
