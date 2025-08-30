@@ -332,6 +332,20 @@ export default function Perfil() {
     fontSize: 13, color: "#64748b", textAlign: "left",
   };
 
+  // Estilos de botones (ancho completo + sombra máis forte)
+  const fullBtnBase = {
+    display: "inline-flex",
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 46,
+    padding: "12px 20px",
+    borderRadius: 14,
+    fontWeight: 700,
+    fontFamily: "Montserrat,system-ui,sans-serif",
+    fontSize: 15,
+  };
+
   return (
     <main class="profile-page" style={box}>
       <form onSubmit={saveAll} noValidate style={{ textAlign: "left", margin: "0 auto", maxWidth: 520 }}>
@@ -418,47 +432,48 @@ export default function Perfil() {
         {info && <p style={{ color: "#065f46", margin: "8px 0" }}>{info}</p>}
         {(err || pwdErr) && <p style={{ color: "#b91c1c", margin: "8px 0" }}>{err || pwdErr}</p>}
 
-        {/* Botón azul de actualización (único nesta fila) */}
-        <div style={{ display: "flex", justifyContent: "flex-start", gap: 12, marginTop: 10 }}>
+        {/* Botón ACTUALIZAR — ancho completo */}
+        <div style={{ marginTop: 12 }}>
           <button
             type="submit"
             onClick={saveAll}
             style={{
-              display: "inline-flex", alignItems: "center", justifyContent: "center",
-              minHeight: 44, padding: "10px 20px",
-              borderRadius: 12, border: "1px solid #7dd3fc",
+              ...fullBtnBase,
+              border: "1px solid #7dd3fc",
               background: "linear-gradient(135deg,#7dd3fc,#0ea5e9)",
-              color: "#fff", fontWeight: 700, fontFamily: "Montserrat,system-ui,sans-serif", fontSize: 15,
-              boxShadow: "0 16px 30px rgba(14,165,233,.28)",
+              color: "#fff",
+              boxShadow: "0 22px 48px rgba(14,165,233,.40)",
             }}
           >
             Actualizar
           </button>
         </div>
 
-        {/* NOVA sección: Cancelación de conta */}
+        {/* Cancelación de conta */}
         <h3 style={secTitle}>Cancelación de conta</h3>
         <p style={subTitle}>Solicitude de baixa e borrado de todos os meus datos de conta en HDC.</p>
-        <div style={{ display: "flex", justifyContent: "flex-start", gap: 12, marginTop: 2 }}>
+
+        {/* Botón ELIMINAR — ancho completo */}
+        <div style={{ marginTop: 6 }}>
           <button
             type="button"
             onClick={requestDelete}
             style={{
-              display: "inline-flex", alignItems: "center", justifyContent: "center",
-              minHeight: 44, padding: "10px 20px",
-              borderRadius: 12, border: "1px solid #fecaca",
+              ...fullBtnBase,
+              border: "1px solid #fecaca",
               background: "linear-gradient(135deg,#fca5a5,#ef4444)",
-              color: "#fff", fontWeight: 700, fontFamily: "Montserrat,system-ui,sans-serif", fontSize: 15,
-              boxShadow: "0 16px 30px rgba(239,68,68,.28)",
+              color: "#fff",
+              boxShadow: "0 22px 48px rgba(239,68,68,.40)",
             }}
           >
-            Eliminar
+            Enviar comunicación de solicitude de eliminación
           </button>
         </div>
       </form>
     </main>
   );
 }
+
 
 
 
