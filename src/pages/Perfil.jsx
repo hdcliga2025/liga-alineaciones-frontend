@@ -85,7 +85,7 @@ export default function Perfil() {
   const [pwdErr, setPwdErr] = useState("");
 
   const allowedColsRef = useRef(new Set());
-  const birthRef = useRef(null);
+  const birthRef = useRef(null); // para abrir el datepicker propio
 
   useEffect(() => {
     (async () => {
@@ -231,7 +231,7 @@ export default function Perfil() {
     setInfo("Solicitude enviada. Revisa o teu correo.");
   }
 
-  // ===== Iconos =====
+  // ===== Iconos (incluida a TARTA) =====
   const stroke = "#ffffff";
   const IconUser = (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -319,7 +319,7 @@ export default function Perfil() {
 
   return (
     <main class="profile-page" style={box}>
-      {/* Ocultar por completo el icono nativo del date input (Chrome/Edge/Safari/Firefox) */}
+      {/* Ocultar icono nativo del date input en todos los navegadores */}
       <style>{`
         .profile-page input[type="date"] {
           appearance: none;
@@ -328,14 +328,11 @@ export default function Perfil() {
           background-image: none !important;
           position: relative;
         }
-        .profile-page input[type="date"]::-webkit-calendar-picker-indicator{
-          display: none;
-          opacity: 0;
-          -webkit-appearance: none;
-        }
+        .profile-page input[type="date"]::-webkit-calendar-picker-indicator{ display:none; opacity:0; }
         .profile-page input[type="date"]::-webkit-clear-button{ display:none; }
         .profile-page input[type="date"]::-webkit-inner-spin-button{ display:none; }
         .profile-page input[type="date"]::-ms-clear{ display:none; }
+        .profile-page input[type="date"]::-moz-calendar-picker-indicator{ display:none; } /* Firefox */
       `}</style>
 
       <form onSubmit={saveAll} noValidate style={{ textAlign: "left", margin: "0 auto", maxWidth: 520 }}>
@@ -382,8 +379,8 @@ export default function Perfil() {
             value={form.birth_date}
             onInput={onChange("birth_date")}
             ariaLabel="Data de nacemento"
-            icon={IconCake}
-            rightSlot={CalendarButton}
+            icon={IconCake}              {/* ← tarta a la IZQUIERDA */}
+            rightSlot={CalendarButton}   {/* ← botón calendario a la DERECHA */}
             inputProps={{ ref: birthRef }}
           />
         )}
