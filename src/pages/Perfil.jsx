@@ -90,6 +90,7 @@ export default function Perfil() {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       const uid = u?.user?.id;
+      const md  = u?.user?.user_metadata || {};
       if (!uid) return;
 
       const { data, error } = await supabase
@@ -98,15 +99,21 @@ export default function Perfil() {
         .eq("id", uid)
         .maybeSingle();
 
-      if (error) { console.error(error); return; }
+      if (error) { console.error(error); }
 
       const allowed = new Set(Object.keys(data || {}));
       allowedColsRef.current = allowed;
 
+      // Fallbacks: se non existen columnas en táboa, colle de metadata
+      const first =
+        (data?.first_name || data?.nombre || md.first_name || (md.full_name||"").split(" ")[0] || "").trim();
+      const last  =
+        (data?.last_name  || data?.apellidos || md.last_name  || (md.full_name||"").split(" ").slice(1).join(" ") || "").trim();
+
       setForm({
-        first_name: (data?.first_name || data?.nombre || "")?.trim(),
-        last_name: (data?.last_name || data?.apellidos || "")?.trim(),
-        email: (data?.email || "")?.trim(),
+        first_name: first,
+        last_name:  last,
+        email: (data?.email || u?.user?.email || "")?.trim(),
         phone: allowed.has("phone") ? (data?.phone || "") : "",
         dni: allowed.has("dni") ? (data?.dni || "") : "",
         carnet_celta_id: allowed.has("carnet_celta_id") ? (data?.carnet_celta_id || "") : "",
@@ -116,7 +123,11 @@ export default function Perfil() {
   }, []);
 
   const onlyDigits = (v) => v.replace(/\D/g, "");
-  const onChange = (k) => (e) => setForm((f) => ({ ...f, [k]: k === "phone" ? onlyDigits(e.currentTarget.value) : e.currentTarget.value }));
+  const onChange = (k) => (e) =>
+    setForm((f) => ({
+      ...f,
+      [k]: k === "phone" ? onlyDigits(e.currentTarget.value) : e.currentTarget.value,
+    }));
 
   function validate() {
     if (!form.first_name.trim() || !form.last_name.trim()) return "Completa nome e apelidos.";
@@ -263,13 +274,31 @@ export default function Perfil() {
       <path d="M8 10V7a4 4 0 1 1 8 0v3" stroke={stroke} stroke-width="1.6" />
     </svg>
   );
+  // Icono TARTA (para Data de nacemento)
+  const IconCake = (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 3v3" stroke={stroke} stroke-width="1.6" stroke-linecap="round" />
+      <path d="M8 9h8a3 3 0 0 1 3 3v2H5v-2a3 3 0 0 1 3-3Z" stroke={stroke} stroke-width="1.6" />
+      <path d="M5 16h14v3a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-3Z" stroke={stroke} stroke-width="1.6" />
+      <path d="M8.5 12c.6 0 1 .4 1 1s.4 1 1 1 1-.4 1-1 .4-1 1-1 1 .4 1 1 .4 1 1 1 1-.4 1-1" stroke={stroke} stroke-width="1.6" stroke-linecap="round" />
+    </svg>
+  );
 
-  // Hovers locais para os botóns
+  // Hovers locais para botóns
   const [hoverA, setHoverA] = useState(false);
   const [hoverB, setHoverB] = useState(false);
 
   return (
-    <main style={box}>
+    <main class="profile-page" style={box}>
+      {/* CSS para ocultar o icono nativo do date-picker */}
+      <style>
+        {`
+        .profile-page input[type="date"]::-webkit-calendar-picker-indicator{ display:none; }
+        .profile-page input[type="date"]::-webkit-inner-spin-button{ display:none; }
+        .profile-page input[type="date"]{ appearance: textfield; -moz-appearance: textfield; }
+        `}
+      </style>
+
       <form onSubmit={saveAll} noValidate style={{ textAlign: "left", margin: "0 auto", maxWidth: 520 }}>
         {/* === Información de xestión === */}
         <h3 style={secTitle}>Información de xestión</h3>
@@ -293,7 +322,16 @@ export default function Perfil() {
           <Field id="carnet_celta_id" placeholder="ID Carnet Celta" value={form.carnet_celta_id} onInput={onChange("carnet_celta_id")} ariaLabel="ID Carnet Celta" icon={IconCard} />
         )}
         {allowedColsRef.current.has("birth_date") && (
-          <Field id="birth_date" type="date" placeholder="Data de nacemento" value={form.birth_date} onInput={onChange("birth_date")} ariaLabel="Data de nacemento" icon={null} />
+          <Field
+            id="birth_date"
+            type="date"
+            placeholder="dd/mm/aaaa"
+            value={form.birth_date}
+            onInput={onChange("birth_date")}
+            ariaLabel="Data de nacemento"
+            icon={IconCake}           // icono tarta dentro
+            inputProps={{}}
+          />
         )}
 
         {/* === Seguridade === */}
@@ -341,18 +379,28 @@ export default function Perfil() {
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 10 }}>
           <button
             type="submit"
-            style={{ ...btnCeleste, ...(hoverA ? hoverUp : null), marginLeft: 0 }}
-            onMouseEnter={() => setHoverA(true)}
-            onMouseLeave={() => setHoverA(false)}
+            style={{ 
+              display:"inline-flex", alignItems:"center", justifyContent:"center",
+              minHeight:44, padding:"10px 20px",
+              borderRadius:12, border:"1px solid #7dd3fc",
+              background:"linear-gradient(135deg,#7dd3fc,#0ea5e9)", color:"#fff",
+              fontWeight:700, fontFamily:"Montserrat,system-ui,sans-serif", fontSize:15,
+              boxShadow:"0 16px 30px rgba(14,165,233,.28)" 
+            }}
             onClick={saveAll}
           >
             Actualizar
           </button>
           <button
             type="button"
-            style={{ ...btnRojo, ...(hoverB ? hoverUp : null), marginRight: 0 }}
-            onMouseEnter={() => setHoverB(true)}
-            onMouseLeave={() => setHoverB(false)}
+            style={{ 
+              display:"inline-flex", alignItems:"center", justifyContent:"center",
+              minHeight:44, padding:"10px 20px",
+              borderRadius:12, border:"1px solid #fecaca",
+              background:"linear-gradient(135deg,#fca5a5,#ef4444)", color:"#fff",
+              fontWeight:700, fontFamily:"Montserrat,system-ui,sans-serif", fontSize:15,
+              boxShadow:"0 16px 30px rgba(239,68,68,.28)" 
+            }}
             onClick={requestDelete}
           >
             Solicitar borrado
