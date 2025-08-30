@@ -8,25 +8,29 @@
   --celeste:#38bdf8;
 }
 
-.dash-wrap{max-width:1080px;margin:0 auto;padding:16px 12px 18px;}
-@media(min-width:560px){.dash-wrap{padding:24px 16px 22px}}
-@media(min-width:960px){.dash-wrap{padding:28px 16px 26px}}
+.dash-wrap{
+  max-width:1080px;
+  margin:0 auto;
+  padding:16px 12px 18px;
+}
+@media(min-width:560px){
+  .dash-wrap{ padding:24px 16px 22px; }
+}
+@media(min-width:960px){
+  .dash-wrap{ padding:28px 16px 26px; }
+}
 
 /* Hero */
 .dash-hero.two-cols{
-  width:min(92vw,380px);margin:6px auto 22px;
+  width:min(92vw,380px);
+  margin:6px auto 22px;
   display:grid;grid-template-columns:1fr 1fr;align-items:center;justify-items:center;gap:2px;
 }
 @media(min-width:560px){
   .dash-hero.two-cols{width:min(92vw,760px);gap:4px;margin:10px auto 28px}
 }
 @media(min-width:960px){
-  /* PC: logo máis arriba e texto máis preto do logo */
-  .dash-hero.two-cols{
-    grid-template-columns:1fr;
-    gap:12px;                 /* antes 22px */
-    margin:4px auto 36px;     /* antes 12px auto 40px */
-  }
+  .dash-hero.two-cols{grid-template-columns:1fr;gap:22px;margin:12px auto 40px}
 }
 
 .dash-hero-img.fill-col{
@@ -78,37 +82,36 @@
 .dash-card-header{font:700 18px/1.15 'Montserrat',system-ui,sans-serif;margin:0}
 .dash-card-desc{font:400 14px/1.25 'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}
 
-/* Chevron — máis grande; xira cara arriba ao abrir */
-.chev{font-weight:800;line-height:1;transition:transform .15s ease,color .15s ease}
-.chev-left{font-size:20px;margin:0 10px 0 6px}
+/* Chevron — AHORA MÁS GRANDE */
+.chev{margin-left:auto;font-size:26px;line-height:1;font-weight:800;color:#0f172a;transition:transform .15s ease,color .15s ease}
 .chev.open{transform:rotate(180deg)}
-@media(min-width:960px){.chev-left{font-size:22px}}
+@media(min-width:960px){.chev{font-size:32px}}
+.main-block.open--partidos .chev{ color: var(--green-500); }
+.main-block.open--alineacions .chev{ color: var(--amber-500); }
+.main-block.open--clasificacions .chev{ color: var(--violet-500); }
 
 /* Subgrid e subcards */
-.subgrid{
-  overflow:hidden;max-height:0;opacity:.0;transform:translateY(-6px);
-  transition:max-height .25s ease,opacity .2s ease,transform .25s ease
-}
-.subgrid.open{
-  max-height:600px;opacity:1;transform:translateY(0);
-  margin-top:24px; /* base (móbil/tablet) */
-}
-@media(min-width:960px){
-  .subgrid.open{ margin-top:30px; } /* PC: máis espazo entre card e subgrid */
-}
+.subgrid{overflow:hidden;max-height:0;opacity:.0;transform:translateY(-6px);transition:max-height .25s ease,opacity .2s ease,transform .25s ease}
+.subgrid.open{max-height:600px;opacity:1;transform:translateY(0);margin-top:10px}
 
-/* Sen fondos ao abrir; só borde e título coas cores da card raíz */
-#sub-partidos.open .subcard{ background:#fff; border-color: var(--green-300); }
-#sub-alineacions.open .subcard{ background:#fff; border-color:#fcd34d; }
-#sub-clasificacions.open .subcard{ background:#fff; border-color: var(--violet-400); }
-
-#sub-partidos.open .subcard:hover{ border-color: var(--green-500); }
-#sub-alineacions.open .subcard:hover{ border-color: var(--amber-500); }
-#sub-clasificacions.open .subcard:hover{ border-color: var(--violet-500); }
-
-#sub-partidos.open .sub-title{ color: var(--green-500); }
-#sub-alineacions.open .sub-title{ color: var(--amber-500); }
-#sub-clasificacions.open .sub-title{ color: var(--violet-500); }
+#sub-partidos.open .subcard{
+  background:#fff;border-color: var(--green-300);
+}
+#sub-partidos.open .subcard:hover{
+  border-color: var(--green-500);
+}
+#sub-alineacions.open .subcard{
+  background:#fff;border-color:#fcd34d;
+}
+#sub-alineacions.open .subcard:hover{
+  border-color: var(--amber-500);
+}
+#sub-clasificacions.open .subcard{
+  background:#fff;border-color: var(--violet-400);
+}
+#sub-clasificacions.open .subcard:hover{
+  border-color: var(--violet-500);
+}
 
 .subcard{
   display:flex;align-items:center;gap:10px;
@@ -121,17 +124,11 @@
 @media(max-width:559px){.subcard{min-height:84px}}
 .subcard:hover{ transform:translateY(-1px); }
 
-/* Marco e icono das subcarpetas — branco dentro, borde a cor da card raíz */
 .sub-ico{
   flex:0 0 56px;width:56px;height:56px;border-radius:14px;display:grid;place-items:center;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 8px rgba(0,0,0,.10);
-  background:#fff;
+  background:#fff; /* sen fondo de cor */
 }
-#sub-partidos .sub-ico{ border:1px solid var(--green-500); }
-#sub-alineacions .sub-ico{ border:1px solid var(--amber-500); }
-#sub-clasificacions .sub-ico{ border:1px solid var(--violet-500); }
-
-/* Títulos e textos subcards */
 .sub-texts{display:grid;gap:2px}
 .sub-title{font:700 16px/1.15 'Montserrat',system-ui,sans-serif;margin:0}
 .sub-desc{font:400 13px/1.25 'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}

@@ -8,8 +8,9 @@ export default function NavBar({ currentPath = "" }) {
   const isPublic = ["/", "/login", "/register"].includes(currentPath || "/");
   if (isPublic) return null;
 
-  // ===== Contador (fecha fija provisional) =====
-  const TARGET_UTC_MS = Date.UTC(2025, 7, 31, 13, 0, 0); // 31/08/2025 15:00 CEST (peche)
+  // ===== Contador (fecha fixa provisional) =====
+  // Peche aliñacións: 31/08/2025 15:00 CEST = 13:00 UTC
+  const TARGET_UTC_MS = Date.UTC(2025, 7, 31, 13, 0, 0);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -29,9 +30,8 @@ export default function NavBar({ currentPath = "" }) {
     return { remainStr: `${pad(days)}D-${pad(h)}H-${pad(m)}M-${pad(s)}S` };
   }, [now]);
 
-  // Parpadeo cada 15s: celeste ↔ negro
-  const blinkPhase = Math.floor(now / 15000) % 2;
-  const colorNow = blinkPhase === 0 ? "#0ea5e9" : "#0f172a";
+  // Cor sempre celeste; sen parpadeo
+  const colorNow = "#0ea5e9";
 
   // ===== Estilos =====
   const [isNarrow, setIsNarrow] = useState(
@@ -43,9 +43,9 @@ export default function NavBar({ currentPath = "" }) {
     return () => window.removeEventListener("resize", onR);
   }, []);
 
-  const fw = isNarrow ? 400 : 500; // un poco menos bold en desktop
-  const fz = isNarrow ? 17 : 20;
-  const sx = isNarrow ? 0.84 : 1.28; // móvil más estrecho
+  const fw = 400;                // PC: sen bold; móbil: tamén lixeiro
+  const fz = isNarrow ? 17 : 20; // tamaños actuais
+  const sx = isNarrow ? 0.84 : 1.28; // móbil máis estreito
 
   const styles = {
     header: {
@@ -74,10 +74,8 @@ export default function NavBar({ currentPath = "" }) {
       width: isNarrow ? 36 : 38, height: isNarrow ? 36 : 38,
       display: "grid", placeItems: "center",
       borderRadius: 12, background: "#fff", border: "1px solid #eef2ff",
-      boxShadow: "0 4px 14px rgba(0,0,0,.06)",
-      textDecoration: "none", outline: "none",
-      transition: "transform .15s ease, box-shadow .15s ease",
-      cursor: "pointer",
+      boxShadow: "0 4px 14px rgba(0,0,0,.06)", textDecoration: "none", outline: "none",
+      transition: "transform .15s ease, box-shadow .15s ease", cursor: "pointer",
     },
     iconBtnHover: { transform: "translateY(-1px)", boxShadow: "0 8px 22px rgba(0,0,0,.10)" },
     spacer: { height: 56 },
@@ -148,7 +146,7 @@ export default function NavBar({ currentPath = "" }) {
         </div>
       </header>
 
-      {/* Empuje para non tapar contido */}
+      {/* Empuxe para non tapar contido */}
       <div style={styles.spacer} />
     </>
   );
