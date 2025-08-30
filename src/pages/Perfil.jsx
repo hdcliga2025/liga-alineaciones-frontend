@@ -3,7 +3,7 @@ import { h } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient";
 
-/** Campo de texto con icono (opcional) dentro */
+/** Campo de texto con icona (opcional) dentro */
 function Field({
   id,
   type = "text",
@@ -19,7 +19,7 @@ function Field({
   const input = {
     width: "100%",
     height: 46,
-    padding: `10px 46px 10px ${icon ? "54px" : "14px"}`, // menos padding se non hai icona
+    padding: `10px 46px 10px ${icon ? "54px" : "14px"}`,
     borderRadius: 14,
     border: "1px solid #e5e7eb",
     background: "#fff",
@@ -34,11 +34,11 @@ function Field({
     left: 10,
     top: "50%",
     transform: "translateY(-50%)",
-    width: 32,                      // máis cadrado
-    height: 32,                     // máis cadrado
+    width: 32,
+    height: 32,
     borderRadius: 10,
-    background: "linear-gradient(135deg,#93c5fd,#60a5fa)", // celeste degradado
-    boxShadow: "0 10px 24px rgba(2,132,199,.35)",          // sombra ampla
+    background: "linear-gradient(135deg,#93c5fd,#0ea5e9)", // degradado celeste
+    boxShadow: "0 12px 28px rgba(14,165,233,.35)",          // sombra ampla
     placeItems: "center",
     pointerEvents: "none",
   };
@@ -84,7 +84,6 @@ export default function Perfil() {
   const [pwdErr, setPwdErr] = useState("");
   const [showPwd, setShowPwd] = useState(false);
 
-  // columnas dispoñibles realmente na táboa
   const allowedColsRef = useRef(new Set());
 
   useEffect(() => {
@@ -138,7 +137,7 @@ export default function Perfil() {
     const allowed = allowedColsRef.current;
     const uid = (await supabase.auth.getUser()).data.user.id;
 
-    // 1) Perfil
+    // Perfil
     const payload = {
       id: uid,
       first_name: form.first_name.trim(),
@@ -150,14 +149,13 @@ export default function Perfil() {
     if (allowed.has("dni")) payload.dni = form.dni.trim() || null;
     if (allowed.has("carnet_celta_id")) payload.carnet_celta_id = form.carnet_celta_id.trim() || null;
     if (allowed.has("birth_date")) payload.birth_date = form.birth_date || null;
-    // Sincronía co legado
     if (allowed.has("nombre")) payload.nombre = form.first_name.trim();
     if (allowed.has("apellidos")) payload.apellidos = form.last_name.trim();
 
     const { error: upErr } = await supabase.from("profiles").upsert(payload, { onConflict: "id" });
     if (upErr) return setErr(upErr.message);
 
-    // 2) Cambio de contrasinal (se hai)
+    // Cambio de contrasinal se procede
     if (newPwd) {
       const { error: pwErr } = await supabase.auth.updateUser({ password: newPwd });
       if (pwErr) return setPwdErr(pwErr.message || "Erro ao cambiar o contrasinal.");
@@ -177,8 +175,8 @@ export default function Perfil() {
     else setInfo("Solicitude de borrado rexistrada. O equipo revisaraa.");
   }
 
-  // Estilos base
-  const box = { maxWidth: 640, margin: "18px auto 40px", padding: "0 16px", textAlign: "center" };
+  // Estilos
+  const box = { maxWidth: 640, margin: "18px auto 28px", padding: "0 16px", textAlign: "center" };
   const secTitle = {
     margin: "18px 0 4px",
     fontWeight: 700,
@@ -196,24 +194,34 @@ export default function Perfil() {
     textAlign: "left",
   };
 
-  // Botóns (máis cadrados e sombra)
+  // Botóns elegantes (degradado + sombra + hover)
   const btnBase = {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
     minHeight: 44,
-    padding: "10px 18px",
-    borderRadius: 12, // máis cadrado
+    padding: "10px 20px",
+    borderRadius: 12,
     border: "1px solid transparent",
     fontWeight: 700,
     fontFamily: "Montserrat,system-ui,sans-serif",
     fontSize: 15,
     color: "#fff",
     cursor: "pointer",
-    boxShadow: "0 10px 24px rgba(0,0,0,.14)",
+    boxShadow: "0 12px 26px rgba(0,0,0,.18)",
+    transition: "transform .12s ease, box-shadow .12s ease, filter .12s ease",
   };
-  const btnCeleste = { ...btnBase, background: "#0ea5e9", borderColor: "#7dd3fc" };
-  const btnRojo = { ...btnBase, background: "#ef4444", borderColor: "#fecaca" };
+  const btnCeleste = {
+    ...btnBase,
+    background: "linear-gradient(135deg,#7dd3fc,#0ea5e9)",
+    borderColor: "#7dd3fc",
+  };
+  const btnRojo = {
+    ...btnBase,
+    background: "linear-gradient(135deg,#fca5a5,#ef4444)",
+    borderColor: "#fecaca",
+  };
+  const hoverUp = { transform: "translateY(-1px)", boxShadow: "0 16px 30px rgba(0,0,0,.22)", filter: "saturate(1.05)" };
 
   // Iconas (trazo branco)
   const stroke = "#ffffff";
@@ -256,11 +264,16 @@ export default function Perfil() {
     </svg>
   );
 
+  // Hovers locais para os botóns
+  const [hoverA, setHoverA] = useState(false);
+  const [hoverB, setHoverB] = useState(false);
+
   return (
     <main style={box}>
       <form onSubmit={saveAll} noValidate style={{ textAlign: "left", margin: "0 auto", maxWidth: 520 }}>
-        {/* === Información de xestión de conta === */}
-        <h3 style={secTitle}>Información de xestión de conta (Datos de acceso e mantemento de conta)</h3>
+        {/* === Información de xestión === */}
+        <h3 style={secTitle}>Información de xestión</h3>
+        <p style={subTitle}>Datos de acceso e mantemento de conta</p>
 
         <Field id="first_name" placeholder="Nome" value={form.first_name} onInput={onChange("first_name")} ariaLabel="Nome" icon={IconUser} />
         <Field id="last_name" placeholder="Apelidos" value={form.last_name} onInput={onChange("last_name")} ariaLabel="Apelidos" icon={IconUser} />
@@ -289,7 +302,7 @@ export default function Perfil() {
         <Field
           id="new_pwd"
           type={showPwd ? "text" : "password"}
-          placeholder="Contrasinal"
+          placeholder="8 caracteres mínimo"
           value={newPwd}
           onInput={(e) => setNewPwd(e.currentTarget.value)}
           ariaLabel="Novo contrasinal"
@@ -324,19 +337,31 @@ export default function Perfil() {
         {info && <p style={{ color: "#065f46", margin: "8px 0" }}>{info}</p>}
         {(err || pwdErr) && <p style={{ color: "#b91c1c", margin: "8px 0" }}>{err || pwdErr}</p>}
 
-        {/* Botóns finais: esquerda/dereita */}
+        {/* Botóns: esquerda/dereita con degradado, sombra e hover */}
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 10 }}>
-          <button type="submit" style={{ ...btnCeleste, marginLeft: 0 }} onClick={saveAll}>
+          <button
+            type="submit"
+            style={{ ...btnCeleste, ...(hoverA ? hoverUp : null), marginLeft: 0 }}
+            onMouseEnter={() => setHoverA(true)}
+            onMouseLeave={() => setHoverA(false)}
+            onClick={saveAll}
+          >
             Actualizar
           </button>
-          <button type="button" style={{ ...btnRojo, marginRight: 0 }} onClick={requestDelete}>
+          <button
+            type="button"
+            style={{ ...btnRojo, ...(hoverB ? hoverUp : null), marginRight: 0 }}
+            onMouseEnter={() => setHoverB(true)}
+            onMouseLeave={() => setHoverB(false)}
+            onClick={requestDelete}
+          >
             Solicitar borrado
           </button>
         </div>
       </form>
 
-      {/* Logo HDC ao final */}
-      <div style={{ marginTop: 20 }}>
+      {/* Logo HDC un pouco máis arriba */}
+      <div style={{ marginTop: 12 }}>
         <img src="/logoHDC.jpg" alt="HDC Logo" style={{ width: 160, height: "auto", opacity: 0.92 }} />
       </div>
     </main>

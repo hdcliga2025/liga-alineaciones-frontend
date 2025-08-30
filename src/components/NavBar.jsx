@@ -7,8 +7,8 @@ export default function NavBar({ currentPath = "" }) {
   const isPublic = ["/", "/login", "/register"].includes(currentPath || "/");
   if (isPublic) return null;
 
-  // ===== Contador regresivo: peche aliñacións (mock) =====
-  // Peche: 31/08/2025 15:00 CEST = 13:00 UTC
+  // ===== Contador regresivo (mock) =====
+  // Peche aliñacións: 31/08/2025 15:00 CEST = 13:00 UTC
   const TARGET_UTC_MS = Date.UTC(2025, 7, 31, 13, 0, 0);
   const [now, setNow] = useState(() => Date.now());
 
@@ -29,7 +29,7 @@ export default function NavBar({ currentPath = "" }) {
     return { remainStr: `${pad(days)}D-${pad(h)}H-${pad(m)}M-${pad(s)}S` };
   }, [now]);
 
-  // Sempre celeste e sen bold
+  // Sempre en celeste e sen negrita
   const colorNow = "#0ea5e9";
 
   // ===== Estilos =====
@@ -42,10 +42,10 @@ export default function NavBar({ currentPath = "" }) {
     return () => window.removeEventListener("resize", onR);
   }, []);
 
-  // Lixeiro aumento de alto (font-size) mantendo ancho
-  const fw = 400;                // PC e móbil: sen negrita
-  const fz = isNarrow ? 20 : 22; // ↑ un chisco respecto antes
-  const sx = isNarrow ? 0.84 : 1.28; // móbil máis estreito
+  // PC: quitamos bold (400). Móbil: forzamos unha única liña reducindo lixeiramente tamaño
+  const fw = 400;                         // PC e móbil sen bold
+  const fz = isNarrow ? 18 : 22;          // móbil un chisquiño menor para que non rompa liña
+  const sx = isNarrow ? 0.84 : 1.28;      // compresión horizontal en móbil
 
   const styles = {
     header: {
@@ -81,6 +81,7 @@ export default function NavBar({ currentPath = "" }) {
       transform: `scaleX(${sx})`,
       transformOrigin: "center",
       letterSpacing: isNarrow ? "0.35px" : "0.6px",
+      whiteSpace: "nowrap",          // forza unha soa liña en móbil
     },
     rightGroup: { justifySelf: "end", display: "flex", alignItems: "center", gap: isNarrow ? 8 : 10, whiteSpace: "nowrap" },
     iconBtn: {
