@@ -11,7 +11,7 @@ import {
   Clipboard, Pitch, Shirt, Book, Target, Bars
 } from "../components/icons.jsx";
 
-/* Si o perfil aínda non ten first_name, obtén un nome “decente” do email */
+/* Se o perfil non ten first_name, intenta obter un nome do email */
 function nameFromEmail(email = "") {
   const raw = (email.split("@")[0] || "").replace(/[._-]+/g, " ").trim();
   if (!raw) return "";
@@ -27,16 +27,23 @@ export default function Dashboard() {
   useEffect(() => {
     let alive = true;
 
-    (async () => {
+    const resolveAndSetName = async () => {
       const { data: s } = await supabase.auth.getSession();
-      const uid = s?.session?.user?.id || null;
-      const email = s?.session?.user?.email || "";
+      const sess = s?.session;
+      const uid = sess?.user?.id || null;
+      const email = sess?.user?.email || "";
+      const md = sess?.user?.user_metadata || {};
+
+      // Fallback inmediato con metadata/email (mejora UX en móvil)
+      const metaFirst =
+        (md.first_name || (md.full_name || "").split(" ")[0] || "").trim();
+      if (metaFirst && alive) setNome(metaFirst);
+
       if (!uid) {
         if (alive) setNome(nameFromEmail(email) || "amig@");
         return;
       }
 
-      // Traemos moitos campos para cubrir todos os casos
       const { data: prof } = await supabase
         .from("profiles")
         .select("first_name, nombre, full_name, email")
@@ -47,31 +54,24 @@ export default function Dashboard() {
         (prof?.first_name || "").trim() ||
         (prof?.nombre || "").trim() ||
         (prof?.full_name || "").trim().split(" ")[0] ||
+        metaFirst ||
         nameFromEmail(prof?.email || email) ||
         "";
 
       if (alive) setNome(first || "amig@");
+    };
 
-      // Pequeño reintento por si AuthWatcher acaba de upsertar
-      setTimeout(async () => {
-        if (!alive) return;
-        const { data: prof2 } = await supabase
-          .from("profiles")
-          .select("first_name, nombre, full_name, email")
-          .eq("id", uid)
-          .maybeSingle();
-        const first2 =
-          (prof2?.first_name || "").trim() ||
-          (prof2?.nombre || "").trim() ||
-          (prof2?.full_name || "").trim().split(" ")[0] ||
-          nameFromEmail(prof2?.email || email) ||
-          "";
-        if (first2 && first2 !== first) setNome(first2);
-      }, 500);
-    })();
+    resolveAndSetName();
+
+    // Reescuchar eventos de auth (móvil a veces llega después)
+    const { data: sub } = supabase.auth.onAuthStateChange(async () => {
+      if (!alive) return;
+      await resolveAndSetName();
+    });
 
     return () => {
       alive = false;
+      sub?.subscription?.unsubscribe?.();
     };
   }, []);
 

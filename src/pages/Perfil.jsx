@@ -23,7 +23,8 @@ function Field({
     borderRadius: 14,
     border: "1px solid #e5e7eb",
     background: "#fff",
-    fontFamily: "Montserrat,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif",
+    fontFamily:
+      "Montserrat,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif",
     fontSize: 15,
     boxShadow: "inset 0 2px 6px rgba(0,0,0,.05)",
     outline: "none",
@@ -85,7 +86,7 @@ export default function Perfil() {
   const [pwdErr, setPwdErr] = useState("");
 
   const allowedColsRef = useRef(new Set());
-  const birthRef = useRef(null); // para abrir el datepicker propio
+  const birthRef = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -103,9 +104,17 @@ export default function Perfil() {
       allowedColsRef.current = new Set(Object.keys(data || {}));
 
       const first =
-        (data?.first_name || data?.nombre || md.first_name || (md.full_name || "").split(" ")[0] || "").trim();
+        (data?.first_name ||
+          data?.nombre ||
+          md.first_name ||
+          (md.full_name || "").split(" ")[0] ||
+          "")?.trim();
       const last =
-        (data?.last_name || data?.apellidos || md.last_name || (md.full_name || "").split(" ").slice(1).join(" ") || "").trim();
+        (data?.last_name ||
+          data?.apellidos ||
+          md.last_name ||
+          (md.full_name || "").split(" ").slice(1).join(" ") ||
+          "")?.trim();
 
       setForm({
         first_name: first,
@@ -113,7 +122,9 @@ export default function Perfil() {
         email: (data?.email || u?.user?.email || "")?.trim(),
         phone: allowedColsRef.current.has("phone") ? (data?.phone || "") : "",
         dni: allowedColsRef.current.has("dni") ? (data?.dni || "") : "",
-        carnet_celta_id: allowedColsRef.current.has("carnet_celta_id") ? (data?.carnet_celta_id || "") : "",
+        carnet_celta_id: allowedColsRef.current.has("carnet_celta_id")
+          ? (data?.carnet_celta_id || "")
+          : "",
         birth_date:
           allowedColsRef.current.has("birth_date") && data?.birth_date
             ? String(data.birth_date).slice(0, 10)
@@ -130,11 +141,14 @@ export default function Perfil() {
     }));
 
   function validate() {
-    if (!form.first_name.trim() || !form.last_name.trim()) return "Completa nome e apelidos.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((form.email || "").trim())) return "O email non é válido.";
+    if (!form.first_name.trim() || !form.last_name.trim())
+      return "Completa nome e apelidos.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((form.email || "").trim()))
+      return "O email non é válido.";
     if (allowedColsRef.current.has("phone") && form.phone && !/^\d{9,15}$/.test(form.phone))
       return "O móbil debe ter entre 9 e 15 díxitos.";
-    if (newPwd && newPwd.length < 8) return "O novo contrasinal debe ter polo menos 8 caracteres.";
+    if (newPwd && newPwd.length < 8)
+      return "O novo contrasinal debe ter polo menos 8 caracteres.";
     return null;
   }
 
@@ -159,12 +173,15 @@ export default function Perfil() {
     };
     if (allowed.has("phone")) payload.phone = form.phone.trim() || null;
     if (allowed.has("dni")) payload.dni = form.dni.trim() || null;
-    if (allowed.has("carnet_celta_id")) payload.carnet_celta_id = form.carnet_celta_id.trim() || null;
+    if (allowed.has("carnet_celta_id"))
+      payload.carnet_celta_id = form.carnet_celta_id.trim() || null;
     if (allowed.has("birth_date")) payload.birth_date = form.birth_date || null;
     if (allowed.has("nombre")) payload.nombre = form.first_name.trim();
     if (allowed.has("apellidos")) payload.apellidos = form.last_name.trim();
 
-    const { error: upErr } = await supabase.from("profiles").upsert(payload, { onConflict: "id" });
+    const { error: upErr } = await supabase
+      .from("profiles")
+      .upsert(payload, { onConflict: "id" });
     if (upErr) return setErr(upErr.message);
 
     if (newPwd) {
@@ -188,7 +205,9 @@ export default function Perfil() {
     const nome = `${form.first_name} ${form.last_name}`.trim() || mail;
     if (!uid) return setErr("Sesión non válida.");
 
-    const { error } = await supabase.from("delete_requests").insert({ user_id: uid, reason: null });
+    const { error } = await supabase
+      .from("delete_requests")
+      .insert({ user_id: uid, reason: null });
     if (error) return setErr(error.message);
 
     try {
@@ -231,7 +250,7 @@ export default function Perfil() {
     setInfo("Solicitude enviada. Revisa o teu correo.");
   }
 
-  // ===== Iconos (incluida a TARTA) =====
+  // ===== Iconos (inclúe tarta) =====
   const stroke = "#ffffff";
   const IconUser = (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -313,35 +332,78 @@ export default function Perfil() {
     </button>
   );
 
-  const box = { maxWidth: 640, margin: "18px auto 28px", padding: "0 16px", textAlign: "center" };
-  const secTitle = { margin: "18px 0 4px", fontWeight: 700, fontFamily: "Montserrat,system-ui,sans-serif", fontSize: 16, color: "#0f172a", textAlign: "left" };
-  const subTitle = { margin: "0 0 8px", fontWeight: 400, fontFamily: "Montserrat,system-ui,sans-serif", fontSize: 13, color: "#64748b", textAlign: "left" };
+  const box = {
+    maxWidth: 640,
+    margin: "18px auto 28px",
+    padding: "0 16px",
+    textAlign: "center",
+  };
+  const secTitle = {
+    margin: "18px 0 4px",
+    fontWeight: 700,
+    fontFamily: "Montserrat,system-ui,sans-serif",
+    fontSize: 16,
+    color: "#0f172a",
+    textAlign: "left",
+  };
+  const subTitle = {
+    margin: "0 0 8px",
+    fontWeight: 400,
+    fontFamily: "Montserrat,system-ui,sans-serif",
+    fontSize: 13,
+    color: "#64748b",
+    textAlign: "left",
+  };
 
   return (
     <main class="profile-page" style={box}>
-      {/* Ocultar icono nativo del date input en todos los navegadores */}
+      {/* Ocultar el icono nativo del date input en todos los navegadores */}
       <style>{`
-        .profile-page input[type="date"] {
-          appearance: none;
-          -webkit-appearance: none;
-          -moz-appearance: none;
-          background-image: none !important;
-          position: relative;
+        .profile-page input[type="date"]{
+          appearance:none; -webkit-appearance:none; -moz-appearance:none;
+          background-image:none !important;
+          position:relative;
         }
         .profile-page input[type="date"]::-webkit-calendar-picker-indicator{ display:none; opacity:0; }
         .profile-page input[type="date"]::-webkit-clear-button{ display:none; }
         .profile-page input[type="date"]::-webkit-inner-spin-button{ display:none; }
         .profile-page input[type="date"]::-ms-clear{ display:none; }
-        .profile-page input[type="date"]::-moz-calendar-picker-indicator{ display:none; } /* Firefox */
+        .profile-page input[type="date"]::-moz-calendar-picker-indicator{ display:none; }
       `}</style>
 
-      <form onSubmit={saveAll} noValidate style={{ textAlign: "left", margin: "0 auto", maxWidth: 520 }}>
+      <form
+        onSubmit={saveAll}
+        noValidate
+        style={{ textAlign: "left", margin: "0 auto", maxWidth: 520 }}
+      >
         <h3 style={secTitle}>Información de xestión</h3>
         <p style={subTitle}>Datos de acceso e mantemento de conta</p>
 
-        <Field id="first_name" placeholder="Nome" value={form.first_name} onInput={onChange("first_name")} ariaLabel="Nome" icon={IconUser} />
-        <Field id="last_name" placeholder="Apelidos" value={form.last_name} onInput={onChange("last_name")} ariaLabel="Apelidos" icon={IconUser} />
-        <Field id="email" type="email" placeholder="Email" value={form.email} onInput={onChange("email")} ariaLabel="Email" icon={IconMail} />
+        <Field
+          id="first_name"
+          placeholder="Nome"
+          value={form.first_name}
+          onInput={onChange("first_name")}
+          ariaLabel="Nome"
+          icon={IconUser}
+        />
+        <Field
+          id="last_name"
+          placeholder="Apelidos"
+          value={form.last_name}
+          onInput={onChange("last_name")}
+          ariaLabel="Apelidos"
+          icon={IconUser}
+        />
+        <Field
+          id="email"
+          type="email"
+          placeholder="Email"
+          value={form.email}
+          onInput={onChange("email")}
+          ariaLabel="Email"
+          icon={IconMail}
+        />
         {allowedColsRef.current.has("phone") && (
           <Field
             id="phone"
@@ -359,7 +421,14 @@ export default function Perfil() {
         <p style={subTitle}>Datos necesarios para ampliar funcionalidade</p>
 
         {allowedColsRef.current.has("dni") && (
-          <Field id="dni" placeholder="DNI" value={form.dni} onInput={onChange("dni")} ariaLabel="DNI" icon={IconID} />
+          <Field
+            id="dni"
+            placeholder="DNI"
+            value={form.dni}
+            onInput={onChange("dni")}
+            ariaLabel="DNI"
+            icon={IconID}
+          />
         )}
         {allowedColsRef.current.has("carnet_celta_id") && (
           <Field
@@ -379,8 +448,8 @@ export default function Perfil() {
             value={form.birth_date}
             onInput={onChange("birth_date")}
             ariaLabel="Data de nacemento"
-            icon={IconCake}              {/* ← tarta a la IZQUIERDA */}
-            rightSlot={CalendarButton}   {/* ← botón calendario a la DERECHA */}
+            icon={IconCake}
+            rightSlot={CalendarButton}
             inputProps={{ ref: birthRef }}
           />
         )}
