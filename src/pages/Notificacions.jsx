@@ -80,7 +80,7 @@ export default function Notificacions() {
     }
   }
 
-  // ===== estilos (inline para non depender doutras follas) =====
+  /* ===== estilos ===== */
   const shell = { paddingBottom: 28, background: '#fff', minHeight: '100vh' };
 
   const titleBox = {
@@ -95,7 +95,6 @@ export default function Notificacions() {
     maxWidth: 720, margin: "10px auto 18px", padding: "0 16px",
     display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center",
   };
-  // botones menos redondeados (12px)
   const pillBtn = {
     padding: "10px 14px",
     borderRadius: 12,
@@ -123,35 +122,6 @@ export default function Notificacions() {
   };
 
   const section = { maxWidth: 720, margin: "0 auto 22px", padding: "0 16px" };
-  const list = { listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 };
-
-  const card = (isRead) => ({
-    display: "grid",
-    gridTemplateColumns: "auto 1fr",
-    gap: 12,
-    border: "1px solid #e5e7eb",
-    borderRadius: 16,
-    padding: 12,
-    background: "#fff",
-    boxShadow: "0 2px 8px rgba(0,0,0,.04)",
-    opacity: isRead ? 0.88 : 1,
-  });
-
-  const iconBox = (isRead) => ({
-    alignSelf: "flex-start",
-    width: 40, height: 40,
-    borderRadius: 12,
-    background: isRead
-      ? "linear-gradient(135deg,#c7d2fe,#93c5fd)"
-      : "linear-gradient(135deg,#93c5fd,#0ea5e9)",
-    boxShadow: "0 12px 24px rgba(14,165,233,.35)",
-    display: "grid", placeItems: "center",
-  });
-
-  const titleRow = {
-    display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline",
-  };
-
   const panel = {
     border: "1px solid #e5e7eb",
     borderRadius: 16,
@@ -159,7 +129,7 @@ export default function Notificacions() {
     background: "#fff",
     boxShadow: "0 2px 8px rgba(0,0,0,.04)",
   };
-
+  const list = { listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 };
   const label = { display: "block", margin: "0 0 6px", fontWeight: 700, color: "#0f172a" };
   const input = {
     width: "100%", padding: "10px 12px", borderRadius: 12,
@@ -185,7 +155,7 @@ export default function Notificacions() {
         <h1 style={h1}>Notificacións</h1>
         <p style={sub}>Centro de avisos da peña. {unread > 0 ? `Tes ${unread} sen ler.` : 'Todo ao día.'}</p>
 
-        {/* Logo máis pequeno, á dereita e un chisco máis abaixo */}
+        {/* Logo máis pequeno e un chisco máis arriba, sen fondo nin sombra */}
         <img
           src="/logoHDC.jpg"
           alt="HDC"
@@ -193,15 +163,15 @@ export default function Notificacions() {
           loading="eager"
           style={{
             position: "absolute",
-            top: 28,          /* baixado ~0.5 cm */
+            top: 14,          /* SUBIDO ~0.5 cm */
             right: 16,
-            width: 96,        /* máis pequeno para non pisar a barra */
+            width: 86,        /* lixeiramente menor para non pisar */
             height: "auto",
             userSelect: "none",
             pointerEvents: "none",
-            background:"#fff",
-            borderRadius: 8,
-            filter: "drop-shadow(0 6px 22px rgba(0,0,0,.08))"
+            background: "transparent",
+            borderRadius: 0,
+            filter: "none"
           }}
         />
       </header>
@@ -234,11 +204,19 @@ export default function Notificacions() {
         ) : (
           <ul style={list}>
             {notifs.map((n) => (
-              <li key={n.id} style={card(n.is_read)}>
-                <div style={iconBox(n.is_read)} aria-hidden="true">{bellIcon()}</div>
+              <li key={n.id} style={{
+                display:"grid",gridTemplateColumns:"auto 1fr",gap:12,
+                border:"1px solid #e5e7eb",borderRadius:16,padding:12,background:"#fff",
+                boxShadow:"0 2px 8px rgba(0,0,0,.04)",opacity:n.is_read?0.88:1
+              }}>
+                <div style={{
+                  alignSelf:"flex-start",width:40,height:40,borderRadius:12,
+                  background:n.is_read?"linear-gradient(135deg,#c7d2fe,#93c5fd)":"linear-gradient(135deg,#93c5fd,#0ea5e9)",
+                  display:"grid",placeItems:"center"
+                }}>{bellIcon()}</div>
                 <div>
-                  <div style={titleRow}>
-                    <strong style={{ fontFamily: "Montserrat,system-ui,sans-serif", fontSize: 16 }}>
+                  <div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"baseline"}}>
+                    <strong style={{ fontFamily:"Montserrat,system-ui,sans-serif", fontSize:16 }}>
                       {n.title || 'Aviso'}
                     </strong>
                     <span style={{ fontSize: ".85rem", opacity: .65 }}>
