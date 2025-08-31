@@ -1,6 +1,6 @@
 ﻿// src/components/Login.jsx
 import { h } from 'preact';
-import { useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import { route } from 'preact-router';
 import { supabase } from '../lib/supabaseClient.js';
 
@@ -10,23 +10,66 @@ export default function Login() {
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
+  const [stuck, setStuck] = useState(false);      // <- detecta “enganchado”
+  const LOGIN_TIMEOUT_MS = 10000;                 // 10s: muestra botón de reset
+
+  // Evita mayúsculas involuntarias en móviles
+  const emailNorm = useMemo(() => (email || '').trim().toLowerCase(), [email]);
+
+  useEffect(() => {
+    let t;
+    if (loading) {
+      setStuck(false);
+      t = setTimeout(() => setStuck(true), LOGIN_TIMEOUT_MS);
+    }
+    return () => t && clearTimeout(t);
+  }, [loading]);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setErr('');
+    setStuck(false);
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+        email: emailNorm,
         password,
       });
-      if (error) return setErr(error.message || 'Erro iniciando sesión.');
-      route('/dashboard', true);
+      if (error) {
+        setErr(error.message || 'Erro iniciando sesión.');
+      } else {
+        route('/dashboard', true);
+      }
     } catch (e2) {
       console.error(e2);
       setErr('Erro inesperado iniciando sesión.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  // Reseteo “duro” de sesión local + signOut + recarga limpia
+  async function hardResetAuth() {
+    try { await supabase.auth.signOut(); } catch {}
+    try {
+      // Limpia claves locales de Supabase (sb-<ref>-auth-token, etc.)
+      Object.keys(localStorage || {}).forEach((k) => {
+        if (k.startsWith('sb-')) localStorage.removeItem(k);
+      });
+    } catch {}
+    try { sessionStorage?.clear?.(); } catch {}
+    // Si hay algún SW de por medio (en el futuro), intenta limpiar caches
+    try {
+      if (window.caches?.keys) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+    } catch {}
+    // Vía rápida: usa tu ruta de logout forzado si la tienes
+    try {
+      location.href = '/logout?to=/login';
+    } catch {
+      route('/login', true);
     }
   }
 
@@ -46,6 +89,7 @@ export default function Login() {
           onInput={(e) => setEmail(e.currentTarget.value)}
           autoComplete="username"
           required
+          inputmode="email"
         />
       </div>
 
@@ -95,6 +139,30 @@ export default function Login() {
           {loading ? 'Accedendo…' : 'Fillos dunha paixón, imos!!'}
         </button>
       </div>
+
+      {/* Suxestión/solución cando queda “Accedendo…” máis de 10s */}
+      {stuck && !err && (
+        <div style={{ marginTop: 10 }}>
+          <p style={{ margin: '6px 0 10px', color: '#334155', fontSize: 13, lineHeight: 1.35 }}>
+            Parece que a sesión quedou pendente. Podes
+            <button
+              type="button"
+              onClick={hardResetAuth}
+              style={{
+                marginLeft: 6, padding: '6px 10px',
+                borderRadius: 10, border: '1px solid #94a3b8',
+                background: 'linear-gradient(135deg,#cbd5e1,#94a3b8)',
+                color: '#0f172a', fontWeight: 700, cursor: 'pointer'
+              }}
+              aria-label="Restablecer sesión"
+              title="Restablecer sesión"
+            >
+              Restablecer sesión
+            </button>
+            e volver tentalo.
+          </p>
+        </div>
+      )}
     </form>
   );
 }
