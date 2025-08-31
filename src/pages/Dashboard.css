@@ -56,7 +56,7 @@
 @media(min-width:560px){.dash-grid.dash-grid--main{width:min(92vw,760px);grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(min-width:960px){.dash-grid.dash-grid--main{width:min(92vw,1080px);grid-template-columns:repeat(3,minmax(0,1fr))}}
 
-/* Cards principais — SIN aumentar altura ni marco */
+/* Cards principais */
 .main-block{display:block}
 .main-card{
   width:100%;display:flex;align-items:center;gap:10px;
@@ -65,15 +65,12 @@
   box-shadow:0 2px 8px var(--dash-shadow);
   transition:transform .15s, box-shadow .15s, border-color .15s;
   min-height:92px;
-
-  /* NUEVO: para controlar la superposición del borde de subcards */
-  position:relative;
-  z-index:1;
+  position:relative; z-index:1;
 }
 @media(max-width:559px){.main-card{min-height:100px}}
 .main-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px var(--dash-shadow-strong);border-color:#e2e8f0}
 
-/* Icono bloque — mismo marco, icono interno más grande via SVG size (no cambiamos estas medidas) */
+/* Icono bloque */
 .dash-icon{
   flex:0 0 64px;width:64px;height:64px;border-radius:14px;
   background:#fff;border:1px solid #e5e7eb;
@@ -94,44 +91,26 @@
 .main-block.open--alineacions .chev{ color: var(--amber-500); }
 .main-block.open--clasificacions .chev{ color: var(--violet-500); }
 
-/* Subgrid y subcards */
+/* Subgrid e subcards */
 .subgrid{
   overflow:hidden;max-height:0;opacity:.0;transform:translateY(-6px);
   transition:max-height .25s ease,opacity .2s ease,transform .25s ease;
-
-  /* NUEVO: elevar por encima de la sombra de la card raíz */
-  position:relative;
-  z-index:2;
+  position:relative; z-index:2;
 }
 .subgrid.open{
-  max-height:600px;opacity:1;transform:translateY(0);margin-top:10px
+  /* ↑ margen un pouco maior para que a sombra da card raíz non tape a liña superior */
+  max-height:600px;opacity:1;transform:translateY(0);margin-top:14px;
 }
 
-/* Colores por sección al abrir */
-#sub-partidos.open .subcard{
-  background:linear-gradient(0deg, rgba(34,197,94,.10), rgba(34,197,94,.10)), #fff;
-  border-color: var(--green-300);
-}
-#sub-partidos.open .subcard:hover{
-  border-color: var(--green-500);
-  background:linear-gradient(0deg, rgba(34,197,94,.16), rgba(34,197,94,.16)), #fff;
-}
-#sub-alineacions.open .subcard{
-  background:linear-gradient(0deg, rgba(245,158,11,.10), rgba(245,158,11,.10)), #fff;
-  border-color:#fcd34d;
-}
-#sub-alineacions.open .subcard:hover{
-  border-color: var(--amber-500);
-  background:linear-gradient(0deg, rgba(245,158,11,.16), rgba(245,158,11,.16)), #fff;
-}
-#sub-clasificacions.open .subcard{
-  background:linear-gradient(0deg, rgba(167,139,250,.10), rgba(167,139,250,.10)), #fff;
-  border-color: var(--violet-400);
-}
-#sub-clasificacions.open .subcard:hover{
-  border-color: var(--violet-500);
-  background:linear-gradient(0deg, rgba(167,139,250,.16), rgba(167,139,250,.16)), #fff;
-}
+/* Fondo sempre branco nas subcards; só cambia a cor do marco */
+#sub-partidos.open .subcard{ background:#fff; border-color: var(--green-300); }
+#sub-partidos.open .subcard:hover{ border-color: var(--green-500); }
+
+#sub-alineacions.open .subcard{ background:#fff; border-color:#fcd34d; }
+#sub-alineacions.open .subcard:hover{ border-color: var(--amber-500); }
+
+#sub-clasificacions.open .subcard{ background:#fff; border-color: var(--violet-400); }
+#sub-clasificacions.open .subcard:hover{ border-color: var(--violet-500); }
 
 .subcard{
   display:flex;align-items:center;gap:10px;
@@ -140,11 +119,7 @@
   box-shadow:none;
   transition:transform .12s, border-color .12s, background .12s;
   min-height:72px;
-
-  /* NUEVO: aseguro que su borde quede por encima de la sombra de la card raíz */
-  position:relative;
-  z-index:3;
-  background-clip: padding-box;
+  position:relative; z-index:3; background-clip:padding-box;
 }
 @media(max-width:559px){.subcard{min-height:84px}}
 .subcard:hover{ transform:translateY(-1px); }

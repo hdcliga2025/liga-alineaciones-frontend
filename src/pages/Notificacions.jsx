@@ -86,6 +86,7 @@ export default function Notificacions() {
   const titleBox = {
     maxWidth: 720, margin: "8px auto 12px", padding: "0 16px",
     fontFamily: "Montserrat,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif",
+    position: "relative",
   };
   const h1 = { margin: 0, fontSize: 22, fontWeight: 800, color: "#0f172a" };
   const sub = { margin: "6px 0 0", fontSize: 13, color: "#64748b" };
@@ -122,7 +123,6 @@ export default function Notificacions() {
   };
 
   const section = { maxWidth: 720, margin: "0 auto 22px", padding: "0 16px" };
-
   const list = { listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 };
 
   const card = (isRead) => ({
@@ -187,20 +187,32 @@ export default function Notificacions() {
     </svg>
   );
 
-  const dateFmt = useMemo(() => ({
-    dateStyle: "short", timeStyle: "short"
-  }), []);
+  const dateFmt = useMemo(() => ({ dateStyle: "short", timeStyle: "short" }), []);
 
   if (loading) return <div style="padding:16px">Cargando…</div>;
 
   return (
     <main style={{ paddingBottom: 28 }}>
-      {/* Título y subtítulo */}
+      {/* Título + logo arriba dereita */}
       <header style={titleBox}>
         <h1 style={h1}>Notificacións</h1>
         <p style={sub}>
           Centro de avisos da peña. {unread > 0 ? `Tes ${unread} sen ler.` : 'Todo ao día.'}
         </p>
+
+        {/* Logo HDC arriba á dereita */}
+        <img
+          src="/logoHDC.jpg"
+          alt="HDC"
+          decoding="async"
+          loading="eager"
+          style={{
+            position: "absolute", top: -6, right: 16,
+            width: 88, height: "auto",
+            userSelect: "none", pointerEvents: "none",
+            filter: "drop-shadow(0 6px 22px rgba(0,0,0,.08))"
+          }}
+        />
       </header>
 
       {/* Accións rápidas */}
@@ -251,7 +263,7 @@ export default function Notificacions() {
         )}
       </section>
 
-      {/* Formulario de feedback ao equipo */}
+      {/* Formulario de feedback */}
       <section style={section}>
         <div style={panel}>
           <h2 style={{ marginTop: 0, fontFamily: "Montserrat,system-ui,sans-serif", fontSize: 18 }}>Enviar mensaxe ao equipo</h2>
