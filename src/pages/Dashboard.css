@@ -56,7 +56,7 @@
 @media(min-width:560px){.dash-grid.dash-grid--main{width:min(92vw,760px);grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(min-width:960px){.dash-grid.dash-grid--main{width:min(92vw,1080px);grid-template-columns:repeat(3,minmax(0,1fr))}}
 
-/* Cards principais */
+/* Cards principais — SIN aumentar altura ni marco */
 .main-block{display:block}
 .main-card{
   width:100%;display:flex;align-items:center;gap:10px;
@@ -65,11 +65,15 @@
   box-shadow:0 2px 8px var(--dash-shadow);
   transition:transform .15s, box-shadow .15s, border-color .15s;
   min-height:92px;
+
+  /* NUEVO: para controlar la superposición del borde de subcards */
+  position:relative;
+  z-index:1;
 }
 @media(max-width:559px){.main-card{min-height:100px}}
 .main-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px var(--dash-shadow-strong);border-color:#e2e8f0}
 
-/* Icono bloque */
+/* Icono bloque — mismo marco, icono interno más grande via SVG size (no cambiamos estas medidas) */
 .dash-icon{
   flex:0 0 64px;width:64px;height:64px;border-radius:14px;
   background:#fff;border:1px solid #e5e7eb;
@@ -82,35 +86,51 @@
 .dash-card-header{font:700 18px/1.15 'Montserrat',system-ui,sans-serif;margin:0}
 .dash-card-desc{font:400 14px/1.25 'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}
 
-/* Chevron — AHORA MÁS GRANDE */
-.chev{margin-left:auto;font-size:26px;line-height:1;font-weight:800;color:#0f172a;transition:transform .15s ease,color .15s ease}
+/* Chevron */
+.chev{margin-left:auto;font-size:22px;line-height:1;font-weight:800;color:#0f172a;transition:transform .15s ease,color .15s ease}
 .chev.open{transform:rotate(180deg)}
-@media(min-width:960px){.chev{font-size:32px}}
+@media(min-width:960px){.chev{font-size:26px}}
 .main-block.open--partidos .chev{ color: var(--green-500); }
 .main-block.open--alineacions .chev{ color: var(--amber-500); }
 .main-block.open--clasificacions .chev{ color: var(--violet-500); }
 
-/* Subgrid e subcards */
-.subgrid{overflow:hidden;max-height:0;opacity:.0;transform:translateY(-6px);transition:max-height .25s ease,opacity .2s ease,transform .25s ease}
-.subgrid.open{max-height:600px;opacity:1;transform:translateY(0);margin-top:10px}
+/* Subgrid y subcards */
+.subgrid{
+  overflow:hidden;max-height:0;opacity:.0;transform:translateY(-6px);
+  transition:max-height .25s ease,opacity .2s ease,transform .25s ease;
 
+  /* NUEVO: elevar por encima de la sombra de la card raíz */
+  position:relative;
+  z-index:2;
+}
+.subgrid.open{
+  max-height:600px;opacity:1;transform:translateY(0);margin-top:10px
+}
+
+/* Colores por sección al abrir */
 #sub-partidos.open .subcard{
-  background:#fff;border-color: var(--green-300);
+  background:linear-gradient(0deg, rgba(34,197,94,.10), rgba(34,197,94,.10)), #fff;
+  border-color: var(--green-300);
 }
 #sub-partidos.open .subcard:hover{
   border-color: var(--green-500);
+  background:linear-gradient(0deg, rgba(34,197,94,.16), rgba(34,197,94,.16)), #fff;
 }
 #sub-alineacions.open .subcard{
-  background:#fff;border-color:#fcd34d;
+  background:linear-gradient(0deg, rgba(245,158,11,.10), rgba(245,158,11,.10)), #fff;
+  border-color:#fcd34d;
 }
 #sub-alineacions.open .subcard:hover{
   border-color: var(--amber-500);
+  background:linear-gradient(0deg, rgba(245,158,11,.16), rgba(245,158,11,.16)), #fff;
 }
 #sub-clasificacions.open .subcard{
-  background:#fff;border-color: var(--violet-400);
+  background:linear-gradient(0deg, rgba(167,139,250,.10), rgba(167,139,250,.10)), #fff;
+  border-color: var(--violet-400);
 }
 #sub-clasificacions.open .subcard:hover{
   border-color: var(--violet-500);
+  background:linear-gradient(0deg, rgba(167,139,250,.16), rgba(167,139,250,.16)), #fff;
 }
 
 .subcard{
@@ -120,15 +140,26 @@
   box-shadow:none;
   transition:transform .12s, border-color .12s, background .12s;
   min-height:72px;
+
+  /* NUEVO: aseguro que su borde quede por encima de la sombra de la card raíz */
+  position:relative;
+  z-index:3;
+  background-clip: padding-box;
 }
 @media(max-width:559px){.subcard{min-height:84px}}
 .subcard:hover{ transform:translateY(-1px); }
 
 .sub-ico{
   flex:0 0 56px;width:56px;height:56px;border-radius:14px;display:grid;place-items:center;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 8px rgba(0,0,0,.10);
-  background:#fff; /* sen fondo de cor */
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 8px rgba(0,0,0,.10)
 }
+.sub-ico--calendar{background:linear-gradient(135deg,#dcfce7,#86efac)}
+.sub-ico--flag{background:linear-gradient(135deg,#e5e7eb,#cbd5e1)}
+.sub-ico--meg{background:linear-gradient(135deg,#fce7f3,#f9a8d4)}
+.sub-ico--clip{background:linear-gradient(135deg,#fee2e2,#fca5a5)}
+.sub-ico--book{background:linear-gradient(135deg,#e0e7ff,#a5b4fc)}
+.sub-ico--tgt{background:linear-gradient(135deg,#dbeafe,#93c5fd)}
+
 .sub-texts{display:grid;gap:2px}
 .sub-title{font:700 16px/1.15 'Montserrat',system-ui,sans-serif;margin:0}
 .sub-desc{font:400 13px/1.25 'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}
