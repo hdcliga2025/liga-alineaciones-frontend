@@ -80,10 +80,13 @@ export default function Notificacions() {
     }
   }
 
+  // ===== estilos (inline para non depender doutras follas) =====
+  const shell = { paddingBottom: 28, background: '#fff', minHeight: '100vh' };
+
   const titleBox = {
     maxWidth: 720, margin: "8px auto 12px", padding: "0 16px",
     fontFamily: "Montserrat,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif",
-    position: "relative",
+    position: "relative", background: "#fff",
   };
   const h1 = { margin: 0, fontSize: 22, fontWeight: 800, color: "#0f172a" };
   const sub = { margin: "6px 0 0", fontSize: 13, color: "#64748b" };
@@ -92,10 +95,10 @@ export default function Notificacions() {
     maxWidth: 720, margin: "10px auto 18px", padding: "0 16px",
     display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center",
   };
-
+  // botones menos redondeados (12px)
   const pillBtn = {
     padding: "10px 14px",
-    borderRadius: 9999,
+    borderRadius: 12,
     border: "1px solid #e2e8f0",
     background: "#f8fafc",
     cursor: "pointer",
@@ -112,7 +115,7 @@ export default function Notificacions() {
   const ghostLink = {
     textDecoration: "none",
     padding: "10px 14px",
-    borderRadius: 9999,
+    borderRadius: 12,
     border: "1px solid #e2e8f0",
     background: "#fff",
     fontWeight: 700,
@@ -149,18 +152,6 @@ export default function Notificacions() {
     display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline",
   };
 
-  const badgeNew = {
-    display: "inline-block",
-    marginTop: 6,
-    fontSize: ".8rem",
-    padding: "2px 8px",
-    borderRadius: 9999,
-    border: "1px solid #f59e0b",
-    color: "#92400e",
-    background: "#fffbeb",
-    fontWeight: 700,
-  };
-
   const panel = {
     border: "1px solid #e5e7eb",
     borderRadius: 16,
@@ -186,15 +177,15 @@ export default function Notificacions() {
 
   const dateFmt = useMemo(() => ({ dateStyle: "short", timeStyle: "short" }), []);
 
-  if (loading) return <div style="padding:16px">Cargando…</div>;
+  if (loading) return <div style="padding:16px;background:#fff">Cargando…</div>;
 
   return (
-    <main style={{ paddingBottom: 28, background:"#fff" }}>
+    <main style={shell}>
       <header style={titleBox}>
         <h1 style={h1}>Notificacións</h1>
         <p style={sub}>Centro de avisos da peña. {unread > 0 ? `Tes ${unread} sen ler.` : 'Todo ao día.'}</p>
 
-        {/* Logo máis grande, á dereita e un pouco máis abaixo */}
+        {/* Logo máis pequeno, á dereita e un chisco máis abaixo */}
         <img
           src="/logoHDC.jpg"
           alt="HDC"
@@ -202,9 +193,9 @@ export default function Notificacions() {
           loading="eager"
           style={{
             position: "absolute",
-            top: 16,
+            top: 28,          /* baixado ~0.5 cm */
             right: 16,
-            width: 128,
+            width: 96,        /* máis pequeno para non pisar a barra */
             height: "auto",
             userSelect: "none",
             pointerEvents: "none",

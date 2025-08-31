@@ -8,38 +8,19 @@
   --celeste:#38bdf8;
 }
 
-.dash-wrap{
-  max-width:1080px;
-  margin:0 auto;
-  padding:16px 12px 18px;
-}
-@media(min-width:560px){
-  .dash-wrap{ padding:24px 16px 22px; }
-}
-@media(min-width:960px){
-  .dash-wrap{ padding:28px 16px 26px; }
-}
+.dash-wrap{max-width:1080px;margin:0 auto;padding:16px 12px 18px}
+@media(min-width:560px){.dash-wrap{padding:24px 16px 22px}}
+@media(min-width:960px){.dash-wrap{padding:28px 16px 26px}}
 
-/* Hero */
 .dash-hero.two-cols{
-  width:min(92vw,380px);
-  margin:6px auto 22px;
-  display:grid;grid-template-columns:1fr 1fr;align-items:center;justify-items:center;gap:2px;
+  width:min(92vw,380px);margin:6px auto 22px;
+  display:grid;grid-template-columns:1fr 1fr;align-items:center;justify-items:center;gap:2px
 }
-@media(min-width:560px){
-  .dash-hero.two-cols{width:min(92vw,760px);gap:4px;margin:10px auto 28px}
-}
-@media(min-width:960px){
-  .dash-hero.two-cols{grid-template-columns:1fr;gap:22px;margin:12px auto 40px}
-}
+@media(min-width:560px){.dash-hero.two-cols{width:min(92vw,760px);gap:4px;margin:10px auto 28px}}
+@media(min-width:960px){.dash-hero.two-cols{grid-template-columns:1fr;gap:22px;margin:12px auto 40px}}
 
-.dash-hero-img.fill-col{
-  width:100%;height:100%;
-  max-height:136px;object-fit:contain
-}
-@media(min-width:960px){
-  .dash-hero-img.fill-col{ max-height:260px; }
-}
+.dash-hero-img.fill-col{width:100%;height:100%;max-height:136px;object-fit:contain}
+@media(min-width:960px){.dash-hero-img.fill-col{max-height:260px}}
 
 .dash-greet{
   font:400 22px/1.22 'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
@@ -48,38 +29,44 @@
 @media(min-width:960px){.dash-greet{font-size:26px}}
 .dash-name{color:#111;text-decoration:none}
 
-/* Grid */
 .dash-grid.dash-grid--main{
   width:min(92vw,380px);margin:0 auto;
-  display:grid;grid-template-columns:1fr;gap:12px;justify-items:stretch;
-}
+  display:grid;grid-template-columns:1fr;gap:12px;justify-items:stretch}
 @media(min-width:560px){.dash-grid.dash-grid--main{width:min(92vw,760px);grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(min-width:960px){.dash-grid.dash-grid--main{width:min(92vw,1080px);grid-template-columns:repeat(3,minmax(0,1fr))}}
 
-/* Cards principais */
-.main-block{
-  display:block;
-  position: relative;
-  isolation: isolate; /* crea contexto para z-index internos */
-}
+/* ==== Cards principais ==== */
+.main-block{display:block;position:relative;isolation:isolate}
 .main-card{
   width:100%;display:flex;align-items:center;gap:10px;
   background:#fff;border:1px solid #eef2ff;border-radius:18px;
   padding:12px 12px;text-align:left;color:inherit;text-decoration:none;cursor:pointer;
   box-shadow:0 2px 8px var(--dash-shadow);
   transition:transform .15s, box-shadow .15s, border-color .15s;
-  min-height:92px;
-  position:relative; z-index:1;
+  min-height:92px;position:relative;z-index:1
 }
 @media(max-width:559px){.main-card{min-height:100px}}
 .main-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px var(--dash-shadow-strong);border-color:#e2e8f0}
 
-/* Icono bloque */
+/* Ao ABRIR, a card raíz baixa e desactívase o lift en hover (PC) */
+@media(min-width:960px){
+  .open--partidos .main-card,
+  .open--alineacions .main-card,
+  .open--clasificacions .main-card{
+    z-index:0; box-shadow:0 1px 4px var(--dash-shadow);
+    transition:box-shadow .15s, border-color .15s; /* sen translate */
+  }
+  .open--partidos .main-card:hover,
+  .open--alineacions .main-card:hover,
+  .open--clasificacions .main-card:hover{
+    transform:none; box-shadow:0 1px 4px var(--dash-shadow);
+  }
+}
+
 .dash-icon{
-  flex:0 0 64px;width:64px;height:64px;border-radius:14px;
-  background:#fff;border:1px solid #e5e7eb;
+  flex:0 0 64px;width:64px;height:64px;border-radius:14px;background:#fff;border:1px solid #e5e7eb;
   display:grid;place-items:center;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 8px rgba(0,0,0,.08);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 8px rgba(0,0,0,.08)
 }
 @media(min-width:960px){.dash-icon{flex:0 0 72px;width:72px;height:72px;border-radius:16px}}
 
@@ -95,38 +82,29 @@
 .main-block.open--alineacions .chev{ color: var(--amber-500); }
 .main-block.open--clasificacions .chev{ color: var(--violet-500); }
 
-/* Subgrid e subcards */
+/* ==== Subgrid / Subcards ==== */
 .subgrid{
   overflow:hidden;max-height:0;opacity:.0;transform:translateY(-6px);
   transition:max-height .25s ease,opacity .2s ease,transform .25s ease;
-  position:relative; z-index:10; /* por riba da raíz */
+  position:relative; z-index:10;
 }
-.subgrid.open{
-  max-height:600px;opacity:1;transform:translateY(0);
-  margin-top:16px; /* separo para que a liña do bordo se vexa con claridade */
-}
+.subgrid.open{max-height:600px;opacity:1;transform:translateY(0);margin-top:16px}
 
-/* Fondo branco nas subcards; cambia só a cor do bordo */
 #sub-partidos.open .subcard{ background:#fff; border-color: var(--green-300); }
 #sub-partidos.open .subcard:hover{ border-color: var(--green-500); }
-
 #sub-alineacions.open .subcard{ background:#fff; border-color:#fcd34d; }
 #sub-alineacions.open .subcard:hover{ border-color: var(--amber-500); }
-
 #sub-clasificacions.open .subcard{ background:#fff; border-color: var(--violet-400); }
 #sub-clasificacions.open .subcard:hover{ border-color: var(--violet-500); }
 
 .subcard{
-  display:flex;align-items:center;gap:10px;
-  background:#fff;border:1px solid #eef2ff;border-radius:16px;
-  padding:12px 12px;margin-bottom:10px;text-decoration:none;color:inherit;
-  box-shadow:none;
-  transition:transform .12s, border-color .12s, background .12s;
-  min-height:72px;
-  position:relative; z-index:11; background-clip:padding-box;
+  display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #eef2ff;border-radius:16px;
+  padding:12px 12px;margin-bottom:10px;text-decoration:none;color:inherit;box-shadow:none;
+  transition:transform .12s, border-color .12s, background .12s;min-height:72px;
+  position:relative; z-index:11; background-clip:padding-box
 }
 @media(max-width:559px){.subcard{min-height:84px}}
-.subcard:hover{ transform:translateY(-1px); }
+.subcard:hover{ transform:translateY(-1px) }
 
 .sub-ico{
   flex:0 0 56px;width:56px;height:56px;border-radius:14px;display:grid;place-items:center;
@@ -135,13 +113,3 @@
 .sub-texts{display:grid;gap:2px}
 .sub-title{font:700 16px/1.15 'Montserrat',system-ui,sans-serif;margin:0}
 .sub-desc{font:400 13px/1.25 'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}
-
-/* PC: cando abre, a card raíz baixa detrás das subcards */
-@media (min-width:960px){
-  .main-block.open--partidos .main-card,
-  .main-block.open--alineacions .main-card,
-  .main-block.open--clasificacions .main-card{
-    z-index:0;
-    box-shadow:0 1px 4px var(--dash-shadow);
-  }
-}
