@@ -65,7 +65,9 @@
   box-shadow:0 2px 8px var(--dash-shadow);
   transition:transform .15s, box-shadow .15s, border-color .15s;
   min-height:92px;
-  position:relative; z-index:1;
+
+  position:relative;
+  z-index:1; /* raíz por defecto por debaixo das subcards (ver regra PC) */
 }
 @media(max-width:559px){.main-card{min-height:100px}}
 .main-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px var(--dash-shadow-strong);border-color:#e2e8f0}
@@ -98,11 +100,11 @@
   position:relative; z-index:2;
 }
 .subgrid.open{
-  /* ↑ margen un pouco maior para que a sombra da card raíz non tape a liña superior */
-  max-height:600px;opacity:1;transform:translateY(0);margin-top:14px;
+  max-height:600px;opacity:1;transform:translateY(0);
+  margin-top:14px; /* separo un pouco para que o bordo se vexa con claridade */
 }
 
-/* Fondo sempre branco nas subcards; só cambia a cor do marco */
+/* Fondo branco nas subcards; cambia só a cor do bordo */
 #sub-partidos.open .subcard{ background:#fff; border-color: var(--green-300); }
 #sub-partidos.open .subcard:hover{ border-color: var(--green-500); }
 
@@ -138,3 +140,23 @@
 .sub-texts{display:grid;gap:2px}
 .sub-title{font:700 16px/1.15 'Montserrat',system-ui,sans-serif;margin:0}
 .sub-desc{font:400 13px/1.25 'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}
+
+/* --- SOLUCIÓN ESPECÍFICA PC: raíz sempre detrás cando está aberta --- */
+@media (min-width:960px){
+  .main-block.open--partidos .main-card,
+  .main-block.open--alineacions .main-card,
+  .main-block.open--clasificacions .main-card{
+    z-index:0;            /* raíz máis atrás */
+    box-shadow:0 1px 4px var(--dash-shadow); /* sombra máis suave cando está aberta */
+  }
+  .main-block.open--partidos .subgrid,
+  .main-block.open--alineacions .subgrid,
+  .main-block.open--clasificacions .subgrid{
+    z-index:5;
+  }
+  .main-block.open--partidos .subcard,
+  .main-block.open--alineacions .subcard,
+  .main-block.open--clasificacions .subcard{
+    z-index:6;
+  }
+}
