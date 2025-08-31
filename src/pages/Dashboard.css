@@ -57,7 +57,11 @@
 @media(min-width:960px){.dash-grid.dash-grid--main{width:min(92vw,1080px);grid-template-columns:repeat(3,minmax(0,1fr))}}
 
 /* Cards principais */
-.main-block{display:block}
+.main-block{
+  display:block;
+  position: relative;
+  isolation: isolate; /* crea contexto para z-index internos */
+}
 .main-card{
   width:100%;display:flex;align-items:center;gap:10px;
   background:#fff;border:1px solid #eef2ff;border-radius:18px;
@@ -65,9 +69,7 @@
   box-shadow:0 2px 8px var(--dash-shadow);
   transition:transform .15s, box-shadow .15s, border-color .15s;
   min-height:92px;
-
-  position:relative;
-  z-index:1; /* raíz por defecto por debaixo das subcards (ver regra PC) */
+  position:relative; z-index:1;
 }
 @media(max-width:559px){.main-card{min-height:100px}}
 .main-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px var(--dash-shadow-strong);border-color:#e2e8f0}
@@ -97,11 +99,11 @@
 .subgrid{
   overflow:hidden;max-height:0;opacity:.0;transform:translateY(-6px);
   transition:max-height .25s ease,opacity .2s ease,transform .25s ease;
-  position:relative; z-index:2;
+  position:relative; z-index:10; /* por riba da raíz */
 }
 .subgrid.open{
   max-height:600px;opacity:1;transform:translateY(0);
-  margin-top:14px; /* separo un pouco para que o bordo se vexa con claridade */
+  margin-top:16px; /* separo para que a liña do bordo se vexa con claridade */
 }
 
 /* Fondo branco nas subcards; cambia só a cor do bordo */
@@ -121,7 +123,7 @@
   box-shadow:none;
   transition:transform .12s, border-color .12s, background .12s;
   min-height:72px;
-  position:relative; z-index:3; background-clip:padding-box;
+  position:relative; z-index:11; background-clip:padding-box;
 }
 @media(max-width:559px){.subcard{min-height:84px}}
 .subcard:hover{ transform:translateY(-1px); }
@@ -130,33 +132,16 @@
   flex:0 0 56px;width:56px;height:56px;border-radius:14px;display:grid;place-items:center;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 8px rgba(0,0,0,.10)
 }
-.sub-ico--calendar{background:linear-gradient(135deg,#dcfce7,#86efac)}
-.sub-ico--flag{background:linear-gradient(135deg,#e5e7eb,#cbd5e1)}
-.sub-ico--meg{background:linear-gradient(135deg,#fce7f3,#f9a8d4)}
-.sub-ico--clip{background:linear-gradient(135deg,#fee2e2,#fca5a5)}
-.sub-ico--book{background:linear-gradient(135deg,#e0e7ff,#a5b4fc)}
-.sub-ico--tgt{background:linear-gradient(135deg,#dbeafe,#93c5fd)}
-
 .sub-texts{display:grid;gap:2px}
 .sub-title{font:700 16px/1.15 'Montserrat',system-ui,sans-serif;margin:0}
 .sub-desc{font:400 13px/1.25 'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}
 
-/* --- SOLUCIÓN ESPECÍFICA PC: raíz sempre detrás cando está aberta --- */
+/* PC: cando abre, a card raíz baixa detrás das subcards */
 @media (min-width:960px){
   .main-block.open--partidos .main-card,
   .main-block.open--alineacions .main-card,
   .main-block.open--clasificacions .main-card{
-    z-index:0;            /* raíz máis atrás */
-    box-shadow:0 1px 4px var(--dash-shadow); /* sombra máis suave cando está aberta */
-  }
-  .main-block.open--partidos .subgrid,
-  .main-block.open--alineacions .subgrid,
-  .main-block.open--clasificacions .subgrid{
-    z-index:5;
-  }
-  .main-block.open--partidos .subcard,
-  .main-block.open--alineacions .subcard,
-  .main-block.open--clasificacions .subcard{
-    z-index:6;
+    z-index:0;
+    box-shadow:0 1px 4px var(--dash-shadow);
   }
 }

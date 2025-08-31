@@ -11,7 +11,6 @@ export default function Notificacions() {
   const [unread, setUnread] = useState(0);
   const [sessionUser, setSessionUser] = useState(null);
 
-  // Feedback
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -50,8 +49,7 @@ export default function Notificacions() {
       .eq('user_id', sessionUser.id)
       .eq('is_read', false);
     if (!error) {
-      const updated = notifs.map(n => ({ ...n, is_read: true }));
-      setNotifs(updated);
+      setNotifs(notifs.map(n => ({ ...n, is_read: true })));
       setUnread(0);
     }
   }
@@ -59,7 +57,6 @@ export default function Notificacions() {
   async function sendFeedback(e) {
     e.preventDefault();
     setFeedbackResult(null);
-
     if (!subject.trim() || !message.trim()) {
       setFeedbackResult({ ok: false, msg: 'Asunto e mensaxe son obrigatorios.' });
       return;
@@ -192,24 +189,27 @@ export default function Notificacions() {
   if (loading) return <div style="padding:16px">Cargando…</div>;
 
   return (
-    <main style={{ paddingBottom: 28 }}>
-      {/* Título + logo arriba dereita */}
+    <main style={{ paddingBottom: 28, background:"#fff" }}>
       <header style={titleBox}>
         <h1 style={h1}>Notificacións</h1>
-        <p style={sub}>
-          Centro de avisos da peña. {unread > 0 ? `Tes ${unread} sen ler.` : 'Todo ao día.'}
-        </p>
+        <p style={sub}>Centro de avisos da peña. {unread > 0 ? `Tes ${unread} sen ler.` : 'Todo ao día.'}</p>
 
-        {/* Logo HDC arriba á dereita */}
+        {/* Logo máis grande, á dereita e un pouco máis abaixo */}
         <img
           src="/logoHDC.jpg"
           alt="HDC"
           decoding="async"
           loading="eager"
           style={{
-            position: "absolute", top: -6, right: 16,
-            width: 88, height: "auto",
-            userSelect: "none", pointerEvents: "none",
+            position: "absolute",
+            top: 16,
+            right: 16,
+            width: 128,
+            height: "auto",
+            userSelect: "none",
+            pointerEvents: "none",
+            background:"#fff",
+            borderRadius: 8,
             filter: "drop-shadow(0 6px 22px rgba(0,0,0,.08))"
           }}
         />
@@ -255,7 +255,15 @@ export default function Notificacions() {
                     </span>
                   </div>
                   {n.body && <p style={{ margin: "6px 0 0", color: "#0f172a" }}>{n.body}</p>}
-                  {!n.is_read && <span style={badgeNew}>Novo</span>}
+                  {!n.is_read && (
+                    <span style={{
+                      display:"inline-block",marginTop:6,fontSize:".8rem",
+                      padding:"2px 8px",borderRadius:9999,border:"1px solid #f59e0b",
+                      color:"#92400e",background:"#fffbeb",fontWeight:700
+                    }}>
+                      Novo
+                    </span>
+                  )}
                 </div>
               </li>
             ))}
@@ -266,7 +274,9 @@ export default function Notificacions() {
       {/* Formulario de feedback */}
       <section style={section}>
         <div style={panel}>
-          <h2 style={{ marginTop: 0, fontFamily: "Montserrat,system-ui,sans-serif", fontSize: 18 }}>Enviar mensaxe ao equipo</h2>
+          <h2 style={{ marginTop: 0, fontFamily: "Montserrat,system-ui,sans-serif", fontSize: 18 }}>
+            Enviar mensaxe ao equipo
+          </h2>
           <form onSubmit={sendFeedback}>
             <div style={{ marginBottom: 12 }}>
               <label htmlFor="subject" style={label}>Asunto</label>
@@ -313,13 +323,11 @@ export default function Notificacions() {
             </button>
 
             {feedbackResult && (
-              <p
-                style={{
-                  marginTop: 10,
-                  color: feedbackResult.ok ? '#065f46' : '#b91c1c',
-                  fontFamily: "Montserrat,system-ui,sans-serif",
-                }}
-              >
+              <p style={{
+                marginTop: 10,
+                color: feedbackResult.ok ? '#065f46' : '#b91c1c',
+                fontFamily: "Montserrat,system-ui,sans-serif",
+              }}>
                 {feedbackResult.msg}
               </p>
             )}
