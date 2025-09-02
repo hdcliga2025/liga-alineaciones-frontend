@@ -20,9 +20,8 @@ import HazTu11 from "./pages/HazTu11.jsx";
 import Clasificacion from "./pages/Clasificacion.jsx";
 import Admin from "./pages/Admin.jsx";
 
-/* Nuevas páginas dedicadas para subcards de Clasificacións */
-import ResultadosUltimaAlineacion from "./pages/ResultadosUltimaAlineacion.jsx";
-import TaboaAcertosAcumulados from "./pages/TaboaAcertosAcumulados.jsx";
+/* Nueva página (subcard Calendario → Próximo partido) */
+import ProximoPartido from "./pages/ProximoPartido.jsx";
 
 /* Logout forzado */
 import ForceLogout from "./pages/ForceLogout.jsx";
@@ -44,7 +43,7 @@ export default function App() {
       : "/"
   );
 
-  // Ocultar NavBar en portada y en cualquier variante de /login, /register, /logout
+  // Ocultar NavBar en portada y en cualquier variante de /login, /register, /logout (con ou sen query)
   const hidePrefixes = ["/login", "/register", "/logout"];
   const shouldHideNav =
     currentPath === "/" ||
@@ -72,9 +71,8 @@ export default function App() {
         <Clasificacion path="/clasificacion" />
         <Admin path="/admin" />
 
-        {/* Rutas dedicadas de Clasificacións (redirixen ás vistas internas) */}
-        <ResultadosUltimaAlineacion path="/resultados-ultima-alineacion" />
-        <TaboaAcertosAcumulados path="/taboa-acertos-acumulados" />
+        {/* Nueva ruta “bonita” para a subcard Calendario → Próximo partido */}
+        <ProximoPartido path="/proximo-partido" />
 
         {/* 404 */}
         <NotFound default />
@@ -82,3 +80,4 @@ export default function App() {
     </>
   );
 }
+

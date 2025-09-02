@@ -1,6 +1,6 @@
 ﻿// src/components/Login.jsx
 import { h } from 'preact';
-import { useEffect, useMemo, useState } from 'preact/hooks';
+import { useState, useRef, useEffect } from 'preact/hooks';
 import { route } from 'preact-router';
 import { supabase } from '../lib/supabaseClient.js';
 
@@ -10,67 +10,69 @@ export default function Login() {
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
-  const [stuck, setStuck] = useState(false);      // <- detecta “enganchado”
-  const LOGIN_TIMEOUT_MS = 10000;                 // 10s: muestra botón de reset
+  const timeoutRef = useRef(null);
 
-  // Evita mayúsculas involuntarias en móviles
-  const emailNorm = useMemo(() => (email || '').trim().toLowerCase(), [email]);
+  useEffect(() => () => clearTimeout(timeoutRef.current), []);
 
-  useEffect(() => {
-    let t;
-    if (loading) {
-      setStuck(false);
-      t = setTimeout(() => setStuck(true), LOGIN_TIMEOUT_MS);
+  async function waitForSession(maxMs = 4000) {
+    const t0 = Date.now();
+    // ping rápido a la sesión durante ~4s
+    while (Date.now() - t0 < maxMs) {
+      const { data } = await supabase.auth.getSession();
+      if (data?.session) return data.session;
+      await new Promise(r => setTimeout(r, 200));
     }
-    return () => t && clearTimeout(t);
-  }, [loading]);
+    return null;
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setErr('');
-    setStuck(false);
     setLoading(true);
+
+    // salvaguarda: si algo raro pasa, soltamos el spinner a los 8s
+    timeoutRef.current = setTimeout(() => setLoading(false), 8000);
+
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email: emailNorm,
+        email: email.trim(),
         password,
       });
       if (error) {
         setErr(error.message || 'Erro iniciando sesión.');
-      } else {
-        route('/dashboard', true);
+        return;
       }
+
+      // Espera a que la sesión quede disponible antes de rutear
+      const sess = await waitForSession(5000);
+      if (sess) {
+        clearTimeout(timeoutRef.current);
+        route('/dashboard', true);
+        return;
+      }
+
+      setErr('Non se puido completar o inicio de sesión. Proba a “Restablecer sesión” e tentalo de novo.');
     } catch (e2) {
       console.error(e2);
       setErr('Erro inesperado iniciando sesión.');
     } finally {
+      clearTimeout(timeoutRef.current);
       setLoading(false);
     }
   }
 
-  // Reseteo “duro” de sesión local + signOut + recarga limpia
-  async function hardResetAuth() {
-    try { await supabase.auth.signOut(); } catch {}
+  async function resetStuckSession() {
     try {
-      // Limpia claves locales de Supabase (sb-<ref>-auth-token, etc.)
-      Object.keys(localStorage || {}).forEach((k) => {
-        if (k.startsWith('sb-')) localStorage.removeItem(k);
-      });
+      await supabase.auth.signOut();
     } catch {}
-    try { sessionStorage?.clear?.(); } catch {}
-    // Si hay algún SW de por medio (en el futuro), intenta limpiar caches
+    // limpia posibles claves antiguas de supabase en localStorage
     try {
-      if (window.caches?.keys) {
-        const keys = await caches.keys();
-        await Promise.all(keys.map((k) => caches.delete(k)));
-      }
+      Object.keys(localStorage)
+        .filter(k => k.startsWith('sb-'))
+        .forEach(k => localStorage.removeItem(k));
     } catch {}
-    // Vía rápida: usa tu ruta de logout forzado si la tienes
-    try {
-      location.href = '/logout?to=/login';
-    } catch {
-      route('/login', true);
-    }
+    try { sessionStorage.clear(); } catch {}
+    setErr('');
   }
 
   return (
@@ -89,7 +91,6 @@ export default function Login() {
           onInput={(e) => setEmail(e.currentTarget.value)}
           autoComplete="username"
           required
-          inputmode="email"
         />
       </div>
 
@@ -140,29 +141,18 @@ export default function Login() {
         </button>
       </div>
 
-      {/* Suxestión/solución cando queda “Accedendo…” máis de 10s */}
-      {stuck && !err && (
-        <div style={{ marginTop: 10 }}>
-          <p style={{ margin: '6px 0 10px', color: '#334155', fontSize: 13, lineHeight: 1.35 }}>
-            Parece que a sesión quedou pendente. Podes
-            <button
-              type="button"
-              onClick={hardResetAuth}
-              style={{
-                marginLeft: 6, padding: '6px 10px',
-                borderRadius: 10, border: '1px solid #94a3b8',
-                background: 'linear-gradient(135deg,#cbd5e1,#94a3b8)',
-                color: '#0f172a', fontWeight: 700, cursor: 'pointer'
-              }}
-              aria-label="Restablecer sesión"
-              title="Restablecer sesión"
-            >
-              Restablecer sesión
-            </button>
-            e volver tentalo.
-          </p>
-        </div>
-      )}
+      {/* Enlace de rescate para sesións trabadas */}
+      <p style={{ marginTop: '10px', fontSize: '.9rem', color: '#334155' }}>
+        Parece que a sesión quedou pendente. Podes{' '}
+        <button
+          type="button"
+          onClick={resetStuckSession}
+          style={{ border: 'none', background: 'transparent', color: '#0284c7', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+        >
+          Restablecer sesión
+        </button>{' '}
+        e volver tentalo.
+      </p>
     </form>
   );
 }

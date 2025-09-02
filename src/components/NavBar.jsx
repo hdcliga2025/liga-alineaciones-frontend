@@ -1,35 +1,71 @@
 // src/components/NavBar.jsx
 import { h } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
+import { supabase } from "../lib/supabaseClient.js";
 
 export default function NavBar({ currentPath = "" }) {
-  // Ocultar en páxinas públicas
   const isPublic = ["/", "/login", "/register"].includes(currentPath || "/");
   if (isPublic) return null;
 
-  // ===== Contador regresivo (mock) =====
-  // Peche aliñacións: 31/08/2025 15:00 CEST = 13:00 UTC
-  const TARGET_UTC_MS = Date.UTC(2025, 7, 31, 13, 0, 0);
+  // ===== Target (close_at = match_iso - 2h) desde Supabase =====
+  const [targetMs, setTargetMs] = useState(null);
   const [now, setNow] = useState(() => Date.now());
 
+  // Tick 1s
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
 
-  const { remainStr } = useMemo(() => {
-    let diff = TARGET_UTC_MS - now;
-    if (diff <= 0) return { remainStr: "00D-00H-00M-00S" };
+  // Carga/refresh del target cada 30s y al volver al tab
+  useEffect(() => {
+    let alive = true;
+
+    async function fetchTarget() {
+      try {
+        const { data } = await supabase
+          .from("next_match")
+          .select("match_iso")
+          .eq("id", 1)
+          .maybeSingle();
+        if (!alive) return;
+        if (data?.match_iso) {
+          const ms = new Date(data.match_iso).getTime() - 2 * 3600 * 1000;
+          setTargetMs(ms);
+        } else {
+          setTargetMs(null);
+        }
+      } catch {
+        // En fallo, mantener estado actual
+      }
+    }
+
+    fetchTarget();
+    const poll = setInterval(fetchTarget, 30000);
+    const onVis = () => { if (!document.hidden) fetchTarget(); };
+    document.addEventListener("visibilitychange", onVis);
+
+    return () => {
+      alive = false;
+      clearInterval(poll);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, []);
+
+  const remainStr = useMemo(() => {
+    if (!targetMs) return "00D-00H-00M-00S";
+    let diff = targetMs - now;
+    if (diff <= 0) return "00D-00H-00M-00S";
     const totalSec = Math.floor(diff / 1000);
     const days = Math.floor(totalSec / 86400);
     const h = Math.floor((totalSec % 86400) / 3600);
     const m = Math.floor((totalSec % 3600) / 60);
     const s = totalSec % 60;
     const pad = (n) => String(n).padStart(2, "0");
-    return { remainStr: `${pad(days)}D-${pad(h)}H-${pad(m)}M-${pad(s)}S` };
-  }, [now]);
+    return `${pad(days)}D-${pad(h)}H-${pad(m)}M-${pad(s)}S`;
+  }, [targetMs, now]);
 
-  // Sempre en celeste e sen negrita
+  // SIEMPRE celeste, sin bold
   const colorNow = "#0ea5e9";
 
   // ===== Estilos =====
@@ -42,10 +78,9 @@ export default function NavBar({ currentPath = "" }) {
     return () => window.removeEventListener("resize", onR);
   }, []);
 
-  // PC: quitamos bold (400). Móbil: forzamos unha única liña reducindo lixeiramente tamaño
-  const fw = 400;                         // PC e móbil sen bold
-  const fz = isNarrow ? 18 : 22;          // móbil un chisquiño menor para que non rompa liña
-  const sx = isNarrow ? 0.84 : 1.28;      // compresión horizontal en móbil
+  const fw = 400; // sin bold
+  const fz = isNarrow ? 17 : 20;
+  const sx = isNarrow ? 0.89 : 1.30;
 
   const styles = {
     header: {
@@ -81,11 +116,12 @@ export default function NavBar({ currentPath = "" }) {
       transform: `scaleX(${sx})`,
       transformOrigin: "center",
       letterSpacing: isNarrow ? "0.35px" : "0.6px",
-      whiteSpace: "nowrap",          // forza unha soa liña en móbil
+      whiteSpace: "nowrap",
     },
     rightGroup: { justifySelf: "end", display: "flex", alignItems: "center", gap: isNarrow ? 8 : 10, whiteSpace: "nowrap" },
     iconBtn: {
-      width: isNarrow ? 36 : 38, height: isNarrow ? 36 : 38,
+      width: isNarrow ? 36 : 38,
+      height: isNarrow ? 36 : 38,
       display: "grid", placeItems: "center",
       borderRadius: 12, background: "#fff",
       border: "1px solid #eef2ff",
@@ -99,11 +135,18 @@ export default function NavBar({ currentPath = "" }) {
   };
 
   const [hover, setHover] = useState("");
-  const btnStyle = (k) => (hover === k ? { ...styles.iconBtn, ...styles.iconBtnHover } : styles.iconBtn);
+  const btnStyle = (k) =>
+    hover === k ? { ...styles.iconBtn, ...styles.iconBtnHover } : styles.iconBtn;
 
   const stroke = "#0ea5e9";
   const strokeW = 1.8;
-  const common = { fill: "none", stroke, strokeWidth: strokeW, strokeLinecap: "round", strokeLinejoin: "round" };
+  const common = {
+    fill: "none",
+    stroke,
+    strokeWidth: strokeW,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+  };
 
   const onBack = (e) => {
     e.preventDefault();
@@ -122,9 +165,13 @@ export default function NavBar({ currentPath = "" }) {
           {/* IZQ: Atrás + Notificacións */}
           <div style={styles.leftGroup}>
             <a
-              href="/dashboard" title="Atrás" style={btnStyle("back")}
-              onMouseEnter={() => setHover("back")} onMouseLeave={() => setHover("")}
-              onClick={onBack} aria-label="Volver á páxina anterior"
+              href="/dashboard"
+              title="Atrás"
+              style={btnStyle("back")}
+              onMouseEnter={() => setHover("back")}
+              onMouseLeave={() => setHover("")}
+              onClick={onBack}
+              aria-label="Volver á páxina anterior"
             >
               <svg width="22" height="22" viewBox="0 0 24 24" {...common}>
                 <path d="M4 12h16" />
@@ -133,8 +180,11 @@ export default function NavBar({ currentPath = "" }) {
             </a>
 
             <a
-              href="/notificacions" title="Notificacións" style={btnStyle("bell")}
-              onMouseEnter={() => setHover("bell")} onMouseLeave={() => setHover("")}
+              href="/notificacions"
+              title="Notificacións"
+              style={btnStyle("bell")}
+              onMouseEnter={() => setHover("bell")}
+              onMouseLeave={() => setHover("")}
               aria-label="Ir a Notificacións"
             >
               <svg width="22" height="22" viewBox="0 0 24 24" {...common}>
@@ -144,7 +194,7 @@ export default function NavBar({ currentPath = "" }) {
             </a>
           </div>
 
-          {/* CENTRO: contador */}
+          {/* CENTRO: contador SIEMPRE celeste */}
           <div style={styles.centerClock} aria-label="Peche das aliñacións">
             <p style={styles.time}>{remainStr}</p>
           </div>
@@ -152,8 +202,11 @@ export default function NavBar({ currentPath = "" }) {
           {/* DCHA: Perfil + Pechar */}
           <div style={styles.rightGroup}>
             <a
-              href="/perfil" title="Perfil" style={btnStyle("user")}
-              onMouseEnter={() => setHover("user")} onMouseLeave={() => setHover("")}
+              href="/perfil"
+              title="Perfil"
+              style={btnStyle("user")}
+              onMouseEnter={() => setHover("user")}
+              onMouseLeave={() => setHover("")}
               aria-label="Ir a Perfil"
             >
               <svg width="22" height="22" viewBox="0 0 24 24" {...common}>
@@ -163,8 +216,11 @@ export default function NavBar({ currentPath = "" }) {
             </a>
 
             <a
-              href="/logout?to=/" title="Pechar sesión" style={btnStyle("close")}
-              onMouseEnter={() => setHover("close")} onMouseLeave={() => setHover("")}
+              href="/logout?to=/"
+              title="Pechar sesión"
+              style={btnStyle("close")}
+              onMouseEnter={() => setHover("close")}
+              onMouseLeave={() => setHover("")}
               aria-label="Pechar sesión"
             >
               <svg width="22" height="22" viewBox="0 0 24 24" {...common}>
@@ -174,6 +230,8 @@ export default function NavBar({ currentPath = "" }) {
           </div>
         </div>
       </header>
+
+      {/* Empuje para non tapar contido */}
       <div style={styles.spacer} />
     </>
   );
