@@ -1,20 +1,22 @@
+// src/pages/PartidosFinalizados.jsx
 import { h } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { route } from "preact-router";
 import { supabase } from "../lib/supabaseClient.js";
 
-/* Layout/estilos */
+/* Layout/estilos iguales aos de Vindeiros */
 const WRAP = { maxWidth: 980, margin: "0 auto", padding: "16px 12px 24px" };
 const CARD = { background:"#fff", border:"1px solid #e5e7eb", borderRadius:18, boxShadow:"0 6px 18px rgba(0,0,0,.06)", padding:"16px 12px" };
 const H1  = { font:"700 22px/1.2 Montserrat,system-ui,sans-serif", margin:"0 0 4px", color:"#0f172a" };
 const SUB = { font:"400 14px/1.25 Montserrat,system-ui,sans-serif", margin:"0 0 14px", color:"#64748b" };
 
 const GRID = { display:"grid", gridTemplateColumns:"72px 160px 1fr 220px 120px", alignItems:"center", gap:0 };
-const HEAD = { font:"700 13px/1.15 Montserrat,system-ui,sans-serif", color:"#334155", padding:"10px 12px" };
+const HEAD = { font:"700 13px/1.15 Montserrat,system-ui,sans-serif", color:"#0f172a", padding:"10px 12px", textTransform:"uppercase" };
 const ROW  = { ...GRID, minHeight:54, borderTop:"1px solid #e5e7eb" };
 const CELL = { padding:"10px 12px", font:"400 14px/1.25 Montserrat,system-ui,sans-serif", color:"#0f172a" };
 const NUM  = { width:40, textAlign:"right", color:"#64748b", marginRight:8, fontWeight:600 };
 const COL_BORDER = "1px solid rgba(15,23,42,.22)";
+const HEAD_BG = "#e0f2fe";
 
 const BTN_ICON = { display:"inline-grid", placeItems:"center", width:40, height:40, border:"1px solid #e5e7eb", borderRadius:10, background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)", cursor:"pointer" };
 
@@ -40,7 +42,7 @@ const parsePartido = (s="") => {
 export default function PartidosFinalizados() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [rows, setRows] = useState([]);
-  const tempPartidoRef = useRef({}); // id -> {home,away}
+  const insertedRef = useRef(false);
 
   // Admin?
   useEffect(() => {
@@ -71,12 +73,11 @@ export default function PartidosFinalizados() {
   }
   useEffect(() => { loadList(); }, []);
 
-  // Auto-archivado (igual que antes)
+  // Auto-archivado cando o peche chega a 0 (mantido)
   useEffect(() => {
-    let t = null, inserted = false;
-
+    let t = null;
     async function checkAndArchive() {
-      if (!isAdmin || inserted) return;
+      if (!isAdmin || insertedRef.current) return;
       const { data: nm } = await supabase
         .from("next_match")
         .select("equipo1,equipo2,competition,match_iso,tz")
@@ -94,11 +95,10 @@ export default function PartidosFinalizados() {
           partido,
           competition: nm.competition || null,
         }, { onConflict: "match_iso" });
-        inserted = true;
+        insertedRef.current = true;
         await loadList();
       }
     }
-
     checkAndArchive();
     t = setInterval(checkAndArchive, 1000);
     return () => clearInterval(t);
@@ -110,7 +110,7 @@ export default function PartidosFinalizados() {
     return out;
   }, [rows]);
 
-  // Handlers de edición (só admin)
+  // Updates (só admin)
   async function updateDate(row, ymd) {
     if (!isAdmin || !row?.id || !ymd) return;
     await supabase.from("matches_finalizados").update({
@@ -119,7 +119,6 @@ export default function PartidosFinalizados() {
     }).eq("id", row.id);
     await loadList();
   }
-
   async function updateCompetition(row, comp) {
     if (!isAdmin || !row?.id) return;
     await supabase.from("matches_finalizados").update({
@@ -128,13 +127,8 @@ export default function PartidosFinalizados() {
     }).eq("id", row.id);
     await loadList();
   }
-
-  async function savePartido(row) {
+  async function savePartido(row, home, away) {
     if (!isAdmin || !row?.id) return;
-    const tmp = tempPartidoRef.current[row.id] || {};
-    const base = parsePartido(row.partido || "");
-    const home = (tmp.home ?? base.home ?? "").toUpperCase().trim();
-    const away = (tmp.away ?? base.away ?? "").toUpperCase().trim();
     await supabase.from("matches_finalizados").update({
       partido: [home, "vs", away].filter(Boolean).join(" ").trim() || null,
       updated_at: new Date().toISOString(),
@@ -155,8 +149,8 @@ export default function PartidosFinalizados() {
         <h2 style={H1}>Partidos finalizados</h2>
         <p style={SUB}>Histórico recente dos encontros do RC Celta.</p>
 
-        {/* Cabeceira */}
-        <div style={{ ...GRID, borderTop:"1px solid #e5e7eb", borderBottom:"1px solid #e5e7eb", background:"#f8fafc" }}>
+        {/* Cabeceira (mesmo look) */}
+        <div style={{ ...GRID, borderTop:"1px solid #bae6fd", borderBottom:"1px solid #bae6fd", background:HEAD_BG }}>
           {headCell(<span style={{ paddingLeft:12 }}>#</span>)}
           {headCell(<span>DATA</span>)}
           {headCell(
@@ -166,22 +160,22 @@ export default function PartidosFinalizados() {
                 <path d="M12 7l3 2-1 4H10L9 9l3-2Z" stroke="#0f172a" strokeWidth="1.2" fill="none"/>
                 <path d="M9 9l-3 2 2 3 2-1M15 9l3 2-2 3-2-1" stroke="#0f172a" strokeWidth="1.2" fill="none"/>
               </svg>
-              <span>Partido</span>
+              <span>PARTIDO</span>
             </div>
           )}
           {headCell(
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M7 4h10v3a5 5 0 01-10 0V4Z" stroke="#0f172a" strokeWidth="1.6"/><path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" stroke="#0f172a" strokeWidth="1.6"/><path d="M9 14h6v3H9z" stroke="#0f172a" strokeWidth="1.6"/></svg>
-              <span>Competición</span>
+              <span>COMPETICIÓN</span>
             </div>
           )}
           {headCell(<span>REVISAR</span>, true)}
         </div>
 
-        {/* Filas */}
+        {/* Filas (60) */}
         {viewRows.map((r, i) => {
           const ymd = r?.match_date ? ymdFromISO(r.match_date) : "";
-          const { home, away } = parsePartido(r?.partido || "");
+          const { home, away } = r?.partido ? parsePartido(r.partido) : { home:"", away:"" };
 
           return (
             <div key={r?.id || `p-${i}`} style={ROW}>
@@ -190,63 +184,49 @@ export default function PartidosFinalizados() {
 
               {/* DATA */}
               {bodyCell(
-                r?.id ? (
+                <input
+                  type="date"
+                  style={inputBase}
+                  value={ymd}
+                  onInput={(e) => updateDate(r, e.currentTarget.value)}
+                  disabled={!isAdmin || !r?.id}
+                />
+              )}
+
+              {/* PARTIDO */}
+              {bodyCell(
+                <div style={{ display:"grid", gridTemplateColumns:"1fr auto 1fr", gap:8, alignItems:"center" }}>
                   <input
-                    type="date"
-                    style={inputBase}
-                    value={ymd}
-                    onInput={(e) => updateDate(r, e.currentTarget.value)}
-                    disabled={!isAdmin}
+                    style={inputTeam}
+                    defaultValue={home}
+                    placeholder="Equipo 1"
+                    disabled={!isAdmin || !r?.id}
+                    onBlur={(e) => savePartido(r, e.currentTarget.value.toUpperCase(), away)}
                   />
-                ) : <div />
+                  <span style={{ fontWeight:800, color:"#0f172a" }}>vs</span>
+                  <input
+                    style={inputTeam}
+                    defaultValue={away}
+                    placeholder="Equipo 2"
+                    disabled={!isAdmin || !r?.id}
+                    onBlur={(e) => savePartido(r, home, e.currentTarget.value.toUpperCase())}
+                  />
+                </div>
               )}
 
-              {/* Partido (Equipo1 vs Equipo2) */}
+              {/* COMPETICIÓN */}
               {bodyCell(
-                r?.id ? (
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr auto 1fr", gap:8, alignItems:"center" }}>
-                    <input
-                      style={inputTeam}
-                      defaultValue={home}
-                      placeholder="Equipo 1"
-                      disabled={!isAdmin}
-                      onInput={(e) => {
-                        const cur = tempPartidoRef.current[r.id] || {};
-                        tempPartidoRef.current[r.id] = { ...cur, home: e.currentTarget.value.toUpperCase() };
-                      }}
-                      onBlur={() => savePartido(r)}
-                    />
-                    <span style={{ fontWeight:800, color:"#0f172a" }}>vs</span>
-                    <input
-                      style={inputTeam}
-                      defaultValue={away}
-                      placeholder="Equipo 2"
-                      disabled={!isAdmin}
-                      onInput={(e) => {
-                        const cur = tempPartidoRef.current[r.id] || {};
-                        tempPartidoRef.current[r.id] = { ...cur, away: e.currentTarget.value.toUpperCase() };
-                      }}
-                      onBlur={() => savePartido(r)}
-                    />
-                  </div>
-                ) : <div />
-              )}
-
-              {/* Competición */}
-              {bodyCell(
-                r?.id ? (
-                  <select
-                    style={selectBase}
-                    value={r?.competition || ""}
-                    onInput={(e) => updateCompetition(r, e.currentTarget.value)}
-                    disabled={!isAdmin}
-                  >
-                    <option value=""></option>
-                    <option value="LaLiga">LaLiga</option>
-                    <option value="Europa League">Europa League</option>
-                    <option value="Copa do Rei">Copa do Rei</option>
-                  </select>
-                ) : <div />,
+                <select
+                  style={selectBase}
+                  value={r?.competition || ""}
+                  onInput={(e) => updateCompetition(r, e.currentTarget.value)}
+                  disabled={!isAdmin || !r?.id}
+                >
+                  <option value=""></option>
+                  <option value="LaLiga">LaLiga</option>
+                  <option value="Europa League">Europa League</option>
+                  <option value="Copa do Rei">Copa do Rei</option>
+                </select>
               )}
 
               {/* REVISAR */}
