@@ -1,12 +1,18 @@
 ﻿// src/components/AuthWatcher.jsx
 import { h } from "preact";
 import { useEffect } from "preact/hooks";
-import { supabase } from "../lib/supabaseClient";
+import { supabase } from "../lib/supabaseClient.js";
 import { route } from "preact-router";
 
 export default function AuthWatcher() {
   useEffect(() => {
     let active = true;
+
+    const isPublicPath = (p) => p === "/" || p === "/login" || p === "/register";
+    const isPrivatePath = (p) =>
+      ["/dashboard", "/notificacions", "/perfil", "/partidos", "/haz-tu-11", "/clasificacion", "/admin"].some((pre) =>
+        p.startsWith(pre)
+      );
 
     const upsertOwnProfile = async () => {
       const { data: u } = await supabase.auth.getUser();
@@ -17,21 +23,20 @@ export default function AuthWatcher() {
       const email = user.email || "";
       const phone = md.phone || "";
 
-      // Lee perfil existente para NO machacar el 'first_name' guardado en el registro
+      // Lee perfil existente para NO machacar nombres ya guardados
       const { data: existing } = await supabase
         .from("profiles")
         .select("first_name,last_name,full_name,phone,email")
         .eq("id", user.id)
         .maybeSingle();
 
-      // Sólo tomar del metadata si existe explícitamente
       const mdFirst = (md.first_name || "").trim();
       const mdLast  = (md.last_name  || "").trim();
       const mdFull  = (md.full_name  || "").trim();
 
       const nextFirst = existing?.first_name?.trim()
         ? existing.first_name.trim()
-        : (mdFirst || ""); // si no había perfil previo, intenta metadata; jamás email-prefix
+        : (mdFirst || "");
 
       const nextLast = existing?.last_name?.trim()
         ? existing.last_name.trim()
@@ -41,7 +46,6 @@ export default function AuthWatcher() {
         ? existing.full_name.trim()
         : (mdFull || (nextFirst || nextLast ? `${nextFirst}${nextLast ? " " + nextLast : ""}`.trim() : ""));
 
-      // Construye payload sólo con lo que sabemos sin inventar
       const payload = {
         id: user.id,
         email,
@@ -56,32 +60,21 @@ export default function AuthWatcher() {
     };
 
     const goDashboardIfAuthOnPublic = (sess) => {
+      if (!sess) return;
       const p = location.pathname;
-      const isPublic = p === "/" || p === "/login" || p === "/register";
-      if (sess && isPublic) route("/dashboard");
+      if (isPublicPath(p)) route("/dashboard", true);
     };
 
     const goLoginIfNoAuthOnPrivate = (sess) => {
       if (sess) return;
       const p = location.pathname;
-      const privatePrefixes = [
-        "/dashboard",
-        "/notificacions",
-        "/perfil",
-        "/partidos",
-        "/haz-tu-11",
-        "/clasificacion",
-        "/admin",
-      ];
-      if (privatePrefixes.some((pre) => p.startsWith(pre))) {
-        route("/login");
-      }
+      if (isPrivatePath(p)) route("/login", true);
     };
 
     // Estado inicial
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       const sess = data?.session || null;
-      if (sess) upsertOwnProfile();
+      if (sess) await upsertOwnProfile();
       goDashboardIfAuthOnPublic(sess);
       goLoginIfNoAuthOnPrivate(sess);
     });
@@ -89,16 +82,38 @@ export default function AuthWatcher() {
     // Listener auth
     const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!active) return;
-      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+
+      // Algunos navegadores móviles agradecen un refresh al cambiar el token
+      if (event === "TOKEN_REFRESHED") {
+        goDashboardIfAuthOnPublic(session);
+        return;
+      }
+
+      if (event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "USER_UPDATED") {
         await upsertOwnProfile();
         goDashboardIfAuthOnPublic(session);
+        return;
       }
+
       if (event === "SIGNED_OUT") {
         goLoginIfNoAuthOnPrivate(null);
+        return;
       }
     });
 
-    return () => { active = false; sub?.subscription?.unsubscribe?.(); };
+    // Refrescar sesión al recuperar foco (iOS/Safari puede “adormecer” tokens)
+    const onFocus = async () => {
+      try {
+        await supabase.auth.refreshSession();
+      } catch {}
+    };
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      active = false;
+      sub?.subscription?.unsubscribe?.();
+      window.removeEventListener("focus", onFocus);
+    };
   }, []);
 
   return null;
