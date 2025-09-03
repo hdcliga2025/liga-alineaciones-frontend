@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { route } from "preact-router";
 import { supabase } from "../lib/supabaseClient.js";
 
-/* ===== Estilos ===== */
 const WRAP = { maxWidth: 1080, margin: "0 auto", padding: "16px 12px 24px" };
 const CARD = { background:"#fff", border:"1px solid #e5e7eb", borderRadius:18, boxShadow:"0 6px 18px rgba(0,0,0,.06)", padding:"16px 12px" };
 const H1  = { font:"700 22px/1.2 Montserrat,system-ui,sans-serif", margin:"0 0 4px", color:"#0f172a" };
@@ -19,11 +18,10 @@ const HEAD_BG = "#0ea5e9";
 
 const BTN_ICON = { display:"inline-grid", placeItems:"center", width:40, height:40, border:"1px solid #e5e7eb", borderRadius:10, background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)", cursor:"pointer" };
 
-const inputBase  = { width:"100%", padding:"10px 12px", border:"1px solid #dbe2f0", borderRadius:10, outline:"none", font:"inherit" };
+const inputBase  = { width:"100%", padding:"10px 12px", border:"1px solid #dbe2f0", borderRadius:10, outline:"none", font:"inherit", color:"#0f172a", background:"#fff" };
 const inputTeam  = { ...inputBase, textTransform:"uppercase", fontWeight:700 };
 const selectBase = { ...inputBase, appearance:"auto", fontWeight:700, cursor:"pointer" };
 
-/* ===== Utils ===== */
 const toDMY = (d, tz="Europe/Madrid") => {
   try {
     const dt = (d instanceof Date) ? d : new Date(d);
@@ -33,7 +31,6 @@ const toDMY = (d, tz="Europe/Madrid") => {
     return `${da}/${m}/${y}`;
   } catch { return ""; }
 };
-
 const parseDMY = (s) => {
   const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(s||"").trim());
   if (!m) return null;
@@ -42,13 +39,17 @@ const parseDMY = (s) => {
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? null : iso;
 };
+const maskDMY = (value) => {
+  const v = value.replace(/[^\d]/g, "").slice(0,8);
+  const p1 = v.slice(0,2), p2 = v.slice(2,4), p3 = v.slice(4,8);
+  return p1 + (p2?"/"+p2:"") + (p3?"/"+p3:"");
+};
 
 export default function PartidosFinalizados() {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [rows, setRows] = useState([]); // {id,match_iso,match_date,partido,competition}
+  const [rows, setRows] = useState([]);
   const insertedRef = useRef(false);
 
-  // Admin?
   useEffect(() => {
     (async () => {
       const { data: s } = await supabase.auth.getSession();
@@ -75,10 +76,9 @@ export default function PartidosFinalizados() {
       .limit(60);
     setRows(data || []);
   }
-
   useEffect(() => { loadList(); }, []);
 
-  // Auto-archive cando o peche chegou (close_at = match_iso - 2h)
+  // Auto-archive cando pecha (match_iso - 2h)
   useEffect(() => {
     const t = setInterval(async () => {
       if (insertedRef.current) return;
@@ -131,7 +131,7 @@ export default function PartidosFinalizados() {
   }
 
   const headCell = (children, center=false) => (
-    <div style={{ ...HEAD, background: HEAD_BG, justifyContent: center ? "center" : "flex-start", borderRight:"1px solid rgba(255,255,255,.0)" }}>
+    <div style={{ ...HEAD, background: HEAD_BG, justifyContent: center ? "center" : "flex-start" }}>
       {children}
     </div>
   );
@@ -169,7 +169,7 @@ export default function PartidosFinalizados() {
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                 <path d="M7 4h10v3a5 5 0 01-10 0V4Z" stroke="#fff" strokeWidth="1.6"/>
-                <path d="M7 7H5a 3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" stroke="#fff" strokeWidth="1.6"/>
+                <path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" stroke="#fff" strokeWidth="1.6"/>
                 <path d="M9 14h6v3H9z" stroke="#fff" strokeWidth="1.6"/>
               </svg>
               <span>COMPETICIÓN</span>
@@ -181,18 +181,19 @@ export default function PartidosFinalizados() {
         {/* Filas */}
         {viewRows.map((r, i) => {
           const last = i === viewRows.length - 1;
-          const dmy  = r?.match_date ? toDMY(r.match_date) : "";
           return (
             <div key={r?.id || `p-${i}`} style={ROW}>
               {/* # */}
               {bodyCell(<span style={{ ...NUM, paddingLeft:12 }}>{String(i+1).padStart(2,"0")}</span>, 0, last)}
 
-              {/* DATA: entrada manual (texto) */}
+              {/* DATA: SOLO texto (editable) */}
               {bodyCell(
                 <input
                   type="text"
                   inputMode="numeric"
-                  defaultValue={dmy}
+                  placeholder="dd/mm/aaaa"
+                  defaultValue={r?.match_date ? toDMY(r.match_date) : ""}
+                  onInput={(e)=>{ e.currentTarget.value = maskDMY(e.currentTarget.value); }}
                   onBlur={(e)=>handleCellEdit(i, "match_date", e.currentTarget.value)}
                   style={inputBase}
                   disabled={!isAdmin || !r?.id}
