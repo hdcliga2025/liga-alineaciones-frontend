@@ -46,12 +46,11 @@ const BTN = {
 const OK = { marginTop: 10, color: "#065f46", fontSize: 14 };
 const ERR = { marginTop: 10, color: "#b91c1c", fontSize: 14 };
 
-/* Ocultar icono nativo del date (derecha) sin interceptar clics */
+/* Ocultar icono nativo del date (derecha) — sin superposiciones */
 const STYLE_HIDE_NATIVE_DATE = `
   .pf-date::-webkit-calendar-picker-indicator{ opacity:0; display:none; }
   .pf-date::-webkit-inner-spin-button{ display:none; }
   .pf-date{ -webkit-appearance:none; appearance:none; }
-  .pf-date-hide{ position:absolute; right:0; top:0; width:44px; height:100%; background:#fff; border-radius:0 14px 14px 0; pointer-events:none; }
 `;
 
 function toYMD(v="") {
@@ -297,13 +296,12 @@ export default function Perfil() {
         <div style={{ ...ROW, marginTop: 12 }}>
           <div>
             <label style={LABEL}>Data de nacemento</label>
-
             <div
               style={{ position: "relative" }}
               onClick={openDatePicker}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDatePicker(); } }}
             >
-              {/* ICONO DE CALENDARIO (recuperado) */}
+              {/* Icono calendario esquerda */}
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ position: "absolute", left: 10, top: 12 }}>
                 <rect x="3" y="4.5" width="18" height="16" rx="2" stroke="#60a5fa" strokeWidth="1.6" />
                 <path d="M7 2.5v4M17 2.5v4M3 9h18" stroke="#60a5fa" strokeWidth="1.6" />
@@ -317,7 +315,7 @@ export default function Perfil() {
                 value={birthDate}
                 onInput={(e) => setBirthDate(e.currentTarget.value)}
               />
-              <span class="pf-date-hide" />
+              {/* Eliminada a capa superposta que cortaba o bordo dereito */}
             </div>
           </div>
 
