@@ -46,7 +46,6 @@ const BTN = {
 const OK = { marginTop: 10, color: "#065f46", fontSize: 14 };
 const ERR = { marginTop: 10, color: "#b91c1c", fontSize: 14 };
 
-/* Oculta icono nativo date e evita que a capa de ocultación intercepte clics */
 const STYLE_HIDE_NATIVE_DATE = `
   .pf-date::-webkit-calendar-picker-indicator{ opacity:0; display:none; }
   .pf-date::-webkit-inner-spin-button{ display:none; }
@@ -54,10 +53,9 @@ const STYLE_HIDE_NATIVE_DATE = `
   .pf-date-hide{ position:absolute; right:0; top:0; width:44px; height:100%; background:#fff; border-radius:0 14px 14px 0; pointer-events:none; }
 `;
 
-/* Helpers */
 function toYMD(v="") {
   if (!v) return "";
-  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+  if (/^\\d{4}-\\d{2}-\\d{2}$/.test(v)) return v;
   const d = new Date(v);
   if (Number.isNaN(d.getTime())) return (String(v).split("T")[0]) || "";
   const yyyy = d.getFullYear();
@@ -76,6 +74,7 @@ export default function Perfil() {
   // datos perfil
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName]   = useState("");
+  const [phone, setPhone]         = useState("");
   const [dni, setDni]             = useState("");
   const [carnet, setCarnet]       = useState("");
   const [birthDate, setBirthDate] = useState(""); // YYYY-MM-DD
@@ -99,24 +98,19 @@ export default function Perfil() {
       try {
         const { data: s } = await supabase.auth.getSession();
         const u = s?.session?.user || null;
-        if (!u) {
-          setLoading(false);
-          return;
-        }
-        if (alive) {
-          setEmail(u.email || "");
-          setUid(u.id);
-        }
+        if (!u) { setLoading(false); return; }
+        if (alive) { setEmail(u.email || ""); setUid(u.id); }
 
         const { data: p } = await supabase
           .from("profiles")
-          .select("first_name,last_name,dni,carnet_celta_id,birth_date")
+          .select("first_name,last_name,phone,dni,carnet_celta_id,birth_date")
           .eq("id", u.id)
           .maybeSingle();
 
         if (alive && p) {
           setFirstName(p.first_name || "");
           setLastName(p.last_name || "");
+          setPhone(p.phone || "");
           setDni(p.dni || "");
           setCarnet(p.carnet_celta_id || "");
           setBirthDate(toYMD(p.birth_date || ""));
@@ -129,31 +123,25 @@ export default function Perfil() {
   }, []);
 
   function openDatePicker() {
+    try { birthRef.current?.scrollIntoView({ block: "center", behavior: "smooth" }); } catch {}
     try {
-      birthRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
-    } catch {}
-    try {
-      // Chrome/Edge soportan showPicker(); fallback a focus()
-      if (typeof birthRef.current?.showPicker === "function") {
-        birthRef.current.showPicker();
-      } else {
-        birthRef.current?.focus();
-      }
+      if (typeof birthRef.current?.showPicker === "function") birthRef.current.showPicker();
+      else birthRef.current?.focus();
     } catch {}
   }
 
   async function onActualizarPerfil(e) {
     e?.preventDefault?.();
-    setErr(""); setMsg(""); // msg inline xa non o usamos como confirmación principal
+    setErr(""); setMsg("");
 
     try {
       setSaving(true);
       if (!uid) throw new Error("Sen sesión.");
 
-      // 1) update de perfil (owner-only por RLS)
       const payload = {
         first_name: firstName || null,
         last_name:  lastName  || null,
+        phone:      phone     || null,
         dni:        dni       || null,
         carnet_celta_id: carnet || null,
         birth_date: birthDate || null,
@@ -167,26 +155,21 @@ export default function Perfil() {
 
       if (updErr) throw updErr;
 
-      // 2) cambio de contrasinal (opcional)
       if (newPassword && newPassword.trim().length >= 8) {
         const { error: passErr } = await supabase.auth.updateUser({
           password: newPassword.trim(),
         });
         if (passErr) throw passErr;
       }
-
       setNewPassword("");
 
-      // toast 2s
       setToast("Cambios gardados");
       clearTimeout(toastTimerRef.current);
       toastTimerRef.current = setTimeout(() => setToast(""), 2000);
-
-      // Mensaxe secundaria (por se queres manter a zona inferior)
       setMsg("Grazas, os teus datos foron actualizados.");
     } catch (e2) {
       console.error(e2);
-      setErr("Erro ao actualizar o perfil.");
+      setErr(e2?.message ? `Erro: ${e2.message}` : "Erro ao actualizar o perfil.");
     } finally {
       setSaving(false);
     }
@@ -200,23 +183,11 @@ export default function Perfil() {
 
       {/* TOAST flotante */}
       {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          style={{
-            position: "fixed",
-            left: "50%",
-            bottom: 24,
-            transform: "translateX(-50%)",
-            background: "#0ea5e9",
-            color: "#fff",
-            padding: "10px 14px",
-            borderRadius: 999,
-            boxShadow: "0 10px 24px rgba(14,165,233,.35)",
-            fontWeight: 700,
-            zIndex: 9999,
-          }}
-        >
+        <div role="status" aria-live="polite" style={{
+          position: "fixed", left: "50%", bottom: 24, transform: "translateX(-50%)",
+          background: "#0ea5e9", color: "#fff", padding: "10px 14px", borderRadius: 999,
+          boxShadow: "0 10px 24px rgba(14,165,233,.35)", fontWeight: 700, zIndex: 9999,
+        }}>
           {toast}
         </div>
       )}
@@ -234,12 +205,7 @@ export default function Perfil() {
                 <circle cx="12" cy="8" r="4" stroke="#60a5fa" strokeWidth="1.6" />
                 <path d="M4 20c2.4-4 13.6-4 16 0" stroke="#60a5fa" strokeWidth="1.6" />
               </svg>
-              <input
-                style={INPUT_BOLD}
-                value={firstName}
-                onInput={(e) => setFirstName(e.currentTarget.value)}
-                placeholder="Nome"
-              />
+              <input style={INPUT_BOLD} value={firstName} onInput={(e) => setFirstName(e.currentTarget.value)} placeholder="Nome" />
             </div>
           </div>
 
@@ -250,12 +216,7 @@ export default function Perfil() {
                 <circle cx="12" cy="8" r="4" stroke="#60a5fa" strokeWidth="1.6" />
                 <path d="M4 20c2.4-4 13.6-4 16 0" stroke="#60a5fa" strokeWidth="1.6" />
               </svg>
-              <input
-                style={INPUT_BOLD}
-                value={lastName}
-                onInput={(e) => setLastName(e.currentTarget.value)}
-                placeholder="Apelidos"
-              />
+              <input style={INPUT_BOLD} value={lastName} onInput={(e) => setLastName(e.currentTarget.value)} placeholder="Apelidos" />
             </div>
           </div>
         </div>
@@ -269,6 +230,76 @@ export default function Perfil() {
                 <path d="M3 6l9 7 9-7" stroke="#9ca3af" strokeWidth="1.6" />
               </svg>
               <input style={{ ...INPUT, color: "#6b7280" }} value={email} readOnly />
+            </div>
+          </div>
+
+          <div>
+            <label style={LABEL}>Móbil</label>
+            <div style={ICONBOX}>
+              <svg style={ICON} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="7" y="3" width="10" height="18" rx="2" stroke="#60a5fa" strokeWidth="1.6" />
+                <circle cx="12" cy="18" r="1" fill="#60a5fa" />
+              </svg>
+              <input
+                style={INPUT_BOLD}
+                value={phone}
+                onInput={(e) => setPhone(e.currentTarget.value)}
+                placeholder="Móbil"
+                inputMode="tel"
+                autoComplete="tel"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Información complementaria */}
+      <section style={CARD}>
+        <h2 style={H1}>Información complementaria</h2>
+        <p style={SUB}>Datos necesarios para ampliar funcionalidade</p>
+
+        <div style={ROW}>
+          <div>
+            <label style={LABEL}>DNI</label>
+            <div style={ICONBOX}>
+              <svg style={ICON} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="14" rx="2" stroke="#60a5fa" strokeWidth="1.6" />
+                <path d="M6 9h12M6 13h8" stroke="#60a5fa" strokeWidth="1.6" />
+              </svg>
+              <input style={INPUT_BOLD} value={dni} onInput={(e) => setDni(e.currentTarget.value.toUpperCase())} placeholder="DNI" />
+            </div>
+          </div>
+
+          <div>
+            <label style={LABEL}>ID Carnet Celta</label>
+            <div style={ICONBOX}>
+              <svg style={ICON} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="14" rx="2" stroke="#60a5fa" strokeWidth="1.6" />
+                <path d="M6 13h12" stroke="#60a5fa" strokeWidth="1.6" />
+              </svg>
+              <input style={INPUT_BOLD} value={carnet} onInput={(e) => setCarnet(e.currentTarget.value.toUpperCase())} placeholder="ID" />
+            </div>
+          </div>
+        </div>
+
+        <div style={{ ...ROW, marginTop: 12 }}>
+          <div>
+            <label style={LABEL}>Data de nacemento</label>
+            <div style={{ position: "relative" }} onClick={openDatePicker} onKeyDown={(e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openDatePicker(); }}}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ position: "absolute", left: 10, top: 12 }}>
+                <path d="M7 11h10v7a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-7Z" stroke="#60a5fa" strokeWidth="1.6"/>
+                <path d="M9 11V9a3 3 0 1 1 6 0v2" stroke="#60a5fa" strokeWidth="1.6"/>
+                <path d="M8 15h8" stroke="#60a5fa" strokeWidth="1.6"/>
+              </svg>
+              <input
+                ref={birthRef}
+                type="date"
+                class="pf-date"
+                style={INPUT}
+                value={birthDate}
+                onInput={(e) => setBirthDate(e.currentTarget.value)}
+              />
+              <span class="pf-date-hide" />
             </div>
           </div>
 
@@ -292,82 +323,10 @@ export default function Perfil() {
         </div>
       </section>
 
-      {/* Información complementaria */}
-      <section style={CARD}>
-        <h2 style={H1}>Información complementaria</h2>
-        <p style={SUB}>Datos necesarios para ampliar funcionalidade</p>
-
-        <div style={ROW}>
-          <div>
-            <label style={LABEL}>DNI</label>
-            <div style={ICONBOX}>
-              <svg style={ICON} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <rect x="3" y="5" width="18" height="14" rx="2" stroke="#60a5fa" strokeWidth="1.6" />
-                <path d="M6 9h12M6 13h8" stroke="#60a5fa" strokeWidth="1.6" />
-              </svg>
-              <input
-                style={INPUT_BOLD}
-                value={dni}
-                onInput={(e) => setDni(e.currentTarget.value.toUpperCase())}
-                placeholder="DNI"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label style={LABEL}>ID Carnet Celta</label>
-            <div style={ICONBOX}>
-              <svg style={ICON} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <rect x="3" y="5" width="18" height="14" rx="2" stroke="#60a5fa" strokeWidth="1.6" />
-                <path d="M6 13h12" stroke="#60a5fa" strokeWidth="1.6" />
-              </svg>
-              <input
-                style={INPUT_BOLD}
-                value={carnet}
-                onInput={(e) => setCarnet(e.currentTarget.value.toUpperCase())}
-                placeholder="ID"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div style={{ ...ROW, marginTop: 12 }}>
-          <div>
-            <label style={LABEL}>Data de nacemento</label>
-            <div
-              style={{ position: "relative" }}
-              onClick={openDatePicker}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDatePicker(); } }}
-            >
-              {/* Icono pastel esquerda (celeste) */}
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ position: "absolute", left: 10, top: 12 }}>
-                <path d="M7 11h10v7a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-7Z" stroke="#60a5fa" strokeWidth="1.6"/>
-                <path d="M9 11V9a3 3 0 1 1 6 0v2" stroke="#60a5fa" strokeWidth="1.6"/>
-                <path d="M8 15h8" stroke="#60a5fa" strokeWidth="1.6"/>
-              </svg>
-
-              <input
-                ref={birthRef}
-                type="date"
-                class="pf-date"
-                style={INPUT}
-                value={birthDate}
-                onInput={(e) => setBirthDate(e.currentTarget.value)}
-              />
-              {/* capa visual que tapa o icono nativo da dereita (non capta clics) */}
-              <span class="pf-date-hide" />
-            </div>
-          </div>
-
-          <div />
-        </div>
-      </section>
-
       <section style={CARD}>
         <button style={BTN} onClick={onActualizarPerfil} disabled={saving}>
           {saving ? "Actualizando…" : "Actualizar"}
         </button>
-        {/* Mensaxes auxiliares (o feedback principal ven como toast) */}
         {msg && <p style={OK}>{msg}</p>}
         {err && <p style={ERR}>{err}</p>}
       </section>
