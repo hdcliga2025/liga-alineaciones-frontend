@@ -18,11 +18,11 @@ const HEAD_BG = "#0ea5e9";
 
 const BTN_ICON = { display:"inline-grid", placeItems:"center", width:40, height:40, border:"1px solid #e5e7eb", borderRadius:10, background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)", cursor:"pointer" };
 
-const inputBase  = { width:"100%", padding:"10px 12px", border:"1px solid #dbe2f0", borderRadius:10, outline:"none", font:"inherit", color:"#0f172a", background:"#fff" };
-const inputTeam  = { ...inputBase, textTransform:"uppercase", fontWeight:700 };
-const selectBase = { ...inputBase, appearance:"auto", fontWeight:700, cursor:"pointer" };
+/* >>> Negrita en inputs; select más grande y bold */
+const inputBase  = { width:"100%", padding:"10px 12px", border:"1px solid #dbe2f0", borderRadius:10, outline:"none", font:"inherit", color:"#0f172a", background:"#fff", fontWeight:700 };
+const inputTeam  = { ...inputBase, textTransform:"uppercase" };
+const selectBase = { ...inputBase, appearance:"auto", cursor:"pointer", fontWeight:800, fontSize:16 };
 
-/* Utils */
 const toDMY = (d, tz="Europe/Madrid") => {
   try {
     const dt = (d instanceof Date) ? d : new Date(d);
@@ -51,7 +51,6 @@ export default function PartidosFinalizados() {
   const [rows, setRows] = useState([]);
   const insertedRef = useRef(false);
 
-  // Admin (robusto)
   useEffect(() => {
     (async () => {
       const { data: s } = await supabase.auth.getSession();
@@ -67,12 +66,6 @@ export default function PartidosFinalizados() {
         if ((prof?.role||"").toLowerCase() === "admin") admin = true;
       }
       setIsAdmin(admin);
-      // reintento breve por se tarda a RLS
-      setTimeout(async ()=>{
-        if (admin) return;
-        const { data: prof2 } = await supabase.from("profiles").select("role").eq("id", uid).maybeSingle();
-        if ((prof2?.role||"").toLowerCase() === "admin") setIsAdmin(true);
-      }, 500);
     })();
   }, []);
 
@@ -86,7 +79,7 @@ export default function PartidosFinalizados() {
   }
   useEffect(() => { loadList(); }, []);
 
-  // auto-archivo cando pecha (match_iso - 2h)
+  /* Inserción automática cuando pecha (match_iso - 2h) */
   useEffect(() => {
     const t = setInterval(async () => {
       if (insertedRef.current) return;
@@ -119,29 +112,21 @@ export default function PartidosFinalizados() {
     return out;
   }, [rows]);
 
-  // Crea a fila se non existe e devolve o id
   async function ensureRow(idx, seed={}) {
     const cur = viewRows[idx];
     if (cur?.id) return cur.id;
     if (!isAdmin) return null;
-    const { data, error } = await supabase
-      .from("matches_finalizados")
-      .insert([{ ...seed }])
-      .select("id")
-      .maybeSingle();
-    if (!error && data?.id) {
-      await loadList();
-      return data.id;
-    }
+    const { data } = await supabase.from("matches_finalizados").insert([{ ...seed }]).select("id").maybeSingle();
+    if (data?.id) { await loadList(); return data.id; }
     return null;
   }
 
   async function handleCellEdit(idx, field, rawValue) {
-    if (!isAdmin) return; // só admin persiste
-    let patch = {};
+    if (!isAdmin) return;
+    const patch = {};
     if (field === "match_date") {
       const iso = parseDMY(rawValue);
-      if (!iso) return; // formato inválido
+      if (!iso) return;
       patch.match_date = iso;
     } else if (field === "partido") {
       patch.partido = rawValue || null;
@@ -151,11 +136,7 @@ export default function PartidosFinalizados() {
     if (!Object.keys(patch).length) return;
 
     let id = viewRows[idx]?.id;
-    if (!id) {
-      // crear rexistro seed co campo que temos
-      id = await ensureRow(idx, patch);
-      if (!id) return;
-    }
+    if (!id) { id = await ensureRow(idx, patch); if (!id) return; }
     patch.updated_at = new Date().toISOString();
     await supabase.from("matches_finalizados").update(patch).eq("id", id);
     await loadList();
@@ -174,7 +155,7 @@ export default function PartidosFinalizados() {
         <h2 style={H1}>Partidos finalizados</h2>
         <p style={SUB}>Histórico dos encontros do Celta na tempada 2025/2026.</p>
 
-        {/* Cabeceira */}
+        {/* Cabecera */}
         <div style={{ ...GRID, borderTop:"1px solid #0ea5e9", borderBottom:"1px solid #0ea5e9" }}>
           {headCell(<span style={{ paddingLeft:12 }}>#</span>)}
           {headCell(<span>DATA</span>)}
@@ -237,7 +218,7 @@ export default function PartidosFinalizados() {
                 </div>, 2, last
               )}
 
-              {/* COMPETICIÓN */}
+              {/* COMPETICIÓN (select más grande y bold) */}
               {bodyCell(
                 <select
                   defaultValue={r?.competition || ""}
