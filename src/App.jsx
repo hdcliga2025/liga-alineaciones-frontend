@@ -20,7 +20,7 @@ import HazTu11 from "./pages/HazTu11.jsx";
 import Clasificacion from "./pages/Clasificacion.jsx";
 import Admin from "./pages/Admin.jsx";
 
-/* Páginas novas */
+/* Páginas Calendario */
 import ProximoPartido from "./pages/ProximoPartido.jsx";
 import VindeirosPartidos from "./pages/VindeirosPartidos.jsx";
 import PartidosFinalizados from "./pages/PartidosFinalizados.jsx";
@@ -73,7 +73,7 @@ export default function App() {
         <Clasificacion path="/clasificacion" />
         <Admin path="/admin" />
 
-        {/* Rutas “bonitas” do Calendario */}
+        {/* Rutas Calendario */}
         <ProximoPartido path="/proximo-partido" />
         <VindeirosPartidos path="/vindeiros-partidos" />
         <PartidosFinalizados path="/partidos-finalizados" />
