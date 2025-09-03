@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
 const ESCUDO_SRC = "/escudo.png";
-const ESCUDO_DESKTOP_WIDTH = 190; // ↑ más grande
-const ESCUDO_DESKTOP_TOP = 0;     // ↑ más arriba
+const ESCUDO_DESKTOP_WIDTH = 200; // ↑ un chisquiño máis grande
+const ESCUDO_DESKTOP_TOP = -8;    // ↑ máis arriba e “fixo”
 
 const WRAP = { maxWidth: 880, margin: "0 auto", padding: "16px" };
 
@@ -18,21 +18,18 @@ const PANEL = {
   padding: "18px 16px",
 };
 
-const TITLE_LINE = {
+const TITLE_LINE_BASE = {
   margin: "0 0 8px 0",
   fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
   letterSpacing: ".3px",
   color: "#0f172a",
   lineHeight: 1.1,
-  fontSize: 30,
 };
 const TEAM_NAME = { fontWeight: 700, textTransform: "uppercase" };
-const VS_STYLE  = { fontWeight: 600, fontSize: 22, margin: "0 8px" };
 
-const LINE_GRAY = {
+const LINE_GRAY_BASE = {
   margin: "6px 0 0",
   fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
-  fontSize: 20,
   color: "#6b7280",
   fontWeight: 600,
 };
@@ -133,9 +130,8 @@ async function fetchMeteoFor(lugar, matchISO) {
     if (idx === -1) {
       let best = 0, bestDiff = Infinity;
       for (let i=0;i<times.length;i++){
-        const d = Math.abs(new Date(times[i]).getTime()) - new Date(localISO).getTime();
-        const ad = Math.abs(d);
-        if (ad < bestDiff) { bestDiff = ad; best = i; }
+        const d = Math.abs(new Date(times[i]).getTime() - new Date(localISO).getTime());
+        if (d < bestDiff) { bestDiff = d; best = i; }
       }
       idx = best;
     }
@@ -167,11 +163,18 @@ export default function ProximoPartido() {
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth <= 560 : false
   );
+
   useEffect(() => {
     const onR = () => setIsMobile(window.innerWidth <= 560);
     window.addEventListener("resize", onR);
     return () => window.removeEventListener("resize", onR);
   }, []);
+
+  const scale = (n) => (isMobile ? Math.max(10, Math.round(n * 0.9)) : n); // ↓ todo un pouco en móbil
+
+  const TITLE_LINE = { ...TITLE_LINE_BASE, fontSize: scale(30) };
+  const VS_STYLE   = { fontWeight: 600, fontSize: scale(22), margin: "0 8px" };
+  const LINE_GRAY  = { ...LINE_GRAY_BASE, fontSize: scale(20) };
 
   const [row, setRow] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -360,7 +363,6 @@ export default function ProximoPartido() {
       const ss = String(now.getSeconds()).padStart(2, "0");
       setInfo(`Gardado e publicado ás ${hh}:${mm}:${ss}`);
 
-      // Espera robusta a persistencia y recarga con busting
       await waitForPersist(match_iso);
       try { localStorage.setItem("nm_updated_at", String(Date.now())); } catch {}
       hardReloadWithBusting();
@@ -374,7 +376,7 @@ export default function ProximoPartido() {
 
   if (loading) return <main style={WRAP}>Cargando…</main>;
 
-  const rightPad = !isMobile && showEscudo ? 255 : 0; // ↑ por escudo maior
+  const rightPad = !isMobile && showEscudo ? 260 : 0; // máis oco para escudo maior
 
   const justTime = useMemo(() => {
     if (!dateObj) return null;
@@ -392,15 +394,15 @@ export default function ProximoPartido() {
     }
   }, [dateObj]);
 
-  const lugarLegend = (row?.lugar || lugar || "—").toUpperCase();
-  const legendText = `METEO | ${lugarLegend} | Previsión na data e hora do partido`;
+  const lugarLegend = (row?.lugar || lugar || "—");
+  const legendText = `METEO: ${capFirst(lugarLegend.toLowerCase())}`;
 
   return (
     <main style={WRAP}>
       <style>{STYLE_HIDE_NATIVE_DATE}</style>
 
       <section style={PANEL}>
-        {/* Escudo desktop por detrás do contido */}
+        {/* Escudo desktop: fixo e por detrás do contido */}
         {showEscudo && !isMobile && (
           <img
             src={ESCUDO_SRC}
@@ -415,6 +417,8 @@ export default function ProximoPartido() {
               height: "auto",
               opacity: 0.95,
               pointerEvents: "none",
+              userSelect: "none",
+              transform: "translateZ(0)", // estabilidade visual
               zIndex: 0,
             }}
           />
@@ -441,21 +445,22 @@ export default function ProximoPartido() {
           </p>
         </div>
 
-        {/* HR visible por riba do escudo */}
+        {/* HR por riba do escudo */}
         <div style={{ position: "relative", zIndex: 2, margin: "18px 0" }}>
           <hr style={{ border: 0, borderTop: "1px solid #e5e7eb", margin: 0 }} />
         </div>
 
-        {/* METEO — alineado co contido; leyenda centrada na liña */}
+        {/* ===== METEO — box alineado co contido ===== */}
         <div style={{ position: "relative", marginTop: 22, marginBottom: 22, zIndex: 1 }}>
+          {/* Leyenda principal (arriba) pisando a liña superior */}
           <span
             style={{
               position: "absolute",
-              top: -11,                 // pisa centrado a liña (border 2px)
+              top: -10, // centrada sobre borde 2px
               left: 12,
               padding: "0 10px",
               background: "#fff",
-              fontSize: 15,             // ↑ texto un pouco maior
+              fontSize: scale(15),   // ↓ en móbil
               lineHeight: 1.2,
               fontWeight: 700,
               color: "#334155",
@@ -464,6 +469,25 @@ export default function ProximoPartido() {
             }}
           >
             {legendText}
+          </span>
+
+          {/* Sub-leyenda (abaixo) pisando a liña inferior */}
+          <span
+            style={{
+              position: "absolute",
+              bottom: -10, // centrada sobre borde inferior 2px
+              left: 12,
+              padding: "0 8px",
+              background: "#fff",
+              fontSize: scale(12),   // ↓ en móbil
+              lineHeight: 1.2,
+              fontWeight: 400,       // sen bold
+              color: "#64748b",
+              zIndex: 2,
+              pointerEvents: "none",
+            }}
+          >
+            Previsión para a hora do partido
           </span>
 
           <div
@@ -477,36 +501,36 @@ export default function ProximoPartido() {
           >
             {meteo ? (
               <div style={{ display: "flex", gap: 22, flexWrap: "wrap", alignItems: "center" }}>
-                <div style={pillStyle()}>
-                  <span style={pillIcon()}>🌡️</span>
-                  <strong style={pillValue()}>
+                <div style={pillStyle(scale)}>
+                  <span style={pillIcon(scale)}>🌡️</span>
+                  <strong style={pillValue(scale)}>
                     {meteo.temp_c != null ? `${Math.round(meteo.temp_c)} °C` : "—"}
                   </strong>
                 </div>
 
-                <div style={pillStyle()}>
-                  <span style={pillIcon()}>💨</span>
-                  <strong style={pillValue()}>
+                <div style={pillStyle(scale)}>
+                  <span style={pillIcon(scale)}>💨</span>
+                  <strong style={pillValue(scale)}>
                     {meteo.wind_kmh != null ? `${Math.round(meteo.wind_kmh)} km/h` : "—"}
                   </strong>
                 </div>
 
-                <div style={pillStyle()}>
-                  <span style={pillIcon()}>☔</span>
-                  <strong style={pillValue()}>
+                <div style={pillStyle(scale)}>
+                  <span style={pillIcon(scale)}>☔</span>
+                  <strong style={pillValue(scale)}>
                     {meteo.precip_prob_pct != null ? `${meteo.precip_prob_pct}%` : "—"}
                   </strong>
                 </div>
               </div>
             ) : (
-              <p style={{ margin: 0, color: "#475569", fontSize: 16 }}>
+              <p style={{ margin: 0, color: "#475569", fontSize: scale(16) }}>
                 Información meteorolóxica dispoñible 48 horas antes do partido.
               </p>
             )}
           </div>
         </div>
 
-        {/* Escudo en móbil (non-admin) */}
+        {/* Escudo en móbil (non-admin) ao final, tamén máis pequeno en móbil */}
         {showEscudo && isMobile && (
           <div style={{ marginTop: 16, display: "grid", placeItems: "center" }}>
             <img
@@ -514,7 +538,7 @@ export default function ProximoPartido() {
               alt="Escudo RC Celta"
               decoding="async"
               loading="eager"
-              style={{ width: 120, height: "auto", opacity: 0.98 }}
+              style={{ width: 108, height: "auto", opacity: 0.98 }} // ↓ un pouco
             />
           </div>
         )}
@@ -627,22 +651,22 @@ export default function ProximoPartido() {
   );
 }
 
-/* ===== Helpers de estilo para píldoras METEO ===== */
-function pillStyle(){
+/* ===== Helpers de estilo para píldoras METEO (con escalado en móbil) ===== */
+function pillStyle(scale){
   return {
     display: "inline-flex",
     alignItems: "center",
     gap: 10,
-    padding: "10px 14px",
+    padding: `${Math.round(scale(10))}px ${Math.round(scale(14))}px`,
     borderRadius: 999,
     background: "#fff",
     border: "1px solid #e2e8f0",
     boxShadow: "0 1px 2px rgba(0,0,0,.05)",
   };
 }
-function pillIcon(){
-  return { fontSize: 26, lineHeight: 1, display: "inline-block" };
+function pillIcon(scale){
+  return { fontSize: scale(26), lineHeight: 1, display: "inline-block" };
 }
-function pillValue(){
-  return { fontSize: 20, lineHeight: 1.1, letterSpacing: ".2px" };
+function pillValue(scale){
+  return { fontSize: scale(20), lineHeight: 1.1, letterSpacing: ".2px" };
 }
