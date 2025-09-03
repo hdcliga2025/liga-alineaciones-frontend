@@ -1,431 +1,634 @@
 // src/pages/ProximoPartido.jsx
 import { h } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
-import { supabase } from "../lib/supabaseClient";
+import { supabase } from "../lib/supabaseClient.js";
 
-const ADMIN_EMAILS = new Set(["hdcliga@gmail.com", "hdcliga2@gmail.com"]);
-const TZ_DEFAULT = "Europe/Madrid";
+const ESCUDO_SRC = "/escudo.png";
 
-// Devuelve o offset (en minutos) da zona en determinada data
-function tzOffsetMinutesAt(tz, date) {
-  const fmt = new Intl.DateTimeFormat("en-US", {
-    timeZone: tz,
-    timeZoneName: "shortOffset",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  });
-  const parts = fmt.formatToParts(date);
-  const tzName = parts.find((p) => p.type === "timeZoneName")?.value || "GMT+0";
-  // tzName adoita vir como "GMT+2" ou "GMT-1"
-  const m = tzName.match(/GMT([+-]\d+)/);
-  const hours = m ? parseInt(m[1], 10) : 0;
-  return hours * 60;
+const WRAP = { maxWidth: 880, margin: "0 auto", padding: "16px" };
+
+const PANEL = {
+  position: "relative",
+  border: "1px solid #e5e7eb",
+  borderRadius: 18,
+  background: "#fff",
+  boxShadow: "0 6px 18px rgba(0,0,0,.06)",
+  padding: "18px 16px",
+};
+
+const TITLE_LINE = {
+  margin: "0 0 8px 0",
+  fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
+  letterSpacing: ".3px",
+  color: "#0f172a",
+  lineHeight: 1.1,
+  fontSize: 30,
+};
+const TEAM_NAME = { fontWeight: 700, textTransform: "uppercase" };
+const VS_STYLE  = { fontWeight: 600, fontSize: 22, margin: "0 8px" };
+
+const LINE_GRAY = {
+  margin: "6px 0 0",
+  fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
+  fontSize: 20,
+  color: "#6b7280",
+  fontWeight: 600,
+};
+
+const HR = { border: 0, borderTop: "1px solid #e5e7eb", margin: "14px 0" };
+
+/* ===== Admin form ===== */
+const ADMIN_BOX = {
+  marginTop: 16,
+  padding: 16,
+  border: "1px dashed #cbd5e1",
+  borderRadius: 14,
+  background: "#f8fafc",
+};
+const LABEL = { display: "block", margin: "0 0 6px 6px", fontSize: 14, color: "#334155", fontWeight: 500 };
+const INPUT_BASE = {
+  width: "100%",
+  padding: "12px 12px",
+  borderRadius: 12,
+  border: "1px solid #dbe2f0",
+  outline: "none",
+  fontFamily: "Montserrat, system-ui, sans-serif",
+  fontSize: 15,
+  color: "#0f172a",
+  background: "#fff",
+};
+const INPUT_EQ     = { ...INPUT_BASE, fontWeight: 800, textTransform: "uppercase" };
+const INPUT_LUGAR  = { ...INPUT_BASE, fontWeight: 800, textTransform: "uppercase" };
+const INPUT_DATE   = { ...INPUT_BASE, fontWeight: 800, paddingLeft: 40 };
+const ROW          = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 };
+const SELECT_BASE  = { ...INPUT_BASE, appearance: "none", WebkitAppearance: "none", MozAppearance: "none", fontWeight: 800, paddingRight: 48, cursor: "pointer" };
+const SELECT_WRAP  = { position: "relative" };
+const SELECT_ARROW = { position: "absolute", top: "50%", right: 18, transform: "translateY(-50%)", pointerEvents: "none", opacity: 0.95 };
+const BTN_SAVE     = { marginTop: 10, width: "100%", padding: "12px 14px", borderRadius: 12, border: "1px solid #60a5fa", color: "#fff", fontWeight: 800, letterSpacing: ".2px", cursor: "pointer", backgroundImage: "linear-gradient(180deg,#67b1ff,#5a8df5)", boxShadow: "0 8px 24px rgba(59,130,246,.35)" };
+const INFO         = { marginTop: 10, color: "#065f46", fontSize: 14 };
+const ERR          = { marginTop: 10, color: "#b91c1c", fontSize: 14 };
+
+/* Ocultar icono nativo do date (dereita) sen cubrir o borde */
+const STYLE_HIDE_NATIVE_DATE = `
+  .nm-date::-webkit-calendar-picker-indicator{ display:none; }
+  .nm-date{ -webkit-appearance:none; appearance:none; }
+`;
+
+/* ===== Utilidades ===== */
+function toLongGalician(dateObj) {
+  try {
+    return new Intl.DateTimeFormat("gl-ES", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      timeZone: "Europe/Madrid",
+    }).format(dateObj);
+  } catch {
+    return dateObj?.toLocaleDateString("gl-ES") || "";
+  }
 }
+const capFirst = (s="") => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
-// Constrúe un ISO UTC a partir de (YYYY-MM-DD, HH:MM) en tz
-function buildMatchISO(dateText, timeText, tz = TZ_DEFAULT) {
-  if (!dateText || !timeText) return null;
-  const [y, m, d] = dateText.split("-").map((n) => parseInt(n, 10));
-  const [hh, mm] = timeText.split(":").map((n) => parseInt(n, 10));
-  // Base como se fose en UTC
-  const baseUTC = new Date(Date.UTC(y, (m || 1) - 1, d || 1, hh || 0, mm || 0));
-  // Offset real desa data en tz
-  const offMin = tzOffsetMinutesAt(tz, baseUTC); // ex. CEST → +120
-  const utcMs = baseUTC.getTime() - offMin * 60_000;
-  return new Date(utcMs).toISOString();
-}
-
-const HOURS_15M = (() => {
-  const out = [];
+function timeOptions() {
+  const opts = [];
   for (let h = 12; h <= 23; h++) {
-    for (const m of [0, 15, 30, 45]) {
+    for (let m of [0, 15, 30, 45]) {
       const hh = String(h).padStart(2, "0");
       const mm = String(m).padStart(2, "0");
-      out.push(`${hh}:${mm}`);
+      opts.push(`${hh}:${mm}`);
     }
   }
-  return out;
-})();
+  return opts;
+}
+
+/* === Meteo 2A (front) === */
+async function fetchMeteoFor(lugar, matchISO) {
+  try {
+    if (!lugar || !matchISO) return null;
+    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(lugar)}&count=1&language=gl&format=json`);
+    const geo = await geoRes.json();
+    const loc = geo?.results?.[0];
+    if (!loc) return null;
+    const lat = loc.latitude, lon = loc.longitude;
+
+    const wxRes = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+      `&hourly=temperature_2m,precipitation_probability,wind_speed_10m&timezone=Europe/Madrid&forecast_days=3`
+    );
+    const wx = await wxRes.json();
+    const times = wx?.hourly?.time || [];
+    if (!times.length) return null;
+
+    const target = new Date(matchISO);
+    const fmt = new Intl.DateTimeFormat("sv-SE", {
+      timeZone: "Europe/Madrid",
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", hour12: false
+    });
+    const parts = fmt.formatToParts(target).reduce((a,p)=>{a[p.type]=p.value;return a;}, {});
+    const localISO = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+
+    let idx = times.indexOf(localISO);
+    if (idx === -1) {
+      let best = 0, bestDiff = Infinity;
+      for (let i=0;i<times.length;i++){
+        const d = Math.abs(new Date(times[i]).getTime() - new Date(localISO).getTime());
+        if (d < bestDiff) { bestDiff = d; best = i; }
+      }
+      idx = best;
+    }
+
+    const temp = wx.hourly.temperature_2m?.[idx] ?? null;
+    const wind = wx.hourly.wind_speed_10m?.[idx] ?? null;
+    const ppop = wx.hourly.precipitation_probability?.[idx] ?? null;
+
+    const text_gl = `${temp!=null?`${Math.round(temp)} °C`:"—"} · vento ${wind!=null?`${Math.round(wind)} km/h`:"—"} · chuvia ${ppop!=null?`${ppop}%`:"—"}`;
+    return {
+      source: "open-meteo",
+      fetched_at: new Date().toISOString(),
+      location: { name: lugar.toUpperCase(), lat, lon },
+      forecast_time_iso: new Date(localISO).toISOString(),
+      temp_c: temp,
+      wind_kmh: wind,
+      precip_prob_pct: ppop,
+      icon: "auto",
+      text_gl,
+    };
+  } catch (e) {
+    console.warn("fetchMeteoFor error", e);
+    return null;
+  }
+}
 
 export default function ProximoPartido() {
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [savedAt, setSavedAt] = useState("");
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth <= 560 : false
+  );
+  useEffect(() => {
+    const onR = () => setIsMobile(window.innerWidth <= 560);
+    window.addEventListener("resize", onR);
+    return () => window.removeEventListener("resize", onR);
+  }, []);
 
-  // Formulario — só campos básicos que xa existían
-  const [form, setForm] = useState({
-    team1: "RC Celta",
-    team2: "",
-    place: "",
-    date_text: "",
-    time_text: "",
-    tz: TZ_DEFAULT,
-  });
+  const [row, setRow] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Meteo en cliente (placeholder a >48h)
-  const [meteo, setMeteo] = useState({ loading: false, text: "", placeholder: false });
+  // Form admin
+  const [teamLocal, setTeamLocal] = useState("");
+  const [teamAway,  setTeamAway]  = useState("");
+  const [lugar,     setLugar]     = useState("");
+  const [competition, setCompetition] = useState("");
+  const [dateStr, setDateStr] = useState("");
+  const [timeStr, setTimeStr] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [info, setInfo] = useState("");
+  const [err, setErr] = useState("");
+
+  const [meteo, setMeteo] = useState(null);
 
   useEffect(() => {
     let alive = true;
+    const safety = setTimeout(() => { if (alive) setLoading(false); }, 1600);
 
     (async () => {
-      // Sesión + admin
-      const { data: s } = await supabase.auth.getSession();
-      const email = s?.session?.user?.email || "";
-      if (ADMIN_EMAILS.has((email || "").toLowerCase())) setIsAdmin(true);
+      try {
+        const { data: s } = await supabase.auth.getSession();
+        const email = s?.session?.user?.email || "";
+        const uid   = s?.session?.user?.id || null;
 
-      // Cargar next_match (id=1)
-      const { data, error } = await supabase
-        .from("next_match")
-        .select("team1, team2, place, date_text, time_text, tz, match_iso")
-        .eq("id", 1)
-        .maybeSingle();
+        let admin = false;
+        if (email) {
+          const e = email.toLowerCase();
+          if (e === "hdcliga@gmail.com" || e === "hdcliga2@gmail.com") admin = true;
+        }
+        if (!admin && uid) {
+          const { data: prof } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", uid)
+            .maybeSingle();
+          if ((prof?.role || "").toLowerCase() === "admin") admin = true;
+        }
+        if (alive) setIsAdmin(admin);
 
-      if (!error && data && alive) {
-        setForm({
-          team1: data.team1 || "RC Celta",
-          team2: data.team2 || "",
-          place: data.place || "",
-          date_text: data.date_text || "",
-          time_text: data.time_text || "",
-          tz: data.tz || TZ_DEFAULT,
-        });
-        // Meteo client-side (se faltan ≤ 48h)
-        hydrateMeteo(data.place, data.match_iso || null, data.tz || TZ_DEFAULT);
-      } else {
-        // Estado por defecto
-        hydrateMeteo("", null, TZ_DEFAULT);
+        const { data: nm } = await supabase
+          .from("next_match")
+          .select("id, equipo1, equipo2, lugar, match_iso, tz, competition, weather_json, updated_at")
+          .eq("id", 1)
+          .maybeSingle();
+
+        if (alive && nm) {
+          setRow(nm);
+          setTeamLocal(nm.equipo1 ? nm.equipo1.toUpperCase() : "");
+          setTeamAway(nm.equipo2 ? nm.equipo2.toUpperCase() : "");
+          setLugar(nm.lugar ? nm.lugar.toUpperCase() : "");
+          setCompetition(nm.competition || "");
+          if (nm.match_iso) {
+            const dt = new Date(nm.match_iso);
+            const yyyy = dt.getFullYear();
+            const mm = String(dt.getMonth() + 1).padStart(2, "0");
+            const dd = String(dt.getDate()).padStart(2, "0");
+            const hh = String(dt.getHours()).padStart(2, "0");
+            const mi = String(dt.getMinutes()).padStart(2, "0");
+            setDateStr(`${yyyy}-${mm}-${dd}`);
+            setTimeStr(`${hh}:${mi}`);
+          } else {
+            setDateStr(""); setTimeStr("");
+          }
+          setMeteo(nm.weather_json || null);
+
+          // Meteo 2A: <48h e non hai meteo -> traer; se admin, persistir
+          if (nm.match_iso) {
+            const ms = new Date(nm.match_iso).getTime() - Date.now();
+            const within48h = ms <= 48 * 3600 * 1000;
+            const staleOrMissing = !nm.weather_json;
+            if (within48h && staleOrMissing && nm.lugar) {
+              const wx = await fetchMeteoFor(nm.lugar, nm.match_iso);
+              if (alive && wx) {
+                setMeteo(wx);
+                if (admin) {
+                  await supabase.from("next_match").update({
+                    weather_json: wx,
+                    updated_at: new Date().toISOString(),
+                  }).eq("id", 1);
+                }
+              }
+            }
+          }
+        }
+      } finally {
+        if (alive) setLoading(false);
+        clearTimeout(safety);
       }
-
-      setLoading(false);
     })();
 
-    return () => {
-      alive = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  return () => { alive = false; clearTimeout(safety); };
   }, []);
 
-  function onChange(k, v) {
-    setForm((f) => ({ ...f, [k]: v }));
-  }
+  const teamA = useMemo(
+    () => (row?.equipo1 || teamLocal || "").toUpperCase(),
+    [row, teamLocal]
+  );
+  const teamB = useMemo(
+    () => (row?.equipo2 || teamAway || "").toUpperCase(),
+    [row, teamAway]
+  );
+
+  const dateObj = useMemo(() => {
+    if (row?.match_iso) return new Date(row.match_iso);
+    if (dateStr && timeStr) return new Date(`${dateStr}T${timeStr}:00`);
+    return null;
+  }, [row, dateStr, timeStr]);
+
+  const longDate = useMemo(() => (dateObj ? toLongGalician(dateObj) : null), [dateObj]);
+
+  const showEscudo = (!isMobile && true) || (isMobile && !isAdmin);
 
   async function onSave(e) {
     e?.preventDefault?.();
-    setSaving(true);
+    setInfo(""); setErr("");
     try {
-      if (!form.team1.trim() || !form.team2.trim() || !form.place.trim() || !form.date_text || !form.time_text) {
-        alert("Completa Equipo Local, Equipo Visitante, Lugar, Data e Hora.");
-        setSaving(false);
+      if (!teamLocal.trim() || !teamAway.trim() || !lugar.trim()) {
+        setErr("Completa equipo local, visitante e lugar.");
         return;
       }
-
-      const match_iso = buildMatchISO(form.date_text, form.time_text, form.tz || TZ_DEFAULT);
-      if (!match_iso) {
-        alert("Non puidemos calcular a hora ISO. Revisa a data e a hora.");
-        setSaving(false);
+      if (!dateStr || !timeStr) {
+        setErr("Completa data e hora.");
         return;
       }
+      setSaving(true);
 
-      // Gardamos en BBDD
+      const local = new Date(`${dateStr}T${timeStr}:00`);
+      const match_iso = local.toISOString();
+
       const payload = {
         id: 1,
-        team1: form.team1.trim().toUpperCase(),
-        team2: form.team2.trim().toUpperCase(),
-        place: form.place.trim().toUpperCase(),
-        date_text: form.date_text,
-        time_text: form.time_text,
-        tz: form.tz || TZ_DEFAULT,
+        equipo1: teamLocal.trim().toUpperCase(),
+        equipo2: teamAway.trim().toUpperCase(),
+        lugar: lugar.trim().toUpperCase(),
+        competition: competition || null,
         match_iso,
+        tz: "Europe/Madrid",
+        updated_at: new Date().toISOString(),
       };
 
       const { error } = await supabase.from("next_match").upsert(payload, { onConflict: "id" });
-      if (error) {
-        console.error(error);
-        alert("Erro gardando o partido.");
-        setSaving(false);
-        return;
+      if (error) throw error;
+
+      // Meteo inmediata a <48h
+      const ms = new Date(match_iso).getTime() - Date.now();
+      if (ms <= 48 * 3600 * 1000) {
+        const wx = await fetchMeteoFor(payload.lugar, match_iso);
+        if (wx) {
+          setMeteo(wx);
+          await supabase.from("next_match").update({
+            weather_json: wx,
+            updated_at: new Date().toISOString(),
+          }).eq("id", 1);
+        }
       }
 
-      // Mensaxe e recarga (para refrescar o contador do NavBar)
       const now = new Date();
       const hh = String(now.getHours()).padStart(2, "0");
       const mm = String(now.getMinutes()).padStart(2, "0");
       const ss = String(now.getSeconds()).padStart(2, "0");
-      setSavedAt(`${hh}:${mm}:${ss}`);
+      setInfo(`Gardado e publicado ás ${hh}:${mm}:${ss}`);
 
-      // Meteo local inmediata
-      hydrateMeteo(payload.place, payload.match_iso, payload.tz);
-
-      // Pequeña pausa visual e recarga
-      setTimeout(() => {
-        window.location.reload();
-      }, 650);
+      setTimeout(() => { window.location.reload(); }, 450);
+    } catch (e2) {
+      console.error("[ProximoPartido] save error:", e2);
+      setErr("Erro gardando os datos.");
     } finally {
       setSaving(false);
     }
   }
 
-  // Meteo en cliente: Open-Meteo + Geocoding cando falten ≤48h
-  async function hydrateMeteo(place, matchISO, tz) {
+  if (loading) return <main style={WRAP}>Cargando…</main>;
+
+  const rightPad = (!isMobile && showEscudo) ? 210 : 0;
+
+  const justTime = useMemo(() => {
+    if (!dateObj) return null;
     try {
-      if (!place || !matchISO) {
-        setMeteo({ loading: false, text: "", placeholder: true });
-        return;
-      }
-      const now = Date.now();
-      const t = Date.parse(matchISO);
-      if (isNaN(t) || t - now > 48 * 3600 * 1000) {
-        setMeteo({ loading: false, text: "", placeholder: true });
-        return;
-      }
-
-      setMeteo((m) => ({ ...m, loading: true }));
-      // 1) Geocoding
-      const gRes = await fetch(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(place)}&count=1&language=gl`
-      );
-      const g = await gRes.json();
-      const r = g?.results?.[0];
-      if (!r) {
-        setMeteo({ loading: false, text: "Non se atopou localización para Meteo.", placeholder: false });
-        return;
-      }
-
-      // 2) Forecast
-      const fRes = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${r.latitude}&longitude=${r.longitude}` +
-          `&hourly=temperature_2m,precipitation_probability,windspeed_10m&timezone=${encodeURIComponent(tz || TZ_DEFAULT)}`
-      );
-      const f = await fRes.json();
-      const hours = f?.hourly?.time || [];
-      const temp = f?.hourly?.temperature_2m || [];
-      const wind = f?.hourly?.windspeed_10m || [];
-      const prob = f?.hourly?.precipitation_probability || [];
-
-      // 3) Hora máis próxima
-      let idx = -1,
-        best = Infinity;
-      for (let i = 0; i < hours.length; i++) {
-        const dt = Date.parse(hours[i]);
-        const d = Math.abs(dt - t);
-        if (d < best) {
-          best = d;
-          idx = i;
-        }
-      }
-      if (idx < 0) {
-        setMeteo({ loading: false, text: "Non hai tramos horarios dispoñibles para Meteo.", placeholder: false });
-        return;
-      }
-
-      const gl = `Temp: ${Math.round(temp[idx])}ºC · Vento: ${Math.round(wind[idx])} km/h · Prob. chuvia: ${prob[idx] ?? 0}%`;
-      setMeteo({ loading: false, text: gl, placeholder: false });
-    } catch (e) {
-      console.error(e);
-      setMeteo({ loading: false, text: "Erro obtendo Meteo.", placeholder: false });
-    }
-  }
-
-  const kickoffLocalStr = useMemo(() => {
-    if (!form.date_text || !form.time_text) return "";
-    try {
-      // Só para mostrar: Data e Hora tal cal
-      return `${form.date_text} · ${form.time_text} (${form.tz || TZ_DEFAULT})`;
+      return new Intl.DateTimeFormat("gl-ES", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: "Europe/Madrid",
+      }).format(dateObj);
     } catch {
-      return "";
+      const hh = String(dateObj.getHours()).padStart(2, "0");
+      const mm = String(dateObj.getMinutes()).padStart(2, "0");
+      return `${hh}:${mm}`;
     }
-  }, [form.date_text, form.time_text, form.tz]);
+  }, [dateObj]);
 
-  if (loading) return <main style={{ padding: 16 }}>Cargando…</main>;
+  const lugarLegend = (row?.lugar || lugar || "—").toUpperCase();
 
   return (
-    <main style={{ maxWidth: 880, margin: "0 auto", padding: "16px" }}>
-      {/* Cabecera visual simple */}
-      <section style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 12, alignItems: "center" }}>
-        <div
-          style={{
-            width: 68,
-            height: 68,
-            borderRadius: 16,
-            border: "1px solid #e5e7eb",
-            display: "grid",
-            placeItems: "center",
-            boxShadow: "0 6px 20px rgba(0,0,0,.12)",
-            background: "#fff",
-          }}
-        >
+    <main style={WRAP}>
+      <style>{STYLE_HIDE_NATIVE_DATE}</style>
+
+      <section style={PANEL}>
+        {/* Escudo: pegado arriba á dereita */}
+        {showEscudo && !isMobile && (
           <img
-            src="/escudo.png"
-            alt="Escudo"
-            width="40"
-            height="40"
-            style={{ objectFit: "contain", display: "block" }}
+            src={ESCUDO_SRC}
+            alt="Escudo RC Celta"
             decoding="async"
             loading="eager"
+            style={{
+              position: "absolute",
+              top: 10,
+              right: 10,
+              width: 150,
+              height: "auto",
+              opacity: 0.95,
+              pointerEvents: "none",
+              zIndex: 0,
+            }}
           />
-        </div>
-        <div>
-          <h2 style={{ margin: "0 0 6px", fontFamily: "Montserrat, system-ui, sans-serif", fontWeight: 700 }}>
-            {form.team1 || "RC Celta"} <span style={{ fontWeight: 600, fontSize: "90%" }}>vs</span>{" "}
-            {form.team2 || "—"}
-          </h2>
-          {form.date_text && form.time_text ? (
-            <p style={{ margin: 0, color: "#334155" }}>{kickoffLocalStr}</p>
-          ) : (
-            <p style={{ margin: 0, color: "#64748b" }}>Data e hora pendentes de confirmar</p>
-          )}
-        </div>
-      </section>
+        )}
 
-      {/* Meteo */}
-      <section
-        style={{
-          marginTop: 14,
-          border: "1px solid #e5e7eb",
-          borderRadius: 14,
-          padding: 12,
-          background: "#fff",
-        }}
-      >
-        <h3 style={{ margin: "0 0 6px" }}>Meteo</h3>
-        {meteo.placeholder ? (
+        {/* Contido principal por riba do escudo */}
+        <div style={{ position: "relative", zIndex: 1, paddingRight: rightPad }}>
+          <h2 style={TITLE_LINE}>
+            <span style={TEAM_NAME}>{teamA || "—"}</span>
+            <span style={VS_STYLE}>vs</span>
+            <span style={TEAM_NAME}>{teamB || "—"}</span>
+          </h2>
+
+          <p style={LINE_GRAY}>
+            Competición: <strong>{row?.competition || competition || "—"}</strong>
+          </p>
+
+          <p style={LINE_GRAY}>
+            Data: <strong>{capFirst(longDate || "—")}</strong>
+          </p>
+
+          <p style={LINE_GRAY}>
+            Hora: {justTime ? <strong>{justTime}</strong> : "—"}
+          </p>
+
+          <hr style={HR} />
+        </div>
+
+        {/* ===== METEO — banner ancho completo do panel ===== */}
+        <div
+          style={{
+            position: "relative",
+            marginTop: 10,
+            marginLeft: -16,  // sangrado aos bordes do panel
+            marginRight: -16, // idem
+            zIndex: 1,
+          }}
+        >
+          {/* Leyenda superposta */}
+          <span
+            style={{
+              position: "absolute",
+              top: -12,
+              left: 18,
+              padding: "0 8px",
+              background: "#fff",
+              fontSize: 13,
+              fontWeight: 700,
+              color: "#334155",
+              zIndex: 2,
+              pointerEvents: "none",
+            }}
+          >
+            METEO | Previsión en {lugarLegend} na data e hora do partido
+          </span>
+
           <div
             style={{
               border: "1px dashed #cbd5e1",
               borderRadius: 12,
-              padding: 12,
-              color: "#475569",
-              background: "#fff",
+              background:
+                "linear-gradient(180deg, rgba(14,165,233,0.08), rgba(99,102,241,0.06))",
+              padding: "16px",
+              paddingRight: 16 + rightPad, // evita solaparse co escudo en desktop
             }}
           >
-            Información meteorolóxica dispoñible 48 horas antes do partido
+            {meteo ? (
+              <div
+                style={{
+                  display: "flex",
+                  gap: 22,
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                }}
+              >
+                {/* Píldoras máis vistosas */}
+                <div style={pillStyle()}>
+                  <span style={pillIcon()}>🌡️</span>
+                  <strong style={pillValue()}>
+                    {meteo.temp_c != null ? `${Math.round(meteo.temp_c)} °C` : "—"}
+                  </strong>
+                </div>
+
+                <div style={pillStyle()}>
+                  <span style={pillIcon()}>💨</span>
+                  <strong style={pillValue()}>
+                    {meteo.wind_kmh != null ? `${Math.round(meteo.wind_kmh)} km/h` : "—"}
+                  </strong>
+                </div>
+
+                <div style={pillStyle()}>
+                  <span style={pillIcon()}>☔</span>
+                  <strong style={pillValue()}>
+                    {meteo.precip_prob_pct != null ? `${meteo.precip_prob_pct}%` : "—"}
+                  </strong>
+                </div>
+              </div>
+            ) : (
+              <p style={{ margin: 0, color: "#475569", fontSize: 16 }}>
+                Información meteorolóxica dispoñible 48 horas antes do partido.
+              </p>
+            )}
           </div>
-        ) : meteo.loading ? (
-          <p style={{ margin: 0 }}>Cargando previsión…</p>
-        ) : meteo.text ? (
-          <p style={{ margin: 0 }}>{meteo.text}</p>
-        ) : (
-          <p style={{ margin: 0, color: "#b91c1c" }}>Non foi posible cargar a Meteo.</p>
+        </div>
+
+        {/* Escudo en móbil (non-admin) ao final */}
+        {showEscudo && isMobile && (
+          <div style={{ marginTop: 16, display: "grid", placeItems: "center" }}>
+            <img
+              src={ESCUDO_SRC}
+              alt="Escudo RC Celta"
+              decoding="async"
+              loading="eager"
+              style={{ width: 120, height: "auto", opacity: 0.98 }}
+            />
+          </div>
+        )}
+
+        {/* Formulario ADMIN */}
+        {isAdmin && (
+          <form style={ADMIN_BOX} onSubmit={onSave}>
+            <div style={{ ...ROW, marginBottom: 12 }}>
+              <div>
+                <label style={LABEL}>Competición</label>
+                <div style={SELECT_WRAP}>
+                  <select
+                    value={competition}
+                    onChange={(e) => setCompetition(e.currentTarget.value)}
+                    style={SELECT_BASE}
+                  >
+                    <option value="">(selecciona)</option>
+                    <option value="LaLiga">LaLiga</option>
+                    <option value="Europa League">Europa League</option>
+                    <option value="Copa do Rei">Copa do Rei</option>
+                  </select>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={SELECT_ARROW}>
+                    <path d="M6 9l6 6 6-6" stroke="#0f172a" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <label style={LABEL}>Lugar</label>
+                <input
+                  style={INPUT_LUGAR}
+                  value={lugar}
+                  onInput={(e) => setLugar(e.currentTarget.value.toUpperCase())}
+                  placeholder="Ex.: VIGO"
+                />
+              </div>
+            </div>
+
+            <div style={{ ...ROW, marginBottom: 12 }}>
+              <div>
+                <label style={LABEL}>Equipo local</label>
+                <input
+                  style={INPUT_EQ}
+                  value={teamLocal}
+                  onInput={(e) => setTeamLocal(e.currentTarget.value.toUpperCase())}
+                  placeholder="(sen valor por defecto)"
+                />
+              </div>
+              <div>
+                <label style={LABEL}>Equipo visitante</label>
+                <input
+                  style={INPUT_EQ}
+                  value={teamAway}
+                  onInput={(e) => setTeamAway(e.currentTarget.value.toUpperCase())}
+                  placeholder="GIRONA"
+                />
+              </div>
+            </div>
+
+            <div style={{ ...ROW, marginBottom: 12 }}>
+              <div>
+                <label style={LABEL}>Data oficial confirmada</label>
+                <div style={{ position: "relative" }}>
+                  {/* Icono calendario á esquerda (celeste) */}
+                  <svg
+                    width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"
+                    style={{ position: "absolute", left: 10, top: 10 }}
+                  >
+                    <rect x="3" y="4.5" width="18" height="16" rx="2" stroke="#0ea5e9" strokeWidth="1.8" />
+                    <path d="M7 2.5v4M17 2.5v4M3 9h18" stroke="#0ea5e9" strokeWidth="1.8" />
+                  </svg>
+                  <input
+                    id="nm-date" class="nm-date" type="date"
+                    style={INPUT_DATE}
+                    value={dateStr}
+                    onInput={(e) => setDateStr(e.currentTarget.value)}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={LABEL}>Hora confirmada</label>
+                <div style={SELECT_WRAP}>
+                  <select
+                    style={SELECT_BASE}
+                    value={timeStr}
+                    onChange={(e) => setTimeStr(e.currentTarget.value)}
+                  >
+                    <option value="">(selecciona)</option>
+                    {timeOptions().map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={SELECT_ARROW}>
+                    <path d="M6 9l6 6 6-6" stroke="#0f172a" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" style={BTN_SAVE} disabled={saving}>
+              {saving ? "Gardando…" : "Gardar"}
+            </button>
+
+            {info && <p style={INFO}>{info}</p>}
+            {err && <p style={ERR}>{err}</p>}
+          </form>
         )}
       </section>
-
-      {/* Formulario admin (só emails autorizados) */}
-      {isAdmin && (
-        <section
-          style={{
-            marginTop: 18,
-            border: "1px solid #e5e7eb",
-            borderRadius: 14,
-            padding: 12,
-            background: "#fff",
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>Editar próximo partido (só admin)</h3>
-          <form onSubmit={onSave}>
-            <div style={{ display: "grid", gap: 10 }}>
-              <label style={{ fontWeight: 600, color: "#334155" }}>Equipo Local</label>
-              <input
-                value={form.team1}
-                onInput={(e) => onChange("team1", e.currentTarget.value.toUpperCase())}
-                placeholder="RC CELTA"
-                style={{
-                  padding: "10px 12px",
-                  borderRadius: 12,
-                  border: "1px solid #e5e7eb",
-                  fontWeight: 700,
-                }}
-              />
-
-              <label style={{ fontWeight: 600, color: "#334155" }}>Equipo Visitante</label>
-              <input
-                value={form.team2}
-                onInput={(e) => onChange("team2", e.currentTarget.value.toUpperCase())}
-                placeholder="RIVAL"
-                style={{
-                  padding: "10px 12px",
-                  borderRadius: 12,
-                  border: "1px solid #e5e7eb",
-                  fontWeight: 700,
-                }}
-              />
-
-              <label style={{ fontWeight: 600, color: "#334155" }}>Lugar</label>
-              <input
-                value={form.place}
-                onInput={(e) => onChange("place", e.currentTarget.value.toUpperCase())}
-                placeholder="VIGO"
-                style={{
-                  padding: "10px 12px",
-                  borderRadius: 12,
-                  border: "1px solid #e5e7eb",
-                  fontWeight: 700,
-                }}
-              />
-
-              <label style={{ fontWeight: 600, color: "#334155" }}>Fecha oficial confirmada</label>
-              <input
-                type="date"
-                value={form.date_text}
-                onInput={(e) => onChange("date_text", e.currentTarget.value)}
-                style={{ padding: "10px 12px", borderRadius: 12, border: "1px solid #e5e7eb" }}
-              />
-
-              <label style={{ fontWeight: 600, color: "#334155" }}>Hora confirmada</label>
-              <select
-                value={form.time_text}
-                onChange={(e) => onChange("time_text", e.currentTarget.value)}
-                style={{ padding: "10px 12px", borderRadius: 12, border: "1px solid #e5e7eb" }}
-              >
-                <option value="">—</option>
-                {HOURS_15M.map((h) => (
-                  <option value={h}>{h}</option>
-                ))}
-              </select>
-
-              {/* Zona horaria (fixa por defecto; editable por se acaso) */}
-              <label style={{ fontWeight: 600, color: "#334155" }}>Zona horaria</label>
-              <input
-                value={form.tz}
-                onInput={(e) => onChange("tz", e.currentTarget.value)}
-                placeholder="Europe/Madrid"
-                style={{ padding: "10px 12px", borderRadius: 12, border: "1px solid #e5e7eb" }}
-              />
-
-              <button
-                type="submit"
-                disabled={saving}
-                style={{
-                  marginTop: 6,
-                  padding: "12px 16px",
-                  borderRadius: 12,
-                  border: "1px solid #0ea5e9",
-                  backgroundImage: "linear-gradient(180deg,#67b1ff,#5a8df5)",
-                  color: "#fff",
-                  fontWeight: 800,
-                  cursor: "pointer",
-                  boxShadow: "0 10px 24px rgba(14,165,233,.28)",
-                }}
-              >
-                {saving ? "Gardando…" : "Gardar"}
-              </button>
-
-              {savedAt && (
-                <p style={{ margin: "6px 0 0", color: "#0f766e" }}>
-                  Gardado e publicado ás {savedAt}
-                </p>
-              )}
-            </div>
-          </form>
-        </section>
-      )}
     </main>
   );
 }
 
-
+/* ===== Helpers de estilo para píldoras METEO ===== */
+function pillStyle(){
+  return {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 10,
+    padding: "10px 14px",
+    borderRadius: 999,
+    background: "#fff",
+    border: "1px solid #e2e8f0",
+    boxShadow: "0 1px 2px rgba(0,0,0,.05)",
+  };
+}
+function pillIcon(){
+  return { fontSize: 26, lineHeight: 1, display: "inline-block" };
+}
+function pillValue(){
+  return { fontSize: 20, lineHeight: 1.1, letterSpacing: ".2px" };
+}
