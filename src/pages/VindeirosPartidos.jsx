@@ -10,12 +10,12 @@ const H1  = { font:"700 22px/1.2 Montserrat,system-ui,sans-serif", margin:"0 0 4
 const SUB = { font:"400 14px/1.25 Montserrat,system-ui,sans-serif", margin:"0 0 14px", color:"#64748b" };
 
 const GRID = { display:"grid", gridTemplateColumns:"72px 160px 1fr 220px 120px", alignItems:"center", gap:0 };
-const HEAD = { font:"700 13px/1.15 Montserrat,system-ui,sans-serif", color:"#0f172a", padding:"10px 12px", textTransform:"uppercase" };
+const HEAD = { font:"700 13px/1.15 Montserrat,system-ui,sans-serif", color:"#fff", padding:"10px 12px", textTransform:"uppercase" };
 const ROW  = { ...GRID, minHeight:54, borderTop:"1px solid #e5e7eb" };
 const CELL = { padding:"10px 12px", font:"400 14px/1.25 Montserrat,system-ui,sans-serif", color:"#0f172a" };
 const NUM  = { width:40, textAlign:"right", color:"#64748b", marginRight:8, fontWeight:600 };
 const COL_BORDER = "1px solid rgba(15,23,42,.22)";
-const HEAD_BG = "#e0f2fe"; // celeste suave
+const HEAD_BG = "#0ea5e9"; // celeste sólido (sky-500)
 
 const BTN_ICON = { display:"inline-grid", placeItems:"center", width:40, height:40, border:"1px solid #e5e7eb", borderRadius:10, background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)", cursor:"pointer" };
 
@@ -58,7 +58,15 @@ export default function VindeirosPartidos() {
   };
 
   const headCell = (children, isLast = false, center = false) => (
-    <div style={{ ...HEAD, borderRight: isLast ? "none" : COL_BORDER, background: HEAD_BG, display: center ? "flex" : "block", justifyContent: center ? "center" : "flex-start" }}>
+    <div
+      style={{
+        ...HEAD,
+        borderRight: isLast ? "none" : COL_BORDER,
+        background: HEAD_BG,
+        display: center ? "flex" : "block",
+        justifyContent: center ? "center" : "flex-start",
+      }}
+    >
       {children}
     </div>
   );
@@ -73,27 +81,29 @@ export default function VindeirosPartidos() {
         <p style={SUB}>Axenda dos próximos encontros con data e hora confirmadas.</p>
 
         {/* Cabeceira */}
-        <div style={{ ...GRID, borderTop:"1px solid #bae6fd", borderBottom:"1px solid #bae6fd" }}>
+        <div style={{ ...GRID, borderTop:"1px solid #0ea5e9", borderBottom:"1px solid #0ea5e9" }}>
           {headCell(<span style={{ paddingLeft:12 }}>#</span>)}
-          {/* DATA: sen texto na cabeceira */}
-          {headCell(<span />, false)}
+          {headCell(<span>DATA</span>)}
           {headCell(
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="12" cy="12" r="9" stroke="#0f172a" strokeWidth="1.6"/>
-                <path d="M12 7l3 2-1 4H10L9 9l3-2Z" stroke="#0f172a" strokeWidth="1.2" fill="none"/>
-                <path d="M9 9l-3 2 2 3 2-1M15 9l3 2-2 3-2-1" stroke="#0f172a" strokeWidth="1.2" fill="none"/>
+                <circle cx="12" cy="12" r="9" stroke="#fff" strokeWidth="1.6"/>
+                <path d="M12 7l3 2-1 4H10L9 9l3-2Z" stroke="#fff" strokeWidth="1.2" fill="none"/>
+                <path d="M9 9l-3 2 2 3 2-1M15 9l3 2-2 3-2-1" stroke="#fff" strokeWidth="1.2" fill="none"/>
               </svg>
               <span>PARTIDO</span>
             </div>
           )}
           {headCell(
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M7 4h10v3a5 5 0 01-10 0V4Z" stroke="#0f172a" strokeWidth="1.6"/><path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" stroke="#0f172a" strokeWidth="1.6"/><path d="M9 14h6v3H9z" stroke="#0f172a" strokeWidth="1.6"/></svg>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M7 4h10v3a5 5 0 01-10 0V4Z" stroke="#fff" strokeWidth="1.6"/>
+                <path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" stroke="#fff" strokeWidth="1.6"/>
+                <path d="M9 14h6v3H9z" stroke="#fff" strokeWidth="1.6"/>
+              </svg>
               <span>COMPETICIÓN</span>
             </div>
           )}
-          {/* REVISAR centrado */}
           {headCell(<span>REVISAR</span>, true, true)}
         </div>
 
@@ -103,7 +113,7 @@ export default function VindeirosPartidos() {
             {/* # */}
             {bodyCell(<span style={{ ...NUM, paddingLeft:12 }}>{String(i + 1).padStart(2, "0")}</span>)}
 
-            {/* DATA (datepicker co icono nativo) */}
+            {/* DATA (datepicker nativo) */}
             {bodyCell(
               <input
                 type="date"
@@ -168,3 +178,4 @@ export default function VindeirosPartidos() {
     </main>
   );
 }
+
