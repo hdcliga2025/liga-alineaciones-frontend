@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
 const ESCUDO_SRC = "/escudo.png";
-const ESCUDO_DESKTOP_WIDTH = 200; // ↑ un chisquiño máis grande
-const ESCUDO_DESKTOP_TOP = -8;    // ↑ máis arriba e “fixo”
+const ESCUDO_DESKTOP_WIDTH = 180; // ↓ un pouco máis pequeno
+const ESCUDO_DESKTOP_TOP = 2;     // posición estable sen tocar liñas
 
 const WRAP = { maxWidth: 880, margin: "0 auto", padding: "16px" };
 
@@ -25,13 +25,14 @@ const TITLE_LINE_BASE = {
   color: "#0f172a",
   lineHeight: 1.1,
 };
-const TEAM_NAME = { fontWeight: 700, textTransform: "uppercase" };
+const TEAM_NAME = { fontWeight: 600, textTransform: "uppercase" }; // ↓ menos bold
+const VS_WEIGHT = 500; // ↓ menos bold
 
 const LINE_GRAY_BASE = {
   margin: "6px 0 0",
   fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
   color: "#6b7280",
-  fontWeight: 600,
+  fontWeight: 500, // ↓ menos bold
 };
 
 /* ===== Admin form ===== */
@@ -173,7 +174,7 @@ export default function ProximoPartido() {
   const scale = (n) => (isMobile ? Math.max(10, Math.round(n * 0.9)) : n); // ↓ todo un pouco en móbil
 
   const TITLE_LINE = { ...TITLE_LINE_BASE, fontSize: scale(30) };
-  const VS_STYLE   = { fontWeight: 600, fontSize: scale(22), margin: "0 8px" };
+  const VS_STYLE   = { fontWeight: VS_WEIGHT, fontSize: scale(22), margin: "0 8px" };
   const LINE_GRAY  = { ...LINE_GRAY_BASE, fontSize: scale(20) };
 
   const [row, setRow] = useState(null);
@@ -376,7 +377,8 @@ export default function ProximoPartido() {
 
   if (loading) return <main style={WRAP}>Cargando…</main>;
 
-  const rightPad = !isMobile && showEscudo ? 260 : 0; // máis oco para escudo maior
+  // oco lateral para non solapar NIN liña nin contidos
+  const rightPad = !isMobile && showEscudo ? ESCUDO_DESKTOP_WIDTH + 70 : 0;
 
   const justTime = useMemo(() => {
     if (!dateObj) return null;
@@ -394,15 +396,15 @@ export default function ProximoPartido() {
     }
   }, [dateObj]);
 
-  const lugarLegend = (row?.lugar || lugar || "—");
-  const legendText = `METEO: ${capFirst(lugarLegend.toLowerCase())}`;
+  const lugarLegendRaw = (row?.lugar || lugar || "—");
+  const legendText = `METEO: ${capFirst(String(lugarLegendRaw).toLowerCase())}`;
 
   return (
     <main style={WRAP}>
       <style>{STYLE_HIDE_NATIVE_DATE}</style>
 
       <section style={PANEL}>
-        {/* Escudo desktop: fixo e por detrás do contido */}
+        {/* Escudo desktop fixo e por detrás: non tapa liñas */}
         {showEscudo && !isMobile && (
           <img
             src={ESCUDO_SRC}
@@ -412,19 +414,19 @@ export default function ProximoPartido() {
             style={{
               position: "absolute",
               top: ESCUDO_DESKTOP_TOP,
-              right: 10,
+              right: 12,
               width: ESCUDO_DESKTOP_WIDTH,
               height: "auto",
               opacity: 0.95,
               pointerEvents: "none",
               userSelect: "none",
-              transform: "translateZ(0)", // estabilidade visual
-              zIndex: 0,
+              transform: "translateZ(0)", // estabiliza en render
+              zIndex: 0,                  // por detrás de todo
             }}
           />
         )}
 
-        {/* Bloque superior */}
+        {/* Bloque superior (menos bold) */}
         <div style={{ position: "relative", zIndex: 1, paddingRight: rightPad }}>
           <h2 style={TITLE_LINE}>
             <span style={TEAM_NAME}>{teamA || "—"}</span>
@@ -433,57 +435,57 @@ export default function ProximoPartido() {
           </h2>
 
           <p style={LINE_GRAY}>
-            Competición: <strong>{row?.competition || competition || "—"}</strong>
+            Competición: <strong style={{ fontWeight: 600 }}>{row?.competition || competition || "—"}</strong>
           </p>
 
           <p style={LINE_GRAY}>
-            Data: <strong>{capFirst(longDate || "—")}</strong>
+            Data: <strong style={{ fontWeight: 600 }}>{capFirst(longDate || "—")}</strong>
           </p>
 
           <p style={LINE_GRAY}>
-            Hora: {justTime ? <strong>{justTime}</strong> : "—"}
+            Hora: {justTime ? <strong style={{ fontWeight: 600 }}>{justTime}</strong> : "—"}
           </p>
         </div>
 
-        {/* HR por riba do escudo */}
+        {/* HR por riba do escudo (non se tapa) */}
         <div style={{ position: "relative", zIndex: 2, margin: "18px 0" }}>
           <hr style={{ border: 0, borderTop: "1px solid #e5e7eb", margin: 0 }} />
         </div>
 
-        {/* ===== METEO — box alineado co contido ===== */}
+        {/* ===== METEO — box aliñado ===== */}
         <div style={{ position: "relative", marginTop: 22, marginBottom: 22, zIndex: 1 }}>
-          {/* Leyenda principal (arriba) pisando a liña superior */}
+          {/* Leyenda principal (arriba), fondo transparente */}
           <span
             style={{
               position: "absolute",
-              top: -10, // centrada sobre borde 2px
+              top: -10, // centrada sobre borde superior 2px
               left: 12,
               padding: "0 10px",
-              background: "#fff",
-              fontSize: scale(15),   // ↓ en móbil
+              background: "transparent", // ← transparente
+              fontSize: scale(15),
               lineHeight: 1.2,
               fontWeight: 700,
               color: "#334155",
-              zIndex: 2,
+              zIndex: 3, // por riba da liña de puntos
               pointerEvents: "none",
             }}
           >
             {legendText}
           </span>
 
-          {/* Sub-leyenda (abaixo) pisando a liña inferior */}
+          {/* Sub-leyenda (abaixo), fondo transparente */}
           <span
             style={{
               position: "absolute",
               bottom: -10, // centrada sobre borde inferior 2px
               left: 12,
               padding: "0 8px",
-              background: "#fff",
-              fontSize: scale(12),   // ↓ en móbil
+              background: "transparent", // ← transparente
+              fontSize: scale(12),
               lineHeight: 1.2,
-              fontWeight: 400,       // sen bold
+              fontWeight: 400,
               color: "#64748b",
-              zIndex: 2,
+              zIndex: 3,
               pointerEvents: "none",
             }}
           >
@@ -496,7 +498,7 @@ export default function ProximoPartido() {
               borderRadius: 12,
               background: "linear-gradient(180deg, rgba(14,165,233,0.08), rgba(99,102,241,0.06))",
               padding: "18px 16px",
-              paddingRight: 16 + rightPad, // evita solaparse co escudo en desktop
+              paddingRight: 16 + rightPad, // evita calquera solape co escudo en desktop
             }}
           >
             {meteo ? (
@@ -530,7 +532,7 @@ export default function ProximoPartido() {
           </div>
         </div>
 
-        {/* Escudo en móbil (non-admin) ao final, tamén máis pequeno en móbil */}
+        {/* Escudo en móbil (non-admin) ao final */}
         {showEscudo && isMobile && (
           <div style={{ marginTop: 16, display: "grid", placeItems: "center" }}>
             <img
@@ -538,7 +540,7 @@ export default function ProximoPartido() {
               alt="Escudo RC Celta"
               decoding="async"
               loading="eager"
-              style={{ width: 108, height: "auto", opacity: 0.98 }} // ↓ un pouco
+              style={{ width: 108, height: "auto", opacity: 0.98 }}
             />
           </div>
         )}
