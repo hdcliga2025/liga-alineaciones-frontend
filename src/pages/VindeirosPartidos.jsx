@@ -17,9 +17,19 @@ const HEAD_BG = "#0ea5e9";
 
 const BTN_ICON = { display:"inline-grid", placeItems:"center", width:40, height:40, border:"1px solid #e5e7eb", borderRadius:10, background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)", cursor:"pointer" };
 
-const inputBase = { width:"100%", padding:"10px 12px", border:"1px solid #dbe2f0", borderRadius:10, outline:"none", font:"inherit" };
+const inputBase = { width:"100%", padding:"10px 12px", border:"1px solid #dbe2f0", borderRadius:10, outline:"none", font:"inherit", color:"#0f172a", background:"#fff" };
 const inputTeam = { ...inputBase, textTransform:"uppercase", fontWeight:700 };
 const selectBase = { ...inputBase, appearance:"auto", fontWeight:700, cursor:"pointer" };
+
+// Máscara simple dd/mm/aaaa (opcional, editable)
+function formatDMY(value) {
+  const v = value.replace(/[^\d]/g, "").slice(0,8);
+  const p1 = v.slice(0,2), p2 = v.slice(2,4), p3 = v.slice(4,8);
+  let out = p1;
+  if (p2) out += "/" + p2;
+  if (p3) out += "/" + p3;
+  return out;
+}
 
 export default function VindeirosPartidos() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -53,13 +63,13 @@ export default function VindeirosPartidos() {
     return () => { alive = false; };
   }, []);
 
-  // 10 filas locais editables (non persisten)
+  // 10 filas locais (non persisten)
   const [rows, setRows] = useState(Array.from({length:10}, ()=>({ date:"", home:"", away:"", comp:"" })));
   const onChange = (i, field, value) =>
     setRows(prev => { const nx = prev.slice(); nx[i] = { ...nx[i], [field]: value }; return nx; });
 
   const headCell = (children, center=false) => (
-    <div style={{ ...HEAD, background: HEAD_BG, justifyContent: center ? "center" : "flex-start", borderRight:"1px solid rgba(255,255,255,.0)" }}>
+    <div style={{ ...HEAD, background: HEAD_BG, justifyContent: center ? "center" : "flex-start" }}>
       {children}
     </div>
   );
@@ -97,7 +107,7 @@ export default function VindeirosPartidos() {
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                 <path d="M7 4h10v3a5 5 0 01-10 0V4Z" stroke="#fff" strokeWidth="1.6"/>
-                <path d="M7 7H5a 3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" stroke="#fff" strokeWidth="1.6"/>
+                <path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" stroke="#fff" strokeWidth="1.6"/>
                 <path d="M9 14h6v3H9z" stroke="#fff" strokeWidth="1.6"/>
               </svg>
               <span>COMPETICIÓN</span>
@@ -114,14 +124,15 @@ export default function VindeirosPartidos() {
               {/* # */}
               {bodyCell(<span style={{ ...NUM, paddingLeft:12 }}>{String(i+1).padStart(2,"0")}</span>, 0, last)}
 
-              {/* DATA: entrada manual (sen calendario) */}
+              {/* DATA: SOLO campo de texto (sen icono) */}
               {bodyCell(
                 <input
                   type="text"
                   inputMode="numeric"
+                  placeholder="dd/mm/aaaa"
                   style={inputBase}
                   value={r.date}
-                  onInput={(e)=>onChange(i,"date",e.currentTarget.value)}
+                  onInput={(e)=>onChange(i,"date", formatDMY(e.currentTarget.value))}
                   disabled={!isAdmin}
                   aria-label="Data (dd/mm/aaaa)"
                 />, 1, last
