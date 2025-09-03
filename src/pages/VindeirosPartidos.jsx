@@ -21,65 +21,24 @@ const inputBase = { width:"100%", padding:"10px 12px", border:"1px solid #dbe2f0
 const inputTeam = { ...inputBase, textTransform:"uppercase", fontWeight:700 };
 const selectBase = { ...inputBase, appearance:"auto", fontWeight:700, cursor:"pointer" };
 
-// Máscara simple dd/mm/aaaa (opcional, editable)
-function formatDMY(value) {
-  const v = value.replace(/[^\d]/g, "").slice(0,8);
-  const p1 = v.slice(0,2), p2 = v.slice(2,4), p3 = v.slice(4,8);
-  let out = p1;
-  if (p2) out += "/" + p2;
-  if (p3) out += "/" + p3;
-  return out;
+// máscara dd/mm/aaaa
+function maskDMY(v) {
+  const s = String(v || "").replace(/[^\d]/g, "").slice(0, 8);
+  const p1 = s.slice(0,2), p2 = s.slice(2,4), p3 = s.slice(4,8);
+  return p1 + (p2?"/"+p2:"") + (p3?"/"+p3:"");
 }
 
 export default function VindeirosPartidos() {
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const { data: s } = await supabase.auth.getSession();
-      const email = s?.session?.user?.email || "";
-      const uid   = s?.session?.user?.id || null;
-      let admin = false;
-
-      if (email) {
-        const e = email.toLowerCase();
-        if (e === "hdcliga@gmail.com" || e === "hdcliga2@gmail.com") admin = true;
-      }
-      if (!admin && uid) {
-        const { data: prof } = await supabase.from("profiles").select("role").eq("id", uid).maybeSingle();
-        if ((prof?.role || "").toLowerCase() === "admin") admin = true;
-      }
-      if (alive) setIsAdmin(admin);
-
-      if (!admin && uid) {
-        setTimeout(async () => {
-          if (!alive) return;
-          const { data: prof2 } = await supabase.from("profiles").select("role").eq("id", uid).maybeSingle();
-          if ((prof2?.role || "").toLowerCase() === "admin") setIsAdmin(true);
-        }, 500);
-      }
-    })();
-    return () => { alive = false; };
-  }, []);
-
-  // 10 filas locais (non persisten)
+  // non bloqueamos edición: se precisa, podemos volver a só-admin en calquera momento
   const [rows, setRows] = useState(Array.from({length:10}, ()=>({ date:"", home:"", away:"", comp:"" })));
   const onChange = (i, field, value) =>
     setRows(prev => { const nx = prev.slice(); nx[i] = { ...nx[i], [field]: value }; return nx; });
 
   const headCell = (children, center=false) => (
-    <div style={{ ...HEAD, background: HEAD_BG, justifyContent: center ? "center" : "flex-start" }}>
-      {children}
-    </div>
+    <div style={{ ...HEAD, background: HEAD_BG, justifyContent: center ? "center" : "flex-start" }}>{children}</div>
   );
   const bodyCell = (children, colIdx, isLastRow=false) => (
-    <div style={{
-      ...CELL,
-      borderRight: COL_BORDER,
-      borderLeft: colIdx===0 ? COL_BORDER : "none",
-      borderBottom: isLastRow ? COL_BORDER : "none"
-    }}>
+    <div style={{ ...CELL, borderRight: COL_BORDER, borderLeft: colIdx===0 ? COL_BORDER : "none", borderBottom: isLastRow ? COL_BORDER : "none" }}>
       {children}
     </div>
   );
@@ -94,25 +53,14 @@ export default function VindeirosPartidos() {
         <div style={{ ...GRID, borderTop:"1px solid #0ea5e9", borderBottom:"1px solid #0ea5e9" }}>
           {headCell(<span style={{ paddingLeft:12 }}>#</span>)}
           {headCell(<span>DATA</span>)}
-          {headCell(
-            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="9" stroke="#fff" strokeWidth="1.6"/>
-                <path d="M12 7l3 2-1 4H10L9 9l3-2Z" stroke="#fff" strokeWidth="1.2" fill="none"/>
-              </svg>
-              <span>PARTIDO</span>
-            </div>
-          )}
-          {headCell(
-            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <path d="M7 4h10v3a5 5 0 01-10 0V4Z" stroke="#fff" strokeWidth="1.6"/>
-                <path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" stroke="#fff" strokeWidth="1.6"/>
-                <path d="M9 14h6v3H9z" stroke="#fff" strokeWidth="1.6"/>
-              </svg>
-              <span>COMPETICIÓN</span>
-            </div>
-          )}
+          {headCell(<div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#fff" strokeWidth="1.6"/><path d="M12 7l3 2-1 4H10L9 9l3-2Z" stroke="#fff" strokeWidth="1.2" fill="none"/></svg>
+            <span>PARTIDO</span>
+          </div>)}
+          {headCell(<div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M7 4h10v3a5 5 0 01-10 0V4Z" stroke="#fff" strokeWidth="1.6"/><path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" stroke="#fff" strokeWidth="1.6"/><path d="M9 14h6v3H9z" stroke="#fff" strokeWidth="1.6"/></svg>
+            <span>COMPETICIÓN</span>
+          </div>)}
           {headCell(<span>REVISAR</span>, true)}
         </div>
 
@@ -121,10 +69,9 @@ export default function VindeirosPartidos() {
           const last = i === rows.length - 1;
           return (
             <div key={i} style={ROW}>
-              {/* # */}
               {bodyCell(<span style={{ ...NUM, paddingLeft:12 }}>{String(i+1).padStart(2,"0")}</span>, 0, last)}
 
-              {/* DATA: SOLO campo de texto (sen icono) */}
+              {/* DATA */}
               {bodyCell(
                 <input
                   type="text"
@@ -132,41 +79,22 @@ export default function VindeirosPartidos() {
                   placeholder="dd/mm/aaaa"
                   style={inputBase}
                   value={r.date}
-                  onInput={(e)=>onChange(i,"date", formatDMY(e.currentTarget.value))}
-                  disabled={!isAdmin}
-                  aria-label="Data (dd/mm/aaaa)"
+                  onInput={(e)=>onChange(i,"date", maskDMY(e.currentTarget.value))}
                 />, 1, last
               )}
 
               {/* PARTIDO */}
               {bodyCell(
                 <div style={{ display:"grid", gridTemplateColumns:"1fr auto 1fr", gap:8, alignItems:"center" }}>
-                  <input
-                    style={inputTeam}
-                    placeholder="EQUIPO 1"
-                    value={r.home}
-                    onInput={(e)=>onChange(i,"home",e.currentTarget.value.toUpperCase())}
-                    disabled={!isAdmin}
-                  />
+                  <input style={inputTeam} placeholder="EQUIPO 1" value={r.home} onInput={(e)=>onChange(i,"home",e.currentTarget.value.toUpperCase())}/>
                   <span style={{ fontWeight:800, color:"#0f172a" }}>vs</span>
-                  <input
-                    style={inputTeam}
-                    placeholder="EQUIPO 2"
-                    value={r.away}
-                    onInput={(e)=>onChange(i,"away",e.currentTarget.value.toUpperCase())}
-                    disabled={!isAdmin}
-                  />
+                  <input style={inputTeam} placeholder="EQUIPO 2" value={r.away} onInput={(e)=>onChange(i,"away",e.currentTarget.value.toUpperCase())}/>
                 </div>, 2, last
               )}
 
               {/* COMPETICIÓN */}
               {bodyCell(
-                <select
-                  style={selectBase}
-                  value={r.comp}
-                  onInput={(e)=>onChange(i,"comp",e.currentTarget.value)}
-                  disabled={!isAdmin}
-                >
+                <select style={selectBase} value={r.comp} onInput={(e)=>onChange(i,"comp",e.currentTarget.value)}>
                   <option value=""></option>
                   <option value="LaLiga">LaLiga</option>
                   <option value="Europa League">Europa League</option>
