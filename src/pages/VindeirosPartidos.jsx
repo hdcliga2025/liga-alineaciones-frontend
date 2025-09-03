@@ -1,6 +1,5 @@
 import { h } from "preact";
-import { useEffect, useState } from "preact/hooks";
-import { supabase } from "../lib/supabaseClient.js";
+import { useState } from "preact/hooks";
 
 const WRAP = { maxWidth: 980, margin: "0 auto", padding: "16px 12px 24px" };
 const CARD = { background:"#fff", border:"1px solid #e5e7eb", borderRadius:18, boxShadow:"0 6px 18px rgba(0,0,0,.06)", padding:"16px 12px" };
@@ -17,11 +16,12 @@ const HEAD_BG = "#0ea5e9";
 
 const BTN_ICON = { display:"inline-grid", placeItems:"center", width:40, height:40, border:"1px solid #e5e7eb", borderRadius:10, background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)", cursor:"pointer" };
 
-const inputBase = { width:"100%", padding:"10px 12px", border:"1px solid #dbe2f0", borderRadius:10, outline:"none", font:"inherit", color:"#0f172a", background:"#fff" };
-const inputTeam = { ...inputBase, textTransform:"uppercase", fontWeight:700 };
-const selectBase = { ...inputBase, appearance:"auto", fontWeight:700, cursor:"pointer" };
+/* >>> Cambios de tipografía: todo lo que se escribe en **bold**, y el select de competición un poco mayor */
+const inputBase = { width:"100%", padding:"10px 12px", border:"1px solid #dbe2f0", borderRadius:10, outline:"none", font:"inherit", color:"#0f172a", background:"#fff", fontWeight:700 };
+const inputTeam = { ...inputBase, textTransform:"uppercase" };
+const selectBase = { ...inputBase, appearance:"auto", cursor:"pointer", fontWeight:800, fontSize:16 };
 
-// máscara dd/mm/aaaa
+/* máscara dd/mm/aaaa */
 function maskDMY(v) {
   const s = String(v || "").replace(/[^\d]/g, "").slice(0, 8);
   const p1 = s.slice(0,2), p2 = s.slice(2,4), p3 = s.slice(4,8);
@@ -29,8 +29,8 @@ function maskDMY(v) {
 }
 
 export default function VindeirosPartidos() {
-  // non bloqueamos edición: se precisa, podemos volver a só-admin en calquera momento
   const [rows, setRows] = useState(Array.from({length:10}, ()=>({ date:"", home:"", away:"", comp:"" })));
+
   const onChange = (i, field, value) =>
     setRows(prev => { const nx = prev.slice(); nx[i] = { ...nx[i], [field]: value }; return nx; });
 
@@ -49,7 +49,7 @@ export default function VindeirosPartidos() {
         <h2 style={H1}>Vindeiros partidos</h2>
         <p style={SUB}>Axenda dos próximos encontros con data e hora confirmadas.</p>
 
-        {/* Cabeceira */}
+        {/* Cabecera */}
         <div style={{ ...GRID, borderTop:"1px solid #0ea5e9", borderBottom:"1px solid #0ea5e9" }}>
           {headCell(<span style={{ paddingLeft:12 }}>#</span>)}
           {headCell(<span>DATA</span>)}
@@ -92,7 +92,7 @@ export default function VindeirosPartidos() {
                 </div>, 2, last
               )}
 
-              {/* COMPETICIÓN */}
+              {/* COMPETICIÓN (select más grande y bold) */}
               {bodyCell(
                 <select style={selectBase} value={r.comp} onInput={(e)=>onChange(i,"comp",e.currentTarget.value)}>
                   <option value=""></option>
