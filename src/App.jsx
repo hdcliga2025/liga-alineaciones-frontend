@@ -23,7 +23,11 @@ import Admin from "./pages/Admin.jsx";
 /* Subcard Calendario → Próximo partido */
 import ProximoPartido from "./pages/ProximoPartido.jsx";
 
-/* Logout forzado (¡import necesario!) */
+/* Novas páxinas de calendario */
+import VindeirosPartidos from "./pages/VindeirosPartidos.jsx";
+import PartidosFinalizados from "./pages/PartidosFinalizados.jsx";
+
+/* Logout forzado (import necesario) */
 import ForceLogout from "./pages/ForceLogout.jsx";
 
 /* 404 */
@@ -49,7 +53,7 @@ export default function App() {
     currentPath === "/" ||
     hidePrefixes.some((p) => (currentPath || "").startsWith(p));
 
-  // Clave para remount del Router por ruta actual (incluye query)
+  // Clave para remount do Router por ruta actual (inclúe query)
   const routerKey = currentPath;
 
   return (
@@ -79,8 +83,10 @@ export default function App() {
         <Clasificacion path="/clasificacion" />
         <Admin path="/admin" />
 
-        {/* Ruta “bonita” → Próximo partido */}
+        {/* Calendario */}
         <ProximoPartido path="/proximo-partido" />
+        <VindeirosPartidos path="/vindeiros-partidos" />
+        <PartidosFinalizados path="/partidos-finalizados" />
 
         {/* 404 */}
         <NotFound default />
