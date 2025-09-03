@@ -46,6 +46,7 @@ const BTN = {
 const OK = { marginTop: 10, color: "#065f46", fontSize: 14 };
 const ERR = { marginTop: 10, color: "#b91c1c", fontSize: 14 };
 
+/* Ocultar icono nativo del date (derecha) sin interceptar clics */
 const STYLE_HIDE_NATIVE_DATE = `
   .pf-date::-webkit-calendar-picker-indicator{ opacity:0; display:none; }
   .pf-date::-webkit-inner-spin-button{ display:none; }
@@ -55,7 +56,7 @@ const STYLE_HIDE_NATIVE_DATE = `
 
 function toYMD(v="") {
   if (!v) return "";
-  if (/^\\d{4}-\\d{2}-\\d{2}$/.test(v)) return v;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
   const d = new Date(v);
   if (Number.isNaN(d.getTime())) return (String(v).split("T")[0]) || "";
   const yyyy = d.getFullYear();
@@ -68,28 +69,22 @@ export default function Perfil() {
   const [loading, setLoading] = useState(true);
   const [uid, setUid] = useState(null);
 
-  // auth
   const [email, setEmail] = useState("");
-
-  // datos perfil
   const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName]   = useState("");
-  const [phone, setPhone]         = useState("");
-  const [dni, setDni]             = useState("");
-  const [carnet, setCarnet]       = useState("");
-  const [birthDate, setBirthDate] = useState(""); // YYYY-MM-DD
-  const [newPassword, setNewPassword] = useState(""); // opcional, ≥8 caracteres
+  const [lastName,  setLastName]  = useState("");
+  const [phone,     setPhone]     = useState("");
+  const [dni,       setDni]       = useState("");
+  const [carnet,    setCarnet]    = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
-  // feedback
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
 
-  // toast flotante 2s
   const [toast, setToast] = useState("");
   const toastTimerRef = useRef(null);
 
-  // ref ao input date para invocar showPicker()
   const birthRef = useRef(null);
 
   useEffect(() => {
@@ -130,13 +125,18 @@ export default function Perfil() {
     } catch {}
   }
 
+  async function ensureProfileRow() {
+    if (!uid) return;
+    await supabase.from("profiles").upsert({ id: uid, email }, { onConflict: "id" });
+  }
+
   async function onActualizarPerfil(e) {
     e?.preventDefault?.();
     setErr(""); setMsg("");
-
     try {
       setSaving(true);
       if (!uid) throw new Error("Sen sesión.");
+      await ensureProfileRow();
 
       const payload = {
         first_name: firstName || null,
@@ -147,18 +147,11 @@ export default function Perfil() {
         birth_date: birthDate || null,
         updated_at: new Date().toISOString(),
       };
-
-      const { error: updErr } = await supabase
-        .from("profiles")
-        .update(payload)
-        .eq("id", uid);
-
+      const { error: updErr } = await supabase.from("profiles").update(payload).eq("id", uid);
       if (updErr) throw updErr;
 
       if (newPassword && newPassword.trim().length >= 8) {
-        const { error: passErr } = await supabase.auth.updateUser({
-          password: newPassword.trim(),
-        });
+        const { error: passErr } = await supabase.auth.updateUser({ password: newPassword.trim() });
         if (passErr) throw passErr;
       }
       setNewPassword("");
@@ -169,7 +162,7 @@ export default function Perfil() {
       setMsg("Grazas, os teus datos foron actualizados.");
     } catch (e2) {
       console.error(e2);
-      setErr(e2?.message ? `Erro: ${e2.message}` : "Erro ao actualizar o perfil.");
+      setErr(`Erro ao actualizar o perfil.${e2?.message ? ` (${e2.message})` : ""}`);
     } finally {
       setSaving(false);
     }
@@ -181,7 +174,6 @@ export default function Perfil() {
     <main style={WRAP}>
       <style>{STYLE_HIDE_NATIVE_DATE}</style>
 
-      {/* TOAST flotante */}
       {toast && (
         <div role="status" aria-live="polite" style={{
           position: "fixed", left: "50%", bottom: 24, transform: "translateX(-50%)",
@@ -205,7 +197,12 @@ export default function Perfil() {
                 <circle cx="12" cy="8" r="4" stroke="#60a5fa" strokeWidth="1.6" />
                 <path d="M4 20c2.4-4 13.6-4 16 0" stroke="#60a5fa" strokeWidth="1.6" />
               </svg>
-              <input style={INPUT_BOLD} value={firstName} onInput={(e) => setFirstName(e.currentTarget.value)} placeholder="Nome" />
+              <input
+                style={INPUT_BOLD}
+                value={firstName}
+                onInput={(e) => setFirstName(e.currentTarget.value)}
+                placeholder="Nome"
+              />
             </div>
           </div>
 
@@ -216,7 +213,12 @@ export default function Perfil() {
                 <circle cx="12" cy="8" r="4" stroke="#60a5fa" strokeWidth="1.6" />
                 <path d="M4 20c2.4-4 13.6-4 16 0" stroke="#60a5fa" strokeWidth="1.6" />
               </svg>
-              <input style={INPUT_BOLD} value={lastName} onInput={(e) => setLastName(e.currentTarget.value)} placeholder="Apelidos" />
+              <input
+                style={INPUT_BOLD}
+                value={lastName}
+                onInput={(e) => setLastName(e.currentTarget.value)}
+                placeholder="Apelidos"
+              />
             </div>
           </div>
         </div>
@@ -237,15 +239,15 @@ export default function Perfil() {
             <label style={LABEL}>Móbil</label>
             <div style={ICONBOX}>
               <svg style={ICON} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <rect x="7" y="3" width="10" height="18" rx="2" stroke="#60a5fa" strokeWidth="1.6" />
-                <circle cx="12" cy="18" r="1" fill="#60a5fa" />
+                <rect x="7" y="2" width="10" height="20" rx="2.5" stroke="#60a5fa" strokeWidth="1.6" />
+                <circle cx="12" cy="18" r="1.2" fill="#60a5fa" />
               </svg>
               <input
+                type="tel"
                 style={INPUT_BOLD}
+                placeholder="+34 600 000 000"
                 value={phone}
                 onInput={(e) => setPhone(e.currentTarget.value)}
-                placeholder="Móbil"
-                inputMode="tel"
                 autoComplete="tel"
               />
             </div>
@@ -266,7 +268,12 @@ export default function Perfil() {
                 <rect x="3" y="5" width="18" height="14" rx="2" stroke="#60a5fa" strokeWidth="1.6" />
                 <path d="M6 9h12M6 13h8" stroke="#60a5fa" strokeWidth="1.6" />
               </svg>
-              <input style={INPUT_BOLD} value={dni} onInput={(e) => setDni(e.currentTarget.value.toUpperCase())} placeholder="DNI" />
+              <input
+                style={INPUT_BOLD}
+                value={dni}
+                onInput={(e) => setDni(e.currentTarget.value.toUpperCase())}
+                placeholder="DNI"
+              />
             </div>
           </div>
 
@@ -277,7 +284,12 @@ export default function Perfil() {
                 <rect x="3" y="5" width="18" height="14" rx="2" stroke="#60a5fa" strokeWidth="1.6" />
                 <path d="M6 13h12" stroke="#60a5fa" strokeWidth="1.6" />
               </svg>
-              <input style={INPUT_BOLD} value={carnet} onInput={(e) => setCarnet(e.currentTarget.value.toUpperCase())} placeholder="ID" />
+              <input
+                style={INPUT_BOLD}
+                value={carnet}
+                onInput={(e) => setCarnet(e.currentTarget.value.toUpperCase())}
+                placeholder="ID"
+              />
             </div>
           </div>
         </div>
@@ -285,12 +297,18 @@ export default function Perfil() {
         <div style={{ ...ROW, marginTop: 12 }}>
           <div>
             <label style={LABEL}>Data de nacemento</label>
-            <div style={{ position: "relative" }} onClick={openDatePicker} onKeyDown={(e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openDatePicker(); }}}>
+
+            <div
+              style={{ position: "relative" }}
+              onClick={openDatePicker}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDatePicker(); } }}
+            >
+              {/* ICONO DE CALENDARIO (recuperado) */}
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ position: "absolute", left: 10, top: 12 }}>
-                <path d="M7 11h10v7a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-7Z" stroke="#60a5fa" strokeWidth="1.6"/>
-                <path d="M9 11V9a3 3 0 1 1 6 0v2" stroke="#60a5fa" strokeWidth="1.6"/>
-                <path d="M8 15h8" stroke="#60a5fa" strokeWidth="1.6"/>
+                <rect x="3" y="4.5" width="18" height="16" rx="2" stroke="#60a5fa" strokeWidth="1.6" />
+                <path d="M7 2.5v4M17 2.5v4M3 9h18" stroke="#60a5fa" strokeWidth="1.6" />
               </svg>
+
               <input
                 ref={birthRef}
                 type="date"
