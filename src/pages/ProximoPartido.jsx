@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
 const ESCUDO_SRC = "/escudo.png";
-const ESCUDO_DESKTOP_WIDTH = 170; // ↑ más grande
-const ESCUDO_DESKTOP_TOP = 6;     // ↑ un poco más arriba
+const ESCUDO_DESKTOP_WIDTH = 170;
+const ESCUDO_DESKTOP_TOP = 6;
 
 const WRAP = { maxWidth: 880, margin: "0 auto", padding: "16px" };
 
@@ -36,8 +36,6 @@ const LINE_GRAY = {
   color: "#6b7280",
   fontWeight: 600,
 };
-
-const HR = { border: 0, borderTop: "1px solid #e5e7eb", margin: "14px 0" };
 
 /* ===== Admin form ===== */
 const ADMIN_BOX = {
@@ -80,10 +78,7 @@ const STYLE_HIDE_NATIVE_DATE = `
 function toLongGalician(dateObj) {
   try {
     return new Intl.DateTimeFormat("gl-ES", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+      weekday: "long", year: "numeric", month: "long", day: "numeric",
       timeZone: "Europe/Madrid",
     }).format(dateObj);
   } catch {
@@ -165,9 +160,7 @@ async function fetchMeteoFor(lugar, matchISO) {
 
 export default function ProximoPartido() {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== "undefined" ? window.innerWidth <= 560 : false
-  );
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
   useEffect(() => {
     const onR = () => setIsMobile(window.innerWidth <= 560);
     window.addEventListener("resize", onR);
@@ -269,14 +262,8 @@ export default function ProximoPartido() {
     return () => { alive = false; clearTimeout(safety); };
   }, []);
 
-  const teamA = useMemo(
-    () => (row?.equipo1 || teamLocal || "").toUpperCase(),
-    [row, teamLocal]
-  );
-  const teamB = useMemo(
-    () => (row?.equipo2 || teamAway || "").toUpperCase(),
-    [row, teamAway]
-  );
+  const teamA = useMemo(() => (row?.equipo1 || teamLocal || "").toUpperCase(), [row, teamLocal]);
+  const teamB = useMemo(() => (row?.equipo2 || teamAway  || "").toUpperCase(), [row, teamAway]);
 
   const dateObj = useMemo(() => {
     if (row?.match_iso) return new Date(row.match_iso);
@@ -287,6 +274,19 @@ export default function ProximoPartido() {
   const longDate = useMemo(() => (dateObj ? toLongGalician(dateObj) : null), [dateObj]);
 
   const showEscudo = (!isMobile && true) || (isMobile && !isAdmin);
+
+  async function waitForPersist(expectedISO, tries = 8, delayMs = 250) {
+    for (let i = 0; i < tries; i++) {
+      const { data: check } = await supabase
+        .from("next_match")
+        .select("match_iso")
+        .eq("id", 1)
+        .maybeSingle();
+      if (check?.match_iso === expectedISO) return true;
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+    return false;
+  }
 
   async function onSave(e) {
     e?.preventDefault?.();
@@ -319,7 +319,10 @@ export default function ProximoPartido() {
       const { error } = await supabase.from("next_match").upsert(payload, { onConflict: "id" });
       if (error) throw error;
 
-      // Meteo inmediata a <48h
+      // Estado inmediato y meteo
+      setRow((prev) => ({ ...(prev || {}), ...payload }));
+      setMeteo(null);
+
       const ms = new Date(match_iso).getTime() - Date.now();
       if (ms <= 48 * 3600 * 1000) {
         const wx = await fetchMeteoFor(payload.lugar, match_iso);
@@ -338,7 +341,9 @@ export default function ProximoPartido() {
       const ss = String(now.getSeconds()).padStart(2, "0");
       setInfo(`Gardado e publicado ás ${hh}:${mm}:${ss}`);
 
-      setTimeout(() => { window.location.reload(); }, 450);
+      await waitForPersist(match_iso);
+      try { localStorage.setItem("nm_updated_at", String(Date.now())); } catch {}
+      window.location.reload();
     } catch (e2) {
       console.error("[ProximoPartido] save error:", e2);
       setErr("Erro gardando os datos.");
@@ -349,17 +354,13 @@ export default function ProximoPartido() {
 
   if (loading) return <main style={WRAP}>Cargando…</main>;
 
-  // Aumentamos el padding derecho para acomodar escudo mayor
-  const rightPad = (!isMobile && showEscudo) ? 230 : 0;
+  const rightPad = !isMobile && showEscudo ? 230 : 0;
 
   const justTime = useMemo(() => {
     if (!dateObj) return null;
     try {
       return new Intl.DateTimeFormat("gl-ES", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: "Europe/Madrid",
+        hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Europe/Madrid",
       }).format(dateObj);
     } catch {
       const hh = String(dateObj.getHours()).padStart(2, "0");
@@ -375,7 +376,7 @@ export default function ProximoPartido() {
       <style>{STYLE_HIDE_NATIVE_DATE}</style>
 
       <section style={PANEL}>
-        {/* Escudo: máis grande e un chisco máis arriba en desktop */}
+        {/* Escudo desktop detrás do contido */}
         {showEscudo && !isMobile && (
           <img
             src={ESCUDO_SRC}
@@ -395,7 +396,7 @@ export default function ProximoPartido() {
           />
         )}
 
-        {/* Contido principal por riba do escudo */}
+        {/* Bloque superior */}
         <div style={{ position: "relative", zIndex: 1, paddingRight: rightPad }}>
           <h2 style={TITLE_LINE}>
             <span style={TEAM_NAME}>{teamA || "—"}</span>
@@ -414,27 +415,21 @@ export default function ProximoPartido() {
           <p style={LINE_GRAY}>
             Hora: {justTime ? <strong>{justTime}</strong> : "—"}
           </p>
-
-          <hr style={{ ...HR, margin: "18px 0" }} />
         </div>
 
-        {/* ===== METEO — banner ancho completo do panel ===== */}
-        <div
-          style={{
-            position: "relative",
-            marginTop: 22,          // ↑ máis espazo por riba
-            marginLeft: -16,
-            marginRight: -16,
-            marginBottom: 22,       // ↑ máis espazo cara o formulario admin
-            zIndex: 1,
-          }}
-        >
-          {/* Leyenda superposta */}
+        {/* HR por riba do escudo */}
+        <div style={{ position: "relative", zIndex: 2, margin: "18px 0" }}>
+          <hr style={{ border: 0, borderTop: "1px solid #e5e7eb", margin: 0 }} />
+        </div>
+
+        {/* METEO — alineado co contido */}
+        <div style={{ position: "relative", marginTop: 22, marginBottom: 22, zIndex: 1 }}>
+          {/* Leyenda pisando a liña punteada */}
           <span
             style={{
               position: "absolute",
-              top: -12,
-              left: 18,
+              top: -13, // justo sobre o borde 2px
+              left: 12,
               padding: "0 8px",
               background: "#fff",
               fontSize: 13,
@@ -449,24 +444,15 @@ export default function ProximoPartido() {
 
           <div
             style={{
-              border: "2px dashed #cbd5e1", // ↑ máis grosor
+              border: "2px dashed #cbd5e1",
               borderRadius: 12,
-              background:
-                "linear-gradient(180deg, rgba(14,165,233,0.08), rgba(99,102,241,0.06))",
+              background: "linear-gradient(180deg, rgba(14,165,233,0.08), rgba(99,102,241,0.06))",
               padding: "18px 16px",
-              paddingRight: 16 + rightPad, // evita solaparse co escudo en desktop
+              paddingRight: 16 + rightPad, // non solapar co escudo
             }}
           >
             {meteo ? (
-              <div
-                style={{
-                  display: "flex",
-                  gap: 22,
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                }}
-              >
-                {/* Píldoras máis vistosas */}
+              <div style={{ display: "flex", gap: 22, flexWrap: "wrap", alignItems: "center" }}>
                 <div style={pillStyle()}>
                   <span style={pillIcon()}>🌡️</span>
                   <strong style={pillValue()}>
@@ -496,7 +482,7 @@ export default function ProximoPartido() {
           </div>
         </div>
 
-        {/* Escudo en móbil (non-admin) ao final */}
+        {/* Escudo en móbil (non-admin) */}
         {showEscudo && isMobile && (
           <div style={{ marginTop: 16, display: "grid", placeItems: "center" }}>
             <img
@@ -568,15 +554,14 @@ export default function ProximoPartido() {
                 <label style={LABEL}>Data oficial confirmada</label>
                 <div style={{ position: "relative" }}>
                   {/* Icono calendario á esquerda (celeste) */}
-                  <svg
-                    width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"
-                    style={{ position: "absolute", left: 10, top: 10 }}
-                  >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ position: "absolute", left: 10, top: 10 }}>
                     <rect x="3" y="4.5" width="18" height="16" rx="2" stroke="#0ea5e9" strokeWidth="1.8" />
                     <path d="M7 2.5v4M17 2.5v4M3 9h18" stroke="#0ea5e9" strokeWidth="1.8" />
                   </svg>
                   <input
-                    id="nm-date" class="nm-date" type="date"
+                    id="nm-date"
+                    class="nm-date"
+                    type="date"
                     style={INPUT_DATE}
                     value={dateStr}
                     onInput={(e) => setDateStr(e.currentTarget.value)}
