@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
 const ESCUDO_SRC = "/escudo.png";
-const ESCUDO_DESKTOP_WIDTH = 176; // lixeiramente máis pequeno e estable
-const ESCUDO_DESKTOP_TOP = -6;    // un pouco máis arriba pero sen tocar liñas
+const ESCUDO_DESKTOP_WIDTH = 172;
+const ESCUDO_DESKTOP_TOP = -10;   // máis arriba, sen tocar liñas
 
 const WRAP = { maxWidth: 880, margin: "0 auto", padding: "16px" };
 
@@ -35,9 +35,7 @@ const LINE_GRAY_BASE = {
   fontWeight: 500,
 };
 
-const ADMIN_BOX = {
-  marginTop: 16, padding: 16, border: "1px dashed #cbd5e1", borderRadius: 14, background: "#f8fafc",
-};
+const ADMIN_BOX = { marginTop: 16, padding: 16, border: "1px dashed #cbd5e1", borderRadius: 14, background: "#f8fafc" };
 const LABEL = { display: "block", margin: "0 0 6px 6px", fontSize: 14, color: "#334155", fontWeight: 500 };
 const INPUT_BASE = {
   width: "100%", padding: "12px 12px", borderRadius: 12, border: "1px solid #dbe2f0",
@@ -56,14 +54,14 @@ const BTN_SAVE = {
   backgroundImage: "linear-gradient(180deg,#67b1ff,#5a8df5)", boxShadow: "0 8px 24px rgba(59,130,246,.35)", fontSize: 17,
 };
 const INFO = { marginTop: 10, color: "#065f46", fontSize: 14 };
-const ERR = { marginTop: 10, color: "#b91c1c", fontSize: 14 };
+const ERR  = { marginTop: 10, color: "#b91c1c", fontSize: 14 };
 
 const STYLE_HIDE_NATIVE_DATE = `
   .nm-date::-webkit-calendar-picker-indicator{ display:none; }
   .nm-date{ -webkit-appearance:none; appearance:none; }
 `;
 
-/* Utils */
+/* ===== Utils ===== */
 function toLongGalician(dateObj) {
   try {
     return new Intl.DateTimeFormat("gl-ES", {
@@ -74,7 +72,7 @@ function toLongGalician(dateObj) {
 const capFirst = (s="") => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 function timeOptions(){ const a=[]; for(let h=12;h<=23;h++){ for(let m of[0,15,30,45]){ a.push(`${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`);} } return a; }
 
-/* Meteo */
+/* Meteo fetch (misma lógica) */
 async function fetchMeteoFor(lugar, matchISO){
   try{
     if(!lugar||!matchISO) return null;
@@ -89,8 +87,8 @@ async function fetchMeteoFor(lugar, matchISO){
     let idx=times.indexOf(localISO);
     if(idx===-1){ let best=0,bestDiff=Infinity; for(let i=0;i<times.length;i++){ const d=Math.abs(new Date(times[i]).getTime()-new Date(localISO).getTime()); if(d<bestDiff){bestDiff=d;best=i;} } idx=best; }
     const temp=wx.hourly.temperature_2m?.[idx]??null, wind=wx.hourly.wind_speed_10m?.[idx]??null, ppop=wx.hourly.precipitation_probability?.[idx]??null;
-    return { source:"open-meteo", fetched_at:new Date().toISOString(), location:{name:lugar.toUpperCase(),lat,lon}, forecast_time_iso:new Date(localISO).toISOString(), temp_c:temp, wind_kmh:wind, precip_prob_pct:ppop, icon:"auto" };
-  }catch(e){ console.warn("fetchMeteoFor error",e); return null; }
+    return { temp_c:temp, wind_kmh:wind, precip_prob_pct:ppop };
+  }catch{ return null; }
 }
 
 export default function ProximoPartido(){
@@ -106,45 +104,38 @@ export default function ProximoPartido(){
   const [dateStr,setDateStr]=useState(""); const [timeStr,setTimeStr]=useState(""); const [saving,setSaving]=useState(false); const [info,setInfo]=useState(""); const [err,setErr]=useState("");
   const [meteo,setMeteo]=useState(null);
 
-  /* Carga paralela: next_match primeiro (mellora navegación interna), e admin aparte */
+  // Carga rápida de next_match
   useEffect(()=>{ let alive=true;
-    (async()=>{
-      try{
-        const { data: nm }=await supabase.from("next_match").select("id,equipo1,equipo2,lugar,match_iso,tz,competition,weather_json,updated_at").eq("id",1).maybeSingle();
-        if(alive && nm){
-          setRow(nm);
-          setTeamLocal(nm.equipo1?.toUpperCase()||""); setTeamAway(nm.equipo2?.toUpperCase()||""); setLugar(nm.lugar?.toUpperCase()||""); setCompetition(nm.competition||"");
-          if(nm.match_iso){ const dt=new Date(nm.match_iso); setDateStr(`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}-${String(dt.getDate()).padStart(2,"0")}`); setTimeStr(`${String(dt.getHours()).padStart(2,"0")}:${String(dt.getMinutes()).padStart(2,"0")}`); }
-          setMeteo(nm.weather_json||null);
-        }
-      }finally{ if(alive) setLoading(false); }
-    })();
-    return()=>{ alive=false; };
-  },[]);
-
-  useEffect(()=>{ let alive=true;
-    (async()=>{
-      const { data:s }=await supabase.auth.getSession();
-      const email=s?.session?.user?.email||""; const uid=s?.session?.user?.id||null;
-      let admin=false; if(email){ const e=email.toLowerCase(); if(e==="hdcliga@gmail.com"||e==="hdcliga2@gmail.com") admin=true; }
-      if(!admin && uid){ const { data:prof }=await supabase.from("profiles").select("role").eq("id",uid).maybeSingle(); if((prof?.role||"").toLowerCase()==="admin") admin=true; }
-      if(alive) setIsAdmin(admin);
-    })();
-    return()=>{ alive=false; };
-  },[]);
-
-  /* Completar meteo automática cando aplique */
-  useEffect(()=>{ let alive=true;
-    (async()=>{
-      const nm=row; if(!nm?.match_iso||!nm?.lugar) return;
-      const ms=new Date(nm.match_iso).getTime()-Date.now();
-      if(ms<=48*3600*1000 && !nm.weather_json){
-        const wx=await fetchMeteoFor(nm.lugar,nm.match_iso);
-        if(alive && wx){ setMeteo(wx); if(isAdmin){ await supabase.from("next_match").update({ weather_json:wx, updated_at:new Date().toISOString() }).eq("id",1); } }
+    (async()=>{ try{
+      const { data:nm }=await supabase.from("next_match").select("id,equipo1,equipo2,lugar,match_iso,tz,competition,weather_json,updated_at").eq("id",1).maybeSingle();
+      if(alive && nm){
+        setRow(nm);
+        setTeamLocal(nm.equipo1?.toUpperCase()||""); setTeamAway(nm.equipo2?.toUpperCase()||""); setLugar(nm.lugar?.toUpperCase()||""); setCompetition(nm.competition||"");
+        if(nm.match_iso){ const dt=new Date(nm.match_iso); setDateStr(`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}-${String(dt.getDate()).padStart(2,"0")}`); setTimeStr(`${String(dt.getHours()).padStart(2,"0")}:${String(dt.getMinutes()).padStart(2,"0")}`); }
+        setMeteo(nm.weather_json||null);
       }
-    })();
+    }finally{ if(alive) setLoading(false); }})();
     return()=>{ alive=false; };
-  },[row,isAdmin]);
+  },[]);
+
+  // Admin (en paralelo)
+  useEffect(()=>{ let alive=true;(async()=>{
+    const { data:s }=await supabase.auth.getSession();
+    const email=s?.session?.user?.email||""; const uid=s?.session?.user?.id||null;
+    let admin=false; if(email){ const e=email.toLowerCase(); if(e==="hdcliga@gmail.com"||e==="hdcliga2@gmail.com") admin=true; }
+    if(!admin && uid){ const { data:prof }=await supabase.from("profiles").select("role").eq("id",uid).maybeSingle(); if((prof?.role||"").toLowerCase()==="admin") admin=true; }
+    if(alive) setIsAdmin(admin);
+  })(); return()=>{ alive=false; }; },[]);
+
+  // Meteo automática (despois)
+  useEffect(()=>{ let alive=true;(async()=>{
+    const nm=row; if(!nm?.match_iso||!nm?.lugar||nm.weather_json) return;
+    const ms=new Date(nm.match_iso).getTime()-Date.now();
+    if(ms<=48*3600*1000){
+      const wx=await fetchMeteoFor(nm.lugar,nm.match_iso);
+      if(alive && wx){ setMeteo(wx); if(isAdmin){ await supabase.from("next_match").update({ weather_json:wx, updated_at:new Date().toISOString() }).eq("id",1); } }
+    }
+  })(); return()=>{ alive=false; }; },[row,isAdmin]);
 
   const teamA=useMemo(()=> (row?.equipo1||teamLocal||"").toUpperCase(),[row,teamLocal]);
   const teamB=useMemo(()=> (row?.equipo2||teamAway ||"").toUpperCase(),[row,teamAway]);
@@ -153,10 +144,6 @@ export default function ProximoPartido(){
   const longDate=useMemo(()=> (dateObj ? toLongGalician(dateObj) : null),[dateObj]);
   const showEscudo=(!isMobile && true) || (isMobile && !isAdmin);
 
-  async function waitForPersist(expectedISO,tries=12,delayMs=300){
-    for(let i=0;i<tries;i++){ const { data:check }=await supabase.from("next_match").select("match_iso").eq("id",1).maybeSingle(); if(check?.match_iso===expectedISO) return true; await new Promise(r=>setTimeout(r,delayMs)); }
-    return false;
-  }
   function hardReloadWithBusting(){ const u=new URL(window.location.href); u.searchParams.set("t",String(Date.now())); window.location.replace(u.toString()); }
 
   async function onSave(e){
@@ -166,41 +153,52 @@ export default function ProximoPartido(){
       if(!dateStr||!timeStr){ setErr("Completa data e hora."); return; }
       setSaving(true);
 
-      const local=new Date(`${dateStr}T${timeStr}:00`); const match_iso=local.toISOString();
-      const payload={ id:1, equipo1:teamLocal.trim().toUpperCase(), equipo2:teamAway.trim().toUpperCase(), lugar:lugar.trim().toUpperCase(), competition:competition||null, match_iso, tz:"Europe/Madrid", updated_at:new Date().toISOString() };
-      const { error }=await supabase.from("next_match").upsert(payload,{ onConflict:"id" }); if(error) throw error;
+      const local=new Date(`${dateStr}T${timeStr}:00`);
+      const payload={ id:1, equipo1:teamLocal.trim().toUpperCase(), equipo2:teamAway.trim().toUpperCase(), lugar:lugar.trim().toUpperCase(), competition:competition||null, match_iso:local.toISOString(), tz:"Europe/Madrid", updated_at:new Date().toISOString() };
+      const { error }=await supabase.from("next_match").upsert(payload,{ onConflict:"id" });
+      if(error) throw error;
 
-      setRow(prev=>({ ...(prev||{}), ...payload })); setMeteo(null);
+      // estado inmediato e info visual
+      setRow(prev=>({ ...(prev||{}), ...payload }));
+      setInfo(`Gardado e publicado ás ${new Date().toLocaleTimeString("gl-ES",{hour12:false})}`);
+      setSaving(false);
 
-      const ms=new Date(match_iso).getTime()-Date.now();
-      if(ms<=48*3600*1000){ const wx=await fetchMeteoFor(payload.lugar,match_iso); if(wx){ setMeteo(wx); await supabase.from("next_match").update({ weather_json:wx, updated_at:new Date().toISOString() }).eq("id",1); } }
-
-      const now=new Date(); const hh=String(now.getHours()).padStart(2,"0"), mm=String(now.getMinutes()).padStart(2,"0"), ss=String(now.getSeconds()).padStart(2,"0");
-      setInfo(`Gardado e publicado ás ${hh}:${mm}:${ss}`);
-
-      await waitForPersist(match_iso); try{ localStorage.setItem("nm_updated_at",String(Date.now())); }catch{} hardReloadWithBusting();
-    }catch(e2){ console.error("[ProximoPartido] save error:",e2); setErr("Erro gardando os datos."); }finally{ setSaving(false); }
+      // recarga rápida; meteo xa se reencherá ao montar
+      setTimeout(hardReloadWithBusting, 450);
+    }catch(e2){
+      console.error("[ProximoPartido] save error:",e2);
+      setErr("Erro gardando os datos.");
+      setSaving(false);
+    }
   }
 
   if(loading) return <main style={WRAP}>Cargando…</main>;
 
   const rightPad=!isMobile && showEscudo ? ESCUDO_DESKTOP_WIDTH + 70 : 0;
-
   const justTime=useMemo(()=>{ if(!dateObj) return null; try{ return new Intl.DateTimeFormat("gl-ES",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"Europe/Madrid"}).format(dateObj); }catch{ const hh=String(dateObj.getHours()).padStart(2,"0"); const mm=String(dateObj.getMinutes()).padStart(2,"0"); return `${hh}:${mm}`; } },[dateObj]);
-
-  const lugarLegendRaw=(row?.lugar||lugar||"—"); const legendText=`METEO: ${capFirst(String(lugarLegendRaw).toLowerCase())}`;
+  const legendText=`METEO: ${capFirst(String((row?.lugar||lugar||"—")).toLowerCase())}`;
 
   return (
     <main style={WRAP}>
       <style>{STYLE_HIDE_NATIVE_DATE}</style>
 
       <section style={PANEL}>
+        {/* Borde superposto en capa superior para que nunca quede tapado polo escudo */}
+        <div style={{ position:"absolute", inset:0, border:"1px solid #e5e7eb", borderRadius:18, pointerEvents:"none", zIndex:4 }} />
+
         {/* Escudo fixo por detrás */}
         {showEscudo && !isMobile && (
-          <img src={ESCUDO_SRC} alt="Escudo RC Celta" decoding="async" loading="eager" style={{
-            position:"absolute", top:ESCUDO_DESKTOP_TOP, right:12, width:ESCUDO_DESKTOP_WIDTH, height:"auto",
-            opacity:0.95, pointerEvents:"none", userSelect:"none", transform:"translateZ(0)", zIndex:0,
-          }}/>
+          <img
+            src={ESCUDO_SRC}
+            alt="Escudo RC Celta"
+            decoding="async"
+            loading="eager"
+            style={{
+              position:"absolute", top:ESCUDO_DESKTOP_TOP, right:12,
+              width:ESCUDO_DESKTOP_WIDTH, height:"auto",
+              opacity:0.95, pointerEvents:"none", userSelect:"none", transform:"translateZ(0)", zIndex:0,
+            }}
+          />
         )}
 
         {/* Bloque superior */}
@@ -222,9 +220,9 @@ export default function ProximoPartido(){
 
         {/* ===== METEO ===== */}
         <div style={{ position:"relative", marginTop:22, marginBottom:22, zIndex:1 }}>
-          {/* Botón METEO centrado (máis fino e máis cadrado) */}
+          {/* Botón METEO a esquerda e máis baixo */}
           <span style={{
-            position:"absolute", top:-18, left:"50%", transform:"translateX(-50%)",
+            position:"absolute", top:-14, left:12,
             display:"inline-flex", alignItems:"center", padding:"4px 12px",
             borderRadius:10, background:"#0ea5e9", color:"#fff",
             boxShadow:"0 6px 18px rgba(14,165,233,.35)", border:"1px solid #0284c7",
@@ -233,9 +231,9 @@ export default function ProximoPartido(){
             {legendText}
           </span>
 
-          {/* Sub-leyenda centrada (máis cadrada e un chisco máis arriba da liña) */}
+          {/* Sub-leyenda un pouco máis arriba */}
           <span style={{
-            position:"absolute", bottom:-16, left:"50%", transform:"translateX(-50%)",
+            position:"absolute", bottom:-12, left:12,
             display:"inline-flex", alignItems:"center", padding:"3px 10px",
             borderRadius:10, background:"#e5e7eb", color:"#334155",
             boxShadow:"0 3px 10px rgba(0,0,0,.08)", border:"1px solid #cbd5e1",
@@ -260,13 +258,6 @@ export default function ProximoPartido(){
             )}
           </div>
         </div>
-
-        {/* Escudo en móbil */}
-        {showEscudo && isMobile && (
-          <div style={{ marginTop:16, display:"grid", placeItems:"center" }}>
-            <img src={ESCUDO_SRC} alt="Escudo RC Celta" decoding="async" loading="eager" style={{ width:108, height:"auto", opacity:0.98 }}/>
-          </div>
-        )}
 
         {/* Form ADMIN */}
         {isAdmin && (
@@ -331,7 +322,7 @@ export default function ProximoPartido(){
 
             <button type="submit" style={BTN_SAVE} disabled={saving}>{saving ? "Gardando…" : "Gardar"}</button>
             {info && <p style={INFO}>{info}</p>}
-            {err && <p style={ERR}>{err}</p>}
+            {err  && <p style={ERR}>{err}</p>}
           </form>
         )}
       </section>
@@ -339,11 +330,6 @@ export default function ProximoPartido(){
   );
 }
 
-/* Píldoras METEO */
-function pillStyle(scale){ return {
-  display:"inline-flex", alignItems:"center", gap:10,
-  padding:`${Math.round(scale(10))}px ${Math.round(scale(14))}px`,
-  borderRadius:999, background:"#fff", border:"1px solid #e2e8f0", boxShadow:"0 1px 2px rgba(0,0,0,.05)",
-};}
+function pillStyle(scale){ return { display:"inline-flex", alignItems:"center", gap:10, padding:`${Math.round(scale(10))}px ${Math.round(scale(14))}px`, borderRadius:999, background:"#fff", border:"1px solid #e2e8f0", boxShadow:"0 1px 2px rgba(0,0,0,.05)", }; }
 function pillIcon(scale){ return { fontSize:scale(26), lineHeight:1, display:"inline-block" }; }
 function pillValue(scale){ return { fontSize:scale(20), lineHeight:1.1, letterSpacing:".2px" }; }
