@@ -20,11 +20,8 @@ import HazTu11 from "./pages/HazTu11.jsx";
 import Clasificacion from "./pages/Clasificacion.jsx";
 import Admin from "./pages/Admin.jsx";
 
-/* Nueva página (subcard Calendario → Próximo partido) */
+/* Subcard Calendario → Próximo partido */
 import ProximoPartido from "./pages/ProximoPartido.jsx";
-
-/* Logout forzado */
-import ForceLogout from "./pages/ForceLogout.jsx";
 
 /* 404 */
 const NotFound = () => (
@@ -43,11 +40,13 @@ export default function App() {
       : "/"
   );
 
-  // Ocultar NavBar en portada y en cualquier variante de /login, /register, /logout (con ou sen query)
   const hidePrefixes = ["/login", "/register", "/logout"];
   const shouldHideNav =
     currentPath === "/" ||
     hidePrefixes.some((p) => (currentPath || "").startsWith(p));
+
+  // Clave de remount por ruta (incluye query para forzar reconstrucción cuando cambie)
+  const routerKey = currentPath;
 
   return (
     <>
@@ -55,7 +54,8 @@ export default function App() {
 
       {!shouldHideNav && <NavBar currentPath={currentPath} />}
 
-      <Router onChange={(e) => setCurrentPath(e.url)}>
+      {/* Clave para remount completo da ruta activa */}
+      <Router key={routerKey} onChange={(e) => setCurrentPath(e.url)}>
         {/* Públicas */}
         <LandingPage path="/" />
         <Login path="/login" />
@@ -71,7 +71,7 @@ export default function App() {
         <Clasificacion path="/clasificacion" />
         <Admin path="/admin" />
 
-        {/* Nueva ruta “bonita” para a subcard Calendario → Próximo partido */}
+        {/* Ruta “bonita” → Próximo partido */}
         <ProximoPartido path="/proximo-partido" />
 
         {/* 404 */}
