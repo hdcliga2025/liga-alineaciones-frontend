@@ -10,51 +10,61 @@ export default function Login() {
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
+  const [showStuckHint, setShowStuckHint] = useState(false); // ← solo mostramos el aviso cuando procede
   const timeoutRef = useRef(null);
 
   useEffect(() => () => clearTimeout(timeoutRef.current), []);
 
-  async function waitForSession(maxMs = 4000) {
+  async function waitForSession(maxMs = 5000) {
     const t0 = Date.now();
-    // ping rápido a la sesión durante ~4s
     while (Date.now() - t0 < maxMs) {
       const { data } = await supabase.auth.getSession();
       if (data?.session) return data.session;
       await new Promise(r => setTimeout(r, 200));
     }
+    // Un intento extra: algunos móviles necesitan un refresh explícito
+    try {
+      const { data } = await supabase.auth.refreshSession();
+      if (data?.session) return data.session;
+    } catch {}
     return null;
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setErr('');
+    setShowStuckHint(false);
     setLoading(true);
 
     // salvaguarda: si algo raro pasa, soltamos el spinner a los 8s
     timeoutRef.current = setTimeout(() => setLoading(false), 8000);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
+
       if (error) {
         setErr(error.message || 'Erro iniciando sesión.');
+        setShowStuckHint(true);
         return;
       }
 
-      // Espera a que la sesión quede disponible antes de rutear
-      const sess = await waitForSession(5000);
+      // Si ya nos devolvió sesión, perfecto; si no, esperamos a que aparezca
+      const sess = data?.session || (await waitForSession(6000));
       if (sess) {
         clearTimeout(timeoutRef.current);
         route('/dashboard', true);
         return;
       }
 
-      setErr('Non se puido completar o inicio de sesión. Proba a “Restablecer sesión” e tentalo de novo.');
+      setErr('Non se puido completar o inicio de sesión.');
+      setShowStuckHint(true);
     } catch (e2) {
       console.error(e2);
       setErr('Erro inesperado iniciando sesión.');
+      setShowStuckHint(true);
     } finally {
       clearTimeout(timeoutRef.current);
       setLoading(false);
@@ -62,10 +72,8 @@ export default function Login() {
   }
 
   async function resetStuckSession() {
-    try {
-      await supabase.auth.signOut();
-    } catch {}
-    // limpia posibles claves antiguas de supabase en localStorage
+    try { await supabase.auth.signOut(); } catch {}
+    // limpia posibles claves antigas de supabase en localStorage/sessionStorage
     try {
       Object.keys(localStorage)
         .filter(k => k.startsWith('sb-'))
@@ -73,6 +81,7 @@ export default function Login() {
     } catch {}
     try { sessionStorage.clear(); } catch {}
     setErr('');
+    setShowStuckHint(false);
   }
 
   return (
@@ -80,11 +89,12 @@ export default function Login() {
       {/* Email */}
       <div class="input-row" aria-label="Email" style={{ marginBottom: '10px' }}>
         <svg class="icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <rect x="3" y="5" width="18" height="14" rx="2" stroke="#6b7280" stroke-width="1.5" />
-          <path d="M3 6l9 7 9-7" stroke="#6b7280" stroke-width="1.5" />
+          <rect x="3" y="5" width="18" height="14" rx="2" stroke="#6b7280" strokeWidth="1.5" />
+          <path d="M3 6l9 7 9-7" stroke="#6b7280" strokeWidth="1.5" />
         </svg>
         <input
           id="email"
+          name="email"
           type="email"
           placeholder="Email"
           value={email}
@@ -97,11 +107,12 @@ export default function Login() {
       {/* Contrasinal */}
       <div class="input-row" aria-label="Contrasinal">
         <svg class="icon-24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <rect x="5" y="10" width="14" height="10" rx="2" stroke="#6b7280" stroke-width="1.5" />
-          <path d="M8 10V7a4 4 0 118 0v3" stroke="#6b7280" stroke-width="1.5" />
+          <rect x="5" y="10" width="14" height="10" rx="2" stroke="#6b7280" strokeWidth="1.5" />
+          <path d="M8 10V7a4 4 0 118 0v3" stroke="#6b7280" strokeWidth="1.5" />
         </svg>
         <input
           id="password"
+          name="password"
           type={showPwd ? 'text' : 'password'}
           placeholder="Contrasinal"
           value={password}
@@ -118,12 +129,14 @@ export default function Login() {
         >
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
             {showPwd ? (
-              <g stroke="#6b7280" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              // Ollo aberto
+              <g stroke="#6b7280" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M2 12s4.5-7 10-7 10 7 10 7-4.5 7-10 7S2 12 2 12Z" />
                 <circle cx="12" cy="12" r="3.2" />
               </g>
             ) : (
-              <g stroke="#6b7280" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              // Ollo riscado
+              <g stroke="#6b7280" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M2 12s4.5-7 10-7 10 7 10 7-4.5 7-10 7S2 12 2 12Z" />
                 <path d="M6 6l12 12" />
               </g>
@@ -136,23 +149,25 @@ export default function Login() {
 
       {/* Botón principal */}
       <div class="cta-wrap">
-        <button type="submit" disabled={loading}>
+        <button type="submit" disabled={loading || !email || !password}>
           {loading ? 'Accedendo…' : 'Fillos dunha paixón, imos!!'}
         </button>
       </div>
 
-      {/* Enlace de rescate para sesións trabadas */}
-      <p style={{ marginTop: '10px', fontSize: '.9rem', color: '#334155' }}>
-        Parece que a sesión quedou pendente. Podes{' '}
-        <button
-          type="button"
-          onClick={resetStuckSession}
-          style={{ border: 'none', background: 'transparent', color: '#0284c7', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
-        >
-          Restablecer sesión
-        </button>{' '}
-        e volver tentalo.
-      </p>
+      {/* Enlace de rescate: só cando falle algo */}
+      {(showStuckHint || err) && (
+        <p style={{ marginTop: '10px', fontSize: '.9rem', color: '#334155' }}>
+          Parece que a sesión quedou pendente. Podes{' '}
+          <button
+            type="button"
+            onClick={resetStuckSession}
+            style={{ border: 'none', background: 'transparent', color: '#0284c7', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+          >
+            Restablecer sesión
+          </button>{' '}
+          e volver tentalo.
+        </p>
+      )}
     </form>
   );
 }
