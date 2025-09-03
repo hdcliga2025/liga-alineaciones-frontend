@@ -22,22 +22,26 @@ const inputBase = { width:"100%", padding:"10px 12px", border:"1px solid #dbe2f0
 const inputTeam = { ...inputBase, textTransform:"uppercase", fontWeight:700 };
 const selectBase = { ...inputBase, appearance:"auto", fontWeight:700, cursor:"pointer" };
 
-/* Oculta 'dd/mm/aa' cando baleiro (webkit) */
-const DATE_CSS = `
-  .hdc-date:not(.has-value)::-webkit-datetime-edit { color: transparent; }
-  .hdc-date:focus::-webkit-datetime-edit,
-  .hdc-date:hover::-webkit-datetime-edit,
-  .hdc-date.has-value::-webkit-datetime-edit { color: inherit; }
+/* Oculta o texto do control date (queda só o icono do despregable) */
+const DATE_HIDE_TEXT_CSS = `
+  /* Chromium/WebKit */
+  .hdc-date::-webkit-datetime-edit { color: transparent; }
+  .hdc-date:focus::-webkit-datetime-edit { color: transparent; }
+  /* Firefox (aprox) */
+  .hdc-date { color: transparent; caret-color: transparent; text-shadow: 0 0 0 transparent; }
 `;
 
 export default function VindeirosPartidos() {
   const [isAdmin, setIsAdmin] = useState(false);
+
   useEffect(() => {
+    let alive = true;
     (async () => {
       const { data: s } = await supabase.auth.getSession();
       const email = s?.session?.user?.email || "";
       const uid   = s?.session?.user?.id || null;
       let admin = false;
+
       if (email) {
         const e = email.toLowerCase();
         if (e === "hdcliga@gmail.com" || e === "hdcliga2@gmail.com") admin = true;
@@ -46,16 +50,30 @@ export default function VindeirosPartidos() {
         const { data: prof } = await supabase.from("profiles").select("role").eq("id", uid).maybeSingle();
         if ((prof?.role || "").toLowerCase() === "admin") admin = true;
       }
-      setIsAdmin(admin);
+      if (alive) setIsAdmin(admin);
+
+      // Pequeno reintento por se o perfil aínda non estaba listo
+      if (!admin && uid) {
+        setTimeout(async () => {
+          if (!alive) return;
+          const { data: prof2 } = await supabase.from("profiles").select("role").eq("id", uid).maybeSingle();
+          const ok = (prof2?.role || "").toLowerCase() === "admin";
+          if (ok) setIsAdmin(true);
+        }, 500);
+      }
     })();
+    return () => { alive = false; };
   }, []);
 
   // 10 filas locais
   const [rows, setRows] = useState(Array.from({length:10}, ()=>({ date:"", home:"", away:"", comp:"" })));
-  const onChange = (i, field, value) => setRows(prev => { const nx = prev.slice(); nx[i] = { ...nx[i], [field]: value }; return nx; });
+  const onChange = (i, field, value) =>
+    setRows(prev => { const nx = prev.slice(); nx[i] = { ...nx[i], [field]: value }; return nx; });
 
   const headCell = (children, center=false) => (
-    <div style={{ ...HEAD, background: HEAD_BG, justifyContent: center ? "center" : "flex-start", borderRight:"1px solid rgba(255,255,255,.0)" }}>{children}</div>
+    <div style={{ ...HEAD, background: HEAD_BG, justifyContent: center ? "center" : "flex-start", borderRight:"1px solid rgba(255,255,255,.0)" }}>
+      {children}
+    </div>
   );
   const bodyCell = (children, colIdx, isLastRow=false) => (
     <div style={{
@@ -63,12 +81,14 @@ export default function VindeirosPartidos() {
       borderRight: COL_BORDER,
       borderLeft: colIdx===0 ? COL_BORDER : "none",
       borderBottom: isLastRow ? COL_BORDER : "none"
-    }}>{children}</div>
+    }}>
+      {children}
+    </div>
   );
 
   return (
     <main style={WRAP}>
-      <style>{DATE_CSS}</style>
+      <style>{DATE_HIDE_TEXT_CSS}</style>
       <section style={CARD}>
         <h2 style={H1}>Vindeiros partidos</h2>
         <p style={SUB}>Axenda dos próximos encontros con data e hora confirmadas.</p>
@@ -79,13 +99,20 @@ export default function VindeirosPartidos() {
           {headCell(<span>DATA</span>)}
           {headCell(
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#fff" strokeWidth="1.6"/><path d="M12 7l3 2-1 4H10L9 9l3-2Z" stroke="#fff" strokeWidth="1.2" fill="none"/></svg>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="9" stroke="#fff" strokeWidth="1.6"/>
+                <path d="M12 7l3 2-1 4H10L9 9l3-2Z" stroke="#fff" strokeWidth="1.2" fill="none"/>
+              </svg>
               <span>PARTIDO</span>
             </div>
           )}
           {headCell(
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M7 4h10v3a5 5 0 01-10 0V4Z" stroke="#fff" strokeWidth="1.6"/><path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" stroke="#fff" strokeWidth="1.6"/><path d="M9 14h6v3H9z" stroke="#fff" strokeWidth="1.6"/></svg>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M7 4h10v3a5 5 0 01-10 0V4Z" stroke="#fff" strokeWidth="1.6"/>
+                <path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" stroke="#fff" strokeWidth="1.6"/>
+                <path d="M9 14h6v3H9z" stroke="#fff" strokeWidth="1.6"/>
+              </svg>
               <span>COMPETICIÓN</span>
             </div>
           )}
@@ -97,29 +124,51 @@ export default function VindeirosPartidos() {
           const last = i === rows.length - 1;
           return (
             <div key={i} style={ROW}>
+              {/* # */}
               {bodyCell(<span style={{ ...NUM, paddingLeft:12 }}>{String(i+1).padStart(2,"0")}</span>, 0, last)}
 
+              {/* DATA (só icono/despregable; texto oculto) */}
               {bodyCell(
                 <input
                   type="date"
-                  class={`hdc-date ${r.date ? "has-value" : ""}`}
+                  class="hdc-date"
                   style={inputBase}
                   value={r.date}
                   onInput={(e)=>onChange(i,"date",e.currentTarget.value)}
                   disabled={!isAdmin}
+                  aria-label="Data"
                 />, 1, last
               )}
 
+              {/* PARTIDO */}
               {bodyCell(
                 <div style={{ display:"grid", gridTemplateColumns:"1fr auto 1fr", gap:8, alignItems:"center" }}>
-                  <input style={inputTeam} placeholder="EQUIPO 1" value={r.home} onInput={(e)=>onChange(i,"home",e.currentTarget.value.toUpperCase())} disabled={!isAdmin}/>
+                  <input
+                    style={inputTeam}
+                    placeholder="EQUIPO 1"
+                    value={r.home}
+                    onInput={(e)=>onChange(i,"home",e.currentTarget.value.toUpperCase())}
+                    disabled={!isAdmin}
+                  />
                   <span style={{ fontWeight:800, color:"#0f172a" }}>vs</span>
-                  <input style={inputTeam} placeholder="EQUIPO 2" value={r.away} onInput={(e)=>onChange(i,"away",e.currentTarget.value.toUpperCase())} disabled={!isAdmin}/>
+                  <input
+                    style={inputTeam}
+                    placeholder="EQUIPO 2"
+                    value={r.away}
+                    onInput={(e)=>onChange(i,"away",e.currentTarget.value.toUpperCase())}
+                    disabled={!isAdmin}
+                  />
                 </div>, 2, last
               )}
 
+              {/* COMPETICIÓN */}
               {bodyCell(
-                <select style={selectBase} value={r.comp} onInput={(e)=>onChange(i,"comp",e.currentTarget.value)} disabled={!isAdmin}>
+                <select
+                  style={selectBase}
+                  value={r.comp}
+                  onInput={(e)=>onChange(i,"comp",e.currentTarget.value)}
+                  disabled={!isAdmin}
+                >
                   <option value=""></option>
                   <option value="LaLiga">LaLiga</option>
                   <option value="Europa League">Europa League</option>
@@ -127,6 +176,7 @@ export default function VindeirosPartidos() {
                 </select>, 3, last
               )}
 
+              {/* REVISAR */}
               {bodyCell(
                 <div style={{ display:"flex", justifyContent:"center" }}>
                   <button type="button" style={BTN_ICON} title="Revisar" disabled>
