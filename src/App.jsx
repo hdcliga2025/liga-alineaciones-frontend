@@ -20,7 +20,7 @@ import HazTu11 from "./pages/HazTu11.jsx";
 import Clasificacion from "./pages/Clasificacion.jsx";
 import Admin from "./pages/Admin.jsx";
 
-/* Páginas Calendario */
+/* Calendario */
 import ProximoPartido from "./pages/ProximoPartido.jsx";
 import VindeirosPartidos from "./pages/VindeirosPartidos.jsx";
 import PartidosFinalizados from "./pages/PartidosFinalizados.jsx";
@@ -54,16 +54,13 @@ export default function App() {
   return (
     <>
       <AuthWatcher />
-
       {!shouldHideNav && <NavBar currentPath={currentPath} />}
-
       <Router onChange={(e) => setCurrentPath(e.url)}>
         {/* Públicas */}
         <LandingPage path="/" />
         <Login path="/login" />
         <Register path="/register" />
         <ForceLogout path="/logout" />
-
         {/* Privadas */}
         <Dashboard path="/dashboard" />
         <Notificacions path="/notificacions" />
@@ -72,12 +69,10 @@ export default function App() {
         <HazTu11 path="/haz-tu-11" />
         <Clasificacion path="/clasificacion" />
         <Admin path="/admin" />
-
-        {/* Rutas Calendario */}
+        {/* Calendario */}
         <ProximoPartido path="/proximo-partido" />
         <VindeirosPartidos path="/vindeiros-partidos" />
         <PartidosFinalizados path="/partidos-finalizados" />
-
         {/* 404 */}
         <NotFound default />
       </Router>

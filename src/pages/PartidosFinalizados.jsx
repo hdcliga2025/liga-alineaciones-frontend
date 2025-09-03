@@ -4,14 +4,14 @@ import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { route } from "preact-router";
 import { supabase } from "../lib/supabaseClient.js";
 
-/* Layout/estilos (idénticos a Vindeiros) */
+/* Layout/estilos idénticos a Vindeiros */
 const WRAP = { maxWidth: 980, margin: "0 auto", padding: "16px 12px 24px" };
 const CARD = { background:"#fff", border:"1px solid #e5e7eb", borderRadius:18, boxShadow:"0 6px 18px rgba(0,0,0,.06)", padding:"16px 12px" };
 const H1  = { font:"700 22px/1.2 Montserrat,system-ui,sans-serif", margin:"0 0 4px", color:"#0f172a" };
 const SUB = { font:"400 14px/1.25 Montserrat,system-ui,sans-serif", margin:"0 0 14px", color:"#64748b" };
 
 const GRID = { display:"grid", gridTemplateColumns:"72px 160px 1fr 220px 120px", alignItems:"center", gap:0 };
-const HEAD = { font:"700 13px/1.15 Montserrat,system-ui,sans-serif", color:"#fff", padding:"10px 12px", textTransform:"uppercase" };
+const HEAD = { font:"700 13px/1.15 Montserrat,system-ui,sans-serif", color:"#fff", padding:"10px 12px", textTransform:"uppercase", minHeight:58, display:"flex", alignItems:"center" };
 const ROW  = { ...GRID, minHeight:54, borderTop:"1px solid #e5e7eb" };
 const CELL = { padding:"10px 12px", font:"400 14px/1.25 Montserrat,system-ui,sans-serif", color:"#0f172a" };
 const NUM  = { width:40, textAlign:"right", color:"#64748b", marginRight:8, fontWeight:600 };
@@ -38,6 +38,14 @@ const parsePartido = (s="") => {
   const m = String(s).split(/vs/i);
   return { home:(m[0]||"").trim().toUpperCase(), away:(m[1]||"").trim().toUpperCase() };
 };
+
+/* Ocultar dd/mm/aa cando está baleiro (Chrome/WebKit) */
+const DATE_CSS = `
+  .hdc-date:not(.has-value)::-webkit-datetime-edit { color: transparent; }
+  .hdc-date:focus::-webkit-datetime-edit,
+  .hdc-date:hover::-webkit-datetime-edit,
+  .hdc-date.has-value::-webkit-datetime-edit { color: inherit; }
+`;
 
 export default function PartidosFinalizados() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -110,40 +118,59 @@ export default function PartidosFinalizados() {
     return out;
   }, [rows]);
 
-  // Updates (só admin)
-  async function updateDate(row, ymd) {
-    if (!isAdmin || !row?.id || !ymd) return;
-    await supabase.from("matches_finalizados").update({
-      match_date: `${ymd}T00:00:00`,
-      updated_at: new Date().toISOString(),
-    }).eq("id", row.id);
+  /* === Insert/Update helpers para edición manual === */
+  async function upsertRow(row, patch) {
+    // patch pode conter: ymd, comp, home, away
+    const payload = {};
+    if (patch.ymd) {
+      payload.match_date = `${patch.ymd}T00:00:00`;
+      payload.match_iso  = `${patch.ymd}T00:00:00`; // chave natural sin hora real
+    }
+    if (patch.comp !== undefined) payload.competition = patch.comp || null;
+    if (patch.home !== undefined || patch.away !== undefined) {
+      const home = (patch.home || "").trim().toUpperCase();
+      const away = (patch.away || "").trim().toUpperCase();
+      const txt = [home, home && away ? "vs" : "", away].filter(Boolean).join(" ");
+      payload.partido = txt || null;
+    }
+    payload.updated_at = new Date().toISOString();
+
+    if (row?.id) {
+      await supabase.from("matches_finalizados").update(payload).eq("id", row.id);
+    } else {
+      await supabase.from("matches_finalizados").insert(payload);
+    }
     await loadList();
   }
-  async function updateCompetition(row, comp) {
-    if (!isAdmin || !row?.id) return;
-    await supabase.from("matches_finalizados").update({
-      competition: comp || null,
-      updated_at: new Date().toISOString(),
-    }).eq("id", row.id);
-    await loadList();
+
+  /* === Handlers campos (permitimos edición tamén en filas novas) === */
+  function onDateInput(row, e) {
+    if (!isAdmin) return;
+    const ymd = e.currentTarget.value;
+    e.currentTarget.classList.toggle("has-value", !!ymd);
+    if (!ymd) return;
+    upsertRow(row, { ymd });
   }
-  async function savePartido(row, home, away) {
-    if (!isAdmin || !row?.id) return;
-    await supabase.from("matches_finalizados").update({
-      partido: [home, "vs", away].filter(Boolean).join(" ").trim() || null,
-      updated_at: new Date().toISOString(),
-    }).eq("id", row.id);
-    await loadList();
+  function onCompChange(row, e) {
+    if (!isAdmin) return;
+    upsertRow(row, { comp: e.currentTarget.value });
+  }
+  function onHomeBlur(row, e, other) {
+    if (!isAdmin) return;
+    upsertRow(row, { home: e.currentTarget.value, away: other });
+  }
+  function onAwayBlur(row, e, other) {
+    if (!isAdmin) return;
+    upsertRow(row, { home: other, away: e.currentTarget.value });
   }
 
   const headCell = (children, isLast = false, center = false) => (
     <div
       style={{
         ...HEAD,
-        borderRight: isLast ? "none" : COL_BORDER,
         background: HEAD_BG,
-        display: center ? "flex" : "block",
         justifyContent: center ? "center" : "flex-start",
+        borderRight: "none" /* sen raias na cabeceira */,
       }}
     >
       {children}
@@ -155,11 +182,12 @@ export default function PartidosFinalizados() {
 
   return (
     <main style={WRAP}>
+      <style>{DATE_CSS}</style>
       <section style={CARD}>
         <h2 style={H1}>Partidos finalizados</h2>
         <p style={SUB}>Histórico dos encontros do Celta na tempada 2025/2026.</p>
 
-        {/* Cabeceira */}
+        {/* Cabeceira (sen liñas internas) */}
         <div style={{ ...GRID, borderTop:"1px solid #0ea5e9", borderBottom:"1px solid #0ea5e9" }}>
           {headCell(<span style={{ paddingLeft:12 }}>#</span>)}
           {headCell(<span>DATA</span>)}
@@ -196,34 +224,35 @@ export default function PartidosFinalizados() {
               {/* # */}
               {bodyCell(<span style={{ ...NUM, paddingLeft:12 }}>{String(i + 1).padStart(2, "0")}</span>)}
 
-              {/* DATA (datepicker nativo) */}
+              {/* DATA (datepicker nativo; oculta dd/mm/aa cando baleiro) */}
               {bodyCell(
                 <input
                   type="date"
+                  class={`hdc-date ${ymd ? "has-value" : ""}`}
                   style={inputBase}
                   value={ymd}
-                  onInput={(e) => updateDate(r, e.currentTarget.value)}
-                  disabled={!isAdmin || !r?.id}
+                  onInput={(e) => onDateInput(r, e)}
+                  disabled={!isAdmin}
                 />
               )}
 
-              {/* PARTIDO */}
+              {/* PARTIDO (edición en blur) */}
               {bodyCell(
                 <div style={{ display:"grid", gridTemplateColumns:"1fr auto 1fr", gap:8, alignItems:"center" }}>
                   <input
                     style={inputTeam}
                     defaultValue={home}
-                    placeholder="Equipo 1"
-                    disabled={!isAdmin || !r?.id}
-                    onBlur={(e) => savePartido(r, e.currentTarget.value.toUpperCase(), away)}
+                    placeholder="EQUIPO 1"
+                    disabled={!isAdmin}
+                    onBlur={(e) => onHomeBlur(r, e, away)}
                   />
                   <span style={{ fontWeight:800, color:"#0f172a" }}>vs</span>
                   <input
                     style={inputTeam}
                     defaultValue={away}
-                    placeholder="Equipo 2"
-                    disabled={!isAdmin || !r?.id}
-                    onBlur={(e) => savePartido(r, home, e.currentTarget.value.toUpperCase())}
+                    placeholder="EQUIPO 2"
+                    disabled={!isAdmin}
+                    onBlur={(e) => onAwayBlur(r, e, home)}
                   />
                 </div>
               )}
@@ -233,13 +262,13 @@ export default function PartidosFinalizados() {
                 <select
                   style={selectBase}
                   value={r?.competition || ""}
-                  onInput={(e) => updateCompetition(r, e.currentTarget.value)}
-                  disabled={!isAdmin || !r?.id}
+                  onInput={(e) => onCompChange(r, e)}
+                  disabled={!isAdmin}
                 >
-                  <option value=""></option>
-                  <option value="LaLiga">LaLiga</option>
-                  <option value="Europa League">Europa League</option>
-                  <option value="Copa do Rei">Copa do Rei</option>
+                <option value=""></option>
+                <option value="LaLiga">LaLiga</option>
+                <option value="Europa League">Europa League</option>
+                <option value="Copa do Rei">Copa do Rei</option>
                 </select>
               )}
 
@@ -268,4 +297,3 @@ export default function PartidosFinalizados() {
     </main>
   );
 }
-

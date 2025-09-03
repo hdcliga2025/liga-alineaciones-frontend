@@ -10,18 +10,28 @@ const H1  = { font:"700 22px/1.2 Montserrat,system-ui,sans-serif", margin:"0 0 4
 const SUB = { font:"400 14px/1.25 Montserrat,system-ui,sans-serif", margin:"0 0 14px", color:"#64748b" };
 
 const GRID = { display:"grid", gridTemplateColumns:"72px 160px 1fr 220px 120px", alignItems:"center", gap:0 };
-const HEAD = { font:"700 13px/1.15 Montserrat,system-ui,sans-serif", color:"#fff", padding:"10px 12px", textTransform:"uppercase" };
+const HEAD = { font:"700 13px/1.15 Montserrat,system-ui,sans-serif", color:"#fff", padding:"10px 12px", textTransform:"uppercase", minHeight:58, display:"flex", alignItems:"center" };
 const ROW  = { ...GRID, minHeight:54, borderTop:"1px solid #e5e7eb" };
 const CELL = { padding:"10px 12px", font:"400 14px/1.25 Montserrat,system-ui,sans-serif", color:"#0f172a" };
 const NUM  = { width:40, textAlign:"right", color:"#64748b", marginRight:8, fontWeight:600 };
+
+/* liñas do corpo (non na cabeceira) */
 const COL_BORDER = "1px solid rgba(15,23,42,.22)";
-const HEAD_BG = "#0ea5e9"; // celeste sólido (sky-500)
+const HEAD_BG = "#0ea5e9"; // celeste sólido
 
 const BTN_ICON = { display:"inline-grid", placeItems:"center", width:40, height:40, border:"1px solid #e5e7eb", borderRadius:10, background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)", cursor:"pointer" };
 
 const inputBase = { width:"100%", padding:"10px 12px", border:"1px solid #dbe2f0", borderRadius:10, outline:"none", font:"inherit" };
 const inputTeam = { ...inputBase, textTransform:"uppercase", fontWeight:700 };
 const selectBase = { ...inputBase, appearance:"auto", fontWeight:700, cursor:"pointer" };
+
+/* Ocultar dd/mm/aa cando está baleiro (Chrome/WebKit) */
+const DATE_CSS = `
+  .hdc-date:not(.has-value)::-webkit-datetime-edit { color: transparent; }
+  .hdc-date:focus::-webkit-datetime-edit,
+  .hdc-date:hover::-webkit-datetime-edit,
+  .hdc-date.has-value::-webkit-datetime-edit { color: inherit; }
+`;
 
 export default function VindeirosPartidos() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -61,10 +71,9 @@ export default function VindeirosPartidos() {
     <div
       style={{
         ...HEAD,
-        borderRight: isLast ? "none" : COL_BORDER,
         background: HEAD_BG,
-        display: center ? "flex" : "block",
         justifyContent: center ? "center" : "flex-start",
+        borderRight: "none" /* sen raias na cabeceira */,
       }}
     >
       {children}
@@ -76,11 +85,12 @@ export default function VindeirosPartidos() {
 
   return (
     <main style={WRAP}>
+      <style>{DATE_CSS}</style>
       <section style={CARD}>
         <h2 style={H1}>Vindeiros partidos</h2>
         <p style={SUB}>Axenda dos próximos encontros con data e hora confirmadas.</p>
 
-        {/* Cabeceira */}
+        {/* Cabeceira (sen raias verticais) */}
         <div style={{ ...GRID, borderTop:"1px solid #0ea5e9", borderBottom:"1px solid #0ea5e9" }}>
           {headCell(<span style={{ paddingLeft:12 }}>#</span>)}
           {headCell(<span>DATA</span>)}
@@ -113,10 +123,11 @@ export default function VindeirosPartidos() {
             {/* # */}
             {bodyCell(<span style={{ ...NUM, paddingLeft:12 }}>{String(i + 1).padStart(2, "0")}</span>)}
 
-            {/* DATA (datepicker nativo) */}
+            {/* DATA (datepicker nativo, oculto texto cando baleiro) */}
             {bodyCell(
               <input
                 type="date"
+                class={`hdc-date ${r.date ? "has-value" : ""}`}
                 style={inputBase}
                 value={r.date}
                 onInput={(e) => onChange(i, "date", e.currentTarget.value)}
@@ -129,7 +140,7 @@ export default function VindeirosPartidos() {
               <div style={{ display:"grid", gridTemplateColumns:"1fr auto 1fr", gap:8, alignItems:"center" }}>
                 <input
                   style={inputTeam}
-                  placeholder="Equipo 1"
+                  placeholder="EQUIPO 1"
                   value={r.home}
                   onInput={(e) => onChange(i, "home", e.currentTarget.value.toUpperCase())}
                   disabled={!isAdmin}
@@ -137,7 +148,7 @@ export default function VindeirosPartidos() {
                 <span style={{ fontWeight:800, color:"#0f172a" }}>vs</span>
                 <input
                   style={inputTeam}
-                  placeholder="Equipo 2"
+                  placeholder="EQUIPO 2"
                   value={r.away}
                   onInput={(e) => onChange(i, "away", e.currentTarget.value.toUpperCase())}
                   disabled={!isAdmin}
@@ -178,4 +189,5 @@ export default function VindeirosPartidos() {
     </main>
   );
 }
+
 
