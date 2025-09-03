@@ -23,6 +23,9 @@ import Admin from "./pages/Admin.jsx";
 /* Subcard Calendario → Próximo partido */
 import ProximoPartido from "./pages/ProximoPartido.jsx";
 
+/* Logout forzado (¡import necesario!) */
+import ForceLogout from "./pages/ForceLogout.jsx";
+
 /* 404 */
 const NotFound = () => (
   <main style={{ padding: "1rem" }}>
@@ -40,12 +43,13 @@ export default function App() {
       : "/"
   );
 
+  // Ocultar NavBar en portada y en cualquier variante de /login, /register, /logout
   const hidePrefixes = ["/login", "/register", "/logout"];
   const shouldHideNav =
     currentPath === "/" ||
     hidePrefixes.some((p) => (currentPath || "").startsWith(p));
 
-  // Clave de remount por ruta (incluye query para forzar reconstrucción cuando cambie)
+  // Clave para remount del Router por ruta actual (incluye query)
   const routerKey = currentPath;
 
   return (
@@ -54,8 +58,12 @@ export default function App() {
 
       {!shouldHideNav && <NavBar currentPath={currentPath} />}
 
-      {/* Clave para remount completo da ruta activa */}
-      <Router key={routerKey} onChange={(e) => setCurrentPath(e.url)}>
+      <Router
+        key={routerKey}
+        onChange={(e) => {
+          if (e.url !== currentPath) setCurrentPath(e.url);
+        }}
+      >
         {/* Públicas */}
         <LandingPage path="/" />
         <Login path="/login" />
