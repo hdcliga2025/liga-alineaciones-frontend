@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
 const ESCUDO_SRC = "/escudo.png";
-const ESCUDO_DESKTOP_WIDTH = 180; // ↓ un pouco máis pequeno
-const ESCUDO_DESKTOP_TOP = 2;     // posición estable sen tocar liñas
+const ESCUDO_DESKTOP_WIDTH = 180; // tamaño seguro
+const ESCUDO_DESKTOP_TOP = 2;     // non toca ningunha liña
 
 const WRAP = { maxWidth: 880, margin: "0 auto", padding: "16px" };
 
@@ -25,14 +25,14 @@ const TITLE_LINE_BASE = {
   color: "#0f172a",
   lineHeight: 1.1,
 };
-const TEAM_NAME = { fontWeight: 600, textTransform: "uppercase" }; // ↓ menos bold
-const VS_WEIGHT = 500; // ↓ menos bold
+const TEAM_NAME = { fontWeight: 600, textTransform: "uppercase" }; // menos bold
+const VS_WEIGHT = 500; // menos bold
 
 const LINE_GRAY_BASE = {
   margin: "6px 0 0",
   fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
   color: "#6b7280",
-  fontWeight: 500, // ↓ menos bold
+  fontWeight: 500, // menos bold
 };
 
 /* ===== Admin form ===== */
@@ -62,7 +62,14 @@ const ROW          = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 
 const SELECT_BASE  = { ...INPUT_BASE, appearance: "none", WebkitAppearance: "none", MozAppearance: "none", fontWeight: 800, paddingRight: 48, cursor: "pointer" };
 const SELECT_WRAP  = { position: "relative" };
 const SELECT_ARROW = { position: "absolute", top: "50%", right: 18, transform: "translateY(-50%)", pointerEvents: "none", opacity: 0.95 };
-const BTN_SAVE     = { marginTop: 10, width: "100%", padding: "12px 14px", borderRadius: 12, border: "1px solid #60a5fa", color: "#fff", fontWeight: 800, letterSpacing: ".2px", cursor: "pointer", backgroundImage: "linear-gradient(180deg,#67b1ff,#5a8df5)", boxShadow: "0 8px 24px rgba(59,130,246,.35)" };
+const BTN_SAVE     = {
+  marginTop: 10, width: "100%", padding: "12px 14px",
+  borderRadius: 12, border: "1px solid #60a5fa",
+  color: "#fff", fontWeight: 800, letterSpacing: ".2px",
+  cursor: "pointer", backgroundImage: "linear-gradient(180deg,#67b1ff,#5a8df5)",
+  boxShadow: "0 8px 24px rgba(59,130,246,.35)",
+  fontSize: 17, // ← máis grande
+};
 const INFO         = { marginTop: 10, color: "#065f46", fontSize: 14 };
 const ERR          = { marginTop: 10, color: "#b91c1c", fontSize: 14 };
 
@@ -171,7 +178,7 @@ export default function ProximoPartido() {
     return () => window.removeEventListener("resize", onR);
   }, []);
 
-  const scale = (n) => (isMobile ? Math.max(10, Math.round(n * 0.9)) : n); // ↓ todo un pouco en móbil
+  const scale = (n) => (isMobile ? Math.max(10, Math.round(n * 0.9)) : n); // -10% en móbil
 
   const TITLE_LINE = { ...TITLE_LINE_BASE, fontSize: scale(30) };
   const VS_STYLE   = { fontWeight: VS_WEIGHT, fontSize: scale(22), margin: "0 8px" };
@@ -272,14 +279,8 @@ export default function ProximoPartido() {
     return () => { alive = false; clearTimeout(safety); };
   }, []);
 
-  const teamA = useMemo(
-    () => (row?.equipo1 || teamLocal || "").toUpperCase(),
-    [row, teamLocal]
-  );
-  const teamB = useMemo(
-    () => (row?.equipo2 || teamAway || "").toUpperCase(),
-    [row, teamAway]
-  );
+  const teamA = useMemo(() => (row?.equipo1 || teamLocal || "").toUpperCase(), [row, teamLocal]);
+  const teamB = useMemo(() => (row?.equipo2 || teamAway  || "").toUpperCase(), [row, teamAway]);
 
   const dateObj = useMemo(() => {
     if (row?.match_iso) return new Date(row.match_iso);
@@ -377,17 +378,14 @@ export default function ProximoPartido() {
 
   if (loading) return <main style={WRAP}>Cargando…</main>;
 
-  // oco lateral para non solapar NIN liña nin contidos
+  // oco lateral para non solapar NIN liñas nin contidos
   const rightPad = !isMobile && showEscudo ? ESCUDO_DESKTOP_WIDTH + 70 : 0;
 
   const justTime = useMemo(() => {
     if (!dateObj) return null;
     try {
       return new Intl.DateTimeFormat("gl-ES", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: "Europe/Madrid",
+        hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Europe/Madrid",
       }).format(dateObj);
     } catch {
       const hh = String(dateObj.getHours()).padStart(2, "0");
@@ -420,8 +418,8 @@ export default function ProximoPartido() {
               opacity: 0.95,
               pointerEvents: "none",
               userSelect: "none",
-              transform: "translateZ(0)", // estabiliza en render
-              zIndex: 0,                  // por detrás de todo
+              transform: "translateZ(0)",
+              zIndex: 0,
             }}
           />
         )}
@@ -447,46 +445,59 @@ export default function ProximoPartido() {
           </p>
         </div>
 
-        {/* HR por riba do escudo (non se tapa) */}
+        {/* HR por riba do escudo */}
         <div style={{ position: "relative", zIndex: 2, margin: "18px 0" }}>
           <hr style={{ border: 0, borderTop: "1px solid #e5e7eb", margin: 0 }} />
         </div>
 
         {/* ===== METEO — box aliñado ===== */}
         <div style={{ position: "relative", marginTop: 22, marginBottom: 22, zIndex: 1 }}>
-          {/* Leyenda principal (arriba), fondo transparente */}
+          {/* Botón celeste (arriba), adaptado ao texto */}
           <span
             style={{
               position: "absolute",
-              top: -10, // centrada sobre borde superior 2px
+              top: -20,                // pisa a liña superior (2px) centrado
               left: 12,
-              padding: "0 10px",
-              background: "transparent", // ← transparente
-              fontSize: scale(15),
-              lineHeight: 1.2,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: `6px 12px`,
+              borderRadius: 999,
+              background: "#0ea5e9",   // celeste-500
+              color: "#fff",
+              boxShadow: "0 6px 20px rgba(14,165,233,.35)",
+              border: "1px solid #0284c7",
+              fontSize: scale(14),
               fontWeight: 700,
-              color: "#334155",
-              zIndex: 3, // por riba da liña de puntos
+              lineHeight: 1.1,
+              zIndex: 3,
               pointerEvents: "none",
+              whiteSpace: "nowrap",
             }}
           >
             {legendText}
           </span>
 
-          {/* Sub-leyenda (abaixo), fondo transparente */}
+          {/* Botón gris (abaixo), adaptado ao texto */}
           <span
             style={{
               position: "absolute",
-              bottom: -10, // centrada sobre borde inferior 2px
+              bottom: -20,             // pisa a liña inferior (2px) centrado
               left: 12,
-              padding: "0 8px",
-              background: "transparent", // ← transparente
+              display: "inline-flex",
+              alignItems: "center",
+              padding: `4px 10px`,
+              borderRadius: 999,
+              background: "#e5e7eb",   // gray-200
+              color: "#334155",        // slate-700
+              boxShadow: "0 3px 12px rgba(0,0,0,.08)",
+              border: "1px solid #cbd5e1",
               fontSize: scale(12),
-              lineHeight: 1.2,
               fontWeight: 400,
-              color: "#64748b",
+              lineHeight: 1.1,
               zIndex: 3,
               pointerEvents: "none",
+              whiteSpace: "nowrap",
             }}
           >
             Previsión para a hora do partido
@@ -497,8 +508,8 @@ export default function ProximoPartido() {
               border: "2px dashed #cbd5e1",
               borderRadius: 12,
               background: "linear-gradient(180deg, rgba(14,165,233,0.08), rgba(99,102,241,0.06))",
-              padding: "18px 16px",
-              paddingRight: 16 + rightPad, // evita calquera solape co escudo en desktop
+              padding: "22px 16px", // un chisco máis para compensar as píldoras
+              paddingRight: 16 + rightPad,
             }}
           >
             {meteo ? (
@@ -604,15 +615,14 @@ export default function ProximoPartido() {
                 <label style={LABEL}>Data oficial confirmada</label>
                 <div style={{ position: "relative" }}>
                   {/* Icono calendario á esquerda (celeste) */}
-                  <svg
-                    width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"
-                    style={{ position: "absolute", left: 10, top: 10 }}
-                  >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ position: "absolute", left: 10, top: 10 }}>
                     <rect x="3" y="4.5" width="18" height="16" rx="2" stroke="#0ea5e9" strokeWidth="1.8" />
                     <path d="M7 2.5v4M17 2.5v4M3 9h18" stroke="#0ea5e9" strokeWidth="1.8" />
                   </svg>
                   <input
-                    id="nm-date" class="nm-date" type="date"
+                    id="nm-date"
+                    class="nm-date"
+                    type="date"
                     style={INPUT_DATE}
                     value={dateStr}
                     onInput={(e) => setDateStr(e.currentTarget.value)}
