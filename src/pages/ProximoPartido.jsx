@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
 const ESCUDO_SRC = "/escudo.png";
-const ESCUDO_DESKTOP_WIDTH = 170;
-const ESCUDO_DESKTOP_TOP = 6;
+const ESCUDO_DESKTOP_WIDTH = 190; // ↑ más grande
+const ESCUDO_DESKTOP_TOP = 0;     // ↑ más arriba
 
 const WRAP = { maxWidth: 880, margin: "0 auto", padding: "16px" };
 
@@ -78,7 +78,10 @@ const STYLE_HIDE_NATIVE_DATE = `
 function toLongGalician(dateObj) {
   try {
     return new Intl.DateTimeFormat("gl-ES", {
-      weekday: "long", year: "numeric", month: "long", day: "numeric",
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
       timeZone: "Europe/Madrid",
     }).format(dateObj);
   } catch {
@@ -130,8 +133,9 @@ async function fetchMeteoFor(lugar, matchISO) {
     if (idx === -1) {
       let best = 0, bestDiff = Infinity;
       for (let i=0;i<times.length;i++){
-        const d = Math.abs(new Date(times[i]).getTime() - new Date(localISO).getTime());
-        if (d < bestDiff) { bestDiff = d; best = i; }
+        const d = Math.abs(new Date(times[i]).getTime()) - new Date(localISO).getTime();
+        const ad = Math.abs(d);
+        if (ad < bestDiff) { bestDiff = ad; best = i; }
       }
       idx = best;
     }
@@ -160,7 +164,9 @@ async function fetchMeteoFor(lugar, matchISO) {
 
 export default function ProximoPartido() {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth <= 560 : false
+  );
   useEffect(() => {
     const onR = () => setIsMobile(window.innerWidth <= 560);
     window.addEventListener("resize", onR);
@@ -262,8 +268,14 @@ export default function ProximoPartido() {
     return () => { alive = false; clearTimeout(safety); };
   }, []);
 
-  const teamA = useMemo(() => (row?.equipo1 || teamLocal || "").toUpperCase(), [row, teamLocal]);
-  const teamB = useMemo(() => (row?.equipo2 || teamAway  || "").toUpperCase(), [row, teamAway]);
+  const teamA = useMemo(
+    () => (row?.equipo1 || teamLocal || "").toUpperCase(),
+    [row, teamLocal]
+  );
+  const teamB = useMemo(
+    () => (row?.equipo2 || teamAway || "").toUpperCase(),
+    [row, teamAway]
+  );
 
   const dateObj = useMemo(() => {
     if (row?.match_iso) return new Date(row.match_iso);
@@ -275,7 +287,7 @@ export default function ProximoPartido() {
 
   const showEscudo = (!isMobile && true) || (isMobile && !isAdmin);
 
-  async function waitForPersist(expectedISO, tries = 8, delayMs = 250) {
+  async function waitForPersist(expectedISO, tries = 12, delayMs = 300) {
     for (let i = 0; i < tries; i++) {
       const { data: check } = await supabase
         .from("next_match")
@@ -286,6 +298,12 @@ export default function ProximoPartido() {
       await new Promise((r) => setTimeout(r, delayMs));
     }
     return false;
+  }
+
+  function hardReloadWithBusting() {
+    const u = new URL(window.location.href);
+    u.searchParams.set("t", String(Date.now()));
+    window.location.replace(u.toString());
   }
 
   async function onSave(e) {
@@ -319,10 +337,11 @@ export default function ProximoPartido() {
       const { error } = await supabase.from("next_match").upsert(payload, { onConflict: "id" });
       if (error) throw error;
 
-      // Estado inmediato y meteo
+      // Estado inmediato
       setRow((prev) => ({ ...(prev || {}), ...payload }));
       setMeteo(null);
 
+      // Meteo inmediata a <48h
       const ms = new Date(match_iso).getTime() - Date.now();
       if (ms <= 48 * 3600 * 1000) {
         const wx = await fetchMeteoFor(payload.lugar, match_iso);
@@ -341,9 +360,10 @@ export default function ProximoPartido() {
       const ss = String(now.getSeconds()).padStart(2, "0");
       setInfo(`Gardado e publicado ás ${hh}:${mm}:${ss}`);
 
+      // Espera robusta a persistencia y recarga con busting
       await waitForPersist(match_iso);
       try { localStorage.setItem("nm_updated_at", String(Date.now())); } catch {}
-      window.location.reload();
+      hardReloadWithBusting();
     } catch (e2) {
       console.error("[ProximoPartido] save error:", e2);
       setErr("Erro gardando os datos.");
@@ -354,13 +374,16 @@ export default function ProximoPartido() {
 
   if (loading) return <main style={WRAP}>Cargando…</main>;
 
-  const rightPad = !isMobile && showEscudo ? 230 : 0;
+  const rightPad = !isMobile && showEscudo ? 255 : 0; // ↑ por escudo maior
 
   const justTime = useMemo(() => {
     if (!dateObj) return null;
     try {
       return new Intl.DateTimeFormat("gl-ES", {
-        hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Europe/Madrid",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: "Europe/Madrid",
       }).format(dateObj);
     } catch {
       const hh = String(dateObj.getHours()).padStart(2, "0");
@@ -370,13 +393,14 @@ export default function ProximoPartido() {
   }, [dateObj]);
 
   const lugarLegend = (row?.lugar || lugar || "—").toUpperCase();
+  const legendText = `METEO | ${lugarLegend} | Previsión na data e hora do partido`;
 
   return (
     <main style={WRAP}>
       <style>{STYLE_HIDE_NATIVE_DATE}</style>
 
       <section style={PANEL}>
-        {/* Escudo desktop detrás do contido */}
+        {/* Escudo desktop por detrás do contido */}
         {showEscudo && !isMobile && (
           <img
             src={ESCUDO_SRC}
@@ -417,29 +441,29 @@ export default function ProximoPartido() {
           </p>
         </div>
 
-        {/* HR por riba do escudo */}
+        {/* HR visible por riba do escudo */}
         <div style={{ position: "relative", zIndex: 2, margin: "18px 0" }}>
           <hr style={{ border: 0, borderTop: "1px solid #e5e7eb", margin: 0 }} />
         </div>
 
-        {/* METEO — alineado co contido */}
+        {/* METEO — alineado co contido; leyenda centrada na liña */}
         <div style={{ position: "relative", marginTop: 22, marginBottom: 22, zIndex: 1 }}>
-          {/* Leyenda pisando a liña punteada */}
           <span
             style={{
               position: "absolute",
-              top: -13, // justo sobre o borde 2px
+              top: -11,                 // pisa centrado a liña (border 2px)
               left: 12,
-              padding: "0 8px",
+              padding: "0 10px",
               background: "#fff",
-              fontSize: 13,
+              fontSize: 15,             // ↑ texto un pouco maior
+              lineHeight: 1.2,
               fontWeight: 700,
               color: "#334155",
               zIndex: 2,
               pointerEvents: "none",
             }}
           >
-            METEO | Previsión en {lugarLegend} na data e hora do partido
+            {legendText}
           </span>
 
           <div
@@ -448,7 +472,7 @@ export default function ProximoPartido() {
               borderRadius: 12,
               background: "linear-gradient(180deg, rgba(14,165,233,0.08), rgba(99,102,241,0.06))",
               padding: "18px 16px",
-              paddingRight: 16 + rightPad, // non solapar co escudo
+              paddingRight: 16 + rightPad, // evita solaparse co escudo en desktop
             }}
           >
             {meteo ? (
@@ -554,14 +578,15 @@ export default function ProximoPartido() {
                 <label style={LABEL}>Data oficial confirmada</label>
                 <div style={{ position: "relative" }}>
                   {/* Icono calendario á esquerda (celeste) */}
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ position: "absolute", left: 10, top: 10 }}>
+                  <svg
+                    width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"
+                    style={{ position: "absolute", left: 10, top: 10 }}
+                  >
                     <rect x="3" y="4.5" width="18" height="16" rx="2" stroke="#0ea5e9" strokeWidth="1.8" />
                     <path d="M7 2.5v4M17 2.5v4M3 9h18" stroke="#0ea5e9" strokeWidth="1.8" />
                   </svg>
                   <input
-                    id="nm-date"
-                    class="nm-date"
-                    type="date"
+                    id="nm-date" class="nm-date" type="date"
                     style={INPUT_DATE}
                     value={dateStr}
                     onInput={(e) => setDateStr(e.currentTarget.value)}
