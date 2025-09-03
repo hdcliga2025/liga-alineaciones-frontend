@@ -1,4 +1,3 @@
-// src/pages/VindeirosPartidos.jsx
 import { h } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
@@ -22,15 +21,6 @@ const inputBase = { width:"100%", padding:"10px 12px", border:"1px solid #dbe2f0
 const inputTeam = { ...inputBase, textTransform:"uppercase", fontWeight:700 };
 const selectBase = { ...inputBase, appearance:"auto", fontWeight:700, cursor:"pointer" };
 
-/* Oculta o texto do control date (queda só o icono do despregable) */
-const DATE_HIDE_TEXT_CSS = `
-  /* Chromium/WebKit */
-  .hdc-date::-webkit-datetime-edit { color: transparent; }
-  .hdc-date:focus::-webkit-datetime-edit { color: transparent; }
-  /* Firefox (aprox) */
-  .hdc-date { color: transparent; caret-color: transparent; text-shadow: 0 0 0 transparent; }
-`;
-
 export default function VindeirosPartidos() {
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -52,20 +42,18 @@ export default function VindeirosPartidos() {
       }
       if (alive) setIsAdmin(admin);
 
-      // Pequeno reintento por se o perfil aínda non estaba listo
       if (!admin && uid) {
         setTimeout(async () => {
           if (!alive) return;
           const { data: prof2 } = await supabase.from("profiles").select("role").eq("id", uid).maybeSingle();
-          const ok = (prof2?.role || "").toLowerCase() === "admin";
-          if (ok) setIsAdmin(true);
+          if ((prof2?.role || "").toLowerCase() === "admin") setIsAdmin(true);
         }, 500);
       }
     })();
     return () => { alive = false; };
   }, []);
 
-  // 10 filas locais
+  // 10 filas locais editables (non persisten)
   const [rows, setRows] = useState(Array.from({length:10}, ()=>({ date:"", home:"", away:"", comp:"" })));
   const onChange = (i, field, value) =>
     setRows(prev => { const nx = prev.slice(); nx[i] = { ...nx[i], [field]: value }; return nx; });
@@ -88,7 +76,6 @@ export default function VindeirosPartidos() {
 
   return (
     <main style={WRAP}>
-      <style>{DATE_HIDE_TEXT_CSS}</style>
       <section style={CARD}>
         <h2 style={H1}>Vindeiros partidos</h2>
         <p style={SUB}>Axenda dos próximos encontros con data e hora confirmadas.</p>
@@ -110,7 +97,7 @@ export default function VindeirosPartidos() {
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                 <path d="M7 4h10v3a5 5 0 01-10 0V4Z" stroke="#fff" strokeWidth="1.6"/>
-                <path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" stroke="#fff" strokeWidth="1.6"/>
+                <path d="M7 7H5a 3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" stroke="#fff" strokeWidth="1.6"/>
                 <path d="M9 14h6v3H9z" stroke="#fff" strokeWidth="1.6"/>
               </svg>
               <span>COMPETICIÓN</span>
@@ -127,16 +114,16 @@ export default function VindeirosPartidos() {
               {/* # */}
               {bodyCell(<span style={{ ...NUM, paddingLeft:12 }}>{String(i+1).padStart(2,"0")}</span>, 0, last)}
 
-              {/* DATA (só icono/despregable; texto oculto) */}
+              {/* DATA: entrada manual (sen calendario) */}
               {bodyCell(
                 <input
-                  type="date"
-                  class="hdc-date"
+                  type="text"
+                  inputMode="numeric"
                   style={inputBase}
                   value={r.date}
                   onInput={(e)=>onChange(i,"date",e.currentTarget.value)}
                   disabled={!isAdmin}
-                  aria-label="Data"
+                  aria-label="Data (dd/mm/aaaa)"
                 />, 1, last
               )}
 
@@ -194,5 +181,4 @@ export default function VindeirosPartidos() {
     </main>
   );
 }
-
 
