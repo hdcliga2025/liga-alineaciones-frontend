@@ -22,6 +22,7 @@ const inputBase  = { width:"100%", padding:"10px 12px", border:"1px solid #dbe2f
 const inputTeam  = { ...inputBase, textTransform:"uppercase", fontWeight:700 };
 const selectBase = { ...inputBase, appearance:"auto", fontWeight:700, cursor:"pointer" };
 
+/* Utils */
 const toDMY = (d, tz="Europe/Madrid") => {
   try {
     const dt = (d instanceof Date) ? d : new Date(d);
@@ -39,9 +40,9 @@ const parseDMY = (s) => {
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? null : iso;
 };
-const maskDMY = (value) => {
-  const v = value.replace(/[^\d]/g, "").slice(0,8);
-  const p1 = v.slice(0,2), p2 = v.slice(2,4), p3 = v.slice(4,8);
+const maskDMY = (v) => {
+  const s = String(v || "").replace(/[^\d]/g, "").slice(0, 8);
+  const p1 = s.slice(0,2), p2 = s.slice(2,4), p3 = s.slice(4,8);
   return p1 + (p2?"/"+p2:"") + (p3?"/"+p3:"");
 };
 
@@ -50,6 +51,7 @@ export default function PartidosFinalizados() {
   const [rows, setRows] = useState([]);
   const insertedRef = useRef(false);
 
+  // Admin (robusto)
   useEffect(() => {
     (async () => {
       const { data: s } = await supabase.auth.getSession();
@@ -65,6 +67,12 @@ export default function PartidosFinalizados() {
         if ((prof?.role||"").toLowerCase() === "admin") admin = true;
       }
       setIsAdmin(admin);
+      // reintento breve por se tarda a RLS
+      setTimeout(async ()=>{
+        if (admin) return;
+        const { data: prof2 } = await supabase.from("profiles").select("role").eq("id", uid).maybeSingle();
+        if ((prof2?.role||"").toLowerCase() === "admin") setIsAdmin(true);
+      }, 500);
     })();
   }, []);
 
@@ -78,7 +86,7 @@ export default function PartidosFinalizados() {
   }
   useEffect(() => { loadList(); }, []);
 
-  // Auto-archive cando pecha (match_iso - 2h)
+  // auto-archivo cando pecha (match_iso - 2h)
   useEffect(() => {
     const t = setInterval(async () => {
       if (insertedRef.current) return;
@@ -111,39 +119,53 @@ export default function PartidosFinalizados() {
     return out;
   }, [rows]);
 
-  async function handleCellEdit(idx, field, value) {
-    const row = viewRows[idx];
-    if (!row?.id || !isAdmin) return;
-    const patch = {};
+  // Crea a fila se non existe e devolve o id
+  async function ensureRow(idx, seed={}) {
+    const cur = viewRows[idx];
+    if (cur?.id) return cur.id;
+    if (!isAdmin) return null;
+    const { data, error } = await supabase
+      .from("matches_finalizados")
+      .insert([{ ...seed }])
+      .select("id")
+      .maybeSingle();
+    if (!error && data?.id) {
+      await loadList();
+      return data.id;
+    }
+    return null;
+  }
+
+  async function handleCellEdit(idx, field, rawValue) {
+    if (!isAdmin) return; // só admin persiste
+    let patch = {};
     if (field === "match_date") {
-      const iso = parseDMY(value);
-      if (!iso) return;
+      const iso = parseDMY(rawValue);
+      if (!iso) return; // formato inválido
       patch.match_date = iso;
     } else if (field === "partido") {
-      patch.partido = value || null;
+      patch.partido = rawValue || null;
     } else if (field === "competition") {
-      patch.competition = value || null;
+      patch.competition = rawValue || null;
     }
     if (!Object.keys(patch).length) return;
+
+    let id = viewRows[idx]?.id;
+    if (!id) {
+      // crear rexistro seed co campo que temos
+      id = await ensureRow(idx, patch);
+      if (!id) return;
+    }
     patch.updated_at = new Date().toISOString();
-    await supabase.from("matches_finalizados").update(patch).eq("id", row.id);
+    await supabase.from("matches_finalizados").update(patch).eq("id", id);
     await loadList();
   }
 
   const headCell = (children, center=false) => (
-    <div style={{ ...HEAD, background: HEAD_BG, justifyContent: center ? "center" : "flex-start" }}>
-      {children}
-    </div>
+    <div style={{ ...HEAD, background: HEAD_BG, justifyContent: center ? "center" : "flex-start" }}>{children}</div>
   );
   const bodyCell = (children, colIdx, isLastRow=false) => (
-    <div style={{
-      ...CELL,
-      borderRight: COL_BORDER,
-      borderLeft: colIdx===0 ? COL_BORDER : "none",
-      borderBottom: isLastRow ? COL_BORDER : "none"
-    }}>
-      {children}
-    </div>
+    <div style={{ ...CELL, borderRight: COL_BORDER, borderLeft: colIdx===0 ? COL_BORDER : "none", borderBottom: isLastRow ? COL_BORDER : "none" }}>{children}</div>
   );
 
   return (
@@ -156,47 +178,35 @@ export default function PartidosFinalizados() {
         <div style={{ ...GRID, borderTop:"1px solid #0ea5e9", borderBottom:"1px solid #0ea5e9" }}>
           {headCell(<span style={{ paddingLeft:12 }}>#</span>)}
           {headCell(<span>DATA</span>)}
-          {headCell(
-            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="9" stroke="#fff" strokeWidth="1.6"/>
-                <path d="M12 7l3 2-1 4H10L9 9l3-2Z" stroke="#fff" strokeWidth="1.2" fill="none"/>
-              </svg>
-              <span>PARTIDO</span>
-            </div>
-          )}
-          {headCell(
-            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <path d="M7 4h10v3a5 5 0 01-10 0V4Z" stroke="#fff" strokeWidth="1.6"/>
-                <path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" stroke="#fff" strokeWidth="1.6"/>
-                <path d="M9 14h6v3H9z" stroke="#fff" strokeWidth="1.6"/>
-              </svg>
-              <span>COMPETICIÓN</span>
-            </div>
-          )}
+          {headCell(<div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#fff" strokeWidth="1.6"/><path d="M12 7l3 2-1 4H10L9 9l3-2Z" stroke="#fff" strokeWidth="1.2" fill="none"/></svg>
+            <span>PARTIDO</span>
+          </div>)}
+          {headCell(<div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M7 4h10v3a5 5 0 01-10 0V4Z" stroke="#fff" strokeWidth="1.6"/><path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" stroke="#fff" strokeWidth="1.6"/><path d="M9 14h6v3H9z" stroke="#fff" strokeWidth="1.6"/></svg>
+            <span>COMPETICIÓN</span>
+          </div>)}
           {headCell(<span>REVISAR</span>, true)}
         </div>
 
         {/* Filas */}
         {viewRows.map((r, i) => {
           const last = i === viewRows.length - 1;
+          const dmy  = r?.match_date ? toDMY(r.match_date) : "";
           return (
             <div key={r?.id || `p-${i}`} style={ROW}>
-              {/* # */}
               {bodyCell(<span style={{ ...NUM, paddingLeft:12 }}>{String(i+1).padStart(2,"0")}</span>, 0, last)}
 
-              {/* DATA: SOLO texto (editable) */}
+              {/* DATA */}
               {bodyCell(
                 <input
                   type="text"
                   inputMode="numeric"
                   placeholder="dd/mm/aaaa"
-                  defaultValue={r?.match_date ? toDMY(r.match_date) : ""}
+                  defaultValue={dmy}
                   onInput={(e)=>{ e.currentTarget.value = maskDMY(e.currentTarget.value); }}
                   onBlur={(e)=>handleCellEdit(i, "match_date", e.currentTarget.value)}
                   style={inputBase}
-                  disabled={!isAdmin || !r?.id}
                   aria-label="Data (dd/mm/aaaa)"
                 />, 1, last
               )}
@@ -212,7 +222,6 @@ export default function PartidosFinalizados() {
                       const right = (document.getElementById(`pf-away-${i}`)?.value || "").toUpperCase();
                       handleCellEdit(i, "partido", left && right ? `${left} vs ${right}` : (left || right));
                     }}
-                    disabled={!isAdmin || !r?.id}
                   />
                   <span style={{ fontWeight:800, color:"#0f172a" }}>vs</span>
                   <input
@@ -224,7 +233,6 @@ export default function PartidosFinalizados() {
                       const left  = (e.currentTarget.parentElement?.querySelector("input")?.value || "").toUpperCase();
                       handleCellEdit(i, "partido", left && right ? `${left} vs ${right}` : (left || right));
                     }}
-                    disabled={!isAdmin || !r?.id}
                   />
                 </div>, 2, last
               )}
@@ -235,7 +243,6 @@ export default function PartidosFinalizados() {
                   defaultValue={r?.competition || ""}
                   onBlur={(e)=>handleCellEdit(i, "competition", e.currentTarget.value)}
                   style={selectBase}
-                  disabled={!isAdmin || !r?.id}
                 >
                   <option value=""></option>
                   <option value="LaLiga">LaLiga</option>
