@@ -57,8 +57,10 @@ export default function VindeirosPartidos() {
     });
   };
 
-  const headCell = (children, isLast = false) => (
-    <div style={{ ...HEAD, borderRight: isLast ? "none" : COL_BORDER }}>{children}</div>
+  const headCell = (children, isLast = false, center = false) => (
+    <div style={{ ...HEAD, borderRight: isLast ? "none" : COL_BORDER, background: HEAD_BG, display: center ? "flex" : "block", justifyContent: center ? "center" : "flex-start" }}>
+      {children}
+    </div>
   );
   const bodyCell = (children, isLast = false) => (
     <div style={{ ...CELL, borderRight: isLast ? "none" : COL_BORDER }}>{children}</div>
@@ -71,9 +73,10 @@ export default function VindeirosPartidos() {
         <p style={SUB}>Axenda dos próximos encontros con data e hora confirmadas.</p>
 
         {/* Cabeceira */}
-        <div style={{ ...GRID, borderTop:"1px solid #bae6fd", borderBottom:"1px solid #bae6fd", background:HEAD_BG }}>
+        <div style={{ ...GRID, borderTop:"1px solid #bae6fd", borderBottom:"1px solid #bae6fd" }}>
           {headCell(<span style={{ paddingLeft:12 }}>#</span>)}
-          {headCell(<span>DATA</span>)}
+          {/* DATA: sen texto na cabeceira */}
+          {headCell(<span />, false)}
           {headCell(
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -90,7 +93,8 @@ export default function VindeirosPartidos() {
               <span>COMPETICIÓN</span>
             </div>
           )}
-          {headCell(<span>REVISAR</span>, true)}
+          {/* REVISAR centrado */}
+          {headCell(<span>REVISAR</span>, true, true)}
         </div>
 
         {/* Filas */}
@@ -99,7 +103,7 @@ export default function VindeirosPartidos() {
             {/* # */}
             {bodyCell(<span style={{ ...NUM, paddingLeft:12 }}>{String(i + 1).padStart(2, "0")}</span>)}
 
-            {/* DATA */}
+            {/* DATA (datepicker co icono nativo) */}
             {bodyCell(
               <input
                 type="date"
@@ -146,7 +150,7 @@ export default function VindeirosPartidos() {
               </select>
             )}
 
-            {/* REVISAR */}
+            {/* REVISAR centrado */}
             {bodyCell(
               <div style={{ display:"flex", justifyContent:"center" }}>
                 <button type="button" style={BTN_ICON} title="Revisar" disabled>

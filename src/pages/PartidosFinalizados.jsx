@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { route } from "preact-router";
 import { supabase } from "../lib/supabaseClient.js";
 
-/* Layout/estilos iguales aos de Vindeiros */
+/* Layout/estilos (idénticos a Vindeiros) */
 const WRAP = { maxWidth: 980, margin: "0 auto", padding: "16px 12px 24px" };
 const CARD = { background:"#fff", border:"1px solid #e5e7eb", borderRadius:18, boxShadow:"0 6px 18px rgba(0,0,0,.06)", padding:"16px 12px" };
 const H1  = { font:"700 22px/1.2 Montserrat,system-ui,sans-serif", margin:"0 0 4px", color:"#0f172a" };
@@ -136,8 +136,10 @@ export default function PartidosFinalizados() {
     await loadList();
   }
 
-  const headCell = (children, isLast = false) => (
-    <div style={{ ...HEAD, borderRight: isLast ? "none" : COL_BORDER }}>{children}</div>
+  const headCell = (children, isLast = false, center = false) => (
+    <div style={{ ...HEAD, borderRight: isLast ? "none" : COL_BORDER, background: HEAD_BG, display: center ? "flex" : "block", justifyContent: center ? "center" : "flex-start" }}>
+      {children}
+    </div>
   );
   const bodyCell = (children, isLast = false) => (
     <div style={{ ...CELL, borderRight: isLast ? "none" : COL_BORDER }}>{children}</div>
@@ -147,12 +149,13 @@ export default function PartidosFinalizados() {
     <main style={WRAP}>
       <section style={CARD}>
         <h2 style={H1}>Partidos finalizados</h2>
-        <p style={SUB}>Histórico recente dos encontros do RC Celta.</p>
+        <p style={SUB}>Histórico dos encontros do Celta na tempada 2025/2026.</p>
 
         {/* Cabeceira (mesmo look) */}
-        <div style={{ ...GRID, borderTop:"1px solid #bae6fd", borderBottom:"1px solid #bae6fd", background:HEAD_BG }}>
+        <div style={{ ...GRID, borderTop:"1px solid #bae6fd", borderBottom:"1px solid #bae6fd" }}>
           {headCell(<span style={{ paddingLeft:12 }}>#</span>)}
-          {headCell(<span>DATA</span>)}
+          {/* DATA: sen texto na cabeceira */}
+          {headCell(<span />)}
           {headCell(
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -169,7 +172,8 @@ export default function PartidosFinalizados() {
               <span>COMPETICIÓN</span>
             </div>
           )}
-          {headCell(<span>REVISAR</span>, true)}
+          {/* REVISAR centrado */}
+          {headCell(<span>REVISAR</span>, true, true)}
         </div>
 
         {/* Filas (60) */}
@@ -182,7 +186,7 @@ export default function PartidosFinalizados() {
               {/* # */}
               {bodyCell(<span style={{ ...NUM, paddingLeft:12 }}>{String(i + 1).padStart(2, "0")}</span>)}
 
-              {/* DATA */}
+              {/* DATA (datepicker co icono nativo) */}
               {bodyCell(
                 <input
                   type="date"
@@ -229,7 +233,7 @@ export default function PartidosFinalizados() {
                 </select>
               )}
 
-              {/* REVISAR */}
+              {/* REVISAR centrado */}
               {bodyCell(
                 <div style={{ display:"flex", justifyContent:"center" }}>
                   <button

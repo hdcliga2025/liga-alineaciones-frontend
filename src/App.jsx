@@ -20,14 +20,12 @@ import HazTu11 from "./pages/HazTu11.jsx";
 import Clasificacion from "./pages/Clasificacion.jsx";
 import Admin from "./pages/Admin.jsx";
 
-/* Subcard Calendario → Próximo partido */
+/* Páginas novas */
 import ProximoPartido from "./pages/ProximoPartido.jsx";
-
-/* Novas páxinas de calendario */
 import VindeirosPartidos from "./pages/VindeirosPartidos.jsx";
 import PartidosFinalizados from "./pages/PartidosFinalizados.jsx";
 
-/* Logout forzado (import necesario) */
+/* Logout forzado */
 import ForceLogout from "./pages/ForceLogout.jsx";
 
 /* 404 */
@@ -47,14 +45,11 @@ export default function App() {
       : "/"
   );
 
-  // Ocultar NavBar en portada y en cualquier variante de /login, /register, /logout
+  // Ocultar NavBar en portada e en calquera variante de /login, /register, /logout
   const hidePrefixes = ["/login", "/register", "/logout"];
   const shouldHideNav =
     currentPath === "/" ||
     hidePrefixes.some((p) => (currentPath || "").startsWith(p));
-
-  // Clave para remount do Router por ruta actual (inclúe query)
-  const routerKey = currentPath;
 
   return (
     <>
@@ -62,12 +57,7 @@ export default function App() {
 
       {!shouldHideNav && <NavBar currentPath={currentPath} />}
 
-      <Router
-        key={routerKey}
-        onChange={(e) => {
-          if (e.url !== currentPath) setCurrentPath(e.url);
-        }}
-      >
+      <Router onChange={(e) => setCurrentPath(e.url)}>
         {/* Públicas */}
         <LandingPage path="/" />
         <Login path="/login" />
@@ -83,7 +73,7 @@ export default function App() {
         <Clasificacion path="/clasificacion" />
         <Admin path="/admin" />
 
-        {/* Calendario */}
+        {/* Rutas “bonitas” do Calendario */}
         <ProximoPartido path="/proximo-partido" />
         <VindeirosPartidos path="/vindeiros-partidos" />
         <PartidosFinalizados path="/partidos-finalizados" />
