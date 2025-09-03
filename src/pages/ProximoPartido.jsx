@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
 const ESCUDO_SRC = "/escudo.png";
+const ESCUDO_DESKTOP_WIDTH = 170; // ↑ más grande
+const ESCUDO_DESKTOP_TOP = 6;     // ↑ un poco más arriba
 
 const WRAP = { maxWidth: 880, margin: "0 auto", padding: "16px" };
 
@@ -264,7 +266,7 @@ export default function ProximoPartido() {
       }
     })();
 
-  return () => { alive = false; clearTimeout(safety); };
+    return () => { alive = false; clearTimeout(safety); };
   }, []);
 
   const teamA = useMemo(
@@ -347,7 +349,8 @@ export default function ProximoPartido() {
 
   if (loading) return <main style={WRAP}>Cargando…</main>;
 
-  const rightPad = (!isMobile && showEscudo) ? 210 : 0;
+  // Aumentamos el padding derecho para acomodar escudo mayor
+  const rightPad = (!isMobile && showEscudo) ? 230 : 0;
 
   const justTime = useMemo(() => {
     if (!dateObj) return null;
@@ -372,7 +375,7 @@ export default function ProximoPartido() {
       <style>{STYLE_HIDE_NATIVE_DATE}</style>
 
       <section style={PANEL}>
-        {/* Escudo: pegado arriba á dereita */}
+        {/* Escudo: máis grande e un chisco máis arriba en desktop */}
         {showEscudo && !isMobile && (
           <img
             src={ESCUDO_SRC}
@@ -381,9 +384,9 @@ export default function ProximoPartido() {
             loading="eager"
             style={{
               position: "absolute",
-              top: 10,
+              top: ESCUDO_DESKTOP_TOP,
               right: 10,
-              width: 150,
+              width: ESCUDO_DESKTOP_WIDTH,
               height: "auto",
               opacity: 0.95,
               pointerEvents: "none",
@@ -412,16 +415,17 @@ export default function ProximoPartido() {
             Hora: {justTime ? <strong>{justTime}</strong> : "—"}
           </p>
 
-          <hr style={HR} />
+          <hr style={{ ...HR, margin: "18px 0" }} />
         </div>
 
         {/* ===== METEO — banner ancho completo do panel ===== */}
         <div
           style={{
             position: "relative",
-            marginTop: 10,
-            marginLeft: -16,  // sangrado aos bordes do panel
-            marginRight: -16, // idem
+            marginTop: 22,          // ↑ máis espazo por riba
+            marginLeft: -16,
+            marginRight: -16,
+            marginBottom: 22,       // ↑ máis espazo cara o formulario admin
             zIndex: 1,
           }}
         >
@@ -445,11 +449,11 @@ export default function ProximoPartido() {
 
           <div
             style={{
-              border: "1px dashed #cbd5e1",
+              border: "2px dashed #cbd5e1", // ↑ máis grosor
               borderRadius: 12,
               background:
                 "linear-gradient(180deg, rgba(14,165,233,0.08), rgba(99,102,241,0.06))",
-              padding: "16px",
+              padding: "18px 16px",
               paddingRight: 16 + rightPad, // evita solaparse co escudo en desktop
             }}
           >
