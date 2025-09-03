@@ -138,7 +138,7 @@ export default function Dashboard() {
             id="sub-partidos"
             class={`subgrid ${open === "partidos" ? "open" : ""}`}
           >
-            {/* >>> CAMBIO: agora apunta a /proximo-partido */}
+            {/* Próximo partido */}
             <a href="/proximo-partido" class="subcard">
               <div
                 class="sub-ico"
@@ -157,7 +157,8 @@ export default function Dashboard() {
               </div>
             </a>
 
-            <a href="/partidos?view=proximos" class="subcard">
+            {/* Vindeiros encontros → NOVA ruta */}
+            <a href="/vindeiros-partidos" class="subcard">
               <div
                 class="sub-ico"
                 style="border:1px solid rgba(34,197,94,.55);"
@@ -174,7 +175,8 @@ export default function Dashboard() {
               </div>
             </a>
 
-            <a href="/partidos?view=finalizados" class="subcard">
+            {/* Partidos finalizados → NOVA ruta */}
+            <a href="/partidos-finalizados" class="subcard">
               <div
                 class="sub-ico"
                 style="border:1px solid rgba(34,197,94,.55);"
@@ -195,9 +197,7 @@ export default function Dashboard() {
 
         {/* ===== Xogar ás Aliñacións ===== */}
         <div
-          class={`main-block ${
-            open === "alineacions" ? "open--alineacions" : ""
-          }`}
+          class={`main-block ${open === "alineacions" ? "open--alineacions" : ""}`}
         >
           <a
             href="#alineacions"
@@ -301,9 +301,7 @@ export default function Dashboard() {
 
         {/* ===== Clasificacións ===== */}
         <div
-          class={`main-block ${
-            open === "clasificacions" ? "open--clasificacions" : ""
-          }`}
+          class={`main-block ${open === "clasificacions" ? "open--clasificacions" : ""}`}
         >
           <a
             href="#clasificacions"
@@ -376,4 +374,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
