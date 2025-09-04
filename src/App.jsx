@@ -20,10 +20,10 @@ import HazTu11 from "./pages/HazTu11.jsx";
 import Clasificacion from "./pages/Clasificacion.jsx";
 import Admin from "./pages/Admin.jsx";
 
-/* Subcard Calendario → Próximo partido */
+/* Próximo partido (calendario) */
 import ProximoPartido from "./pages/ProximoPartido.jsx";
 
-/* NUEVAS PÁGINAS */
+/* NUEVAS páginas */
 import VindeirosPartidos from "./pages/VindeirosPartidos.jsx";
 import PartidosFinalizados from "./pages/PartidosFinalizados.jsx";
 
@@ -47,7 +47,6 @@ export default function App() {
       : "/"
   );
 
-  // Ocultar NavBar en portada y en /login, /register, /logout (con o sin query)
   const hidePrefixes = ["/login", "/register", "/logout"];
   const shouldHideNav =
     currentPath === "/" ||
@@ -56,7 +55,6 @@ export default function App() {
   return (
     <>
       <AuthWatcher />
-
       {!shouldHideNav && <NavBar currentPath={currentPath} />}
 
       <Router onChange={(e) => setCurrentPath(e.url)}>
@@ -75,10 +73,8 @@ export default function App() {
         <Clasificacion path="/clasificacion" />
         <Admin path="/admin" />
 
-        {/* Próximo partido */}
+        {/* Calendario */}
         <ProximoPartido path="/proximo-partido" />
-
-        {/* NUEVAS RUTAS DIRECTAS */}
         <VindeirosPartidos path="/vindeiros-partidos" />
         <PartidosFinalizados path="/partidos-finalizados" />
 
