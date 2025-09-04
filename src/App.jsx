@@ -23,6 +23,10 @@ import Admin from "./pages/Admin.jsx";
 /* Subcard Calendario → Próximo partido */
 import ProximoPartido from "./pages/ProximoPartido.jsx";
 
+/* NUEVAS PÁGINAS */
+import VindeirosPartidos from "./pages/VindeirosPartidos.jsx";
+import PartidosFinalizados from "./pages/PartidosFinalizados.jsx";
+
 /* Logout forzado */
 import ForceLogout from "./pages/ForceLogout.jsx";
 
@@ -43,7 +47,7 @@ export default function App() {
       : "/"
   );
 
-  // Ocultar NavBar en portada y en cualquier variante de /login, /register, /logout
+  // Ocultar NavBar en portada y en /login, /register, /logout (con o sin query)
   const hidePrefixes = ["/login", "/register", "/logout"];
   const shouldHideNav =
     currentPath === "/" ||
@@ -71,8 +75,12 @@ export default function App() {
         <Clasificacion path="/clasificacion" />
         <Admin path="/admin" />
 
-        {/* Nueva ruta “bonita” para a subcard Calendario → Próximo partido */}
+        {/* Próximo partido */}
         <ProximoPartido path="/proximo-partido" />
+
+        {/* NUEVAS RUTAS DIRECTAS */}
+        <VindeirosPartidos path="/vindeiros-partidos" />
+        <PartidosFinalizados path="/partidos-finalizados" />
 
         {/* 404 */}
         <NotFound default />
