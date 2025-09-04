@@ -4,20 +4,23 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
 export default function NavBar({ currentPath = "" }) {
+  // Rutas públicas: no renderizar la barra
   const isPublic = ["/", "/login", "/register"].includes(currentPath || "/");
   if (isPublic) return null;
 
-  // ===== Estado reloj =====
-  const [targetMs, setTargetMs] = useState(null);
+  /* ==============================
+     Estado para reloj y robustez
+     ============================== */
+  const [targetMs, setTargetMs] = useState(null); // cierre = match_iso - 2h
   const [now, setNow] = useState(() => Date.now());
 
-  // Tick 1s para el reloj
+  // Ticker de 1s
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
 
-  // Carga/refresh del target (cada 10s + al volver al tab)
+  // Carga/refresh del target. Importante: nunca lo dejamos en null si hay un fallo puntual.
   useEffect(() => {
     let alive = true;
 
@@ -28,22 +31,28 @@ export default function NavBar({ currentPath = "" }) {
           .select("match_iso")
           .eq("id", 1)
           .maybeSingle();
+
         if (!alive) return;
-        if (error) return; // mantenemos el último bueno
+        if (error) return; // mantener último valor conocido
+
         if (data?.match_iso) {
           const ms = new Date(data.match_iso).getTime() - 2 * 3600 * 1000;
           setTargetMs(ms);
-        } else {
-          setTargetMs(null);
         }
+        // si no hay match_iso, mantenemos el último valor para que el reloj no se vaya a 00
       } catch {
-        /* noop */
+        // mantener último valor
       }
     }
 
-    fetchTarget();                        // primer fetch
-    const poll = setInterval(fetchTarget, 10000); // móvil agresivo
-    const onVis = () => { if (!document.hidden) fetchTarget(); };
+    // Primer fetch + polling
+    fetchTarget();
+    const poll = setInterval(fetchTarget, 10000);
+
+    // Cuando el tab vuelve a foreground
+    const onVis = () => {
+      if (!document.hidden) fetchTarget();
+    };
     document.addEventListener("visibilitychange", onVis);
 
     return () => {
@@ -53,23 +62,44 @@ export default function NavBar({ currentPath = "" }) {
     };
   }, []);
 
-  // === Auto-archivo liviano cada 15s (via RPC segura) ===
+  // Poll liviano para auto-archivar (funciona aunque nadie visite Finalizados)
   useEffect(() => {
-    let t = null;
-    async function tick() {
-      try { await supabase.rpc("archive_next_match_if_due"); }
-      catch { /* noop */ }
+    let alive = true;
+    async function tryArchive() {
+      try {
+        const { data, error } = await supabase.rpc("archive_next_match_if_due");
+        // Si archivó algo, refrescamos el target
+        if (!error && data) {
+          const { data: nm } = await supabase
+            .from("next_match")
+            .select("match_iso")
+            .eq("id", 1)
+            .maybeSingle();
+          if (!alive) return;
+          if (nm?.match_iso) {
+            const ms = new Date(nm.match_iso).getTime() - 2 * 3600 * 1000;
+            setTargetMs(ms);
+          }
+        }
+      } catch {
+        /* ignorar errores de red puntuales */
+      }
     }
-    tick(); // primer disparo
-    t = setInterval(tick, 15000);
-    return () => clearInterval(t);
+
+    tryArchive();
+    const poll = setInterval(tryArchive, 15000);
+    return () => {
+      alive = false;
+      clearInterval(poll);
+    };
   }, []);
 
+  // String del contador. Evitamos 00 por fallos; si no hay target mostramos 00... pero sin parpadeos.
   const remainStr = useMemo(() => {
     if (!targetMs) return "00D-00H-00M-00S";
     let diff = targetMs - now;
-    if (!Number.isFinite(diff)) return "00D-00H-00M-00S";
-    const totalSec = Math.max(0, Math.floor(diff / 1000));
+    if (diff <= 0) diff = 0;
+    const totalSec = Math.floor(diff / 1000);
     const days = Math.floor(totalSec / 86400);
     const h = Math.floor((totalSec % 86400) / 3600);
     const m = Math.floor((totalSec % 3600) / 60);
@@ -78,7 +108,9 @@ export default function NavBar({ currentPath = "" }) {
     return `${pad(days)}D-${pad(h)}H-${pad(m)}M-${pad(s)}S`;
   }, [targetMs, now]);
 
-  // ===== Estilos =====
+  /* ==============================
+     Estilos y UI
+     ============================== */
   const [isNarrow, setIsNarrow] = useState(
     typeof window !== "undefined" ? window.innerWidth <= 480 : false
   );
@@ -90,78 +122,126 @@ export default function NavBar({ currentPath = "" }) {
 
   const styles = {
     header: {
-      position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 50,
       background: "rgba(255,255,255,0.9)",
       backdropFilter: "saturate(180%) blur(8px)",
       borderBottom: "1px solid #e5e7eb",
     },
     container: {
-      maxWidth: 1080, margin: "0 auto",
+      maxWidth: 1080,
+      margin: "0 auto",
       padding: "8px 12px",
       display: "grid",
       gridTemplateColumns: "auto 1fr auto",
       alignItems: "center",
       gap: isNarrow ? 6 : 8,
     },
-    leftGroup: { display: "flex", alignItems: "center", gap: isNarrow ? 8 : 10, whiteSpace: "nowrap" },
-    centerClock: { justifySelf: "center", textAlign: "center", userSelect: "none",
-      fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
-      lineHeight: 1.0
+    leftGroup: {
+      display: "flex",
+      alignItems: "center",
+      gap: isNarrow ? 8 : 10,
+      whiteSpace: "nowrap",
+    },
+    centerClock: {
+      justifySelf: "center",
+      textAlign: "center",
+      userSelect: "none",
+      fontFamily:
+        "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
+      lineHeight: 1.0,
     },
     time: {
-      margin: 0, color: "#0ea5e9", fontWeight: 400,
+      margin: 0,
+      color: "#0ea5e9", // siempre celeste
+      fontWeight: 400, // sin bold
       fontSize: isNarrow ? 17 : 20,
-      transform: `scaleX(${isNarrow ? 0.89 : 1.30})`,
+      transform: `scaleX(${isNarrow ? 0.89 : 1.3})`,
       transformOrigin: "center",
       letterSpacing: isNarrow ? "0.35px" : "0.6px",
       whiteSpace: "nowrap",
     },
-    rightGroup: { justifySelf: "end", display: "flex", alignItems: "center", gap: isNarrow ? 8 : 10, whiteSpace: "nowrap" },
+    rightGroup: {
+      justifySelf: "end",
+      display: "flex",
+      alignItems: "center",
+      gap: isNarrow ? 8 : 10,
+      whiteSpace: "nowrap",
+    },
     iconBtn: {
-      width: isNarrow ? 36 : 38, height: isNarrow ? 36 : 38,
-      display: "grid", placeItems: "center",
-      borderRadius: 12, background: "#fff",
+      width: isNarrow ? 36 : 38,
+      height: isNarrow ? 36 : 38,
+      display: "grid",
+      placeItems: "center",
+      borderRadius: 12,
+      background: "#fff",
       border: "1px solid #eef2ff",
       boxShadow: "0 4px 14px rgba(0,0,0,.06)",
-      textDecoration: "none", outline: "none",
-      transition: "transform .15s ease, box-shadow .15s ease", cursor: "pointer",
+      textDecoration: "none",
+      outline: "none",
+      transition: "transform .15s ease, box-shadow .15s ease",
+      cursor: "pointer",
     },
-    iconBtnHover: { transform: "translateY(-1px)", boxShadow: "0 8px 22px rgba(0,0,0,.10)" },
+    iconBtnHover: {
+      transform: "translateY(-1px)",
+      boxShadow: "0 8px 22px rgba(0,0,0,.10)",
+    },
     spacer: { height: 56 },
   };
 
   const [hover, setHover] = useState("");
   const btnStyle = (k) =>
-    hover === k ? { ...styles.iconBtn, ...styles.iconBtnHover } : styles.iconBtn;
+    hover === k
+      ? { ...styles.iconBtn, ...styles.iconBtnHover }
+      : styles.iconBtn;
 
   const stroke = "#0ea5e9";
-  const common = { fill: "none", stroke, strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" };
+  const strokeW = 1.8;
+  const common = {
+    fill: "none",
+    stroke,
+    strokeWidth: strokeW,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+  };
 
   const onBack = (e) => {
     e.preventDefault();
-    try { if (history.length > 1) history.back(); else location.href = "/dashboard"; }
-    catch { location.href = "/dashboard"; }
+    try {
+      if (history.length > 1) history.back();
+      else location.href = "/dashboard";
+    } catch {
+      location.href = "/dashboard";
+    }
   };
 
   return (
     <>
       <header style={styles.header}>
         <div style={styles.container}>
+          {/* IZQUIERDA: Atrás + Notificacións */}
           <div style={styles.leftGroup}>
             <a
-              href="/dashboard" title="Atrás"
+              href="/dashboard"
+              title="Atrás"
               style={btnStyle("back")}
               onMouseEnter={() => setHover("back")}
               onMouseLeave={() => setHover("")}
-              onClick={onBack} aria-label="Volver á páxina anterior"
+              onClick={onBack}
+              aria-label="Volver á páxina anterior"
             >
               <svg width="22" height="22" viewBox="0 0 24 24" {...common}>
-                <path d="M4 12h16" /><path d="M10 6l-6 6 6 6" />
+                <path d="M4 12h16" />
+                <path d="M10 6l-6 6 6 6" />
               </svg>
             </a>
 
             <a
-              href="/notificacions" title="Notificacións"
+              href="/notificacions"
+              title="Notificacións"
               style={btnStyle("bell")}
               onMouseEnter={() => setHover("bell")}
               onMouseLeave={() => setHover("")}
@@ -174,13 +254,16 @@ export default function NavBar({ currentPath = "" }) {
             </a>
           </div>
 
+          {/* CENTRO: Contador SIEMPRE celeste */}
           <div style={styles.centerClock} aria-label="Peche das aliñacións">
             <p style={styles.time}>{remainStr}</p>
           </div>
 
+          {/* DERECHA: Perfil + Logout */}
           <div style={styles.rightGroup}>
             <a
-              href="/perfil" title="Perfil"
+              href="/perfil"
+              title="Perfil"
               style={btnStyle("user")}
               onMouseEnter={() => setHover("user")}
               onMouseLeave={() => setHover("")}
@@ -193,7 +276,8 @@ export default function NavBar({ currentPath = "" }) {
             </a>
 
             <a
-              href="/logout?to=/" title="Pechar sesión"
+              href="/logout?to=/"
+              title="Pechar sesión"
               style={btnStyle("close")}
               onMouseEnter={() => setHover("close")}
               onMouseLeave={() => setHover("")}
@@ -207,6 +291,7 @@ export default function NavBar({ currentPath = "" }) {
         </div>
       </header>
 
+      {/* Empuje para no tapar contenido */}
       <div style={styles.spacer} />
     </>
   );
