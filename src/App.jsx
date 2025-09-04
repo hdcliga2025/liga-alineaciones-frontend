@@ -1,4 +1,5 @@
-﻿import { h } from "preact";
+﻿// src/App.jsx
+import { h } from "preact";
 import { useState } from "preact/hooks";
 import { Router } from "preact-router";
 
@@ -19,7 +20,7 @@ import HazTu11 from "./pages/HazTu11.jsx";
 import Clasificacion from "./pages/Clasificacion.jsx";
 import Admin from "./pages/Admin.jsx";
 
-/* Rutas nuevas */
+/* Subpáxinas calendario */
 import ProximoPartido from "./pages/ProximoPartido.jsx";
 import VindeirosPartidos from "./pages/VindeirosPartidos.jsx";
 import PartidosFinalizados from "./pages/PartidosFinalizados.jsx";
@@ -27,7 +28,6 @@ import PartidosFinalizados from "./pages/PartidosFinalizados.jsx";
 /* Logout forzado */
 import ForceLogout from "./pages/ForceLogout.jsx";
 
-/* 404 */
 const NotFound = () => (
   <main style={{ padding: "1rem" }}>
     <h2>Páxina non atopada</h2>
@@ -49,6 +49,7 @@ export default function App() {
   return (
     <>
       <AuthWatcher />
+
       {!shouldHideNav && <NavBar currentPath={currentPath} />}
 
       <Router onChange={(e) => setCurrentPath(e.url)}>
@@ -61,18 +62,17 @@ export default function App() {
         {/* Privadas */}
         <Dashboard path="/dashboard" />
         <Notificacions path="/notificacions" />
-        <Perfil path="/perfil" />
+        <Perfil key={`perfil:${currentPath}`} path="/perfil" />
         <Partidos path="/partidos" />
         <HazTu11 path="/haz-tu-11" />
         <Clasificacion path="/clasificacion" />
         <Admin path="/admin" />
 
-        {/* Rutas “bonitas” */}
-        <ProximoPartido path="/proximo-partido" />
-        <VindeirosPartidos path="/vindeiros-partidos" />
-        <PartidosFinalizados path="/partidos-finalizados" />
+        {/* Subrutas calendario (con key para remonte limpio) */}
+        <ProximoPartido key={`nx:${currentPath}`} path="/proximo-partido" />
+        <VindeirosPartidos key={`vind:${currentPath}`} path="/vindeiros-partidos" />
+        <PartidosFinalizados key={`fin:${currentPath}`} path="/partidos-finalizados" />
 
-        {/* 404 */}
         <NotFound default />
       </Router>
     </>
