@@ -20,18 +20,19 @@ import HazTu11 from "./pages/HazTu11.jsx";
 import Clasificacion from "./pages/Clasificacion.jsx";
 import Admin from "./pages/Admin.jsx";
 
-/* Subpáxinas calendario */
+/* Subcard Calendario → Próximo partido */
 import ProximoPartido from "./pages/ProximoPartido.jsx";
-import VindeirosPartidos from "./pages/VindeirosPartidos.jsx";
-import PartidosFinalizados from "./pages/PartidosFinalizados.jsx";
 
 /* Logout forzado */
 import ForceLogout from "./pages/ForceLogout.jsx";
 
+/* 404 */
 const NotFound = () => (
   <main style={{ padding: "1rem" }}>
     <h2>Páxina non atopada</h2>
-    <p>Volver ao <a href="/login">login</a></p>
+    <p>
+      Volver ao <a href="/login">login</a>
+    </p>
   </main>
 );
 
@@ -42,9 +43,11 @@ export default function App() {
       : "/"
   );
 
+  // Ocultar NavBar en portada y en cualquier variante de /login, /register, /logout
   const hidePrefixes = ["/login", "/register", "/logout"];
   const shouldHideNav =
-    currentPath === "/" || hidePrefixes.some((p) => (currentPath || "").startsWith(p));
+    currentPath === "/" ||
+    hidePrefixes.some((p) => (currentPath || "").startsWith(p));
 
   return (
     <>
@@ -62,20 +65,18 @@ export default function App() {
         {/* Privadas */}
         <Dashboard path="/dashboard" />
         <Notificacions path="/notificacions" />
-        <Perfil key={`perfil:${currentPath}`} path="/perfil" />
+        <Perfil path="/perfil" />
         <Partidos path="/partidos" />
         <HazTu11 path="/haz-tu-11" />
         <Clasificacion path="/clasificacion" />
         <Admin path="/admin" />
 
-        {/* Subrutas calendario (con key para remonte limpio) */}
-        <ProximoPartido key={`nx:${currentPath}`} path="/proximo-partido" />
-        <VindeirosPartidos key={`vind:${currentPath}`} path="/vindeiros-partidos" />
-        <PartidosFinalizados key={`fin:${currentPath}`} path="/partidos-finalizados" />
+        {/* Nueva ruta “bonita” para a subcard Calendario → Próximo partido */}
+        <ProximoPartido path="/proximo-partido" />
 
+        {/* 404 */}
         <NotFound default />
       </Router>
     </>
   );
 }
-
