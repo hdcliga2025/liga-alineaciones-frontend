@@ -1,6 +1,5 @@
 import { h } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
-import { route } from "preact-router";
 import { supabase } from "../lib/supabaseClient.js";
 
 /* ========= Helpers ========= */
@@ -18,13 +17,13 @@ const parseDMYToISO = (s) => {
   const m = /^(\d{2})\/(\d{2})\/(\d{2}|\d{4})$/.exec(String(s||"").trim());
   if (!m) return null;
   let [_, dd, mm, yy] = m;
-  if (yy.length === 2) yy = String(2000 + parseInt(yy, 10)); // regla: aa -> 20aa
+  if (yy.length === 2) yy = String(2000 + parseInt(yy, 10)); // aa -> 20aa
   const iso = `${yy}-${mm}-${dd}T00:00:00`;
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? null : iso;
 };
 const COMP_OPTIONS = ["LaLiga", "Europa League", "Copa do Rei"];
-const lcKey = "hdc_vindeiros_cards_v2";
+const lcKey = "hdc_vindeiros_cards_v3";
 
 /* ========= Estilos ========= */
 const WRAP = { maxWidth: 980, margin: "0 auto", padding: "16px 12px 24px" };
@@ -39,48 +38,73 @@ const CARD = {
   padding: 12,
   marginBottom: 10,
 };
-const ROW1 = { display: "grid", gridTemplateColumns: "auto 130px 1fr", gap: 8, alignItems: "center", marginBottom: 10 };
-const ROW2 = { display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, alignItems: "center" };
 
-const PILL = { minWidth: 26, height: 22, borderRadius: 999, background: "#f1f5f9", color:"#0f172a", display:"grid", placeItems:"center", font:"700 12px/1 Montserrat,system-ui,sans-serif", padding: "0 8px" };
-const LABEL = { font:"700 11px/1.1 Montserrat,system-ui,sans-serif", color:"#334155", letterSpacing:".3px", marginBottom: 4 };
-
-const INPUT = {
-  width:"100%", padding:"10px 12px", border:"1px solid #dbe2f0", borderRadius:10,
-  font:"700 14px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", outline:"none",
+/* Fila 1: nº + “E1 vs E2” dentro da MESMA cela (un só bordo) */
+const FIRST_LINE = {
+  display:"grid",
+  gridTemplateColumns:"1fr",
+  gap: 0,
+  marginBottom: 10,
 };
-const INPUT_SOFT = { ...INPUT, font:"700 13px/1.2 Montserrat,system-ui,sans-serif" };
+const MATCH_CELL = {
+  display:"grid",
+  gridTemplateColumns:"auto 1fr auto 1fr",
+  alignItems:"center",
+  gap: 0,
+  border:"1px solid #dbe2f0",
+  borderRadius:12,
+  background:"#fff",
+  overflow:"hidden"
+};
+const PILL = {
+  marginLeft: 8,
+  marginRight: 6,
+  minWidth: 28, height: 24, borderRadius: 999,
+  background: "#f1f5f9", color:"#0f172a",
+  display:"grid", placeItems:"center",
+  font:"800 11px/1 Montserrat,system-ui,sans-serif",
+  padding: "0 8px"
+};
+const MATCH_INPUT = {
+  width:"100%", padding:"10px 12px", border:"none", outline:"none",
+  font:"700 14px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", background:"transparent"
+};
+const VS = { padding:"0 10px", font:"800 12px/1 Montserrat,system-ui,sans-serif", color:"#334155" };
 
-const MATCH_WRAP = { display:"grid", gap: 4 };
-const MATCH_JOIN = { display:"grid", gridTemplateColumns:"1fr auto 1fr", alignItems:"center", gap: 0 };
-const VS = { padding:"10px 10px", border:"1px solid #dbe2f0", font:"800 12px/1 Montserrat,system-ui,sans-serif", color:"#334155", background:"#f1f5f9" };
-const LEFT_FIELD  = { ...INPUT, borderTopRightRadius:0, borderBottomRightRadius:0, borderRight:"none" };
-const RIGHT_FIELD = { ...INPUT, borderTopLeftRadius:0, borderBottomLeftRadius:0 };
-
+/* Fila 2: Data + icono competición + accións (gardar/borrar) */
+const SECOND_LINE = { display:"grid", gridTemplateColumns:"1fr auto auto auto", gap: 8, alignItems:"center" };
+const INPUT_SOFT = {
+  width:"100%", padding:"10px 12px",
+  border:"1px solid #dbe2f0", borderRadius:10,
+  font:"700 13px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", outline:"none",
+};
 const CHIP = {
-  display:"inline-flex", alignItems:"center", gap:6, border:"1px solid #e5e7eb",
-  padding:"8px 10px", borderRadius:10, background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)",
-  font:"700 14px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", cursor:"pointer"
+  display:"inline-flex", alignItems:"center", gap:6,
+  border:"1px solid #e5e7eb", padding:"8px 10px", borderRadius:10,
+  background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)",
+  font:"700 13px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", cursor:"pointer"
 };
 const MENU = {
-  position:"absolute", marginTop:4, background:"#fff", border:"1px solid #e5e7eb",
-  borderRadius:10, boxShadow:"0 10px 26px rgba(0,0,0,.12)", zIndex:30
+  position:"absolute", marginTop:4, right:0, background:"#fff",
+  border:"1px solid #e5e7eb", borderRadius:10,
+  boxShadow:"0 10px 26px rgba(0,0,0,.12)", zIndex:30
 };
-const MENU_ITEM = {
-  padding:"8px 12px", font:"600 13px/1.2 Montserrat,system-ui,sans-serif", cursor:"pointer", whiteSpace:"nowrap"
-};
+const MENU_ITEM = { padding:"8px 12px", font:"600 13px/1.2 Montserrat,system-ui,sans-serif", cursor:"pointer", whiteSpace:"nowrap" };
 
 const ICONBTN = {
-  width:36, height:36, display:"grid", placeItems:"center", borderRadius:10, border:"1px solid #e5e7eb",
-  background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.08)", cursor:"pointer"
+  width:36, height:36, display:"grid", placeItems:"center",
+  borderRadius:10, border:"1px solid #0ea5e9",
+  background:"#fff", boxShadow:"0 2px 8px rgba(14,165,233,.25)",
+  cursor:"pointer"
 };
+const ICON_STROKE = { fill:"none", stroke:"#0ea5e9", strokeWidth:1.8, strokeLinecap:"round", strokeLinejoin:"round" };
 const TOAST = {
   position:"fixed", left:"50%", bottom:18, transform:"translateX(-50%)",
   background:"#0ea5e9", color:"#fff", padding:"8px 12px", borderRadius:10,
   font:"700 13px/1.2 Montserrat,system-ui,sans-serif", boxShadow:"0 10px 26px rgba(14,165,233,.4)", zIndex:1000
 };
 
-/* ========= Componente ========= */
+/* ========= Compo ========= */
 export default function VindeirosPartidos() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [rows, setRows] = useState([]); // [{id, date_iso, team1, team2, competition}]
@@ -141,10 +165,8 @@ export default function VindeirosPartidos() {
   }
   useEffect(() => { loadFromDB(); }, []);
 
-  function saveToLC(next) {
-    try { localStorage.setItem(lcKey, JSON.stringify(next)); } catch {}
-  }
-  function setToast2s(msg){ setToast(msg); setTimeout(()=>setToast(""), 2000); }
+  function saveToLC(next) { try { localStorage.setItem(lcKey, JSON.stringify(next)); } catch {} }
+  function toast2(msg){ setToast(msg); setTimeout(()=>setToast(""), 2000); }
 
   function updateRow(idx, patch){
     setRows(prev=>{
@@ -166,12 +188,12 @@ export default function VindeirosPartidos() {
 
   async function onSave(idx){
     const r = rows[idx];
-    if (!isAdmin){ setToast2s("Só admin pode gardar"); return; }
+    if (!isAdmin){ toast2("Só admin pode gardar"); return; }
 
     let iso = r.date_iso;
     if (typeof iso === "string" && /\d{2}\/\d{2}\/(\d{2}|\d{4})/.test(iso)) {
       const p = parseDMYToISO(iso);
-      if (!p){ setToast2s("DATA inválida"); return; }
+      if (!p){ toast2("DATA inválida"); return; }
       iso = p;
     }
     if (dbEnabledRef.current) {
@@ -185,7 +207,7 @@ export default function VindeirosPartidos() {
             updated_at: new Date().toISOString(),
           })
           .eq("id", r.id);
-        if (error){ setToast2s("Erro gardando"); return; }
+        if (error){ toast2("Erro gardando"); return; }
       } else {
         const { data, error } = await supabase.from("matches_vindeiros")
           .insert({
@@ -196,13 +218,26 @@ export default function VindeirosPartidos() {
             updated_at: new Date().toISOString(),
           })
           .select().maybeSingle();
-        if (error){ setToast2s("Erro gardando"); return; }
+        if (error){ toast2("Erro gardando"); return; }
         updateRow(idx, { id: data?.id || null });
       }
-    } else {
-      // localStorage xa actualizado en edición
     }
-    setToast2s("Gardado!");
+    toast2("Gardado!");
+  }
+
+  async function onDelete(idx){
+    const r = rows[idx];
+    if (!isAdmin){ toast2("Só admin pode borrar"); return; }
+    if (dbEnabledRef.current && r.id){
+      const { error } = await supabase.from("matches_vindeiros").delete().eq("id", r.id);
+      if (error){ toast2("Erro borrando"); return; }
+    }
+    setRows(prev => prev.filter((_,i)=>i!==idx));
+    if (!dbEnabledRef.current){
+      const next = rows.filter((_,i)=>i!==idx);
+      saveToLC(next);
+    }
+    toast2("Eliminado");
   }
 
   const view = useMemo(()=> rows.slice(0,limit), [rows]);
@@ -212,11 +247,6 @@ export default function VindeirosPartidos() {
       <main style={WRAP}>
         <h2 style={H1}>Vindeiros partidos</h2>
         <p style={SUB}>Axenda dos próximos encontros con data e hora confirmada</p>
-        {Array.from({length:4}).map((_,i)=>(
-          <div key={i} style={{...CARD, height:96, background:"linear-gradient(90deg,#fff 25%,#f8fafc 37%,#fff 63%)", backgroundSize:"400% 100%", animation:"sh 1.2s ease infinite"}}>
-            <style>{`@keyframes sh{0%{background-position:100% 0}100%{background-position:0 0}}`}</style>
-          </div>
-        ))}
       </main>
     );
   }
@@ -229,7 +259,7 @@ export default function VindeirosPartidos() {
       {isAdmin && (
         <div style={{ marginBottom: 10 }}>
           <button onClick={addCard} style={{display:"inline-flex",alignItems:"center",gap:6, padding:"8px 10px", borderRadius:10, border:"1px solid #e5e7eb", background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)", font:"700 14px/1.2 Montserrat,system-ui,sans-serif"}}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 4v16M4 12h16" stroke="#0f172a" stroke-width="2" stroke-linecap="round"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 4v16M4 12h16" stroke="#0f172a" strokeWidth="2" strokeLinecap="round"/></svg>
             Engadir
           </button>
         </div>
@@ -239,58 +269,51 @@ export default function VindeirosPartidos() {
         const dmy2 = r.date_iso ? (/\d{4}-\d{2}-\d{2}/.test(r.date_iso) ? toDMY2(r.date_iso) : r.date_iso) : "";
         return (
           <section key={r.id || `v-${idx}`} style={CARD}>
-            {/* Fila 1: Nº + DATA + PARTIDO (unido) */}
-            <div style={ROW1}>
-              <span style={PILL}>{String(idx+1).padStart(2,"0")}</span>
-
-              <div style={{ display:"grid", gap:4 }}>
-                <label style={LABEL}>DATA</label>
+            {/* Fila 1: nº + “E1 vs E2” nunha única cela */}
+            <div style={FIRST_LINE}>
+              <div style={MATCH_CELL}>
+                <span style={PILL}>{String(idx+1).padStart(2,"0")}</span>
                 <input
-                  style={INPUT_SOFT}
-                  value={dmy2}
-                  placeholder="dd/mm/aa"
-                  onInput={(e)=>updateRow(idx,{ date_iso: e.currentTarget.value })}
+                  style={MATCH_INPUT}
+                  value={r.team1}
+                  placeholder="LOCAL"
+                  onInput={(e)=>updateRow(idx,{ team1: e.currentTarget.value.toUpperCase() })}
+                  readOnly={!isAdmin}
+                />
+                <span style={VS}>vs</span>
+                <input
+                  style={MATCH_INPUT}
+                  value={r.team2}
+                  placeholder="VISITANTE"
+                  onInput={(e)=>updateRow(idx,{ team2: e.currentTarget.value.toUpperCase() })}
                   readOnly={!isAdmin}
                 />
               </div>
-
-              <div style={MATCH_WRAP}>
-                <label style={LABEL}>PARTIDO</label>
-                <div style={MATCH_JOIN}>
-                  <input
-                    style={LEFT_FIELD}
-                    value={r.team1}
-                    placeholder="LOCAL"
-                    onInput={(e)=>updateRow(idx,{ team1: e.currentTarget.value.toUpperCase() })}
-                    readOnly={!isAdmin}
-                  />
-                  <span style={VS}>vs</span>
-                  <input
-                    style={RIGHT_FIELD}
-                    value={r.team2}
-                    placeholder="VISITANTE"
-                    onInput={(e)=>updateRow(idx,{ team2: e.currentTarget.value.toUpperCase() })}
-                    readOnly={!isAdmin}
-                  />
-                </div>
-              </div>
             </div>
 
-            {/* Fila 2: COMPETICIÓN + Ver + Guardar */}
-            <div style={ROW2}>
+            {/* Fila 2: Data + icono competición + Gardar + Borrar */}
+            <div style={SECOND_LINE}>
+              <input
+                style={INPUT_SOFT}
+                value={dmy2}
+                placeholder="dd/mm/aa"
+                onInput={(e)=>updateRow(idx,{ date_iso: e.currentTarget.value })}
+                readOnly={!isAdmin}
+              />
+
               <div style={{ position:"relative" }}>
-                <label style={LABEL}>COMPETICIÓN</label>
                 <button
                   type="button"
                   style={CHIP}
                   onClick={()=> setMenuAt(menuAt===idx ? null : idx)}
                   disabled={!isAdmin}
                   aria-haspopup="listbox"
+                  title="Competición"
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <path d="M7 4h10v3a5 5 0 01-10 0V4Z" stroke="#0f172a" stroke-width="1.6"/>
-                    <path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" stroke="#0f172a" stroke-width="1.6"/>
-                    <path d="M9 14h6v3H9z" stroke="#0f172a" stroke-width="1.6"/>
+                  <svg width="18" height="18" viewBox="0 0 24 24" style={ICON_STROKE}>
+                    <path d="M7 4h10v3a5 5 0 01-10 0V4Z"/>
+                    <path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3"/>
+                    <path d="M9 14h6v3H9z"/>
                   </svg>
                   <span>{r.competition || "—"}</span>
                 </button>
@@ -306,20 +329,21 @@ export default function VindeirosPartidos() {
                 )}
               </div>
 
-              <button type="button" style={ICONBTN} title="Revisar" onClick={()=>route("/proximo-partido")}>
-                {/* Ollo */}
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" stroke="#0f172a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                  <circle cx="12" cy="12" r="3" stroke="#0f172a" stroke-width="1.6"/>
+              <button type="button" style={ICONBTN} title="Gardar" onClick={()=>onSave(idx)}>
+                {/* Disquete */}
+                <svg width="18" height="18" viewBox="0 0 24 24" style={ICON_STROKE}>
+                  <path d="M4 4h12l4 4v12H4V4Z" />
+                  <path d="M7 4v6h10V4" />
+                  <path d="M8 16h8v4H8z" />
                 </svg>
               </button>
 
-              <button type="button" style={ICONBTN} title="Gardar" onClick={()=>onSave(idx)}>
-                {/* Disquete */}
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M4 4h12l4 4v12H4V4Z" stroke="#0f172a" stroke-width="1.6" />
-                  <path d="M7 4v6h10V4" stroke="#0f172a" stroke-width="1.6" />
-                  <path d="M8 16h8v4H8z" stroke="#0f172a" stroke-width="1.6" />
+              <button type="button" style={ICONBTN} title="Borrar" onClick={()=>onDelete(idx)}>
+                {/* Bote lixo */}
+                <svg width="18" height="18" viewBox="0 0 24 24" style={ICON_STROKE}>
+                  <path d="M3 6h18" />
+                  <path d="M8 6V4h8v2" />
+                  <path d="M7 6l1 14h8l1-14" />
                 </svg>
               </button>
             </div>

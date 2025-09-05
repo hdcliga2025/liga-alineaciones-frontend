@@ -25,7 +25,7 @@ const parseDMYToISO = (s) => {
 };
 const COMP_OPTIONS = ["LaLiga", "Europa League", "Copa do Rei"];
 
-/* ========= Estilos ========= */
+/* ========= Estilos (compartidos coa outra páxina) ========= */
 const WRAP = { maxWidth: 980, margin: "0 auto", padding: "16px 12px 24px" };
 const H1   = { font: "700 20px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", margin: "0 0 8px" };
 const SUB  = { color: "#475569", font: "400 13px/1.3 Montserrat,system-ui,sans-serif", margin: "0 0 14px" };
@@ -38,48 +38,63 @@ const CARD = {
   padding: 12,
   marginBottom: 10,
 };
-const ROW1 = { display: "grid", gridTemplateColumns: "auto 130px 1fr", gap: 8, alignItems: "center", marginBottom: 10 };
-const ROW2 = { display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, alignItems: "center" };
 
-const PILL = { minWidth: 26, height: 22, borderRadius: 999, background: "#f1f5f9", color:"#0f172a", display:"grid", placeItems:"center", font:"700 12px/1 Montserrat,system-ui,sans-serif", padding: "0 8px" };
-const LABEL = { font:"700 11px/1.1 Montserrat,system-ui,sans-serif", color:"#334155", letterSpacing:".3px", marginBottom: 4 };
-
-const INPUT = {
-  width:"100%", padding:"10px 12px", border:"1px solid #dbe2f0", borderRadius:10,
-  font:"700 14px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", outline:"none",
+const FIRST_LINE = { display:"grid", gridTemplateColumns:"1fr", gap:0, marginBottom:10 };
+const MATCH_CELL = {
+  display:"grid",
+  gridTemplateColumns:"auto 1fr auto 1fr",
+  alignItems:"center",
+  gap: 0,
+  border:"1px solid #dbe2f0",
+  borderRadius:12,
+  background:"#fff",
+  overflow:"hidden"
 };
-const INPUT_SOFT = { ...INPUT, font:"700 13px/1.2 Montserrat,system-ui,sans-serif" };
+const PILL = {
+  marginLeft: 8, marginRight: 6, minWidth: 28, height: 24, borderRadius: 999,
+  background: "#f1f5f9", color:"#0f172a",
+  display:"grid", placeItems:"center",
+  font:"800 11px/1 Montserrat,system-ui,sans-serif", padding: "0 8px"
+};
+const MATCH_INPUT = {
+  width:"100%", padding:"10px 12px", border:"none", outline:"none",
+  font:"700 14px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", background:"transparent"
+};
+const VS = { padding:"0 10px", font:"800 12px/1 Montserrat,system-ui,sans-serif", color:"#334155" };
 
-const MATCH_WRAP = { display:"grid", gap: 4 };
-const MATCH_JOIN = { display:"grid", gridTemplateColumns:"1fr auto 1fr", alignItems:"center", gap: 0 };
-const VS = { padding:"10px 10px", border:"1px solid #dbe2f0", font:"800 12px/1 Montserrat,system-ui,sans-serif", color:"#334155", background:"#f1f5f9" };
-const LEFT_FIELD  = { ...INPUT, borderTopRightRadius:0, borderBottomRightRadius:0, borderRight:"none" };
-const RIGHT_FIELD = { ...INPUT, borderTopLeftRadius:0, borderBottomLeftRadius:0 };
-
+const SECOND_LINE = { display:"grid", gridTemplateColumns:"1fr auto auto auto", gap: 8, alignItems:"center" };
+const INPUT_SOFT = {
+  width:"100%", padding:"10px 12px",
+  border:"1px solid #dbe2f0", borderRadius:10,
+  font:"700 13px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", outline:"none",
+};
 const CHIP = {
-  display:"inline-flex", alignItems:"center", gap:6, border:"1px solid #e5e7eb",
-  padding:"8px 10px", borderRadius:10, background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)",
-  font:"700 14px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", cursor:"pointer"
+  display:"inline-flex", alignItems:"center", gap:6,
+  border:"1px solid #e5e7eb", padding:"8px 10px", borderRadius:10,
+  background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)",
+  font:"700 13px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", cursor:"pointer"
 };
 const MENU = {
-  position:"absolute", marginTop:4, background:"#fff", border:"1px solid #e5e7eb",
-  borderRadius:10, boxShadow:"0 10px 26px rgba(0,0,0,.12)", zIndex:30
+  position:"absolute", marginTop:4, right:0, background:"#fff",
+  border:"1px solid #e5e7eb", borderRadius:10,
+  boxShadow:"0 10px 26px rgba(0,0,0,.12)", zIndex:30
 };
-const MENU_ITEM = {
-  padding:"8px 12px", font:"600 13px/1.2 Montserrat,system-ui,sans-serif", cursor:"pointer", whiteSpace:"nowrap"
-};
+const MENU_ITEM = { padding:"8px 12px", font:"600 13px/1.2 Montserrat,system-ui,sans-serif", cursor:"pointer", whiteSpace:"nowrap" };
 
 const ICONBTN = {
-  width:36, height:36, display:"grid", placeItems:"center", borderRadius:10, border:"1px solid #e5e7eb",
-  background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.08)", cursor:"pointer"
+  width:36, height:36, display:"grid", placeItems:"center",
+  borderRadius:10, border:"1px solid #0ea5e9",
+  background:"#fff", boxShadow:"0 2px 8px rgba(14,165,233,.25)",
+  cursor:"pointer"
 };
+const ICON_STROKE = { fill:"none", stroke:"#0ea5e9", strokeWidth:1.8, strokeLinecap:"round", strokeLinejoin:"round" };
 const TOAST = {
   position:"fixed", left:"50%", bottom:18, transform:"translateX(-50%)",
   background:"#0ea5e9", color:"#fff", padding:"8px 12px", borderRadius:10,
   font:"700 13px/1.2 Montserrat,system-ui,sans-serif", boxShadow:"0 10px 26px rgba(14,165,233,.4)", zIndex:1000
 };
 
-/* ========= Componente ========= */
+/* ========= Compo ========= */
 export default function PartidosFinalizados() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [rows, setRows] = useState([]); // {id, match_date, team1, team2, competition}
@@ -135,7 +150,7 @@ export default function PartidosFinalizados() {
   }
   useEffect(() => { loadList(); }, []);
 
-  function setToast2s(msg){ setToast(msg); setTimeout(()=>setToast(""), 2000); }
+  function toast2(msg){ setToast(msg); setTimeout(()=>setToast(""), 2000); }
   function updateRow(idx, patch){
     setRows(prev=>{
       const next = prev.slice();
@@ -152,12 +167,12 @@ export default function PartidosFinalizados() {
 
   async function onSave(idx){
     const r = rows[idx];
-    if (!isAdmin){ setToast2s("Só admin pode gardar"); return; }
+    if (!isAdmin){ toast2("Só admin pode gardar"); return; }
 
     let iso = r.match_date;
     if (typeof iso === "string" && /\d{2}\/\d{2}\/(\d{2}|\d{4})/.test(iso)) {
       const p = parseDMYToISO(iso);
-      if (!p){ setToast2s("DATA inválida"); return; }
+      if (!p){ toast2("DATA inválida"); return; }
       iso = p;
     }
     const partido = `${(r.team1||"").toUpperCase()} vs ${(r.team2||"").toUpperCase()}`.trim();
@@ -171,7 +186,7 @@ export default function PartidosFinalizados() {
           updated_at: new Date().toISOString(),
         })
         .eq("id", r.id);
-      if (error){ setToast2s("Erro gardando"); return; }
+      if (error){ toast2("Erro gardando"); return; }
     } else {
       const { data, error } = await supabase.from("matches_finalizados")
         .insert({
@@ -181,10 +196,10 @@ export default function PartidosFinalizados() {
           updated_at: new Date().toISOString(),
         })
         .select().maybeSingle();
-      if (error){ setToast2s("Erro gardando"); return; }
+      if (error){ toast2("Erro gardando"); return; }
       updateRow(idx, { id: data?.id || null });
     }
-    setToast2s("Gardado!");
+    toast2("Gardado!");
   }
 
   const view = useMemo(()=> rows.slice(0,60), [rows]);
@@ -194,11 +209,6 @@ export default function PartidosFinalizados() {
       <main style={WRAP}>
         <h2 style={H1}>Partidos finalizados</h2>
         <p style={SUB}>Histórico dos encontros do Celta na tempada 2025/2026</p>
-        {Array.from({length:4}).map((_,i)=>(
-          <div key={i} style={{...CARD, height:96, background:"linear-gradient(90deg,#fff 25%,#f8fafc 37%,#fff 63%)", backgroundSize:"400% 100%", animation:"sh 1.2s ease infinite"}}>
-            <style>{`@keyframes sh{0%{background-position:100% 0}100%{background-position:0 0}}`}</style>
-          </div>
-        ))}
       </main>
     );
   }
@@ -211,7 +221,7 @@ export default function PartidosFinalizados() {
       {isAdmin && (
         <div style={{ marginBottom: 10 }}>
           <button onClick={addCard} style={{display:"inline-flex",alignItems:"center",gap:6, padding:"8px 10px", borderRadius:10, border:"1px solid #e5e7eb", background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)", font:"700 14px/1.2 Montserrat,system-ui,sans-serif"}}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 4v16M4 12h16" stroke="#0f172a" stroke-width="2" stroke-linecap="round"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 4v16M4 12h16" stroke="#0f172a" strokeWidth="2" strokeLinecap="round"/></svg>
             Engadir
           </button>
         </div>
@@ -221,58 +231,51 @@ export default function PartidosFinalizados() {
         const dmy2 = r.match_date ? (/\d{4}-\d{2}-\d{2}/.test(r.match_date) ? toDMY2(r.match_date) : r.match_date) : "";
         return (
           <section key={r.id || `f-${idx}`} style={CARD}>
-            {/* Fila 1 */}
-            <div style={ROW1}>
-              <span style={PILL}>{String(idx+1).padStart(2,"0")}</span>
-
-              <div style={{ display:"grid", gap:4 }}>
-                <label style={LABEL}>DATA</label>
+            {/* Fila 1: nº + “E1 vs E2” unha única cela */}
+            <div style={FIRST_LINE}>
+              <div style={MATCH_CELL}>
+                <span style={PILL}>{String(idx+1).padStart(2,"0")}</span>
                 <input
-                  style={INPUT_SOFT}
-                  value={dmy2}
-                  placeholder="dd/mm/aa"
-                  onInput={(e)=>updateRow(idx,{ match_date: e.currentTarget.value })}
+                  style={MATCH_INPUT}
+                  value={r.team1}
+                  placeholder="LOCAL"
+                  onInput={(e)=>updateRow(idx,{ team1: e.currentTarget.value.toUpperCase() })}
+                  readOnly={!isAdmin}
+                />
+                <span style={VS}>vs</span>
+                <input
+                  style={MATCH_INPUT}
+                  value={r.team2}
+                  placeholder="VISITANTE"
+                  onInput={(e)=>updateRow(idx,{ team2: e.currentTarget.value.toUpperCase() })}
                   readOnly={!isAdmin}
                 />
               </div>
-
-              <div style={MATCH_WRAP}>
-                <label style={LABEL}>PARTIDO</label>
-                <div style={MATCH_JOIN}>
-                  <input
-                    style={LEFT_FIELD}
-                    value={r.team1}
-                    placeholder="LOCAL"
-                    onInput={(e)=>updateRow(idx,{ team1: e.currentTarget.value.toUpperCase() })}
-                    readOnly={!isAdmin}
-                  />
-                  <span style={VS}>vs</span>
-                  <input
-                    style={RIGHT_FIELD}
-                    value={r.team2}
-                    placeholder="VISITANTE"
-                    onInput={(e)=>updateRow(idx,{ team2: e.currentTarget.value.toUpperCase() })}
-                    readOnly={!isAdmin}
-                  />
-                </div>
-              </div>
             </div>
 
-            {/* Fila 2 */}
-            <div style={ROW2}>
+            {/* Fila 2: Data + icono competición + Gardar + Ollo */}
+            <div style={SECOND_LINE}>
+              <input
+                style={INPUT_SOFT}
+                value={dmy2}
+                placeholder="dd/mm/aa"
+                onInput={(e)=>updateRow(idx,{ match_date: e.currentTarget.value })}
+                readOnly={!isAdmin}
+              />
+
               <div style={{ position:"relative" }}>
-                <label style={LABEL}>COMPETICIÓN</label>
                 <button
                   type="button"
                   style={CHIP}
                   onClick={()=> setMenuAt(menuAt===idx ? null : idx)}
                   disabled={!isAdmin}
                   aria-haspopup="listbox"
+                  title="Competición"
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <path d="M7 4h10v3a5 5 0 01-10 0V4Z" stroke="#0f172a" stroke-width="1.6"/>
-                    <path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" stroke="#0f172a" stroke-width="1.6"/>
-                    <path d="M9 14h6v3H9z" stroke="#0f172a" stroke-width="1.6"/>
+                  <svg width="18" height="18" viewBox="0 0 24 24" style={ICON_STROKE}>
+                    <path d="M7 4h10v3a5 5 0 01-10 0V4Z"/>
+                    <path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3"/>
+                    <path d="M9 14h6v3H9z"/>
                   </svg>
                   <span>{r.competition || "—"}</span>
                 </button>
@@ -288,18 +291,24 @@ export default function PartidosFinalizados() {
                 )}
               </div>
 
-              <button type="button" style={ICONBTN} title="Revisar" onClick={()=>route("/proximo-partido")}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" stroke="#0f172a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                  <circle cx="12" cy="12" r="3" stroke="#0f172a" stroke-width="1.6"/>
+              <button type="button" style={ICONBTN} title="Gardar" onClick={()=>onSave(idx)} disabled={!isAdmin}>
+                <svg width="18" height="18" viewBox="0 0 24 24" style={ICON_STROKE}>
+                  <path d="M4 4h12l4 4v12H4V4Z" />
+                  <path d="M7 4v6h10V4" />
+                  <path d="M8 16h8v4H8z" />
                 </svg>
               </button>
 
-              <button type="button" style={ICONBTN} title="Gardar" onClick={()=>onSave(idx)} disabled={!isAdmin}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M4 4h12l4 4v12H4V4Z" stroke="#0f172a" stroke-width="1.6" />
-                  <path d="M7 4v6h10V4" stroke="#0f172a" stroke-width="1.6" />
-                  <path d="M8 16h8v4H8z" stroke="#0f172a" stroke-width="1.6" />
+              <button
+                type="button"
+                style={ICONBTN}
+                title="Revisar ranking do partido"
+                onClick={()=> route(`/resultados-ultima-alineacion${r.id?`?match_id=${r.id}`:""}`)}
+              >
+                {/* Ollo */}
+                <svg width="20" height="20" viewBox="0 0 24 24" style={ICON_STROKE}>
+                  <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z"/>
+                  <circle cx="12" cy="12" r="3"/>
                 </svg>
               </button>
             </div>
