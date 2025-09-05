@@ -15,7 +15,7 @@ const BTN_ADD = {
   border:"1px solid #38bdf8",
   backgroundImage:"linear-gradient(180deg,#6cc7ff,#4da7f3)",
   color:"#fff",
-  padding:"7px 56px",                 // delgado
+  padding:"7px 56px",
   borderRadius:12, cursor:"pointer",
   boxShadow:"0 12px 28px rgba(14,165,233,.25)",
   font:"800 14px/1 Montserrat,system-ui,sans-serif", letterSpacing:".25px",
@@ -32,7 +32,7 @@ const CARD   = {
 };
 const CARD_SAVED = { border:"2px solid #0ea5e9", background:"#f3f6f9" };
 
-/* Fila 1: número + equipos (sin ojo ahora) */
+/* Fila 1: número + equipos (ojo va en fila 2) */
 const ROW1 = { display:"grid", gridTemplateColumns:"auto 1fr", alignItems:"center", gap:10, marginBottom:8 };
 
 const NUMBOX = {
@@ -42,7 +42,7 @@ const NUMBOX = {
 };
 const NUMBOX_SAVED = { border:"2px solid #0ea5e9" };
 
-/* Botón ojo (ahora en fila 2 a la derecha) */
+/* Botón ojo (fila 2, derecha) */
 const EYE_BTN = {
   width:36, height:36, display:"grid", placeItems:"center",
   border:"1px solid #e5e7eb", background:"#fff", borderRadius:10,
@@ -133,7 +133,7 @@ export default function PartidosFinalizados() {
   const MOBILE_CSS = `
     @media (max-width: 560px){
       .pf-row2 {
-        grid-template-columns: minmax(130px, 170px) 1fr 40px; /* DATA algo más corta, COMPETICIÓN más ancha */
+        grid-template-columns: minmax(130px, 170px) 1fr 40px;
       }
     }
   `;
@@ -164,7 +164,7 @@ export default function PartidosFinalizados() {
     const { data } = await supabase
       .from("matches_finalizados")
       .select("id, match_date, partido, competition, updated_at, created_at")
-      .order("match_date", { ascending: false }); // máis recente primeiro
+      .order("match_date", { ascending: false });
     setRows(Array.isArray(data) ? data : []);
   }
   useEffect(()=>{ loadList(); }, []);
@@ -178,7 +178,7 @@ export default function PartidosFinalizados() {
     const payload = {
       id: local.id || undefined,
       partido: (local.partido||"").toUpperCase(),
-      competition: local.competition || null, // valor canónico
+      competition: local.competition || null,
       match_date: local.match_date || null,
       updated_at: new Date().toISOString(),
     };
@@ -208,7 +208,7 @@ export default function PartidosFinalizados() {
           n[i] = { ...(n[i]||nextRow), id: saved?.id ?? n[i]?.id, __saved:true, _tmp:false };
           return n;
         });
-        showToast("REGISTRADO", true);  // ← sin corchetes
+        showToast("REGISTRADO", true);
         await loadList();
       } catch (e) {
         console.error(e);
@@ -252,10 +252,8 @@ export default function PartidosFinalizados() {
     <main style={WRAP}>
       <style>{MOBILE_CSS}</style>
 
-      {/* Título principal arriba */}
       <h2 style={H1}>PARTIDOS FINALIZADOS</h2>
 
-      {/* Línea del botón + texto grande */}
       <div style={TOPBAR}>
         {isAdmin && (
           <button type="button" style={BTN_ADD} onClick={onAdd} disabled={busy}>
@@ -310,7 +308,7 @@ export default function PartidosFinalizados() {
                 </div>
               </div>
 
-              {/* Fila 2: data + competición + ojo (derecha) */}
+              {/* Fila 2: data + competición + ojo */}
               <div class="pf-row2" style={ROW2}>
                 <input
                   type="date"
@@ -329,9 +327,12 @@ export default function PartidosFinalizados() {
                   <span style={ICON_TROPHY}>{ICON_TROPHY_SVG}</span>
                   <select
                     style={SELECT_COMP(editable)}
-                    value={r.competition || ""}             {/* valor canónico */}
+                    value={(r.competition || "")}
                     disabled={!editable}
-                    onChange={(e)=> editable && setLocal(i, { competition: e.currentTarget.value })}
+                    onChange={(e)=> {
+                      if (!editable) return;
+                      setLocal(i, { competition: e.currentTarget.value });
+                    }}
                   >
                     <option value="">(SELECCIONA)</option>
                     <option value="LaLiga">LALIGA</option>
