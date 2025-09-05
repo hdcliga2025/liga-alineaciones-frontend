@@ -4,24 +4,26 @@ import { route } from "preact-router";
 import { supabase } from "../lib/supabaseClient.js";
 
 /* ========= Helpers ========= */
-const toDMY = (d) => {
+const tz = "Europe/Madrid";
+const toDMY2 = (d) => {
   try {
     const dt = d instanceof Date ? d : new Date(d);
-    const y = new Intl.DateTimeFormat("sv-SE",{ year:"numeric", timeZone:"Europe/Madrid" }).format(dt);
-    const m = new Intl.DateTimeFormat("sv-SE",{ month:"2-digit", timeZone:"Europe/Madrid" }).format(dt);
-    const da= new Intl.DateTimeFormat("sv-SE",{ day:"2-digit", timeZone:"Europe/Madrid" }).format(dt);
-    return `${da}/${m}/${y}`;
+    const dd = new Intl.DateTimeFormat("es-ES", { day: "2-digit", timeZone: tz }).format(dt);
+    const mm = new Intl.DateTimeFormat("es-ES", { month: "2-digit", timeZone: tz }).format(dt);
+    const yy = new Intl.DateTimeFormat("es-ES", { year: "2-digit", timeZone: tz }).format(dt);
+    return `${dd}/${mm}/${yy}`;
   } catch { return ""; }
 };
-const parseDMY = (s) => {
-  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(s||"").trim());
+const parseDMYToISO = (s) => {
+  const m = /^(\d{2})\/(\d{2})\/(\d{2}|\d{4})$/.exec(String(s||"").trim());
   if (!m) return null;
-  const [_, dd, mm, yyyy] = m;
-  const iso = `${yyyy}-${mm}-${dd}T00:00:00`;
+  let [_, dd, mm, yy] = m;
+  if (yy.length === 2) yy = String(2000 + parseInt(yy, 10)); // aa -> 20aa
+  const iso = `${yy}-${mm}-${dd}T00:00:00`;
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? null : iso;
 };
-const COMP_OPTIONS = ["LaLiga","Europa League","Copa do Rei"];
+const COMP_OPTIONS = ["LaLiga", "Europa League", "Copa do Rei"];
 
 /* ========= Estilos ========= */
 const WRAP = { maxWidth: 980, margin: "0 auto", padding: "16px 12px 24px" };
@@ -36,18 +38,23 @@ const CARD = {
   padding: 12,
   marginBottom: 10,
 };
-const BAR = { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 };
-const PILL = { minWidth: 26, height: 22, borderRadius: 999, background: "#f1f5f9", color:"#0f172a", display:"grid", placeItems:"center", font:"700 12px/1 Montserrat,system-ui,sans-serif", padding: "0 8px" };
+const ROW1 = { display: "grid", gridTemplateColumns: "auto 130px 1fr", gap: 8, alignItems: "center", marginBottom: 10 };
+const ROW2 = { display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, alignItems: "center" };
 
-const FIELD_ROW = { display: "grid", gridTemplateColumns: "1fr", gap: 8, marginBottom: 8 };
-const ROW_2COL  = { display:"grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 };
-const LABEL = { font:"700 11px/1.1 Montserrat,system-ui,sans-serif", color:"#334155", letterSpacing:".3px" };
+const PILL = { minWidth: 26, height: 22, borderRadius: 999, background: "#f1f5f9", color:"#0f172a", display:"grid", placeItems:"center", font:"700 12px/1 Montserrat,system-ui,sans-serif", padding: "0 8px" };
+const LABEL = { font:"700 11px/1.1 Montserrat,system-ui,sans-serif", color:"#334155", letterSpacing:".3px", marginBottom: 4 };
 
 const INPUT = {
   width:"100%", padding:"10px 12px", border:"1px solid #dbe2f0", borderRadius:10,
   font:"700 14px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", outline:"none",
 };
 const INPUT_SOFT = { ...INPUT, font:"700 13px/1.2 Montserrat,system-ui,sans-serif" };
+
+const MATCH_WRAP = { display:"grid", gap: 4 };
+const MATCH_JOIN = { display:"grid", gridTemplateColumns:"1fr auto 1fr", alignItems:"center", gap: 0 };
+const VS = { padding:"10px 10px", border:"1px solid #dbe2f0", font:"800 12px/1 Montserrat,system-ui,sans-serif", color:"#334155", background:"#f1f5f9" };
+const LEFT_FIELD  = { ...INPUT, borderTopRightRadius:0, borderBottomRightRadius:0, borderRight:"none" };
+const RIGHT_FIELD = { ...INPUT, borderTopLeftRadius:0, borderBottomLeftRadius:0 };
 
 const CHIP = {
   display:"inline-flex", alignItems:"center", gap:6, border:"1px solid #e5e7eb",
@@ -62,7 +69,6 @@ const MENU_ITEM = {
   padding:"8px 12px", font:"600 13px/1.2 Montserrat,system-ui,sans-serif", cursor:"pointer", whiteSpace:"nowrap"
 };
 
-const ACTIONS = { display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, marginTop:4 };
 const ICONBTN = {
   width:36, height:36, display:"grid", placeItems:"center", borderRadius:10, border:"1px solid #e5e7eb",
   background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.08)", cursor:"pointer"
@@ -129,67 +135,59 @@ export default function PartidosFinalizados() {
   }
   useEffect(() => { loadList(); }, []);
 
-  function setToast2s(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(""), 2000);
-  }
-
-  function updateRow(idx, patch) {
-    setRows(prev => {
+  function setToast2s(msg){ setToast(msg); setTimeout(()=>setToast(""), 2000); }
+  function updateRow(idx, patch){
+    setRows(prev=>{
       const next = prev.slice();
-      const cur = next[idx] || {};
-      next[idx] = { ...cur, ...patch };
+      next[idx] = { ...(next[idx]||{}), ...patch };
       return next;
     });
   }
-
-  function addCard() {
-    setRows(prev => {
-      const base = { id:null, match_date:null, team1:"", team2:"", competition:"", updated_at:new Date().toISOString() };
-      return [base, ...prev].slice(0,limit);
+  function addCard(){
+    setRows(prev=>{
+      const base = { id:null, match_date:null, team1:"", team2:"", competition:"" };
+      return [base, ...prev].slice(0,60);
     });
   }
 
-  async function onSave(idx) {
+  async function onSave(idx){
     const r = rows[idx];
-    if (!isAdmin) { setToast2s("Só admin pode gardar"); return; }
+    if (!isAdmin){ setToast2s("Só admin pode gardar"); return; }
 
-    // Validación DATA
-    let date_iso = r.match_date || null;
-    if (typeof r.match_date === "string" && /\d{2}\/\d{2}\/\d{4}/.test(r.match_date)) {
-      const p = parseDMY(r.match_date);
-      if (!p) { setToast2s("DATA inválida"); return; }
-      date_iso = p;
+    let iso = r.match_date;
+    if (typeof iso === "string" && /\d{2}\/\d{2}\/(\d{2}|\d{4})/.test(iso)) {
+      const p = parseDMYToISO(iso);
+      if (!p){ setToast2s("DATA inválida"); return; }
+      iso = p;
     }
     const partido = `${(r.team1||"").toUpperCase()} vs ${(r.team2||"").toUpperCase()}`.trim();
 
     if (r.id) {
       const { error } = await supabase.from("matches_finalizados")
         .update({
-          match_date: date_iso,
+          match_date: iso,
           partido,
           competition: r.competition || null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", r.id);
-      if (error) { setToast2s("Erro gardando"); return; }
+      if (error){ setToast2s("Erro gardando"); return; }
     } else {
       const { data, error } = await supabase.from("matches_finalizados")
         .insert({
-          match_date: date_iso,
+          match_date: iso,
           partido,
           competition: r.competition || null,
           updated_at: new Date().toISOString(),
         })
-        .select()
-        .maybeSingle();
-      if (error) { setToast2s("Erro gardando"); return; }
+        .select().maybeSingle();
+      if (error){ setToast2s("Erro gardando"); return; }
       updateRow(idx, { id: data?.id || null });
     }
     setToast2s("Gardado!");
   }
 
-  const view = useMemo(()=> rows.slice(0,limit), [rows]);
+  const view = useMemo(()=> rows.slice(0,60), [rows]);
 
   if (loading) {
     return (
@@ -210,7 +208,6 @@ export default function PartidosFinalizados() {
       <h2 style={H1}>Partidos finalizados</h2>
       <p style={SUB}>Histórico dos encontros do Celta na tempada 2025/2026</p>
 
-      {/* Acción engadir (só admin) */}
       {isAdmin && (
         <div style={{ marginBottom: 10 }}>
           <button onClick={addCard} style={{display:"inline-flex",alignItems:"center",gap:6, padding:"8px 10px", borderRadius:10, border:"1px solid #e5e7eb", background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)", font:"700 14px/1.2 Montserrat,system-ui,sans-serif"}}>
@@ -220,32 +217,54 @@ export default function PartidosFinalizados() {
         </div>
       )}
 
-      {view.map((r, idx) => {
-        const dmy = r.match_date ? (/\d{4}-\d{2}-\d{2}/.test(r.match_date) ? toDMY(r.match_date) : r.match_date) : "";
+      {view.map((r, idx)=>{
+        const dmy2 = r.match_date ? (/\d{4}-\d{2}-\d{2}/.test(r.match_date) ? toDMY2(r.match_date) : r.match_date) : "";
         return (
           <section key={r.id || `f-${idx}`} style={CARD}>
-            {/* Barra superior */}
-            <div style={BAR}>
+            {/* Fila 1 */}
+            <div style={ROW1}>
               <span style={PILL}>{String(idx+1).padStart(2,"0")}</span>
 
-              <div style={{ display:"grid", gap:4, flex:1 }}>
+              <div style={{ display:"grid", gap:4 }}>
                 <label style={LABEL}>DATA</label>
                 <input
                   style={INPUT_SOFT}
-                  value={dmy}
-                  placeholder="dd/mm/aaaa"
+                  value={dmy2}
+                  placeholder="dd/mm/aa"
                   onInput={(e)=>updateRow(idx,{ match_date: e.currentTarget.value })}
                   readOnly={!isAdmin}
                 />
               </div>
 
+              <div style={MATCH_WRAP}>
+                <label style={LABEL}>PARTIDO</label>
+                <div style={MATCH_JOIN}>
+                  <input
+                    style={LEFT_FIELD}
+                    value={r.team1}
+                    placeholder="LOCAL"
+                    onInput={(e)=>updateRow(idx,{ team1: e.currentTarget.value.toUpperCase() })}
+                    readOnly={!isAdmin}
+                  />
+                  <span style={VS}>vs</span>
+                  <input
+                    style={RIGHT_FIELD}
+                    value={r.team2}
+                    placeholder="VISITANTE"
+                    onInput={(e)=>updateRow(idx,{ team2: e.currentTarget.value.toUpperCase() })}
+                    readOnly={!isAdmin}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Fila 2 */}
+            <div style={ROW2}>
               <div style={{ position:"relative" }}>
-                <label style={{...LABEL, marginBottom:4, display:"block"}}>COMPETICIÓN</label>
+                <label style={LABEL}>COMPETICIÓN</label>
                 <button
                   type="button"
-                  style={{ display:"inline-flex", alignItems:"center", gap:6, border:"1px solid #e5e7eb",
-                    padding:"8px 10px", borderRadius:10, background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)",
-                    font:"700 15px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", cursor:"pointer" }}
+                  style={CHIP}
                   onClick={()=> setMenuAt(menuAt===idx ? null : idx)}
                   disabled={!isAdmin}
                   aria-haspopup="listbox"
@@ -257,15 +276,10 @@ export default function PartidosFinalizados() {
                   </svg>
                   <span>{r.competition || "—"}</span>
                 </button>
-
                 {menuAt===idx && (
                   <div style={MENU} role="listbox">
                     {COMP_OPTIONS.map(opt=>(
-                      <div
-                        key={opt}
-                        style={{...MENU_ITEM, background: r.competition===opt ? "#f1f5f9" : "#fff"}}
-                        onClick={()=>{ updateRow(idx,{ competition: opt }); setMenuAt(null); }}
-                      >
+                      <div key={opt} style={{...MENU_ITEM, background: r.competition===opt ? "#f1f5f9" : "#fff"}} onClick={()=>{ updateRow(idx,{ competition: opt }); setMenuAt(null); }}>
                         {opt}
                       </div>
                     ))}
@@ -273,36 +287,8 @@ export default function PartidosFinalizados() {
                   </div>
                 )}
               </div>
-            </div>
 
-            {/* Partido */}
-            <div style={ROW_2COL}>
-              <div>
-                <label style={LABEL}>EQUIPO 1</label>
-                <input
-                  style={INPUT}
-                  value={r.team1}
-                  placeholder="LOCAL"
-                  onInput={(e)=>updateRow(idx,{ team1: e.currentTarget.value.toUpperCase() })}
-                  readOnly={!isAdmin}
-                />
-              </div>
-              <div>
-                <label style={LABEL}>EQUIPO 2</label>
-                <input
-                  style={INPUT}
-                  value={r.team2}
-                  placeholder="VISITANTE"
-                  onInput={(e)=>updateRow(idx,{ team2: e.currentTarget.value.toUpperCase() })}
-                  readOnly={!isAdmin}
-                />
-              </div>
-            </div>
-
-            {/* Acciones */}
-            <div style={ACTIONS}>
               <button type="button" style={ICONBTN} title="Revisar" onClick={()=>route("/proximo-partido")}>
-                {/* Ollo */}
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" stroke="#0f172a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
                   <circle cx="12" cy="12" r="3" stroke="#0f172a" stroke-width="1.6"/>
@@ -310,7 +296,6 @@ export default function PartidosFinalizados() {
               </button>
 
               <button type="button" style={ICONBTN} title="Gardar" onClick={()=>onSave(idx)} disabled={!isAdmin}>
-                {/* Disquete */}
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path d="M4 4h12l4 4v12H4V4Z" stroke="#0f172a" stroke-width="1.6" />
                   <path d="M7 4v6h10V4" stroke="#0f172a" stroke-width="1.6" />
