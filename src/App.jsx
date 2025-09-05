@@ -1,5 +1,4 @@
-﻿// src/App.jsx
-import { h } from "preact";
+﻿import { h } from "preact";
 import { useState } from "preact/hooks";
 import { Router } from "preact-router";
 
@@ -20,10 +19,10 @@ import HazTu11 from "./pages/HazTu11.jsx";
 import Clasificacion from "./pages/Clasificacion.jsx";
 import Admin from "./pages/Admin.jsx";
 
-/* Próximo partido (calendario) */
+/* Próximo partido */
 import ProximoPartido from "./pages/ProximoPartido.jsx";
 
-/* NUEVAS páginas */
+/* NUEVAS rutas calendario */
 import VindeirosPartidos from "./pages/VindeirosPartidos.jsx";
 import PartidosFinalizados from "./pages/PartidosFinalizados.jsx";
 
@@ -47,6 +46,7 @@ export default function App() {
       : "/"
   );
 
+  // Ocultar NavBar en portada y en cualquier variante de /login, /register, /logout
   const hidePrefixes = ["/login", "/register", "/logout"];
   const shouldHideNav =
     currentPath === "/" ||
@@ -55,6 +55,7 @@ export default function App() {
   return (
     <>
       <AuthWatcher />
+
       {!shouldHideNav && <NavBar currentPath={currentPath} />}
 
       <Router onChange={(e) => setCurrentPath(e.url)}>
