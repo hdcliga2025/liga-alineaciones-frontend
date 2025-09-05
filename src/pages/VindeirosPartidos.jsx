@@ -2,32 +2,32 @@ import { h } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
-/* ====== Estilos base (tarxetas, responsive) ====== */
+/* ===== Estilos / layout ===== */
 const WRAP   = { maxWidth: 1080, margin: "0 auto", padding: "16px 12px 24px" };
-const HEADER = { display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:12 };
-const H1     = { font:"700 20px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", margin:0 };
+const H1     = { font:"700 20px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", margin:"0 0 8px" };
 
+const BTN_ADD_WRAP = { margin: "4px 0 14px" };
 const BTN_ADD = {
   display:"inline-flex", alignItems:"center", gap:8,
   border:"1px solid #0ea5e9", background:"#fff",
-  padding:"8px 12px", borderRadius:10, cursor:"pointer",
-  boxShadow:"0 8px 20px rgba(14,165,233,.18)", color:"#0ea5e9",
-  font:"700 14px/1 Montserrat,system-ui,sans-serif"
+  padding:"10px 18px", borderRadius:12, cursor:"pointer",
+  boxShadow:"0 10px 24px rgba(14,165,233,.18)", color:"#0ea5e9",
+  font:"700 14px/1 Montserrat,system-ui,sans-serif", letterSpacing:".2px"
 };
 
 const LIST   = { display:"grid", gap:10 };
 const CARD   = {
-  background:"#f3f6f9", // gris claro de fondo unificador
+  background:"#f3f6f9",
   border:"1px solid #e5e7eb",
   borderRadius:14,
   boxShadow:"0 6px 18px rgba(0,0,0,.06)",
   padding:"10px 10px 12px",
 };
-const CARD_SAVED = { border:"2px solid #0ea5e9", background:"#f0f9ff" }; // confirmación de gardado
+const CARD_SAVED = { border:"2px solid #0ea5e9", background:"#f0f9ff" };
 
 const ROW1 = { display:"grid", gridTemplateColumns:"auto 1fr", alignItems:"center", gap:10, marginBottom:8 };
 const NUMBOX = {
-  minWidth:30, height:30, border:"1px solid #cbd5e1", borderRadius:6,
+  minWidth:32, height:32, border:"1px solid #cbd5e1", borderRadius:6,
   display:"grid", placeItems:"center", background:"#fff",
   font:"700 14px/1 Montserrat,system-ui,sans-serif", color:"#0f172a"
 };
@@ -45,7 +45,7 @@ const INPUT_TEAM = (editable) => ({
 });
 const VS = { font:"700 13px/1 Montserrat,system-ui,sans-serif", color:"#64748b" };
 
-const ROW2 = { display:"grid", gridTemplateColumns:"minmax(120px, 200px) 1fr auto", gap:8, alignItems:"center" };
+const ROW2 = { display:"grid", gridTemplateColumns:"minmax(140px, 220px) 1fr auto", gap:8, alignItems:"center" };
 const INPUT_DATE = (editable) => ({
   width:"100%", border:"1px solid #dbe2f0", borderRadius:10, padding:"8px 10px",
   background:"#fff", outline:"none",
@@ -53,12 +53,15 @@ const INPUT_DATE = (editable) => ({
   color:"#0f172a", letterSpacing:".2px"
 });
 const SELECT_COMP = (editable) => ({
-  width:"100%", border:"1px solid #dbe2f0", borderRadius:10, padding:"8px 36px 8px 36px",
+  width:"100%", border:"1px solid #dbe2f0", borderRadius:10, padding:"10px 40px 10px 42px",
   background:"#fff", outline:"none", appearance:"none", WebkitAppearance:"none", MozAppearance:"none",
   font:`${editable ? "700" : "600"} 13px/1.1 Montserrat,system-ui,sans-serif`,
   color:"#0f172a"
 });
-const ICON_TROPHY = { position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", pointerEvents:"none", opacity:.8 };
+const ICON_TROPHY = {
+  position:"absolute", left:10, top:"50%", transform:"translateY(-50%)",
+  pointerEvents:"none", opacity:.95
+};
 const ICON_CHEV   = { position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", pointerEvents:"none", opacity:.9 };
 
 const ACTIONS = { display:"flex", alignItems:"center", gap:8, justifyContent:"flex-end" };
@@ -68,32 +71,23 @@ const ICONBTN = (color="#0ea5e9") => ({
   boxShadow:"0 6px 16px rgba(14,165,233,.18)", cursor:"pointer"
 });
 
-/* ====== Utils ====== */
+/* ===== Utils ===== */
 const pad2 = (n)=>String(n).padStart(2,"0");
-/* dd/mm/aa ó dd/mm/aaaa → ISO */
-function parseDMYtoISO(s) {
-  const m = /^\s*(\d{2})\/(\d{2})\/(\d{2}|\d{4})\s*$/.exec(String(s||""));
-  if (!m) return null;
-  let [_, dd, mm, yy] = m;
-  if (yy.length === 2) yy = `20${yy}`; // 25 → 2025
-  const iso = `${yy}-${mm}-${dd}T00:00:00`;
+const isoToYMD = (iso)=> {
+  if (!iso) return "";
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-  return d.toISOString();
-}
-function isoToDMY2(iso){ // → dd/mm/aa (2 díxitos ano)
-  try {
-    const d = new Date(iso);
-    const DD = pad2(d.getDate());
-    const MM = pad2(d.getMonth()+1);
-    const YY = String(d.getFullYear()).slice(-2);
-    return `${DD}/${MM}/${YY}`;
-  } catch { return ""; }
-}
+  if (Number.isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+};
+const ymdToISO = (ymd)=> {
+  if (!ymd) return null;
+  const d = new Date(`${ymd}T00:00:00`);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+};
 
 export default function VindeirosPartidos() {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [rows, setRows] = useState([]); // {id,equipo1,equipo2,match_date,competition,updated_at}
+  const [rows, setRows] = useState([]); // {id,equipo1,equipo2,match_date,competition}
   const [busy, setBusy] = useState(false);
 
   // admin?
@@ -124,7 +118,6 @@ export default function VindeirosPartidos() {
   }
   useEffect(()=>{ loadList(); }, []);
 
-  // gardar (insert/update)
   async function saveRow(local) {
     const payload = {
       id: local.id || undefined,
@@ -142,6 +135,14 @@ export default function VindeirosPartidos() {
     return data || payload;
   }
 
+  function setLocal(i, patch){
+    setRows(prev=>{
+      const n = prev.slice();
+      n[i] = { ...n[i], ...patch };
+      return n;
+    });
+  }
+
   async function onAdd() {
     if (!isAdmin) return;
     setRows((r)=>[
@@ -156,61 +157,47 @@ export default function VindeirosPartidos() {
     await loadList();
   }
 
-  function setLocal(i, patch){
-    setRows(prev=>{
-      const n = prev.slice();
-      n[i] = { ...n[i], ...patch };
-      return n;
-    });
-  }
-
   async function onSave(i) {
     if (busy) return;
     try {
       setBusy(true);
       const r = rows[i];
       if (!r) return;
-      // validar 4 campos
       if (!(r.equipo1 && r.equipo2 && r.match_date && r.competition)) return;
       const saved = await saveRow(r);
-      // marca visual saved
-      setLocal(i, { id: saved.id ?? r.id, __saved: true, _tmp: false });
-      // refresco lista ordenada por fecha
-      await loadList();
+      setLocal(i, { id: saved.id ?? r.id, __saved: true, _tmp:false });
+      await loadList(); // reordenado por data asc
     } finally { setBusy(false); }
   }
 
   const view = useMemo(()=>{
-    // non-admin: só datos reais (sen _tmp)
     const base = isAdmin ? rows : rows.filter(r=>r?.id);
-    // renumerar tras orden actual (xa está por data asc)
     return base.map((r, idx)=>({ ...r, _num: idx+1 }));
   }, [rows, isAdmin]);
 
   return (
     <main style={WRAP}>
-      <div style={HEADER}>
-        <h2 style={H1}>Axenda dos próximos encontros con data e hora confirmada</h2>
-        {isAdmin && (
+      <h2 style={H1}>Axenda dos próximos encontros con data e hora confirmada</h2>
+      {isAdmin && (
+        <div style={BTN_ADD_WRAP}>
           <button type="button" style={BTN_ADD} onClick={onAdd}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{stroke:"#0ea5e9",strokeWidth:2}}>
               <path d="M12 5v14M5 12h14" />
             </svg>
             Engadir
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       <section style={LIST}>
         {view.map((r, i) => {
           const editable = !!isAdmin;
           const savedStyle = r.__saved ? CARD_SAVED : null;
-
-          const dmy = r.match_date ? isoToDMY2(r.match_date) : "";
+          const ymd = isoToYMD(r.match_date);
 
           return (
             <article key={r.id || `n-${i}`} style={{ ...CARD, ...(savedStyle||{}) }}>
-              {/* Fila 1: número + Equipo1 vs Equipo2 */}
+              {/* Fila 1 */}
               <div style={ROW1}>
                 <div style={NUMBOX}>{String(r._num||i+1).padStart(2,"0")}</div>
                 <div style={TEAMLINE}>
@@ -232,24 +219,26 @@ export default function VindeirosPartidos() {
                 </div>
               </div>
 
-              {/* Fila 2: Data + Competición + accións */}
+              {/* Fila 2 */}
               <div style={ROW2}>
                 <input
+                  type="date"
                   style={INPUT_DATE(editable)}
-                  value={dmy}
+                  value={ymd}
                   onInput={(e)=>{
                     if (!editable) return;
-                    const iso = parseDMYtoISO(e.currentTarget.value);
+                    const iso = ymdToISO(e.currentTarget.value);
                     setLocal(i, { match_date: iso, __saved:false });
                   }}
-                  placeholder="DD/MM/AA"
                   readOnly={!editable}
+                  disabled={!editable}
                 />
 
                 <div style={{ position:"relative" }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={ICON_TROPHY} aria-hidden="true">
-                    <path d="M7 4h10v3a5 5 0 01-10 0V4Z" stroke="#64748b" strokeWidth="1.6"/>
-                    <path d="M9 14h6v3H9z" stroke="#64748b" strokeWidth="1.6"/>
+                  {/* Icono trofeo más grande y celeste */}
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={ICON_TROPHY} aria-hidden="true">
+                    <path d="M7 4h10v3a5 5 0 01-10 0V4Z" stroke="#0ea5e9" strokeWidth="1.8"/>
+                    <path d="M9 14h6v3H9z" stroke="#0ea5e9" strokeWidth="1.8"/>
                   </svg>
                   <select
                     style={SELECT_COMP(editable)}
