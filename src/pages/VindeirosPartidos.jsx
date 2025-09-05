@@ -17,21 +17,20 @@ const parseDMYToISO = (s) => {
   const m = /^(\d{2})\/(\d{2})\/(\d{2}|\d{4})$/.exec(String(s||"").trim());
   if (!m) return null;
   let [_, dd, mm, yy] = m;
-  if (yy.length === 2) yy = String(2000 + parseInt(yy, 10)); // aa -> 20aa
+  if (yy.length === 2) yy = String(2000 + parseInt(yy, 10));
   const iso = `${yy}-${mm}-${dd}T00:00:00`;
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? null : iso;
 };
 const COMP_OPTIONS = ["LaLiga", "Europa League", "Copa do Rei"];
-const COMP_MIN_CH = Math.max(...COMP_OPTIONS.map(s => s.length)); // ancho mínimo chip
-const lcKey = "hdc_vindeiros_cards_v5";
+const COMP_MIN_CH = Math.max(...COMP_OPTIONS.map(s => s.length));
+const lcKey = "hdc_vindeiros_cards_v6";
 
-/* ========= Estilos base ========= */
+/* ========= Estilos ========= */
 const WRAP = { maxWidth: 980, margin: "0 auto", padding: "16px 12px 24px" };
 const H1   = { font: "700 20px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", margin: "0 0 8px" };
 const SUB  = { color: "#475569", font: "400 13px/1.3 Montserrat,system-ui,sans-serif", margin: "0 0 14px" };
 
-/* Tarjeta con fondo gris claro */
 const CARD_BASE = {
   background: "#f8fafc",
   border: "1px solid #e5e7eb",
@@ -41,42 +40,41 @@ const CARD_BASE = {
   marginBottom: 10,
 };
 
-/* Fila 1: nº + “E1 vs E2” dentro de una sola celda */
-const FIRST_LINE = { display:"grid", gridTemplateColumns:"1fr", gap: 0, marginBottom: 10 };
+/* Fila 1 → nº + “E1 vs E2” en una sola celda (flex dinámico) */
+const FIRST_LINE = { marginBottom: 10 };
 const MATCH_CELL_BASE = {
-  display:"grid",
-  gridTemplateColumns:"auto 1fr auto 1fr",
+  display:"flex",
   alignItems:"center",
-  gap: 0,
   border:"1px solid #dbe2f0",
   borderRadius:12,
   background:"#fff",
   overflow:"hidden"
 };
 const NUMBOX_BASE = {
-  marginLeft: 8,
-  marginRight: 6,
-  minWidth: 28,
-  height: 28,
-  borderRadius: 6,
-  background: "#e2e8f0",
-  color:"#0f172a",
+  marginLeft: 8, marginRight: 6,
+  minWidth: 28, height: 28, borderRadius:6,
+  background:"#e2e8f0", color:"#0f172a",
   display:"grid", placeItems:"center",
   font:"800 14px/1 Montserrat,system-ui,sans-serif",
-  padding: "0 8px"
+  padding:"0 8px", border:"1px solid transparent"
 };
-const MATCH_INPUT = {
-  width:"100%", padding:"10px 12px", border:"none", outline:"none",
-  font:"700 14px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", background:"transparent"
+const TEAM_INPUT = {
+  flex:"1 1 auto",
+  minWidth: 40,
+  width:"auto",
+  padding:"10px 12px",
+  border:"none", outline:"none",
+  font:"700 14px/1.2 Montserrat,system-ui,sans-serif",
+  color:"#0f172a", background:"transparent",
+  minHeight: 40
 };
 const VS = { padding:"0 10px", font:"800 12px/1 Montserrat,system-ui,sans-serif", color:"#334155" };
 
-/* Fila 2: [Guardar]  [DATA + Competición]  [espacio (se quitó borrar por tarjeta)] */
+/* Fila 2 → centro (DATA + COMP) + botón Guardar a la derecha */
 const SECOND_LINE = {
   display:"grid",
-  gridTemplateColumns:"auto 1fr auto",
-  gap: 8,
-  alignItems:"center"
+  gridTemplateColumns:"1fr auto",
+  gap: 8, alignItems:"center"
 };
 const INPUT_SOFT_BASE = {
   padding:"10px 12px",
@@ -86,17 +84,23 @@ const INPUT_SOFT_BASE = {
   color:"#0f172a", outline:"none",
   background:"#fff"
 };
-/* wrapper central para DATA (izq) + COMP (der) */
 const MID_WRAP = { display:"grid", gridTemplateColumns:"auto auto", gap:8, alignItems:"center", justifyContent:"start" };
 
 const CHIP_BASE = {
-  display:"inline-flex", alignItems:"center", gap:6,
+  display:"inline-flex", alignItems:"center", gap:8,
   border:"1px solid #e5e7eb", padding:"8px 10px", borderRadius:10,
   background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)",
   font:"700 13px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", cursor:"pointer",
-  minWidth: `${COMP_MIN_CH + 2}ch`, justifyContent:"space-between"
+  minWidth: `${COMP_MIN_CH + 4}ch`, justifyContent:"space-between"
 };
-
+const ICON_TROPHY = (c="#0ea5e9") => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+    style={{ stroke:c, strokeWidth:1.8, strokeLinecap:"round", strokeLinejoin:"round" }}>
+    <path d="M7 4h10v3a5 5 0 01-10 0V4Z" />
+    <path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" />
+    <path d="M9 14h6v3H9z" />
+  </svg>
+);
 const ICONBTN = (accent="#0ea5e9") => ({
   width:36, height:36, display:"grid", placeItems:"center",
   borderRadius:10, border:`1px solid ${accent}`,
@@ -107,10 +111,9 @@ const ICON_STROKE = (accent="#0ea5e9") => ({
   fill:"none", stroke:accent, strokeWidth:1.8, strokeLinecap:"round", strokeLinejoin:"round"
 });
 
-/* ========= Componente ========= */
 export default function VindeirosPartidos() {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [rows, setRows] = useState([]); // [{id, date_iso, team1, team2, competition}]
+  const [rows, setRows] = useState([]); // {id,date_iso,team1,team2,competition}
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
   const [menuAt, setMenuAt] = useState(null);
@@ -255,7 +258,7 @@ export default function VindeirosPartidos() {
 
   const view = useMemo(()=> rows.slice(0,limit), [rows]);
 
-  // ajustes de tamaños en móvil
+  // tamaños móvil
   const fTeam = isMobile ? 13 : 14;
   const fNum  = isMobile ? 13 : 14;
   const hNum  = isMobile ? 24 : 28;
@@ -276,10 +279,18 @@ export default function VindeirosPartidos() {
       <h2 style={H1}>Vindeiros partidos</h2>
       <p style={SUB}>Axenda dos próximos encontros con data e hora confirmada</p>
 
-      {/* Barra superior: Engadir (izq) + Borrar por nº (der) */}
-      <div style={{ display:"grid", gridTemplateColumns:"1fr auto", alignItems:"center", marginBottom: 10 }}>
+      {/* Barra superior: Engadir (ajustado al texto) + Borrar por nº (derecha) */}
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom: 10 }}>
         {isAdmin ? (
-          <button onClick={addCard} style={{display:"inline-flex",alignItems:"center",gap:6, padding:"8px 10px", borderRadius:10, border:"1px solid #e5e7eb", background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)", font:"700 14px/1.2 Montserrat,system-ui,sans-serif"}}>
+          <button
+            onClick={addCard}
+            style={{
+              display:"inline-flex", alignItems:"center", gap:6,
+              padding:"8px 10px", borderRadius:10, border:"1px solid #e5e7eb",
+              background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)",
+              font:"700 14px/1.2 Montserrat,system-ui,sans-serif"
+            }}
+          >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 4v16M4 12h16" stroke="#0f172a" strokeWidth="2" strokeLinecap="round"/></svg>
             Engadir
           </button>
@@ -307,7 +318,7 @@ export default function VindeirosPartidos() {
 
         return (
           <section key={r.id || `v-${idx}`} style={cardStyle}>
-            {/* Fila 1: nº + “E1 vs E2” */}
+            {/* Fila 1 */}
             <div style={FIRST_LINE}>
               <div style={matchCell}>
                 <span style={{
@@ -319,41 +330,33 @@ export default function VindeirosPartidos() {
                   {String(idx+1).padStart(2,"0")}
                 </span>
                 <input
-                  style={{ ...MATCH_INPUT, padding: padTeam, font:`700 ${fTeam}px/1.2 Montserrat,system-ui,sans-serif` }}
+                  style={{ ...TEAM_INPUT, padding: padTeam, font:`700 ${fTeam}px/1.2 Montserrat,system-ui,sans-serif` }}
                   value={r.team1}
                   placeholder="LOCAL"
+                  size={(r.team1||"LOCAL").length}
                   onInput={(e)=>updateRow(idx,{ team1: e.currentTarget.value.toUpperCase() })}
                   readOnly={!isAdmin}
                 />
                 <span style={{ ...VS, font:`800 ${isMobile?11:12}px/1 Montserrat,system-ui,sans-serif` }}>vs</span>
                 <input
-                  style={{ ...MATCH_INPUT, padding: padTeam, font:`700 ${fTeam}px/1.2 Montserrat,system-ui,sans-serif` }}
+                  style={{ ...TEAM_INPUT, padding: padTeam, font:`700 ${fTeam}px/1.2 Montserrat,system-ui,sans-serif` }}
                   value={r.team2}
                   placeholder="VISITANTE"
+                  size={(r.team2||"VISITANTE").length}
                   onInput={(e)=>updateRow(idx,{ team2: e.currentTarget.value.toUpperCase() })}
                   readOnly={!isAdmin}
                 />
               </div>
             </div>
 
-            {/* Fila 2: [Guardar] | [DATA (izq) + Competición (der)] | [espacio] */}
+            {/* Fila 2: centro (DATA + COMP) | guardar derecha */}
             <div style={SECOND_LINE}>
-              {/* Guardar (izquierda) */}
-              <button type="button" style={ICONBTN("#0ea5e9")} title="Gardar" onClick={()=>onSave(idx)} disabled={!isAdmin}>
-                <svg width="18" height="18" viewBox="0 0 24 24" style={ICON_STROKE("#0ea5e9")}>
-                  <path d="M4 4h12l4 4v12H4V4Z" />
-                  <path d="M7 4v6h10V4" />
-                  <path d="M8 16h8v4H8z" />
-                </svg>
-              </button>
-
-              {/* Centro: DATA (izquierda) + Competición (derecha) */}
               <div style={MID_WRAP}>
                 <input
-                  style={{ ...inputSoft, font:`700 ${fData}px/1.2 Montserrat,system-ui,sans-serif`, width: `${Math.max(8, (dmy2||"").length || 8)}ch` }}
-                  size={Math.max(8, (dmy2||"").length || 8)}
+                  style={{ ...inputSoft, font:`700 ${fData}px/1.2 Montserrat,system-ui,sans-serif`, width: "10ch", textTransform:"uppercase" }}
+                  size={Math.max(10, (dmy2||"DD/MM/AA").length)}
                   value={dmy2}
-                  placeholder="dd/mm/aa"
+                  placeholder="DD/MM/AA"
                   onInput={(e)=>updateRow(idx,{ date_iso: e.currentTarget.value })}
                   readOnly={!isAdmin}
                 />
@@ -367,7 +370,10 @@ export default function VindeirosPartidos() {
                     aria-haspopup="listbox"
                     title="Competición"
                   >
-                    <span>{r.competition || "—"}</span>
+                    <span style={{display:"inline-flex", alignItems:"center", gap:6}}>
+                      {ICON_TROPHY("#0ea5e9")}
+                      <span>{r.competition || "—"}</span>
+                    </span>
                     <svg width="16" height="16" viewBox="0 0 24 24" style={ICON_STROKE("#0ea5e9")}><path d="M7 10l5 5 5-5" /></svg>
                   </button>
                   {menuAt===idx && (
@@ -386,8 +392,13 @@ export default function VindeirosPartidos() {
                 </div>
               </div>
 
-              {/* (derecha vacío) */}
-              <span />
+              <button type="button" style={ICONBTN("#0ea5e9")} title="Gardar" onClick={()=>onSave(idx)} disabled={!isAdmin}>
+                <svg width="18" height="18" viewBox="0 0 24 24" style={ICON_STROKE("#0ea5e9")}>
+                  <path d="M4 4h12l4 4v12H4V4Z" />
+                  <path d="M7 4v6h10V4" />
+                  <path d="M8 16h8v4H8z" />
+                </svg>
+              </button>
             </div>
           </section>
         );
@@ -405,5 +416,4 @@ export default function VindeirosPartidos() {
     </main>
   );
 }
-
 
