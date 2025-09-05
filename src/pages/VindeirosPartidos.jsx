@@ -5,9 +5,8 @@ import { supabase } from "../lib/supabaseClient.js";
 /* ========= Helpers ========= */
 const COMP_OPTIONS = ["LaLiga", "Europa League", "Copa do Rei"];
 const COMP_MIN_CH = Math.max(...COMP_OPTIONS.map((s) => s.length));
-const lcKey = "hdc_vindeiros_cards_v9";
+const lcKey = "hdc_vindeiros_cards_v10";
 
-/** YYYY-MM-DD (para <input type="date">) */
 const toISODate = (d) => {
   try {
     const dt = d instanceof Date ? d : new Date(d);
@@ -19,7 +18,6 @@ const toISODate = (d) => {
     return "";
   }
 };
-/** YYYY-MM-DD → midnight ISO */
 const toMidnightISO = (yyyy_mm_dd) => {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(yyyy_mm_dd || "").trim());
   if (!m) return null;
@@ -31,21 +29,24 @@ const dateMs = (yyyy_mm_dd) => {
   const ms = d.getTime();
   return Number.isNaN(ms) ? Infinity : ms;
 };
+const isComplete = (r) => Boolean(r.team1 && r.team2 && r.date_iso && r.competition);
 
 /* ========= Estilos ========= */
 const WRAP = { maxWidth: 1080, margin: "0 auto", padding: "16px 12px 24px" };
 const H1 = { font: "700 20px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", margin: "0 0 8px" };
 const SUB = { color: "#475569", font: "400 13px/1.3 Montserrat,system-ui,sans-serif", margin: "0 0 14px" };
 
-const CARD_BASE = {
-  background: "#f8fafc",
-  border: "2px solid #e5e7eb",
+const CARD_BASE = (saved) => ({
+  background: saved
+    ? "linear-gradient(180deg, rgba(14,165,233,.08), rgba(14,165,233,.02))"
+    : "#f8fafc",
+  border: `2px solid ${saved ? "#0ea5e9" : "#e5e7eb"}`,
   borderRadius: 16,
   boxShadow: "0 6px 18px rgba(0,0,0,.06)",
   padding: 12,
   marginBottom: 12,
-  transition: "border-color .25s ease, border-width .25s ease",
-};
+  transition: "border-color .25s ease, background .25s ease",
+});
 
 const FIRST_LINE = { marginBottom: 10 };
 const MATCH_CELL = {
@@ -57,38 +58,39 @@ const MATCH_CELL = {
   overflow: "hidden",
 };
 
-const NUMBOX = {
+const NUMBOX = (h, f) => ({
   marginLeft: 8,
   marginRight: 6,
-  minWidth: 28,
-  height: 28,
+  minWidth: h,
+  height: h,
   borderRadius: 6,
   background: "#e2e8f0",
   color: "#0f172a",
   display: "grid",
   placeItems: "center",
-  font: "800 14px/1 Montserrat,system-ui,sans-serif",
+  font: `800 ${f}px/1 Montserrat,system-ui,sans-serif`,
   padding: "0 8px",
   border: "1px solid transparent",
-};
+});
 
-const TEAM_INPUT = {
+const TEAM_INPUT = (f, pad) => ({
   flex: "1 1 auto",
   minWidth: 40,
-  padding: "10px 12px",
+  padding: pad,
   border: "none",
   outline: "none",
-  font: "700 14px/1.2 Montserrat,system-ui,sans-serif",
+  font: `700 ${f}px/1.2 Montserrat,system-ui,sans-serif`,
   color: "#0f172a",
   background: "transparent",
   minHeight: 40,
-};
-const VS = { padding: "0 10px", font: "800 12px/1 Montserrat,system-ui,sans-serif", color: "#334155" };
+});
+const VS = (f) => ({ padding: "0 10px", font: `800 ${f}px/1 Montserrat,system-ui,sans-serif`, color: "#334155" });
 
 const SECOND_LINE = (desktop) => ({
   display: "grid",
+  // Data (auto) + Comp (auto) + hueco
   gridTemplateColumns: desktop ? "auto auto 1fr" : "auto auto 1fr",
-  gap: desktop ? 40 : 8, // ~1 cm en escritorio
+  gap: desktop ? 40 : 8,
   alignItems: "center",
 });
 
@@ -102,8 +104,8 @@ const DATE_WRAP = {
   padding: "8px 10px",
   background: "#fff",
 };
-const DATE_ICON = (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ stroke: "#0ea5e9", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" }}>
+const DATE_ICON_GRAY = (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ stroke: "#94a3b8", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" }}>
     <rect x="3" y="4.5" width="18" height="16" rx="2" />
     <path d="M7 2.5v4M17 2.5v4M3 9h18" />
   </svg>
@@ -122,8 +124,8 @@ const CHIP_BASE = {
   color: "#0f172a",
   cursor: "pointer",
   minWidth: `${COMP_MIN_CH + 6}ch`,
-  justifyContent: "space-between",
-  height: 38, // mismo alto que date
+  whiteSpace: "nowrap",
+  height: 38, // igual que date
 };
 
 const ICON_TROPHY = (
@@ -134,72 +136,26 @@ const ICON_TROPHY = (
   </svg>
 );
 
-const ICON_STROKE = (accent = "#0ea5e9") => ({
-  fill: "none",
-  stroke: accent,
-  strokeWidth: 1.8,
-  strokeLinecap: "round",
-  strokeLinejoin: "round",
-});
-const SMALL_BTN = {
-  width: 34,
-  height: 34,
-  display: "grid",
-  placeItems: "center",
-  borderRadius: 10,
-  border: "1px solid #94d3f6",
-  background: "#fff",
-  boxShadow: "0 2px 8px rgba(14,165,233,.25)",
-  cursor: "pointer",
-};
-
-/* Mini-toast */
-function Toast({ text, kind = "ok" }) {
-  const bg = kind === "ok" ? "#0ea5e9" : "#b91c1c";
-  return (
-    <div
-      style={{
-        position: "fixed",
-        left: "50%",
-        bottom: 16,
-        transform: "translateX(-50%)",
-        background: bg,
-        color: "#fff",
-        padding: "6px 10px",
-        borderRadius: 10,
-        font: "700 12px/1.1 Montserrat,system-ui,sans-serif",
-        boxShadow: "0 10px 26px rgba(0,0,0,.18)",
-        zIndex: 1000,
-      }}
-    >
-      {text}
-    </div>
-  );
-}
+/* Oculta el icono nativo derecho del input date en PC */
+const HIDE_NATIVE_DATE = `
+  .hdc-date::-webkit-calendar-picker-indicator{ opacity:0; display:none; }
+  .hdc-date::-webkit-inner-spin-button{ display:none; }
+  .hdc-date{ -webkit-appearance:none; appearance:none; }
+`;
 
 /* ========= Componente ========= */
 export default function VindeirosPartidos() {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [rows, setRows] = useState([]); // {id,date_iso,team1,team2,competition}
+  const [rows, setRows] = useState([]); // {id,date_iso,team1,team2,competition,saved}
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState(null);
   const [menuAt, setMenuAt] = useState(null);
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth <= 560 : false
   );
-  const saveTimers = useRef({}); // idx -> timeout
-  const flashMap = useRef({}); // id/idx -> true mientras “borde ancho”
+  const saveTimers = useRef({});
   const dbEnabledRef = useRef(true);
   const limit = 10;
 
-  /* Ocultar icono nativo del <input type="date"> (PC) */
-  const HIDE_NATIVE_DATE = `
-    .hdc-date::-webkit-calendar-picker-indicator{ opacity:0; display:none; }
-    .hdc-date::-webkit-inner-spin-button{ display:none; }
-    .hdc-date{ -webkit-appearance:none; appearance:none; }
-  `;
-
-  /* Admin? */
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -217,24 +173,15 @@ export default function VindeirosPartidos() {
       }
       if (alive) setIsAdmin(admin);
     })();
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, []);
 
-  /* Responsivo */
   useEffect(() => {
     const onR = () => setIsMobile(window.innerWidth <= 560);
     window.addEventListener("resize", onR);
     return () => window.removeEventListener("resize", onR);
   }, []);
 
-  function showToast(text, kind = "ok") {
-    setToast({ text, kind });
-    setTimeout(() => setToast(null), 1700);
-  }
-
-  /* Carga / fallback localStorage */
   async function loadFromDB() {
     try {
       const { data, error } = await supabase
@@ -249,6 +196,12 @@ export default function VindeirosPartidos() {
         team1: (r.team1 || "").toUpperCase(),
         team2: (r.team2 || "").toUpperCase(),
         competition: r.competition || "",
+        saved: isComplete({
+          date_iso: r.match_date ? toISODate(r.match_date) : "",
+          team1: r.team1,
+          team2: r.team2,
+          competition: r.competition,
+        }),
       }));
       dbEnabledRef.current = true;
       setRows(sortByDateAsc(mapped));
@@ -258,9 +211,7 @@ export default function VindeirosPartidos() {
         const raw = localStorage.getItem(lcKey);
         const parsed = raw ? JSON.parse(raw) : [];
         setRows(sortByDateAsc(Array.isArray(parsed) ? parsed.slice(0, limit) : []));
-      } catch {
-        setRows([]);
-      }
+      } catch { setRows([]); }
     } finally {
       setLoading(false);
     }
@@ -276,48 +227,28 @@ export default function VindeirosPartidos() {
     };
   }, []);
 
-  function saveToLC(next) {
-    try {
-      localStorage.setItem(lcKey, JSON.stringify(next));
-    } catch {}
-  }
-
-  function needsAutoSave(r) {
-    return Boolean(r.team1 && r.team2 && r.date_iso && r.competition);
-  }
-
-  function sortByDateAsc(arr) {
-    const out = arr.slice();
-    out.sort((a, b) => dateMs(a.date_iso) - dateMs(b.date_iso));
-    return out;
-  }
+  function saveToLC(next) { try { localStorage.setItem(lcKey, JSON.stringify(next)); } catch {} }
+  const sortByDateAsc = (arr) => { const out = arr.slice(); out.sort((a,b)=>dateMs(a.date_iso)-dateMs(b.date_iso)); return out; };
 
   function updateRow(idx, patch) {
     if (!isAdmin) return;
     setRows((prev) => {
       const next = prev.slice();
-      const nr = { ...(next[idx] || {}), ...patch };
-      next[idx] = nr;
+      const updated = { ...(next[idx] || {}), ...patch };
+      updated.saved = isComplete(updated) ? updated.saved : false; // si incompleta, pierde “guardado”
+      next[idx] = updated;
       if (!dbEnabledRef.current) saveToLC(next);
       clearTimeout(saveTimers.current[idx]);
       saveTimers.current[idx] = setTimeout(() => {
-        if (needsAutoSave(nr)) onAutoSave(idx);
-      }, 500);
+        if (isComplete(updated)) onAutoSave(idx);
+      }, 400);
       return next;
     });
   }
 
-  function onBlurRow(idx) {
-    const r = rows[idx];
-    if (!isAdmin) return;
-    if (!needsAutoSave(r)) {
-      showToast("Cumplimenta los 4 campos para guardar automáticamente.", "err");
-    }
-  }
-
   async function onAutoSave(idx) {
     const r = rows[idx];
-    if (!isAdmin || !needsAutoSave(r)) return;
+    if (!isAdmin || !isComplete(r)) return;
 
     const payload = {
       match_date: toMidnightISO(r.date_iso),
@@ -341,31 +272,24 @@ export default function VindeirosPartidos() {
             return next;
           });
         }
-      } // offline ya persistido en LC
-
-      // borde celeste ancho (confirmación)
-      flashBorder(idx);
-      setRows((prev) => sortByDateAsc(prev));
-      setTimeout(loadFromDB, 300);
+      }
+      // marca persistente de guardado
+      setRows((prev) => {
+        const next = prev.slice();
+        next[idx] = { ...next[idx], saved: true };
+        return sortByDateAsc(next);
+      });
+      setTimeout(loadFromDB, 250);
     } catch (e) {
       console.error(e);
-      showToast("Erro gardando", "err");
+      // no toast explícito para mantener pantalla limpia
     }
-  }
-
-  function flashBorder(idx) {
-    const key = rows[idx]?.id || `idx-${idx}`;
-    flashMap.current[key] = true;
-    setTimeout(() => {
-      delete flashMap.current[key];
-      setRows((prev) => prev.slice());
-    }, 2500);
   }
 
   function addCard() {
     if (!isAdmin) return;
     setRows((prev) => {
-      const base = { id: null, date_iso: "", team1: "", team2: "", competition: "" };
+      const base = { id: null, date_iso: "", team1: "", team2: "", competition: "", saved: false };
       const next = [base, ...prev].slice(0, limit);
       if (!dbEnabledRef.current) saveToLC(next);
       return next;
@@ -373,41 +297,32 @@ export default function VindeirosPartidos() {
   }
 
   async function deleteByRowNumber() {
-    if (!isAdmin) {
-      showToast("Só admin pode borrar", "err");
-      return;
-    }
+    if (!isAdmin) return;
     const input = prompt("Indica o número de fila a eliminar (1–10):");
     if (!input) return;
     const n = parseInt(String(input).trim(), 10);
-    if (!(n >= 1 && n <= limit)) {
-      showToast("Número inválido", "err");
-      return;
-    }
+    if (!(n >= 1 && n <= limit)) return;
     const idx = n - 1;
     const r = rows[idx];
     try {
       if (dbEnabledRef.current && r?.id) {
-        const { error } = await supabase.from("matches_vindeiros").delete().eq("id", r.id);
-        if (error) throw error;
+        await supabase.from("matches_vindeiros").delete().eq("id", r.id);
       }
       const next = rows.filter((_, i) => i !== idx);
       setRows(next);
       if (!dbEnabledRef.current) saveToLC(next);
-      showToast("Eliminado");
-    } catch (e) {
-      console.error(e);
-      showToast("Erro borrando", "err");
-    }
+    } catch (e) { console.error(e); }
   }
 
   const view = useMemo(() => rows.slice(0, limit), [rows]);
 
-  // tamaños móvil
+  // tamaños móvil/PC
   const fTeam = isMobile ? 13 : 14;
   const fNum = isMobile ? 13 : 14;
   const hNum = isMobile ? 24 : 28;
+  const vsF  = isMobile ? 11 : 12;
   const padTeam = isMobile ? "8px 10px" : "10px 12px";
+  const dateWidth = isMobile ? "9ch" : "20ch"; // móvil más corto
 
   if (loading) {
     return (
@@ -425,7 +340,6 @@ export default function VindeirosPartidos() {
       <h2 style={H1}>Vindeiros partidos</h2>
       <p style={SUB}>Axenda dos próximos encontros con data e hora confirmada</p>
 
-      {/* Barra superior: Engadir + papelera */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
         {isAdmin ? (
           <button
@@ -447,16 +361,20 @@ export default function VindeirosPartidos() {
             </svg>
             Engadir
           </button>
-        ) : (
-          <span />
-        )}
+        ) : <span />}
 
         {isAdmin && (
-          <button onClick={deleteByRowNumber} style={SMALL_BTN} title="Borrar por número de fila">
-            <svg width="16" height="16" viewBox="0 0 24 24" style={ICON_STROKE("#0ea5e9")}>
-              <path d="M3 6h18" />
-              <path d="M8 6V4h8v2" />
-              <path d="M7 6l1 12h8l1-12" />
+          <button
+            onClick={deleteByRowNumber}
+            title="Borrar por número de fila"
+            style={{
+              width: 34, height: 34, display: "grid", placeItems: "center",
+              borderRadius: 10, border: "1px solid #94d3f6", background: "#fff",
+              boxShadow: "0 2px 8px rgba(14,165,233,.25)", cursor: "pointer"
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M7 6l1 12h8l1-12" />
             </svg>
           </button>
         )}
@@ -464,60 +382,45 @@ export default function VindeirosPartidos() {
 
       {view.map((r, idx) => {
         const key = r.id || `idx-${idx}`;
-        const flashing = !!flashMap.current[key];
-        const cardStyle = {
-          ...CARD_BASE,
-          borderColor: flashing ? "#0ea5e9" : "#e5e7eb",
-          borderWidth: flashing ? 3 : 2,
-        };
+        const saved = !!r.saved;
 
         return (
-          <section key={key} style={cardStyle}>
+          <section key={key} style={CARD_BASE(saved)}>
             {/* Fila 1 */}
             <div style={FIRST_LINE}>
               <div style={MATCH_CELL}>
-                <span
-                  style={{
-                    ...NUMBOX,
-                    height: hNum,
-                    minWidth: hNum,
-                    font: `800 ${fNum}px/1 Montserrat,system-ui,sans-serif`,
-                  }}
-                >
+                <span style={NUMBOX(hNum, fNum)}>
                   {String(idx + 1).padStart(2, "0")}
                 </span>
                 <input
-                  style={{ ...TEAM_INPUT, padding: padTeam, font: `700 ${fTeam}px/1.2 Montserrat,system-ui,sans-serif` }}
+                  style={TEAM_INPUT(fTeam, padTeam)}
                   value={r.team1}
                   placeholder="LOCAL"
                   size={(r.team1 || "LOCAL").length}
                   onInput={(e) => updateRow(idx, { team1: e.currentTarget.value.toUpperCase() })}
-                  onBlur={() => onBlurRow(idx)}
                   readOnly={!isAdmin}
                 />
-                <span style={{ ...VS, font: `800 ${isMobile ? 11 : 12}px/1 Montserrat,system-ui,sans-serif` }}>vs</span>
+                <span style={VS(vsF)}>vs</span>
                 <input
-                  style={{ ...TEAM_INPUT, padding: padTeam, font: `700 ${fTeam}px/1.2 Montserrat,system-ui,sans-serif` }}
+                  style={TEAM_INPUT(fTeam, padTeam)}
                   value={r.team2}
                   placeholder="VISITANTE"
                   size={(r.team2 || "VISITANTE").length}
                   onInput={(e) => updateRow(idx, { team2: e.currentTarget.value.toUpperCase() })}
-                  onBlur={() => onBlurRow(idx)}
                   readOnly={!isAdmin}
                 />
               </div>
             </div>
 
-            {/* Fila 2: DATA + COMP + hueco derecha */}
+            {/* Fila 2 */}
             <div style={SECOND_LINE(!isMobile)}>
-              <label style={DATE_WRAP}>
-                {DATE_ICON}
+              <label style={DATE_WRAP} title="Data">
+                {DATE_ICON_GRAY}
                 <input
                   class="hdc-date"
                   type="date"
                   value={r.date_iso || ""}
                   onInput={(e) => updateRow(idx, { date_iso: e.currentTarget.value })}
-                  onBlur={() => onBlurRow(idx)}
                   readOnly={!isAdmin}
                   style={{
                     border: "none",
@@ -525,7 +428,7 @@ export default function VindeirosPartidos() {
                     background: "transparent",
                     font: `700 ${isMobile ? 12 : 14}px/1.2 Montserrat,system-ui,sans-serif`,
                     color: "#0f172a",
-                    width: isMobile ? "11ch" : "20ch", // móvil más corto, PC más largo
+                    width: dateWidth,
                   }}
                 />
               </label>
@@ -539,13 +442,13 @@ export default function VindeirosPartidos() {
                   aria-haspopup="listbox"
                   title="Competición"
                 >
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                    {ICON_TROPHY}
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 8, whiteSpace: "nowrap" }}>
+                    <span style={{ display: "inline-grid" }}>{/* icono copa grande */}{ICON_TROPHY}</span>
                     <span style={{ font: `700 ${isMobile ? 12 : 14}px/1.2 Montserrat,system-ui,sans-serif` }}>
                       {r.competition || "—"}
                     </span>
                   </span>
-                  <svg width="16" height="16" viewBox="0 0 24 24" style={ICON_STROKE("#0ea5e9")}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M7 10l5 5 5-5" />
                   </svg>
                 </button>
@@ -572,20 +475,14 @@ export default function VindeirosPartidos() {
                           background: r.competition === opt ? "#f1f5f9" : "#fff",
                           whiteSpace: "nowrap",
                         }}
-                        onClick={() => {
-                          updateRow(idx, { competition: opt });
-                          setMenuAt(null);
-                        }}
+                        onClick={() => { updateRow(idx, { competition: opt }); setMenuAt(null); }}
                       >
                         {opt}
                       </div>
                     ))}
                     <div
                       style={{ padding: "8px 12px", font: "600 13px/1.2 Montserrat,system-ui,sans-serif", cursor: "pointer" }}
-                      onClick={() => {
-                        updateRow(idx, { competition: "" });
-                        setMenuAt(null);
-                      }}
+                      onClick={() => { updateRow(idx, { competition: "" }); setMenuAt(null); }}
                     >
                       —
                     </div>
@@ -598,8 +495,6 @@ export default function VindeirosPartidos() {
           </section>
         );
       })}
-
-      {toast && <Toast text={toast.text} kind={toast.kind} />}
     </main>
   );
 }
