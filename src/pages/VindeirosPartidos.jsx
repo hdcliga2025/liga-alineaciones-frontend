@@ -5,9 +5,9 @@ import { supabase } from "../lib/supabaseClient.js";
 /* ========= Helpers ========= */
 const COMP_OPTIONS = ["LaLiga", "Europa League", "Copa do Rei"];
 const COMP_MIN_CH = Math.max(...COMP_OPTIONS.map((s) => s.length));
-const lcKey = "hdc_vindeiros_cards_v8";
+const lcKey = "hdc_vindeiros_cards_v9";
 
-/** YYYY-MM-DD desde Date/string (para <input type="date">) */
+/** YYYY-MM-DD (para <input type="date">) */
 const toISODate = (d) => {
   try {
     const dt = d instanceof Date ? d : new Date(d);
@@ -19,7 +19,7 @@ const toISODate = (d) => {
     return "";
   }
 };
-/** YYYY-MM-DD → YYYY-MM-DDT00:00:00 (para guardar) */
+/** YYYY-MM-DD → midnight ISO */
 const toMidnightISO = (yyyy_mm_dd) => {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(yyyy_mm_dd || "").trim());
   if (!m) return null;
@@ -33,22 +33,22 @@ const dateMs = (yyyy_mm_dd) => {
 };
 
 /* ========= Estilos ========= */
-const WRAP = { maxWidth: 980, margin: "0 auto", padding: "16px 12px 24px" };
+const WRAP = { maxWidth: 1080, margin: "0 auto", padding: "16px 12px 24px" };
 const H1 = { font: "700 20px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", margin: "0 0 8px" };
 const SUB = { color: "#475569", font: "400 13px/1.3 Montserrat,system-ui,sans-serif", margin: "0 0 14px" };
 
 const CARD_BASE = {
   background: "#f8fafc",
-  border: "1px solid #e5e7eb",
+  border: "2px solid #e5e7eb",
   borderRadius: 16,
   boxShadow: "0 6px 18px rgba(0,0,0,.06)",
   padding: 12,
-  marginBottom: 10,
-  transition: "background-color .25s ease, border-color .25s ease",
+  marginBottom: 12,
+  transition: "border-color .25s ease, border-width .25s ease",
 };
 
 const FIRST_LINE = { marginBottom: 10 };
-const MATCH_CELL_BASE = {
+const MATCH_CELL = {
   display: "flex",
   alignItems: "center",
   border: "1px solid #dbe2f0",
@@ -56,7 +56,8 @@ const MATCH_CELL_BASE = {
   background: "#fff",
   overflow: "hidden",
 };
-const NUMBOX_BASE = {
+
+const NUMBOX = {
   marginLeft: 8,
   marginRight: 6,
   minWidth: 28,
@@ -70,10 +71,10 @@ const NUMBOX_BASE = {
   padding: "0 8px",
   border: "1px solid transparent",
 };
+
 const TEAM_INPUT = {
   flex: "1 1 auto",
   minWidth: 40,
-  width: "auto",
   padding: "10px 12px",
   border: "none",
   outline: "none",
@@ -84,41 +85,36 @@ const TEAM_INPUT = {
 };
 const VS = { padding: "0 10px", font: "800 12px/1 Montserrat,system-ui,sans-serif", color: "#334155" };
 
-const SECOND_LINE = {
+const SECOND_LINE = (desktop) => ({
   display: "grid",
-  gridTemplateColumns: "auto auto 1fr",
-  gap: 8,
+  gridTemplateColumns: desktop ? "auto auto 1fr" : "auto auto 1fr",
+  gap: desktop ? 40 : 8, // ~1 cm en escritorio
   alignItems: "center",
-};
+});
 
-const DATE_WRAP = (accent) => ({
+const DATE_WRAP = {
   display: "inline-grid",
   gridTemplateColumns: "auto auto",
   alignItems: "center",
   gap: 6,
-  border: `1px solid ${accent}`,
+  border: "1px solid #dbe2f0",
   borderRadius: 10,
   padding: "8px 10px",
   background: "#fff",
-});
-const DATE_ICON = (accent = "#0ea5e9") => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    style={{ stroke: accent, strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" }}
-  >
+};
+const DATE_ICON = (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ stroke: "#0ea5e9", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" }}>
     <rect x="3" y="4.5" width="18" height="16" rx="2" />
     <path d="M7 2.5v4M17 2.5v4M3 9h18" />
   </svg>
 );
-const CHIP_BASE = (accent) => ({
+
+const CHIP_BASE = {
   display: "inline-flex",
   alignItems: "center",
   gap: 8,
-  border: `1px solid ${accent}`,
-  padding: "10px 12px",
+  border: "1px solid #dbe2f0",
+  padding: "8px 10px",
   borderRadius: 10,
   background: "#fff",
   boxShadow: "0 2px 8px rgba(0,0,0,.06)",
@@ -127,20 +123,17 @@ const CHIP_BASE = (accent) => ({
   cursor: "pointer",
   minWidth: `${COMP_MIN_CH + 6}ch`,
   justifyContent: "space-between",
-});
-const ICON_TROPHY = (c = "#0ea5e9") => (
-  <svg
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    style={{ stroke: c, strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" }}
-  >
+  height: 38, // mismo alto que date
+};
+
+const ICON_TROPHY = (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ stroke: "#0ea5e9", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" }}>
     <path d="M7 4h10v3a5 5 0 01-10 0V4Z" />
     <path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" />
     <path d="M9 14h6v3H9z" />
   </svg>
 );
+
 const ICON_STROKE = (accent = "#0ea5e9") => ({
   fill: "none",
   stroke: accent,
@@ -160,22 +153,9 @@ const SMALL_BTN = {
   cursor: "pointer",
 };
 
-/* Toast compacto */
+/* Mini-toast */
 function Toast({ text, kind = "ok" }) {
   const bg = kind === "ok" ? "#0ea5e9" : "#b91c1c";
-  const Icon =
-    kind === "ok"
-      ? () => (
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ stroke: "#fff", strokeWidth: 2 }}>
-            <path d="M20 6L9 17l-5-5" />
-          </svg>
-        )
-      : () => (
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ stroke: "#fff", strokeWidth: 2 }}>
-            <path d="M12 9v5M12 17h.01" />
-            <path d="M10.3 3.5l-8 14A2 2 0 0 0 4 20h16a2 2 0 0 0 1.7-2.5l-8-14a2 2 0 0 0-3.4 0Z" />
-          </svg>
-        );
   return (
     <div
       style={{
@@ -190,12 +170,9 @@ function Toast({ text, kind = "ok" }) {
         font: "700 12px/1.1 Montserrat,system-ui,sans-serif",
         boxShadow: "0 10px 26px rgba(0,0,0,.18)",
         zIndex: 1000,
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 8,
       }}
     >
-      <Icon /> {text}
+      {text}
     </div>
   );
 }
@@ -211,9 +188,16 @@ export default function VindeirosPartidos() {
     typeof window !== "undefined" ? window.innerWidth <= 560 : false
   );
   const saveTimers = useRef({}); // idx -> timeout
-  const flashMap = useRef({}); // id/idx -> true mientras “verde”
+  const flashMap = useRef({}); // id/idx -> true mientras “borde ancho”
   const dbEnabledRef = useRef(true);
   const limit = 10;
+
+  /* Ocultar icono nativo del <input type="date"> (PC) */
+  const HIDE_NATIVE_DATE = `
+    .hdc-date::-webkit-calendar-picker-indicator{ opacity:0; display:none; }
+    .hdc-date::-webkit-inner-spin-button{ display:none; }
+    .hdc-date{ -webkit-appearance:none; appearance:none; }
+  `;
 
   /* Admin? */
   useEffect(() => {
@@ -247,7 +231,7 @@ export default function VindeirosPartidos() {
 
   function showToast(text, kind = "ok") {
     setToast({ text, kind });
-    setTimeout(() => setToast(null), 2000);
+    setTimeout(() => setToast(null), 1700);
   }
 
   /* Carga / fallback localStorage */
@@ -267,13 +251,13 @@ export default function VindeirosPartidos() {
         competition: r.competition || "",
       }));
       dbEnabledRef.current = true;
-      setRows(mapped);
+      setRows(sortByDateAsc(mapped));
     } catch {
       dbEnabledRef.current = false;
       try {
         const raw = localStorage.getItem(lcKey);
         const parsed = raw ? JSON.parse(raw) : [];
-        setRows(Array.isArray(parsed) ? parsed.slice(0, limit) : []);
+        setRows(sortByDateAsc(Array.isArray(parsed) ? parsed.slice(0, limit) : []));
       } catch {
         setRows([]);
       }
@@ -315,11 +299,10 @@ export default function VindeirosPartidos() {
       const nr = { ...(next[idx] || {}), ...patch };
       next[idx] = nr;
       if (!dbEnabledRef.current) saveToLC(next);
-      /* autosave con debounce si están todos */
       clearTimeout(saveTimers.current[idx]);
       saveTimers.current[idx] = setTimeout(() => {
         if (needsAutoSave(nr)) onAutoSave(idx);
-      }, 600);
+      }, 500);
       return next;
     });
   }
@@ -358,27 +341,23 @@ export default function VindeirosPartidos() {
             return next;
           });
         }
-      } else {
-        // offline → ya guardado en LC en updateRow
-      }
+      } // offline ya persistido en LC
 
-      // flash verde y reordenar por fecha
-      flashGreen(idx);
+      // borde celeste ancho (confirmación)
+      flashBorder(idx);
       setRows((prev) => sortByDateAsc(prev));
-      // revalidar del servidor por si hay cambios concurrentes
-      setTimeout(loadFromDB, 400);
+      setTimeout(loadFromDB, 300);
     } catch (e) {
       console.error(e);
       showToast("Erro gardando", "err");
     }
   }
 
-  function flashGreen(idx) {
+  function flashBorder(idx) {
     const key = rows[idx]?.id || `idx-${idx}`;
     flashMap.current[key] = true;
     setTimeout(() => {
       delete flashMap.current[key];
-      // trigger repaint
       setRows((prev) => prev.slice());
     }, 2500);
   }
@@ -412,8 +391,9 @@ export default function VindeirosPartidos() {
         const { error } = await supabase.from("matches_vindeiros").delete().eq("id", r.id);
         if (error) throw error;
       }
-      setRows((prev) => prev.filter((_, i) => i !== idx));
-      if (!dbEnabledRef.current) saveToLC(rows.filter((_, i) => i !== idx));
+      const next = rows.filter((_, i) => i !== idx);
+      setRows(next);
+      if (!dbEnabledRef.current) saveToLC(next);
       showToast("Eliminado");
     } catch (e) {
       console.error(e);
@@ -432,6 +412,7 @@ export default function VindeirosPartidos() {
   if (loading) {
     return (
       <main style={WRAP}>
+        <style>{HIDE_NATIVE_DATE}</style>
         <h2 style={H1}>Vindeiros partidos</h2>
         <p style={SUB}>Axenda dos próximos encontros con data e hora confirmada</p>
       </main>
@@ -440,10 +421,11 @@ export default function VindeirosPartidos() {
 
   return (
     <main style={WRAP}>
+      <style>{HIDE_NATIVE_DATE}</style>
       <h2 style={H1}>Vindeiros partidos</h2>
       <p style={SUB}>Axenda dos próximos encontros con data e hora confirmada</p>
 
-      {/* Barra superior: Engadir + papelera (pequeña/bonita) */}
+      {/* Barra superior: Engadir + papelera */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
         {isAdmin ? (
           <button
@@ -452,7 +434,7 @@ export default function VindeirosPartidos() {
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
-              padding: "8px 16px",
+              padding: "8px 18px",
               borderRadius: 10,
               border: "1px solid #e5e7eb",
               background: "#fff",
@@ -481,30 +463,24 @@ export default function VindeirosPartidos() {
       </div>
 
       {view.map((r, idx) => {
-        const isCeltaHome = (r.team1 || "").toUpperCase().includes("CELTA");
-        const accent = isCeltaHome ? "#0ea5e9" : "#dbe2f0";
         const key = r.id || `idx-${idx}`;
         const flashing = !!flashMap.current[key];
         const cardStyle = {
           ...CARD_BASE,
-          border: `1px solid ${isCeltaHome ? "#0ea5e9" : "#e5e7eb"}`,
-          background: flashing ? "#ecfdf5" : CARD_BASE.background,
-          borderColor: flashing ? "#86efac" : isCeltaHome ? "#0ea5e9" : "#e5e7eb",
+          borderColor: flashing ? "#0ea5e9" : "#e5e7eb",
+          borderWidth: flashing ? 3 : 2,
         };
-        const matchCell = { ...MATCH_CELL_BASE, border: `1px solid ${accent}` };
 
         return (
           <section key={key} style={cardStyle}>
             {/* Fila 1 */}
             <div style={FIRST_LINE}>
-              <div style={matchCell}>
+              <div style={MATCH_CELL}>
                 <span
                   style={{
-                    ...NUMBOX_BASE,
+                    ...NUMBOX,
                     height: hNum,
                     minWidth: hNum,
-                    border: `1px solid ${accent}`,
-                    background: isCeltaHome ? "#e0f2fe" : "#e2e8f0",
                     font: `800 ${fNum}px/1 Montserrat,system-ui,sans-serif`,
                   }}
                 >
@@ -532,11 +508,12 @@ export default function VindeirosPartidos() {
               </div>
             </div>
 
-            {/* Fila 2: DATA + COMP + (espaciador a la derecha) */}
-            <div style={SECOND_LINE}>
-              <label style={DATE_WRAP(accent)}>
-                {DATE_ICON("#0ea5e9")}
+            {/* Fila 2: DATA + COMP + hueco derecha */}
+            <div style={SECOND_LINE(!isMobile)}>
+              <label style={DATE_WRAP}>
+                {DATE_ICON}
                 <input
+                  class="hdc-date"
                   type="date"
                   value={r.date_iso || ""}
                   onInput={(e) => updateRow(idx, { date_iso: e.currentTarget.value })}
@@ -546,9 +523,9 @@ export default function VindeirosPartidos() {
                     border: "none",
                     outline: "none",
                     background: "transparent",
-                    font: "700 13px/1.2 Montserrat,system-ui,sans-serif",
+                    font: `700 ${isMobile ? 12 : 14}px/1.2 Montserrat,system-ui,sans-serif`,
                     color: "#0f172a",
-                    width: "12ch", // <-- más corto como pediste
+                    width: isMobile ? "11ch" : "20ch", // móvil más corto, PC más largo
                   }}
                 />
               </label>
@@ -556,15 +533,17 @@ export default function VindeirosPartidos() {
               <div style={{ position: "relative" }}>
                 <button
                   type="button"
-                  style={CHIP_BASE(accent)}
+                  style={CHIP_BASE}
                   onClick={() => setMenuAt(menuAt === idx ? null : idx)}
                   disabled={!isAdmin}
                   aria-haspopup="listbox"
                   title="Competición"
                 >
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                    {ICON_TROPHY("#0ea5e9")}
-                    <span>{r.competition || "—"}</span>
+                    {ICON_TROPHY}
+                    <span style={{ font: `700 ${isMobile ? 12 : 14}px/1.2 Montserrat,system-ui,sans-serif` }}>
+                      {r.competition || "—"}
+                    </span>
                   </span>
                   <svg width="16" height="16" viewBox="0 0 24 24" style={ICON_STROKE("#0ea5e9")}>
                     <path d="M7 10l5 5 5-5" />
@@ -577,7 +556,7 @@ export default function VindeirosPartidos() {
                       marginTop: 4,
                       left: 0,
                       background: "#fff",
-                      border: `1px solid ${accent}`,
+                      border: "1px solid #dbe2f0",
                       borderRadius: 10,
                       boxShadow: "0 10px 26px rgba(0,0,0,.12)",
                       zIndex: 30,
@@ -602,11 +581,7 @@ export default function VindeirosPartidos() {
                       </div>
                     ))}
                     <div
-                      style={{
-                        padding: "8px 12px",
-                        font: "600 13px/1.2 Montserrat,system-ui,sans-serif",
-                        cursor: "pointer",
-                      }}
+                      style={{ padding: "8px 12px", font: "600 13px/1.2 Montserrat,system-ui,sans-serif", cursor: "pointer" }}
                       onClick={() => {
                         updateRow(idx, { competition: "" });
                         setMenuAt(null);
@@ -618,7 +593,6 @@ export default function VindeirosPartidos() {
                 )}
               </div>
 
-              {/* hueco a la derecha; sin botón Guardar */}
               <div />
             </div>
           </section>
