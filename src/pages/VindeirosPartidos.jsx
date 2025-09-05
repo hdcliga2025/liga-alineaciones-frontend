@@ -1,18 +1,19 @@
 import { h } from "preact";
-import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
-/* ===== Estilos / layout ===== */
+/* ===== Estilos base (idénticos a Finalizados) ===== */
 const WRAP   = { maxWidth: 1080, margin: "0 auto", padding: "16px 12px 24px" };
-const H1     = { font:"700 20px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", margin:"0 0 8px" };
+const H1     = { font:"800 22px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", margin:"0 0 4px" };
+const SUBTXT = { font:"400 12px/1.2 Montserrat,system-ui,sans-serif", color:"#64748b", margin:"0 0 10px" };
 
-const BTN_ADD_WRAP = { margin: "12px 0 16px" };
+const TOPBAR = { display:"flex", alignItems:"center", gap:12, margin:"6px 0 14px" };
 const BTN_ADD = {
   display:"inline-flex", alignItems:"center", gap:10,
   border:"1px solid #38bdf8",
   backgroundImage:"linear-gradient(180deg,#6cc7ff,#4da7f3)",
   color:"#fff",
-  padding:"9px 56px",               // más largo, más delgado
+  padding:"7px 56px",
   borderRadius:12, cursor:"pointer",
   boxShadow:"0 12px 28px rgba(14,165,233,.25)",
   font:"800 14px/1 Montserrat,system-ui,sans-serif", letterSpacing:".25px",
@@ -27,59 +28,38 @@ const CARD   = {
   boxShadow:"0 6px 18px rgba(0,0,0,.06)",
   padding:"10px 10px 12px",
 };
-const CARD_SAVED = { border:"2px solid #0ea5e9", background:"#f3f6f9" };
-
-/* Fila 1: nº + ojo + equipos (wrapper único con 'vs' integrado) */
-const ROW1 = {
-  display:"grid",
-  gridTemplateColumns:"auto auto 1fr",
-  alignItems:"center",
-  gap:10,
-  marginBottom:8
+const CARD_SAVED = {
+  border:"2px solid #0ea5e9",
+  background:"linear-gradient(180deg, #f2fbff 0%, #f7fbff 100%)"
 };
+
+const ROW1 = { display:"grid", gridTemplateColumns:"auto 1fr", alignItems:"center", gap:10, marginBottom:8 };
 const NUMBOX = {
   minWidth:36, height:36, border:"1px solid #cbd5e1", borderRadius:6,
   display:"grid", placeItems:"center", background:"#fff",
   font:"700 14px/1 Montserrat,system-ui,sans-serif", color:"#0f172a"
 };
+const NUMBOX_SAVED = { border:"2px solid #0ea5e9" };
+
 const EYE_BTN = {
   width:36, height:36, display:"grid", placeItems:"center",
   border:"1px solid #e5e7eb", background:"#fff", borderRadius:10,
   cursor:"pointer", boxShadow:"0 2px 8px rgba(0,0,0,.06)"
 };
 
-/* Campo integrado Equipos */
 const TEAMWRAP = {
-  display:"grid",
-  gridTemplateColumns:"1fr auto 1fr",
-  alignItems:"center",
-  gap:0,
-  border:"1px solid #dbe2f0",
-  borderRadius:10,
-  background:"#fff",
-  overflow:"hidden"
+  display:"grid", gridTemplateColumns:"1fr auto 1fr", alignItems:"center",
+  border:"1px solid #dbe2f0", borderRadius:10, background:"#fff", overflow:"hidden"
 };
 const TEAM_INPUT = (editable) => ({
-  width:"100%",
-  minWidth:0,
-  border:"none",
-  padding:"10px 12px",
-  outline:"none",
-  background:"transparent",
+  width:"100%", minWidth:0, border:"none", padding:"10px 12px",
+  outline:"none", background:"transparent",
   font:`${editable ? "700" : "600"} 14px/1.2 Montserrat,system-ui,sans-serif`,
-  color:"#0f172a",
-  textTransform:"uppercase"          // muestra siempre en mayúsculas
+  color:"#0f172a", textTransform:"uppercase"
 });
-const VS = {
-  padding:"0 10px",
-  font:"700 13px/1 Montserrat,system-ui,sans-serif",
-  color:"#64748b",
-  borderLeft:"1px solid #e5e7eb",
-  borderRight:"1px solid #e5e7eb"
-};
+const VS = { padding:"0 10px", font:"700 13px/1 Montserrat,system-ui,sans-serif", color:"#64748b", borderLeft:"1px solid #e5e7eb", borderRight:"1px solid #e5e7eb" };
 
-/* Fila 2: data + competición */
-const ROW2 = { display:"grid", gridTemplateColumns:"minmax(160px, 240px) 1fr", gap:8, alignItems:"center" };
+const ROW2 = { display:"grid", gridTemplateColumns:"40px minmax(170px, 220px) 1fr", gap:8, alignItems:"center" };
 const INPUT_DATE = (editable) => ({
   width:"100%", border:"1px solid #dbe2f0", borderRadius:10, padding:"8px 10px",
   background:"#fff", outline:"none",
@@ -89,35 +69,35 @@ const INPUT_DATE = (editable) => ({
 const SELECT_WRAP = { position:"relative" };
 const SELECT_COMP = (editable) => ({
   width:"100%", border:"1px solid #dbe2f0", borderRadius:10,
-  padding:"10px 44px 10px 46px",
+  padding:"10px 48px 10px 52px",
   background:"#fff", outline:"none",
   appearance:"none", WebkitAppearance:"none", MozAppearance:"none",
   font:`${editable ? "700" : "600"} 13px/1.1 Montserrat,system-ui,sans-serif`,
-  color:"#0f172a",
-  textTransform:"uppercase"          // visual en mayúsculas
+  color:"#0f172a", textTransform:"uppercase"
 });
 const ICON_TROPHY = {
   position:"absolute", left:12, top:"50%", transform:"translateY(-50%)",
   pointerEvents:"none"
 };
+const ICON_TROPHY_SVG = (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M7 4h10v2a5 5 0 01-10 0V4Z" stroke="#0ea5e9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M6 4H4a3 3 0 0 0 3 5" stroke="#0ea5e9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M18 4h2a3 3 0 0 1-3 5" stroke="#0ea5e9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M9 14h6v3H9z" stroke="#0ea5e9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M8 20h8" stroke="#0ea5e9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="12" cy="10" r="1" fill="#0ea5e9"/>
+  </svg>
+);
 const ICON_CHEV   = { position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", pointerEvents:"none", opacity:.9 };
 
-/* Toast */
-const TOAST = (ok) => ({
-  position:"fixed", left:"50%", bottom:20, transform:"translateX(-50%)",
-  background: ok ? "rgba(16,185,129,.95)" : "rgba(239,68,68,.95)",
-  color:"#fff", padding:"10px 14px", borderRadius:10,
-  font:"700 13px/1 Montserrat,system-ui,sans-serif",
-  boxShadow:"0 10px 22px rgba(0,0,0,.25)", zIndex:9999
-});
-
-/* ===== Utils ===== */
+/* Utils */
 const pad2 = (n)=>String(n).padStart(2,"0");
 const isoToYMD = (iso)=> {
   if (!iso) return "";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
-  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 };
 const ymdToISO = (ymd)=> {
   if (!ymd) return null;
@@ -127,12 +107,11 @@ const ymdToISO = (ymd)=> {
 
 export default function VindeirosPartidos() {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [rows, setRows] = useState([]); // {id,equipo1,equipo2,match_date,competition}
-  const [busy, setBusy] = useState(false);
-  const timersRef = useRef({}); // autoguardado por fila
-  const [toast, setToast] = useState({ msg:"", ok:true });
+  // local (10)
+  const [rows, setRows] = useState(
+    Array.from({length:10}, ()=>({ partido:"", match_date:null, competition:"", __saved:false }))
+  );
 
-  // admin?
   useEffect(() => {
     (async () => {
       const { data: s } = await supabase.auth.getSession();
@@ -149,163 +128,105 @@ export default function VindeirosPartidos() {
       }
       setIsAdmin(admin);
     })();
-    return () => {
-      Object.values(timersRef.current||{}).forEach((t)=> clearTimeout(t));
-      timersRef.current = {};
-    };
   }, []);
-
-  async function loadList() {
-    const { data } = await supabase
-      .from("matches_vindeiros")
-      .select("id,equipo1,equipo2,match_date,competition,updated_at,created_at")
-      .order("match_date", { ascending: true }); // máis próxima primeiro
-    setRows(Array.isArray(data) ? data : []);
-  }
-  useEffect(()=>{ loadList(); }, []);
-
-  function showToast(msg, ok=true) {
-    setToast({ msg, ok });
-    setTimeout(()=> setToast({ msg:"", ok:true }), 2000);
-  }
-
-  async function saveRow(local) {
-    const payload = {
-      id: local.id || undefined,
-      equipo1: (local.equipo1||"").toUpperCase(),
-      equipo2: (local.equipo2||"").toUpperCase(),
-      competition: local.competition || null,
-      match_date: local.match_date || null,
-      updated_at: new Date().toISOString(),
-    };
-    const q = local.id
-      ? supabase.from("matches_vindeiros").update(payload).eq("id", local.id)
-      : supabase.from("matches_vindeiros").insert(payload).select().single();
-    const { data, error } = await q;
-    if (error) throw error;
-    return data || payload;
-  }
-
-  function scheduleAutoSave(i, nextRow){
-    if (!isAdmin) return;
-    const ok =
-      (nextRow.equipo1||"").trim() &&
-      (nextRow.equipo2||"").trim() &&
-      !!nextRow.match_date &&
-      (nextRow.competition||"").trim();
-    if (!ok) return;
-    if (timersRef.current[i]) clearTimeout(timersRef.current[i]);
-    timersRef.current[i] = setTimeout(async ()=>{
-      try {
-        setBusy(true);
-        const saved = await saveRow(nextRow);
-        setRows(prev=>{
-          const n = prev.slice();
-          n[i] = { ...(n[i]||nextRow), id: saved?.id ?? n[i]?.id, __saved:true, _tmp:false };
-          return n;
-        });
-        showToast("[REGISTRADO]", true);
-        await loadList();
-      } catch (e) {
-        console.error(e);
-        showToast("Erro gardando", false);
-      } finally { setBusy(false); }
-    }, 400);
-  }
 
   function setLocal(i, patch){
     setRows(prev=>{
       const n = prev.slice();
-      const nextRow = { ...n[i], ...patch, __saved:false };
-      n[i] = nextRow;
-      scheduleAutoSave(i, nextRow);
+      n[i] = { ...n[i], ...patch };
+      // marca visual de “gardado” (local) cando os 4 campos están cheos
+      const parts = String(n[i].partido||"").toUpperCase().split(/\s+VS\s+/);
+      const ok = (parts[0]||"").trim() && (parts[1]||"").trim() && !!n[i].match_date && (n[i].competition||"").trim();
+      n[i].__saved = !!ok;
       return n;
     });
   }
 
-  async function onAdd() {
+  function onAdd(){
     if (!isAdmin) return;
-    setRows((r)=>[
-      { id:null, equipo1:"", equipo2:"", match_date:null, competition:"", _tmp:true, __saved:false },
+    setRows(r=>[
+      { partido:"", match_date:null, competition:"", __saved:false },
       ...r
     ]);
   }
 
-  /* Vista:
-     - Solo admin ve temporales y puede editar.
-     - Público ve solo filas guardadas (con id).
-     - Estilo guardado persistente si fila tiene los 4 campos en BBDD.
-     - Numeración: mayor arriba → menor abajo (menor queda abaixo).
-  */
   const view = useMemo(()=>{
-    const base = isAdmin ? rows : rows.filter(r=>r?.id);
-    const total = base.length;
-    return base.map((r, idx)=>{
-      const savedPersist =
-        !!r?.id &&
-        (r?.equipo1||"").trim() &&
-        (r?.equipo2||"").trim() &&
-        !!r?.match_date &&
-        (r?.competition||"").trim();
-      return { ...r, _numDisp: pad2(total - idx), __saved: r.__saved || savedPersist };
-    });
-  }, [rows, isAdmin]);
+    const total = rows.length;
+    return rows.map((r, idx)=> ({ ...r, _numDisp: pad2(total - idx) }));
+  }, [rows]);
 
   return (
     <main style={WRAP}>
-      <h2 style={H1}>Axenda dos próximos encontros con data e hora confirmada</h2>
+      <h2 style={H1}>VINDEIROS PARTIDOS</h2>
+      <p style={SUBTXT}>Próximos partidos a xogar polo Celta con data programada.</p>
 
-      {isAdmin && (
-        <div style={BTN_ADD_WRAP}>
-          <button type="button" style={BTN_ADD} onClick={onAdd} disabled={busy}>
+      <div style={TOPBAR}>
+        {isAdmin && (
+          <button type="button" style={BTN_ADD} onClick={onAdd}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{stroke:"#fff",strokeWidth:2}}>
               <path d="M12 5v14M5 12h14" />
             </svg>
             Engadir
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       <section style={LIST}>
         {view.map((r, i) => {
           const editable = !!isAdmin;
           const ymd = isoToYMD(r.match_date);
           const cardStyle = r.__saved ? { ...CARD, ...CARD_SAVED } : CARD;
+          const parts = String(r.partido || "").split(/\s+vs\s+/i);
+          const t1 = (parts[0]||"").toUpperCase();
+          const t2 = (parts[1]||"").toUpperCase();
 
           return (
-            <article key={r.id || `n-${i}`} style={cardStyle}>
-              {/* Fila 1: número + ojo + equipos (campo integrado) */}
+            <article key={`v-${i}`} style={cardStyle}>
+              {/* Fila 1: nº + equipos */}
               <div style={ROW1}>
-                <div style={NUMBOX}>{r._numDisp}</div>
-
-                <a href="/resultados-ultima-alineacion" title="Revisar resultados" style={EYE_BTN} aria-label="Revisar resultados">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" stroke="#0f172a" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                    <circle cx="12" cy="12" r="3" stroke="#0f172a" strokeWidth="1.6"/>
-                  </svg>
-                </a>
+                <div style={r.__saved ? { ...NUMBOX, ...NUMBOX_SAVED } : NUMBOX}>{r._numDisp}</div>
 
                 <div style={TEAMWRAP}>
                   <input
                     style={TEAM_INPUT(editable)}
-                    value={(r.equipo1||"").toUpperCase()}
-                    onInput={(e)=> editable && setLocal(i, { equipo1: e.currentTarget.value.toUpperCase() })}
+                    value={t1}
+                    onInput={(e)=> {
+                      if (!editable) return;
+                      const left = (e.currentTarget.value||"").toUpperCase();
+                      setLocal(i, { partido: left + (t2 ? ` vs ${t2}` : "") });
+                    }}
                     placeholder="EQUIPO 1"
                     readOnly={!editable}
                   />
                   <span style={VS}>vs</span>
                   <input
                     style={TEAM_INPUT(editable)}
-                    value={(r.equipo2||"").toUpperCase()}
-                    onInput={(e)=> editable && setLocal(i, { equipo2: e.currentTarget.value.toUpperCase() })}
+                    value={t2}
+                    onInput={(e)=> {
+                      if (!editable) return;
+                      const right = (e.currentTarget.value||"").toUpperCase();
+                      setLocal(i, { partido: (t1 ? `${t1} vs ` : "EQUIPO 1 vs ") + right });
+                    }}
                     placeholder="EQUIPO 2"
                     readOnly={!editable}
                   />
                 </div>
               </div>
 
-              {/* Fila 2: data + competición */}
-              <div style={ROW2}>
+              {/* Fila 2: Ollo (izq) + data + competición (só visual en Vindeiros) */}
+              <div class="pf-row2" style={ROW2}>
+                <a
+                  href="/resultados-ultima-alineacion"
+                  title="Revisar"
+                  style={EYE_BTN}
+                  aria-label="Revisar"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" stroke="#0ea5e9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="12" cy="12" r="3" stroke="#0ea5e9" strokeWidth="1.8"/>
+                  </svg>
+                </a>
+
                 <input
                   type="date"
                   style={INPUT_DATE(editable)}
@@ -320,16 +241,15 @@ export default function VindeirosPartidos() {
                 />
 
                 <div style={SELECT_WRAP}>
-                  {/* Trofeo celeste grande */}
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={ICON_TROPHY} aria-hidden="true">
-                    <path d="M7 4h10v3a5 5 0 01-10 0V4Z" stroke="#0ea5e9" strokeWidth="1.8"/>
-                    <path d="M9 14h6v3H9z" stroke="#0ea5e9" strokeWidth="1.8"/>
-                  </svg>
+                  <span style={ICON_TROPHY}>{ICON_TROPHY_SVG}</span>
                   <select
                     style={SELECT_COMP(editable)}
-                    value={(r.competition || "").toUpperCase()}
+                    value={r.competition || ""}
                     disabled={!editable}
-                    onChange={(e)=> editable && setLocal(i, { competition: e.currentTarget.value })}
+                    onChange={(e)=> {
+                      if (!editable) return;
+                      setLocal(i, { competition: e.currentTarget.value });
+                    }}
                   >
                     <option value="">(SELECCIONA)</option>
                     <option value="LaLiga">LALIGA</option>
@@ -344,17 +264,8 @@ export default function VindeirosPartidos() {
             </article>
           );
         })}
-
-        {!view.length && (
-          <p style={{ margin:"10px 2px", color:"#64748b" }}>
-            {isAdmin ? "Non hai encontros. Preme Engadir para crear un novo." : "Non hai encontros dispoñibles."}
-          </p>
-        )}
       </section>
-
-      {toast.msg && <div style={TOAST(toast.ok)}>{toast.msg}</div>}
     </main>
   );
 }
-
 

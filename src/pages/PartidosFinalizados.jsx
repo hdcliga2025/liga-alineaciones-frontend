@@ -4,11 +4,11 @@ import { supabase } from "../lib/supabaseClient.js";
 
 /* ===== Estilos base ===== */
 const WRAP   = { maxWidth: 1080, margin: "0 auto", padding: "16px 12px 24px" };
-const H1     = { font:"800 22px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", margin:"0 0 6px" };
+const H1     = { font:"800 22px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", margin:"0 0 4px" };
+const SUBTXT = { font:"400 12px/1.2 Montserrat,system-ui,sans-serif", color:"#64748b", margin:"0 0 10px" };
 
 /* Fila botón + texto largo */
-const TOPBAR = { display:"flex", alignItems:"center", gap:12, margin:"10px 0 14px" };
-const TOP_TEXT = { font:"800 18px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a" };
+const TOPBAR = { display:"flex", alignItems:"center", gap:12, margin:"6px 0 14px" };
 
 const BTN_ADD = {
   display:"inline-flex", alignItems:"center", gap:10,
@@ -30,9 +30,12 @@ const CARD   = {
   boxShadow:"0 6px 18px rgba(0,0,0,.06)",
   padding:"10px 10px 12px",
 };
-const CARD_SAVED = { border:"2px solid #0ea5e9", background:"#f3f6f9" };
+const CARD_SAVED = {
+  border:"2px solid #0ea5e9",
+  background:"linear-gradient(180deg, #f2fbff 0%, #f7fbff 100%)"
+};
 
-/* Fila 1: número + equipos (ojo va en fila 2) */
+/* Fila 1: número + equipos */
 const ROW1 = { display:"grid", gridTemplateColumns:"auto 1fr", alignItems:"center", gap:10, marginBottom:8 };
 
 const NUMBOX = {
@@ -42,13 +45,14 @@ const NUMBOX = {
 };
 const NUMBOX_SAVED = { border:"2px solid #0ea5e9" };
 
-/* Botón ojo (fila 2, derecha) */
+/* Botón ojo (fila 2, izquierda) */
 const EYE_BTN = {
   width:36, height:36, display:"grid", placeItems:"center",
   border:"1px solid #e5e7eb", background:"#fff", borderRadius:10,
-  cursor:"pointer", boxShadow:"0 2px 8px rgba(0,0,0,.06)", justifySelf:"end"
+  cursor:"pointer", boxShadow:"0 2px 8px rgba(0,0,0,.06)"
 };
 
+/* Equipos */
 const TEAMWRAP = {
   display:"grid", gridTemplateColumns:"1fr auto 1fr", alignItems:"center",
   border:"1px solid #dbe2f0", borderRadius:10, background:"#fff", overflow:"hidden"
@@ -62,8 +66,8 @@ const TEAM_INPUT = (editable) => ({
 });
 const VS = { padding:"0 10px", font:"700 13px/1 Montserrat,system-ui,sans-serif", color:"#64748b", borderLeft:"1px solid #e5e7eb", borderRight:"1px solid #e5e7eb" };
 
-/* Fila 2: data + competición + ojo (derecha) */
-const ROW2 = { display:"grid", gridTemplateColumns:"minmax(170px, 220px) 1fr 40px", gap:8, alignItems:"center" };
+/* Fila 2: ojo izq + data + competición */
+const ROW2 = { display:"grid", gridTemplateColumns:"40px minmax(170px, 220px) 1fr", gap:8, alignItems:"center" };
 
 const INPUT_DATE = (editable) => ({
   width:"100%", border:"1px solid #dbe2f0", borderRadius:10, padding:"8px 10px",
@@ -82,7 +86,7 @@ const SELECT_COMP = (editable) => ({
   textTransform:"uppercase"
 });
 
-/* TROFEO nuevo: bonito y grande */
+/* TROFEO (grande, celeste) */
 const ICON_TROPHY = {
   position:"absolute", left:12, top:"50%", transform:"translateY(-50%)",
   pointerEvents:"none"
@@ -129,11 +133,10 @@ export default function PartidosFinalizados() {
   const timersRef = useRef({});
   const [toast, setToast] = useState({ msg:"", ok:true });
 
-  /* CSS responsivo para móvil: fila 2 con más espacio para competición */
   const MOBILE_CSS = `
     @media (max-width: 560px){
       .pf-row2 {
-        grid-template-columns: minmax(130px, 170px) 1fr 40px;
+        grid-template-columns: 40px minmax(130px, 170px) 1fr;
       }
     }
   `;
@@ -253,6 +256,7 @@ export default function PartidosFinalizados() {
       <style>{MOBILE_CSS}</style>
 
       <h2 style={H1}>PARTIDOS FINALIZADOS</h2>
+      <p style={SUBTXT}>Listado dos encontros xa xogados polo Celta na tempada 2025/2026.</p>
 
       <div style={TOPBAR}>
         {isAdmin && (
@@ -263,7 +267,6 @@ export default function PartidosFinalizados() {
             Engadir
           </button>
         )}
-        <span style={TOP_TEXT}>Histórico dos encontros do Celta na tempada 2025/2026</span>
       </div>
 
       <section style={LIST}>
@@ -308,8 +311,20 @@ export default function PartidosFinalizados() {
                 </div>
               </div>
 
-              {/* Fila 2: data + competición + ojo */}
+              {/* Fila 2: Ollo (izq) + data + competición */}
               <div class="pf-row2" style={ROW2}>
+                <a
+                  href="/resultados-ultima-alineacion"
+                  title="Revisar resultados"
+                  style={EYE_BTN}
+                  aria-label="Revisar resultados"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" stroke="#0ea5e9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="12" cy="12" r="3" stroke="#0ea5e9" strokeWidth="1.8"/>
+                  </svg>
+                </a>
+
                 <input
                   type="date"
                   style={INPUT_DATE(editable)}
@@ -343,18 +358,6 @@ export default function PartidosFinalizados() {
                     <path d="M6 9l6 6 6-6" stroke="#0f172a" strokeWidth="2"/>
                   </svg>
                 </div>
-
-                <a
-                  href="/resultados-ultima-alineacion"
-                  title="Revisar resultados"
-                  style={EYE_BTN}
-                  aria-label="Revisar resultados"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" stroke="#0f172a" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                    <circle cx="12" cy="12" r="3" stroke="#0f172a" strokeWidth="1.6"/>
-                  </svg>
-                </a>
               </div>
             </article>
           );
