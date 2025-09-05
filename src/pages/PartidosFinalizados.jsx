@@ -2,7 +2,7 @@ import { h } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
-/* ===== Estilos ===== */
+/* ===== Estilos base ===== */
 const WRAP   = { maxWidth: 1080, margin: "0 auto", padding: "16px 12px 24px" };
 const H1     = { font:"800 22px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", margin:"0 0 6px" };
 
@@ -15,7 +15,7 @@ const BTN_ADD = {
   border:"1px solid #38bdf8",
   backgroundImage:"linear-gradient(180deg,#6cc7ff,#4da7f3)",
   color:"#fff",
-  padding:"7px 56px",                 // un poco menos alto
+  padding:"7px 56px",                 // delgado
   borderRadius:12, cursor:"pointer",
   boxShadow:"0 12px 28px rgba(14,165,233,.25)",
   font:"800 14px/1 Montserrat,system-ui,sans-serif", letterSpacing:".25px",
@@ -32,7 +32,9 @@ const CARD   = {
 };
 const CARD_SAVED = { border:"2px solid #0ea5e9", background:"#f3f6f9" };
 
-const ROW1 = { display:"grid", gridTemplateColumns:"auto auto 1fr", alignItems:"center", gap:10, marginBottom:8 };
+/* Fila 1: número + equipos (sin ojo ahora) */
+const ROW1 = { display:"grid", gridTemplateColumns:"auto 1fr", alignItems:"center", gap:10, marginBottom:8 };
+
 const NUMBOX = {
   minWidth:36, height:36, border:"1px solid #cbd5e1", borderRadius:6,
   display:"grid", placeItems:"center", background:"#fff",
@@ -40,10 +42,11 @@ const NUMBOX = {
 };
 const NUMBOX_SAVED = { border:"2px solid #0ea5e9" };
 
+/* Botón ojo (ahora en fila 2 a la derecha) */
 const EYE_BTN = {
   width:36, height:36, display:"grid", placeItems:"center",
   border:"1px solid #e5e7eb", background:"#fff", borderRadius:10,
-  cursor:"pointer", boxShadow:"0 2px 8px rgba(0,0,0,.06)"
+  cursor:"pointer", boxShadow:"0 2px 8px rgba(0,0,0,.06)", justifySelf:"end"
 };
 
 const TEAMWRAP = {
@@ -59,7 +62,9 @@ const TEAM_INPUT = (editable) => ({
 });
 const VS = { padding:"0 10px", font:"700 13px/1 Montserrat,system-ui,sans-serif", color:"#64748b", borderLeft:"1px solid #e5e7eb", borderRight:"1px solid #e5e7eb" };
 
-const ROW2 = { display:"grid", gridTemplateColumns:"minmax(160px, 240px) 1fr", gap:8, alignItems:"center" };
+/* Fila 2: data + competición + ojo (derecha) */
+const ROW2 = { display:"grid", gridTemplateColumns:"minmax(170px, 220px) 1fr 40px", gap:8, alignItems:"center" };
+
 const INPUT_DATE = (editable) => ({
   width:"100%", border:"1px solid #dbe2f0", borderRadius:10, padding:"8px 10px",
   background:"#fff", outline:"none",
@@ -74,10 +79,10 @@ const SELECT_COMP = (editable) => ({
   appearance:"none", WebkitAppearance:"none", MozAppearance:"none",
   font:`${editable ? "700" : "600"} 13px/1.1 Montserrat,system-ui,sans-serif`,
   color:"#0f172a",
-  textTransform:"uppercase"          // solo visual; guardamos valor canónico
+  textTransform:"uppercase"
 });
 
-/* TROFEO nuevo: más bonito y más grande */
+/* TROFEO nuevo: bonito y grande */
 const ICON_TROPHY = {
   position:"absolute", left:12, top:"50%", transform:"translateY(-50%)",
   pointerEvents:"none"
@@ -124,6 +129,15 @@ export default function PartidosFinalizados() {
   const timersRef = useRef({});
   const [toast, setToast] = useState({ msg:"", ok:true });
 
+  /* CSS responsivo para móvil: fila 2 con más espacio para competición */
+  const MOBILE_CSS = `
+    @media (max-width: 560px){
+      .pf-row2 {
+        grid-template-columns: minmax(130px, 170px) 1fr 40px; /* DATA algo más corta, COMPETICIÓN más ancha */
+      }
+    }
+  `;
+
   useEffect(() => {
     (async () => {
       const { data: s } = await supabase.auth.getSession();
@@ -164,7 +178,7 @@ export default function PartidosFinalizados() {
     const payload = {
       id: local.id || undefined,
       partido: (local.partido||"").toUpperCase(),
-      competition: local.competition || null, // GUARDAMOS valor canónico
+      competition: local.competition || null, // valor canónico
       match_date: local.match_date || null,
       updated_at: new Date().toISOString(),
     };
@@ -194,7 +208,7 @@ export default function PartidosFinalizados() {
           n[i] = { ...(n[i]||nextRow), id: saved?.id ?? n[i]?.id, __saved:true, _tmp:false };
           return n;
         });
-        showToast("[REGISTRADO]", true);
+        showToast("REGISTRADO", true);  // ← sin corchetes
         await loadList();
       } catch (e) {
         console.error(e);
@@ -236,6 +250,8 @@ export default function PartidosFinalizados() {
 
   return (
     <main style={WRAP}>
+      <style>{MOBILE_CSS}</style>
+
       {/* Título principal arriba */}
       <h2 style={H1}>PARTIDOS FINALIZADOS</h2>
 
@@ -263,16 +279,9 @@ export default function PartidosFinalizados() {
 
           return (
             <article key={r.id || `n-${i}`} style={cardStyle}>
-              {/* Fila 1: nº + ojo + equipos */}
+              {/* Fila 1: nº + equipos */}
               <div style={ROW1}>
                 <div style={r.__saved ? { ...NUMBOX, ...NUMBOX_SAVED } : NUMBOX}>{r._numDisp}</div>
-
-                <a href="/resultados-ultima-alineacion" title="Revisar resultados" style={EYE_BTN} aria-label="Revisar resultados">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" stroke="#0f172a" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                    <circle cx="12" cy="12" r="3" stroke="#0f172a" strokeWidth="1.6"/>
-                  </svg>
-                </a>
 
                 <div style={TEAMWRAP}>
                   <input
@@ -301,8 +310,8 @@ export default function PartidosFinalizados() {
                 </div>
               </div>
 
-              {/* Fila 2: data + competición */}
-              <div style={ROW2}>
+              {/* Fila 2: data + competición + ojo (derecha) */}
+              <div class="pf-row2" style={ROW2}>
                 <input
                   type="date"
                   style={INPUT_DATE(editable)}
@@ -333,6 +342,18 @@ export default function PartidosFinalizados() {
                     <path d="M6 9l6 6 6-6" stroke="#0f172a" strokeWidth="2"/>
                   </svg>
                 </div>
+
+                <a
+                  href="/resultados-ultima-alineacion"
+                  title="Revisar resultados"
+                  style={EYE_BTN}
+                  aria-label="Revisar resultados"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" stroke="#0f172a" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="12" cy="12" r="3" stroke="#0f172a" strokeWidth="1.6"/>
+                  </svg>
+                </a>
               </div>
             </article>
           );
