@@ -2,10 +2,10 @@ import { h } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
-/* ========= Helpers ========= */
+/* ===== Helpers ===== */
 const COMP_OPTIONS = ["LaLiga", "Europa League", "Copa do Rei"];
 const COMP_MIN_CH = Math.max(...COMP_OPTIONS.map((s) => s.length));
-const lcKey = "hdc_vindeiros_cards_v10";
+const lcKey = "hdc_vindeiros_cards_v11";
 
 const toISODate = (d) => {
   try {
@@ -14,9 +14,7 @@ const toISODate = (d) => {
     const m = String(dt.getMonth() + 1).padStart(2, "0");
     const da = String(dt.getDate()).padStart(2, "0");
     return `${y}-${m}-${da}`;
-  } catch {
-    return "";
-  }
+  } catch { return ""; }
 };
 const toMidnightISO = (yyyy_mm_dd) => {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(yyyy_mm_dd || "").trim());
@@ -31,15 +29,13 @@ const dateMs = (yyyy_mm_dd) => {
 };
 const isComplete = (r) => Boolean(r.team1 && r.team2 && r.date_iso && r.competition);
 
-/* ========= Estilos ========= */
+/* ===== Estilos ===== */
 const WRAP = { maxWidth: 1080, margin: "0 auto", padding: "16px 12px 24px" };
 const H1 = { font: "700 20px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", margin: "0 0 8px" };
 const SUB = { color: "#475569", font: "400 13px/1.3 Montserrat,system-ui,sans-serif", margin: "0 0 14px" };
 
 const CARD_BASE = (saved) => ({
-  background: saved
-    ? "linear-gradient(180deg, rgba(14,165,233,.08), rgba(14,165,233,.02))"
-    : "#f8fafc",
+  background: saved ? "linear-gradient(180deg, rgba(14,165,233,.08), rgba(14,165,233,.02))" : "#f8fafc",
   border: `2px solid ${saved ? "#0ea5e9" : "#e5e7eb"}`,
   borderRadius: 16,
   boxShadow: "0 6px 18px rgba(0,0,0,.06)",
@@ -57,7 +53,6 @@ const MATCH_CELL = {
   background: "#fff",
   overflow: "hidden",
 };
-
 const NUMBOX = (h, f) => ({
   marginLeft: 8,
   marginRight: 6,
@@ -72,7 +67,6 @@ const NUMBOX = (h, f) => ({
   padding: "0 8px",
   border: "1px solid transparent",
 });
-
 const TEAM_INPUT = (f, pad) => ({
   flex: "1 1 auto",
   minWidth: 40,
@@ -88,7 +82,6 @@ const VS = (f) => ({ padding: "0 10px", font: `800 ${f}px/1 Montserrat,system-ui
 
 const SECOND_LINE = (desktop) => ({
   display: "grid",
-  // Data (auto) + Comp (auto) + hueco
   gridTemplateColumns: desktop ? "auto auto 1fr" : "auto auto 1fr",
   gap: desktop ? 40 : 8,
   alignItems: "center",
@@ -125,9 +118,8 @@ const CHIP_BASE = {
   cursor: "pointer",
   minWidth: `${COMP_MIN_CH + 6}ch`,
   whiteSpace: "nowrap",
-  height: 38, // igual que date
+  height: 38,
 };
-
 const ICON_TROPHY = (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ stroke: "#0ea5e9", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" }}>
     <path d="M7 4h10v3a5 5 0 01-10 0V4Z" />
@@ -136,22 +128,20 @@ const ICON_TROPHY = (
   </svg>
 );
 
-/* Oculta el icono nativo derecho del input date en PC */
+/* oculta icono nativo date */
 const HIDE_NATIVE_DATE = `
   .hdc-date::-webkit-calendar-picker-indicator{ opacity:0; display:none; }
   .hdc-date::-webkit-inner-spin-button{ display:none; }
   .hdc-date{ -webkit-appearance:none; appearance:none; }
 `;
 
-/* ========= Componente ========= */
+/* ===== Página ===== */
 export default function VindeirosPartidos() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [rows, setRows] = useState([]); // {id,date_iso,team1,team2,competition,saved}
   const [loading, setLoading] = useState(true);
   const [menuAt, setMenuAt] = useState(null);
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== "undefined" ? window.innerWidth <= 560 : false
-  );
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
   const saveTimers = useRef({});
   const dbEnabledRef = useRef(true);
   const limit = 10;
@@ -182,6 +172,12 @@ export default function VindeirosPartidos() {
     return () => window.removeEventListener("resize", onR);
   }, []);
 
+  function makePlaceholders(n = limit) {
+    return Array.from({ length: n }, () => ({
+      id: null, date_iso: "", team1: "", team2: "", competition: "", saved: false
+    }));
+  }
+
   async function loadFromDB() {
     try {
       const { data, error } = await supabase
@@ -204,17 +200,17 @@ export default function VindeirosPartidos() {
         }),
       }));
       dbEnabledRef.current = true;
-      setRows(sortByDateAsc(mapped));
+      const base = mapped.length ? mapped : makePlaceholders();
+      setRows(sortByDateAsc(base));
     } catch {
       dbEnabledRef.current = false;
       try {
         const raw = localStorage.getItem(lcKey);
         const parsed = raw ? JSON.parse(raw) : [];
-        setRows(sortByDateAsc(Array.isArray(parsed) ? parsed.slice(0, limit) : []));
-      } catch { setRows([]); }
-    } finally {
-      setLoading(false);
-    }
+        const base = Array.isArray(parsed) && parsed.length ? parsed.slice(0, limit) : makePlaceholders();
+        setRows(sortByDateAsc(base));
+      } catch { setRows(makePlaceholders()); }
+    } finally { setLoading(false); }
   }
   useEffect(() => {
     loadFromDB();
@@ -235,13 +231,13 @@ export default function VindeirosPartidos() {
     setRows((prev) => {
       const next = prev.slice();
       const updated = { ...(next[idx] || {}), ...patch };
-      updated.saved = isComplete(updated) ? updated.saved : false; // si incompleta, pierde “guardado”
+      updated.saved = isComplete(updated) ? updated.saved : false;
       next[idx] = updated;
       if (!dbEnabledRef.current) saveToLC(next);
       clearTimeout(saveTimers.current[idx]);
       saveTimers.current[idx] = setTimeout(() => {
         if (isComplete(updated)) onAutoSave(idx);
-      }, 400);
+      }, 350);
       return next;
     });
   }
@@ -249,7 +245,6 @@ export default function VindeirosPartidos() {
   async function onAutoSave(idx) {
     const r = rows[idx];
     if (!isAdmin || !isComplete(r)) return;
-
     const payload = {
       match_date: toMidnightISO(r.date_iso),
       team1: r.team1 || null,
@@ -257,7 +252,6 @@ export default function VindeirosPartidos() {
       competition: r.competition || null,
       updated_at: new Date().toISOString(),
     };
-
     try {
       if (dbEnabledRef.current) {
         if (r.id) {
@@ -273,27 +267,18 @@ export default function VindeirosPartidos() {
           });
         }
       }
-      // marca persistente de guardado
       setRows((prev) => {
         const next = prev.slice();
         next[idx] = { ...next[idx], saved: true };
         return sortByDateAsc(next);
       });
-      setTimeout(loadFromDB, 250);
-    } catch (e) {
-      console.error(e);
-      // no toast explícito para mantener pantalla limpia
-    }
+      setTimeout(loadFromDB, 200);
+    } catch (e) { console.error(e); }
   }
 
   function addCard() {
     if (!isAdmin) return;
-    setRows((prev) => {
-      const base = { id: null, date_iso: "", team1: "", team2: "", competition: "", saved: false };
-      const next = [base, ...prev].slice(0, limit);
-      if (!dbEnabledRef.current) saveToLC(next);
-      return next;
-    });
+    setRows((prev) => sortByDateAsc([{ id:null,date_iso:"",team1:"",team2:"",competition:"",saved:false }, ...prev]).slice(0, limit));
   }
 
   async function deleteByRowNumber() {
@@ -309,20 +294,19 @@ export default function VindeirosPartidos() {
         await supabase.from("matches_vindeiros").delete().eq("id", r.id);
       }
       const next = rows.filter((_, i) => i !== idx);
-      setRows(next);
-      if (!dbEnabledRef.current) saveToLC(next);
+      setRows(next.length ? next : makePlaceholders());
     } catch (e) { console.error(e); }
   }
 
   const view = useMemo(() => rows.slice(0, limit), [rows]);
 
-  // tamaños móvil/PC
+  // móvil/pc
   const fTeam = isMobile ? 13 : 14;
   const fNum = isMobile ? 13 : 14;
   const hNum = isMobile ? 24 : 28;
   const vsF  = isMobile ? 11 : 12;
   const padTeam = isMobile ? "8px 10px" : "10px 12px";
-  const dateWidth = isMobile ? "9ch" : "20ch"; // móvil más corto
+  const dateWidth = isMobile ? "9ch" : "20ch";
 
   if (loading) {
     return (
@@ -345,14 +329,9 @@ export default function VindeirosPartidos() {
           <button
             onClick={addCard}
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "8px 18px",
-              borderRadius: 10,
-              border: "1px solid #e5e7eb",
-              background: "#fff",
-              boxShadow: "0 2px 8px rgba(0,0,0,.06)",
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "8px 18px", borderRadius: 10, border: "1px solid #e5e7eb",
+              background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,.06)",
               font: "700 14px/1.2 Montserrat,system-ui,sans-serif",
             }}
           >
@@ -383,15 +362,12 @@ export default function VindeirosPartidos() {
       {view.map((r, idx) => {
         const key = r.id || `idx-${idx}`;
         const saved = !!r.saved;
-
         return (
           <section key={key} style={CARD_BASE(saved)}>
-            {/* Fila 1 */}
+            {/* Línea 1: # + equipo1 vs equipo2 */}
             <div style={FIRST_LINE}>
               <div style={MATCH_CELL}>
-                <span style={NUMBOX(hNum, fNum)}>
-                  {String(idx + 1).padStart(2, "0")}
-                </span>
+                <span style={NUMBOX(hNum, fNum)}>{String(idx + 1).padStart(2, "0")}</span>
                 <input
                   style={TEAM_INPUT(fTeam, padTeam)}
                   value={r.team1}
@@ -412,9 +388,10 @@ export default function VindeirosPartidos() {
               </div>
             </div>
 
-            {/* Fila 2 */}
-            <div style={SECOND_LINE(!isMobile)}>
+            {/* Línea 2: DATA + competición */}
+            <div style={{ display:"grid", gridTemplateColumns: isMobile ? "auto auto 1fr" : "auto auto 1fr", gap: isMobile?8:40, alignItems:"center" }}>
               <label style={DATE_WRAP} title="Data">
+                {/* icono gris visible */}
                 {DATE_ICON_GRAY}
                 <input
                   class="hdc-date"
@@ -423,9 +400,7 @@ export default function VindeirosPartidos() {
                   onInput={(e) => updateRow(idx, { date_iso: e.currentTarget.value })}
                   readOnly={!isAdmin}
                   style={{
-                    border: "none",
-                    outline: "none",
-                    background: "transparent",
+                    border: "none", outline: "none", background: "transparent",
                     font: `700 ${isMobile ? 12 : 14}px/1.2 Montserrat,system-ui,sans-serif`,
                     color: "#0f172a",
                     width: dateWidth,
@@ -443,7 +418,11 @@ export default function VindeirosPartidos() {
                   title="Competición"
                 >
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 8, whiteSpace: "nowrap" }}>
-                    <span style={{ display: "inline-grid" }}>{/* icono copa grande */}{ICON_TROPHY}</span>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ stroke: "#0ea5e9", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" }}>
+                      <path d="M7 4h10v3a5 5 0 01-10 0V4Z" />
+                      <path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" />
+                      <path d="M9 14h6v3H9z" />
+                    </svg>
                     <span style={{ font: `700 ${isMobile ? 12 : 14}px/1.2 Montserrat,system-ui,sans-serif` }}>
                       {r.competition || "—"}
                     </span>

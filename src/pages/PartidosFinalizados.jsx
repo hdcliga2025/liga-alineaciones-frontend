@@ -4,7 +4,7 @@ import { supabase } from "../lib/supabaseClient.js";
 
 const COMP_OPTIONS = ["LaLiga", "Europa League", "Copa do Rei"];
 const COMP_MIN_CH = Math.max(...COMP_OPTIONS.map((s) => s.length));
-const lcKey = "hdc_final_cards_v6";
+const lcKey = "hdc_final_cards_v7";
 
 const toISODate = (d) => {
   try {
@@ -40,9 +40,7 @@ const H1 = { font: "700 20px/1.2 Montserrat,system-ui,sans-serif", color: "#0f17
 const SUB = { color: "#475569", font: "400 13px/1.3 Montserrat,system-ui,sans-serif", margin: "0 0 14px" };
 
 const CARD_BASE = (saved) => ({
-  background: saved
-    ? "linear-gradient(180deg, rgba(14,165,233,.08), rgba(14,165,233,.02))"
-    : "#f8fafc",
+  background: saved ? "linear-gradient(180deg, rgba(14,165,233,.08), rgba(14,165,233,.02))" : "#f8fafc",
   border: `2px solid ${saved ? "#0ea5e9" : "#e5e7eb"}`,
   borderRadius: 16,
   boxShadow: "0 6px 18px rgba(0,0,0,.06)",
@@ -84,12 +82,7 @@ const TEAM_INPUT = (f, pad) => ({
   minHeight: 40,
 });
 const VS = (f) => ({ padding: "0 10px", font: `800 ${f}px/1 Montserrat,system-ui,sans-serif`, color: "#334155" });
-const SECOND_LINE = (desktop) => ({
-  display: "grid",
-  gridTemplateColumns: desktop ? "auto auto 1fr" : "auto auto 1fr",
-  gap: desktop ? 40 : 8,
-  alignItems: "center",
-});
+
 const DATE_WRAP = {
   display: "inline-grid",
   gridTemplateColumns: "auto auto",
@@ -129,6 +122,7 @@ const ICON_TROPHY = (
     <path d="M9 14h6v3H9z" />
   </svg>
 );
+
 const HIDE_NATIVE_DATE = `
   .hdc-date::-webkit-calendar-picker-indicator{ opacity:0; display:none; }
   .hdc-date::-webkit-inner-spin-button{ display:none; }
@@ -140,9 +134,7 @@ export default function PartidosFinalizados() {
   const [rows, setRows] = useState([]); // {id,date_iso,team1,team2,competition,saved}
   const [loading, setLoading] = useState(true);
   const [menuAt, setMenuAt] = useState(null);
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== "undefined" ? window.innerWidth <= 560 : false
-  );
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
   const saveTimers = useRef({});
   const dbEnabledRef = useRef(true);
   const limit = 10;
@@ -173,6 +165,12 @@ export default function PartidosFinalizados() {
     return () => window.removeEventListener("resize", onR);
   }, []);
 
+  function makePlaceholders(n = limit) {
+    return Array.from({ length: n }, () => ({
+      id: null, date_iso: "", team1: "", team2: "", competition: "", saved: false
+    }));
+  }
+
   async function loadFromDB() {
     try {
       const { data, error } = await supabase
@@ -193,14 +191,16 @@ export default function PartidosFinalizados() {
         return { ...row, saved: isComplete(row) };
       });
       dbEnabledRef.current = true;
-      setRows(sortByDateAsc(mapped));
+      const base = mapped.length ? mapped : makePlaceholders();
+      setRows(sortByDateAsc(base));
     } catch {
       dbEnabledRef.current = false;
       try {
         const raw = localStorage.getItem(lcKey);
         const parsed = raw ? JSON.parse(raw) : [];
-        setRows(sortByDateAsc(Array.isArray(parsed) ? parsed.slice(0, limit) : []));
-      } catch { setRows([]); }
+        const base = Array.isArray(parsed) && parsed.length ? parsed.slice(0, limit) : makePlaceholders();
+        setRows(sortByDateAsc(base));
+      } catch { setRows(makePlaceholders()); }
     } finally { setLoading(false); }
   }
   useEffect(() => {
@@ -228,7 +228,7 @@ export default function PartidosFinalizados() {
       clearTimeout(saveTimers.current[idx]);
       saveTimers.current[idx] = setTimeout(() => {
         if (isComplete(updated)) onAutoSave(idx);
-      }, 400);
+      }, 350);
       return next;
     });
   }
@@ -236,14 +236,12 @@ export default function PartidosFinalizados() {
   async function onAutoSave(idx) {
     const r = rows[idx];
     if (!isAdmin || !isComplete(r)) return;
-
     const payload = {
       match_date: toMidnightISO(r.date_iso),
       competition: r.competition || null,
       partido: joinPartido(r.team1, r.team2),
       updated_at: new Date().toISOString(),
     };
-
     try {
       if (dbEnabledRef.current) {
         if (r.id) {
@@ -264,7 +262,7 @@ export default function PartidosFinalizados() {
         next[idx] = { ...next[idx], saved: true };
         return sortByDateAsc(next);
       });
-      setTimeout(loadFromDB, 250);
+      setTimeout(loadFromDB, 200);
     } catch (e) { console.error(e); }
   }
 
@@ -298,7 +296,7 @@ export default function PartidosFinalizados() {
         const saved = !!r.saved;
         return (
           <section key={key} style={CARD_BASE(saved)}>
-            {/* Fila 1 */}
+            {/* Línea 1 */}
             <div style={{ marginBottom: 10 }}>
               <div style={MATCH_CELL}>
                 <span style={NUMBOX(hNum, fNum)}>{String(idx + 1).padStart(2,"0")}</span>
@@ -322,8 +320,8 @@ export default function PartidosFinalizados() {
               </div>
             </div>
 
-            {/* Fila 2 */}
-            <div style={SECOND_LINE(!isMobile)}>
+            {/* Línea 2 */}
+            <div style={{ display:"grid", gridTemplateColumns: isMobile ? "auto auto 1fr" : "auto auto 1fr", gap: isMobile?8:40, alignItems:"center" }}>
               <label style={DATE_WRAP} title="Data">
                 {DATE_ICON_GRAY}
                 <input
@@ -333,9 +331,7 @@ export default function PartidosFinalizados() {
                   onInput={(e) => updateRow(idx, { date_iso: e.currentTarget.value })}
                   readOnly={!isAdmin}
                   style={{
-                    border: "none",
-                    outline: "none",
-                    background: "transparent",
+                    border: "none", outline: "none", background: "transparent",
                     font: `700 ${isMobile ? 12 : 14}px/1.2 Montserrat,system-ui,sans-serif`,
                     color: "#0f172a",
                     width: dateWidth,

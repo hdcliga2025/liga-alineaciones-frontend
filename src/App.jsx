@@ -10,7 +10,7 @@ import LandingPage from "./pages/LandingPage.jsx";
 import Login from "./components/Login.jsx";
 import Register from "./components/Register.jsx";
 
-/* Privadas */
+/* Privadas clásicas */
 import Dashboard from "./pages/Dashboard.jsx";
 import Notificacions from "./pages/Notificacions.jsx";
 import Perfil from "./pages/Perfil.jsx";
@@ -19,8 +19,10 @@ import HazTu11 from "./pages/HazTu11.jsx";
 import Clasificacion from "./pages/Clasificacion.jsx";
 import Admin from "./pages/Admin.jsx";
 
-/* Subcards */
+/* Próximo partido */
 import ProximoPartido from "./pages/ProximoPartido.jsx";
+
+/* NUEVAS subpáginas */
 import VindeirosPartidos from "./pages/VindeirosPartidos.jsx";
 import PartidosFinalizados from "./pages/PartidosFinalizados.jsx";
 
@@ -36,6 +38,24 @@ const NotFound = () => (
     </p>
   </main>
 );
+
+/* Pequeño ErrorBoundary para evitar pantalla en branco por runtime errors */
+class ErrorBoundary {
+  constructor(props) { this.props = props; this.state = { hasError: false, err: null }; }
+  static getDerivedStateFromError(err) { return { hasError: true, err }; }
+  componentDidCatch(err) { console.error("[ErrorBoundary]", err); }
+  render() {
+    if (this.state?.hasError) {
+      return (
+        <main style={{ maxWidth: 860, margin: "0 auto", padding: "16px" }}>
+          <h2>Houbo un pequeno erro</h2>
+          <p style={{ color: "#64748b" }}>Tenta refrescar a páxina. O contido debería seguir dispoñible.</p>
+        </main>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(
@@ -55,30 +75,34 @@ export default function App() {
 
       {!shouldHideNav && <NavBar currentPath={currentPath} />}
 
-      <Router onChange={(e) => setCurrentPath(e.url)}>
-        {/* Públicas */}
-        <LandingPage path="/" />
-        <Login path="/login" />
-        <Register path="/register" />
-        <ForceLogout path="/logout" />
+      <ErrorBoundary>
+        <Router onChange={(e) => setCurrentPath(e.url)}>
+          {/* Públicas */}
+          <LandingPage path="/" />
+          <Login path="/login" />
+          <Register path="/register" />
+          <ForceLogout path="/logout" />
 
-        {/* Privadas */}
-        <Dashboard path="/dashboard" />
-        <Notificacions path="/notificacions" />
-        <Perfil path="/perfil" />
-        <Partidos path="/partidos" />
-        <HazTu11 path="/haz-tu-11" />
-        <Clasificacion path="/clasificacion" />
-        <Admin path="/admin" />
+          {/* Privadas */}
+          <Dashboard path="/dashboard" />
+          <Notificacions path="/notificacions" />
+          <Perfil path="/perfil" />
+          <Partidos path="/partidos" />
+          <HazTu11 path="/haz-tu-11" />
+          <Clasificacion path="/clasificacion" />
+          <Admin path="/admin" />
 
-        {/* Subcards */}
-        <ProximoPartido path="/proximo-partido" />
-        <VindeirosPartidos path="/vindeiros-partidos" />
-        <PartidosFinalizados path="/partidos-finalizados" />
+          {/* Próximo partido */}
+          <ProximoPartido path="/proximo-partido" />
 
-        {/* 404 */}
-        <NotFound default />
-      </Router>
+          {/* NUEVAS rutas directas */}
+          <VindeirosPartidos path="/vindeiros-partidos" />
+          <PartidosFinalizados path="/partidos-finalizados" />
+
+          {/* 404 */}
+          <NotFound default />
+        </Router>
+      </ErrorBoundary>
     </>
   );
 }
