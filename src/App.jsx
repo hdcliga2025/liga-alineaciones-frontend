@@ -1,6 +1,6 @@
 ﻿import { h } from "preact";
-import { useState } from "preact/hooks";
-import { Router } from "preact-router";
+import { useState, useEffect } from "preact/hooks";
+import { Router, route } from "preact-router";
 
 import AuthWatcher from "./components/AuthWatcher.jsx";
 import NavBar from "./components/NavBar.jsx";
@@ -22,12 +22,15 @@ import Admin from "./pages/Admin.jsx";
 /* Próximo partido */
 import ProximoPartido from "./pages/ProximoPartido.jsx";
 
-/* NUEVAS rutas calendario */
+/* NUEVAS páginas de calendario */
 import VindeirosPartidos from "./pages/VindeirosPartidos.jsx";
 import PartidosFinalizados from "./pages/PartidosFinalizados.jsx";
 
-/* Logout forzado */
-import ForceLogout from "./pages/ForceLogout.jsx";
+/* Utilidad para redirigir */
+function Redirect({ to = "/" }) {
+  useEffect(() => { route(to, true); }, [to]);
+  return null;
+}
 
 /* 404 */
 const NotFound = () => (
@@ -40,13 +43,18 @@ const NotFound = () => (
 );
 
 export default function App() {
+  // ping de verificación en consola para este build
+  useEffect(() => {
+    // si ves este log en producción, sabes que este App.jsx está desplegado
+    console.log("[ROUTES LOADED] /proximo-partido, /vindeiros-partidos, /partidos-finalizados");
+  }, []);
+
   const [currentPath, setCurrentPath] = useState(
     typeof window !== "undefined"
       ? window.location.pathname + (window.location.search || "")
       : "/"
   );
 
-  // Ocultar NavBar en portada y en cualquier variante de /login, /register, /logout
   const hidePrefixes = ["/login", "/register", "/logout"];
   const shouldHideNav =
     currentPath === "/" ||
@@ -55,7 +63,6 @@ export default function App() {
   return (
     <>
       <AuthWatcher />
-
       {!shouldHideNav && <NavBar currentPath={currentPath} />}
 
       <Router onChange={(e) => setCurrentPath(e.url)}>
@@ -63,7 +70,15 @@ export default function App() {
         <LandingPage path="/" />
         <Login path="/login" />
         <Register path="/register" />
-        <ForceLogout path="/logout" />
+        {/* alias viejo por si acaso */}
+        <Redirect path="/force-logout" to="/logout" />
+        {/* Logout forzado */}
+        <Redirect path="/salir" to="/logout" />
+        <Redirect path="/cerrar" to="/logout" />
+        <Redirect path="/logout" to="/logout" />
+        <Redirect path="/out" to="/logout" />
+        {/* Si tuvieras un componente ForceLogout, déjalo así: */}
+        {/* <ForceLogout path="/logout" /> */}
 
         {/* Privadas */}
         <Dashboard path="/dashboard" />
@@ -76,8 +91,18 @@ export default function App() {
 
         {/* Calendario */}
         <ProximoPartido path="/proximo-partido" />
+
+        {/* Rutas nuevas + alias cortos por seguridad */}
         <VindeirosPartidos path="/vindeiros-partidos" />
+        <VindeirosPartidos path="/vindeiros" />
+
         <PartidosFinalizados path="/partidos-finalizados" />
+        <PartidosFinalizados path="/finalizados" />
+
+        {/* Redirecciones defensivas por si algo quedó enlazado antiguo */}
+        <Redirect path="/proximos" to="/vindeiros-partidos" />
+        <Redirect path="/proximos-partidos" to="/vindeiros-partidos" />
+        <Redirect path="/historico" to="/partidos-finalizados" />
 
         {/* 404 */}
         <NotFound default />
