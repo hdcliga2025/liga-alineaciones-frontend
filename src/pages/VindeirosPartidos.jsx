@@ -4,27 +4,24 @@ import { supabase } from "../lib/supabaseClient.js";
 
 /* ========= Helpers ========= */
 const tz = "Europe/Madrid";
-const toDMY2 = (d) => {
+const toISODate = (d) => {
   try {
     const dt = d instanceof Date ? d : new Date(d);
-    const dd = new Intl.DateTimeFormat("es-ES", { day: "2-digit", timeZone: tz }).format(dt);
-    const mm = new Intl.DateTimeFormat("es-ES", { month: "2-digit", timeZone: tz }).format(dt);
-    const yy = new Intl.DateTimeFormat("es-ES", { year: "2-digit", timeZone: tz }).format(dt);
-    return `${dd}/${mm}/${yy}`;
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, "0");
+    const da = String(dt.getDate()).padStart(2, "0");
+    return `${y}-${m}-${da}`;
   } catch { return ""; }
 };
 const parseDMYToISO = (s) => {
-  const m = /^(\d{2})\/(\d{2})\/(\d{2}|\d{4})$/.exec(String(s||"").trim());
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s||"").trim());
   if (!m) return null;
-  let [_, dd, mm, yy] = m;
-  if (yy.length === 2) yy = String(2000 + parseInt(yy, 10));
-  const iso = `${yy}-${mm}-${dd}T00:00:00`;
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? null : iso;
+  // ya viene en formato del input date => ISO-YYYY-MM-DD
+  return `${m[1]}-${m[2]}-${m[3]}T00:00:00`;
 };
 const COMP_OPTIONS = ["LaLiga", "Europa League", "Copa do Rei"];
 const COMP_MIN_CH = Math.max(...COMP_OPTIONS.map(s => s.length));
-const lcKey = "hdc_vindeiros_cards_v6";
+const lcKey = "hdc_vindeiros_cards_v7";
 
 /* ========= Estilos ========= */
 const WRAP = { maxWidth: 980, margin: "0 auto", padding: "16px 12px 24px" };
@@ -86,15 +83,33 @@ const INPUT_SOFT_BASE = {
 };
 const MID_WRAP = { display:"grid", gridTemplateColumns:"auto auto", gap:8, alignItems:"center", justifyContent:"start" };
 
-const CHIP_BASE = {
+const DATE_WRAP = (accent) => ({
+  display:"inline-grid",
+  gridTemplateColumns:"auto auto",
+  alignItems:"center",
+  gap:6,
+  border:`1px solid ${accent}`,
+  borderRadius:10,
+  padding:"8px 10px",
+  background:"#fff",
+});
+const DATE_ICON = (accent="#0ea5e9") => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+    style={{ stroke:accent, strokeWidth:1.8, strokeLinecap:"round", strokeLinejoin:"round" }}>
+    <rect x="3" y="4.5" width="18" height="16" rx="2" />
+    <path d="M7 2.5v4M17 2.5v4M3 9h18" />
+  </svg>
+);
+
+const CHIP_BASE = (accent) => ({
   display:"inline-flex", alignItems:"center", gap:8,
-  border:"1px solid #e5e7eb", padding:"8px 10px", borderRadius:10,
+  border:`1px solid ${accent}`, padding:"10px 12px", borderRadius:10,
   background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)",
   font:"700 13px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", cursor:"pointer",
-  minWidth: `${COMP_MIN_CH + 4}ch`, justifyContent:"space-between"
-};
+  minWidth: `${COMP_MIN_CH + 6}ch`, justifyContent:"space-between"
+});
 const ICON_TROPHY = (c="#0ea5e9") => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
     style={{ stroke:c, strokeWidth:1.8, strokeLinecap:"round", strokeLinejoin:"round" }}>
     <path d="M7 4h10v3a5 5 0 01-10 0V4Z" />
     <path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" />
@@ -111,11 +126,30 @@ const ICON_STROKE = (accent="#0ea5e9") => ({
   fill:"none", stroke:accent, strokeWidth:1.8, strokeLinecap:"round", strokeLinejoin:"round"
 });
 
+/* Toast */
+function Toast({ text, kind="ok" }) {
+  const bg = kind==="ok" ? "#0ea5e9" : "#b91c1c";
+  const Icon = kind==="ok"
+    ? () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{stroke:"#fff",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round"}}><path d="M20 6L9 17l-5-5"/></svg>)
+    : () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{stroke:"#fff",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round"}}><path d="M12 9v5M12 17h.01"/><path d="M10.3 3.5l-8 14A2 2 0 0 0 4 20h16a2 2 0 0 0 1.7-2.5l-8-14a2 2 0 0 0-3.4 0Z"/></svg>);
+  return (
+    <div style={{
+      position:"fixed", left:"50%", bottom:16, transform:"translateX(-50%)",
+      background:bg, color:"#fff", padding:"6px 10px", borderRadius:10,
+      font:"700 12px/1.1 Montserrat,system-ui,sans-serif",
+      boxShadow:"0 10px 26px rgba(0,0,0,.18)", zIndex:1000,
+      display:"inline-flex", alignItems:"center", gap:8
+    }}>
+      <Icon /> {text}
+    </div>
+  );
+}
+
 export default function VindeirosPartidos() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [rows, setRows] = useState([]); // {id,date_iso,team1,team2,competition}
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState(null);
   const [menuAt, setMenuAt] = useState(null);
   const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
   const dbEnabledRef = useRef(true);
@@ -148,6 +182,8 @@ export default function VindeirosPartidos() {
     return () => { alive = false; };
   }, []);
 
+  function showToast(text, kind="ok"){ setToast({text, kind}); setTimeout(()=>setToast(null), 2000); }
+
   async function loadFromDB() {
     try {
       const { data, error } = await supabase
@@ -158,7 +194,7 @@ export default function VindeirosPartidos() {
       if (error) throw error;
       const mapped = (data||[]).map(r => ({
         id: r.id,
-        date_iso: r.match_date || null,
+        date_iso: r.match_date ? toISODate(r.match_date) : "", // para input[type=date]
         team1: r.team1 || "",
         team2: r.team2 || "",
         competition: r.competition || "",
@@ -179,7 +215,6 @@ export default function VindeirosPartidos() {
   useEffect(() => { loadFromDB(); }, []);
 
   function saveToLC(next) { try { localStorage.setItem(lcKey, JSON.stringify(next)); } catch {} }
-  function toast2(msg){ setToast(msg); setTimeout(()=>setToast(""), 2000); }
   function updateRow(idx, patch){
     setRows(prev=>{
       const next = prev.slice();
@@ -190,7 +225,7 @@ export default function VindeirosPartidos() {
   }
   function addCard(){
     setRows(prev=>{
-      const base = { id:null, date_iso:null, team1:"", team2:"", competition:"" };
+      const base = { id:null, date_iso:"", team1:"", team2:"", competition:"" };
       const next = [base, ...prev].slice(0,limit);
       if (!dbEnabledRef.current) saveToLC(next);
       return next;
@@ -199,14 +234,11 @@ export default function VindeirosPartidos() {
 
   async function onSave(idx){
     const r = rows[idx];
-    if (!isAdmin){ toast2("Só admin pode gardar"); return; }
+    if (!isAdmin){ showToast("Só admin pode gardar","err"); return; }
 
-    let iso = r.date_iso;
-    if (typeof iso === "string" && /\d{2}\/\d{2}\/(\d{2}|\d{4})/.test(iso)) {
-      const p = parseDMYToISO(iso);
-      if (!p){ toast2("DATA inválida"); return; }
-      iso = p;
-    }
+    let iso = r.date_iso ? parseDMYToISO(r.date_iso) : null; // de YYYY-MM-DD → YYYY-MM-DDT00:00:00
+    if (r.date_iso && !iso){ showToast("DATA inválida","err"); return; }
+
     if (dbEnabledRef.current) {
       if (r.id) {
         const { error } = await supabase.from("matches_vindeiros")
@@ -218,7 +250,7 @@ export default function VindeirosPartidos() {
             updated_at: new Date().toISOString(),
           })
           .eq("id", r.id);
-        if (error){ toast2("Erro gardando"); return; }
+        if (error){ showToast("Erro gardando","err"); return; }
       } else {
         const { data, error } = await supabase.from("matches_vindeiros")
           .insert({
@@ -229,31 +261,31 @@ export default function VindeirosPartidos() {
             updated_at: new Date().toISOString(),
           })
           .select().maybeSingle();
-        if (error){ toast2("Erro gardando"); return; }
+        if (error){ showToast("Erro gardando","err"); return; }
         updateRow(idx, { id: data?.id || null });
       }
     }
-    toast2("Gardado!");
+    showToast("Gardado!");
   }
 
   async function deleteByRowNumber() {
-    if (!isAdmin) { toast2("Só admin pode borrar"); return; }
+    if (!isAdmin) { showToast("Só admin pode borrar","err"); return; }
     const input = prompt("Indica o número de fila a eliminar (1–10):");
     if (!input) return;
     const n = parseInt(String(input).trim(), 10);
-    if (!(n >= 1 && n <= limit)) { toast2("Número de fila inválido"); return; }
+    if (!(n >= 1 && n <= limit)) { showToast("Número inválido","err"); return; }
     const idx = n - 1;
     const r = rows[idx];
     if (dbEnabledRef.current && r?.id) {
       const { error } = await supabase.from("matches_vindeiros").delete().eq("id", r.id);
-      if (error) { toast2("Erro borrando"); return; }
+      if (error) { showToast("Erro borrando","err"); return; }
     }
     setRows(prev => prev.filter((_,i)=>i!==idx));
     if (!dbEnabledRef.current){
       const next = rows.filter((_,i)=>i!==idx);
       saveToLC(next);
     }
-    toast2("Eliminado");
+    showToast("Eliminado");
   }
 
   const view = useMemo(()=> rows.slice(0,limit), [rows]);
@@ -263,7 +295,6 @@ export default function VindeirosPartidos() {
   const fNum  = isMobile ? 13 : 14;
   const hNum  = isMobile ? 24 : 28;
   const padTeam = isMobile ? "8px 10px" : "10px 12px";
-  const fData = isMobile ? 12 : 13;
 
   if (loading) {
     return (
@@ -279,14 +310,14 @@ export default function VindeirosPartidos() {
       <h2 style={H1}>Vindeiros partidos</h2>
       <p style={SUB}>Axenda dos próximos encontros con data e hora confirmada</p>
 
-      {/* Barra superior: Engadir (ajustado al texto) + Borrar por nº (derecha) */}
+      {/* Barra superior: Engadir + papelera (más bonito y algo más pequeño) */}
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom: 10 }}>
         {isAdmin ? (
           <button
             onClick={addCard}
             style={{
               display:"inline-flex", alignItems:"center", gap:6,
-              padding:"8px 10px", borderRadius:10, border:"1px solid #e5e7eb",
+              padding:"8px 14px", borderRadius:10, border:"1px solid #e5e7eb",
               background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)",
               font:"700 14px/1.2 Montserrat,system-ui,sans-serif"
             }}
@@ -297,24 +328,23 @@ export default function VindeirosPartidos() {
         ) : <span />}
 
         {isAdmin && (
-          <button onClick={deleteByRowNumber} style={{ width:38, height:38, display:"grid", placeItems:"center", borderRadius:10, border:"1px solid #0ea5e9", background:"#fff", boxShadow:"0 2px 8px rgba(14,165,233,.35)" }} title="Borrar por número de fila">
-            <svg width="18" height="18" viewBox="0 0 24 24" style={ICON_STROKE("#0ea5e9")}>
+          <button onClick={deleteByRowNumber}
+            style={{ width:34, height:34, display:"grid", placeItems:"center", borderRadius:10, border:"1px solid #94d3f6", background:"#fff", boxShadow:"0 2px 8px rgba(14,165,233,.25)" }}
+            title="Borrar por número de fila">
+            <svg width="16" height="16" viewBox="0 0 24 24" style={ICON_STROKE("#0ea5e9")}>
               <path d="M3 6h18" />
               <path d="M8 6V4h8v2" />
-              <path d="M7 6l1 14h8l1-14" />
+              <path d="M7 6l1 12h8l1-12" />
             </svg>
           </button>
         )}
       </div>
 
       {view.map((r, idx)=>{
-        const dmy2 = r.date_iso ? (/\d{4}-\d{2}-\d{2}/.test(r.date_iso) ? toDMY2(r.date_iso) : r.date_iso) : "";
         const isCeltaHome = (r.team1 || "").toUpperCase().includes("CELTA");
         const accent = isCeltaHome ? "#0ea5e9" : "#dbe2f0";
         const cardStyle = { ...CARD_BASE, border: `1px solid ${isCeltaHome ? "#0ea5e9" : "#e5e7eb"}` };
         const matchCell = { ...MATCH_CELL_BASE, border:`1px solid ${accent}` };
-        const inputSoft = { ...INPUT_SOFT_BASE, border:`1px solid ${accent}` };
-        const chip = { ...CHIP_BASE, border:`1px solid ${accent}` };
 
         return (
           <section key={r.id || `v-${idx}`} style={cardStyle}>
@@ -349,28 +379,35 @@ export default function VindeirosPartidos() {
               </div>
             </div>
 
-            {/* Fila 2: centro (DATA + COMP) | guardar derecha */}
+            {/* Fila 2: DATA + COMP | Guardar */}
             <div style={SECOND_LINE}>
               <div style={MID_WRAP}>
-                <input
-                  style={{ ...inputSoft, font:`700 ${fData}px/1.2 Montserrat,system-ui,sans-serif`, width: "10ch", textTransform:"uppercase" }}
-                  size={Math.max(10, (dmy2||"DD/MM/AA").length)}
-                  value={dmy2}
-                  placeholder="DD/MM/AA"
-                  onInput={(e)=>updateRow(idx,{ date_iso: e.currentTarget.value })}
-                  readOnly={!isAdmin}
-                />
+                <label style={DATE_WRAP(accent)}>
+                  {DATE_ICON("#0ea5e9")}
+                  <input
+                    type="date"
+                    value={r.date_iso || ""}
+                    onInput={(e)=>updateRow(idx,{ date_iso: e.currentTarget.value })}
+                    readOnly={!isAdmin}
+                    style={{
+                      border:"none", outline:"none", background:"transparent",
+                      font:"700 13px/1.2 Montserrat,system-ui,sans-serif",
+                      color:"#0f172a",
+                      width:"14ch", // largo para DD/MM/AA sin corte
+                    }}
+                  />
+                </label>
 
                 <div style={{ position:"relative" }}>
                   <button
                     type="button"
-                    style={{ ...chip, font:`700 ${isMobile?12:13}px/1.2 Montserrat,system-ui,sans-serif` }}
+                    style={CHIP_BASE(accent)}
                     onClick={()=> setMenuAt(menuAt===idx ? null : idx)}
                     disabled={!isAdmin}
                     aria-haspopup="listbox"
                     title="Competición"
                   >
-                    <span style={{display:"inline-flex", alignItems:"center", gap:6}}>
+                    <span style={{display:"inline-flex", alignItems:"center", gap:8}}>
                       {ICON_TROPHY("#0ea5e9")}
                       <span>{r.competition || "—"}</span>
                     </span>
@@ -404,15 +441,7 @@ export default function VindeirosPartidos() {
         );
       })}
 
-      {toast && (
-        <div style={{
-          position:"fixed", left:"50%", bottom:18, transform:"translateX(-50%)",
-          background:"#0ea5e9", color:"#fff", padding:"8px 12px", borderRadius:10,
-          font:"700 13px/1.2 Montserrat,system-ui,sans-serif", boxShadow:"0 10px 26px rgba(14,165,233,.4)", zIndex:1000
-        }}>
-          {toast}
-        </div>
-      )}
+      {toast && <Toast text={toast.text} kind={toast.kind} />}
     </main>
   );
 }
