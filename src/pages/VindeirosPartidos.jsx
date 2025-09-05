@@ -6,15 +6,15 @@ import { supabase } from "../lib/supabaseClient.js";
 const WRAP   = { maxWidth: 1080, margin: "0 auto", padding: "16px 12px 24px" };
 const H1     = { font:"700 20px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", margin:"0 0 8px" };
 
-const BTN_ADD_WRAP = { margin: "6px 0 14px" };
+const BTN_ADD_WRAP = { margin: "10px 0 16px" };
 const BTN_ADD = {
-  display:"inline-flex", alignItems:"center", gap:8,
+  display:"inline-flex", alignItems:"center", gap:10,
   border:"1px solid #38bdf8",
   backgroundImage:"linear-gradient(180deg,#67b1ff,#5a8df5)",
   color:"#fff",
-  padding:"12px 26px", borderRadius:12, cursor:"pointer",
+  padding:"12px 40px", borderRadius:12, cursor:"pointer",
   boxShadow:"0 12px 28px rgba(14,165,233,.28)",
-  font:"800 14px/1 Montserrat,system-ui,sans-serif", letterSpacing:".2px"
+  font:"800 14px/1 Montserrat,system-ui,sans-serif", letterSpacing:".25px"
 };
 
 const LIST   = { display:"grid", gap:10 };
@@ -27,26 +27,55 @@ const CARD   = {
 };
 const CARD_SAVED = { border:"2px solid #0ea5e9", background:"#f3f6f9" };
 
-const ROW1 = { display:"grid", gridTemplateColumns:"auto 1fr", alignItems:"center", gap:10, marginBottom:8 };
+/* Fila 1: nº + ojo + equipos (wrapper único con 'vs' integrado) */
+const ROW1 = {
+  display:"grid",
+  gridTemplateColumns:"auto auto 1fr",
+  alignItems:"center",
+  gap:10,
+  marginBottom:8
+};
 const NUMBOX = {
-  minWidth:32, height:32, border:"1px solid #cbd5e1", borderRadius:6,
+  minWidth:36, height:36, border:"1px solid #cbd5e1", borderRadius:6,
   display:"grid", placeItems:"center", background:"#fff",
   font:"700 14px/1 Montserrat,system-ui,sans-serif", color:"#0f172a"
 };
-const TEAMLINE = {
+const EYE_BTN = {
+  width:36, height:36, display:"grid", placeItems:"center",
+  border:"1px solid #e5e7eb", background:"#fff", borderRadius:10,
+  cursor:"pointer", boxShadow:"0 2px 8px rgba(0,0,0,.06)"
+};
+
+/* Campo integrado Equipos */
+const TEAMWRAP = {
   display:"grid",
   gridTemplateColumns:"1fr auto 1fr",
   alignItems:"center",
-  gap:6
+  gap:0,
+  border:"1px solid #dbe2f0",
+  borderRadius:10,
+  background:"#fff",
+  overflow:"hidden"
 };
-const INPUT_TEAM = (editable) => ({
-  width:"100%", border:"1px solid #dbe2f0", borderRadius:10, padding:"8px 10px",
-  background:"#fff", outline:"none",
+const TEAM_INPUT = (editable) => ({
+  width:"100%",
+  minWidth:0,
+  border:"none",
+  padding:"10px 12px",
+  outline:"none",
+  background:"transparent",
   font:`${editable ? "700" : "600"} 14px/1.2 Montserrat,system-ui,sans-serif`,
   color:"#0f172a"
 });
-const VS = { font:"700 13px/1 Montserrat,system-ui,sans-serif", color:"#64748b" };
+const VS = {
+  padding:"0 10px",
+  font:"700 13px/1 Montserrat,system-ui,sans-serif",
+  color:"#64748b",
+  borderLeft:"1px solid #e5e7eb",
+  borderRight:"1px solid #e5e7eb"
+};
 
+/* Fila 2: data + competición */
 const ROW2 = { display:"grid", gridTemplateColumns:"minmax(160px, 240px) 1fr", gap:8, alignItems:"center" };
 const INPUT_DATE = (editable) => ({
   width:"100%", border:"1px solid #dbe2f0", borderRadius:10, padding:"8px 10px",
@@ -57,7 +86,7 @@ const INPUT_DATE = (editable) => ({
 const SELECT_WRAP = { position:"relative" };
 const SELECT_COMP = (editable) => ({
   width:"100%", border:"1px solid #dbe2f0", borderRadius:10,
-  padding:"10px 40px 10px 44px",
+  padding:"10px 44px 10px 46px",
   background:"#fff", outline:"none",
   appearance:"none", WebkitAppearance:"none", MozAppearance:"none",
   font:`${editable ? "700" : "600"} 13px/1.1 Montserrat,system-ui,sans-serif`,
@@ -65,7 +94,7 @@ const SELECT_COMP = (editable) => ({
 });
 const ICON_TROPHY = {
   position:"absolute", left:12, top:"50%", transform:"translateY(-50%)",
-  pointerEvents:"none", opacity:.95
+  pointerEvents:"none"
 };
 const ICON_CHEV   = { position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", pointerEvents:"none", opacity:.9 };
 
@@ -107,7 +136,6 @@ export default function VindeirosPartidos() {
       setIsAdmin(admin);
     })();
     return () => {
-      // limpar timeouts
       Object.values(timersRef.current||{}).forEach((t)=> clearTimeout(t));
       timersRef.current = {};
     };
@@ -143,7 +171,6 @@ export default function VindeirosPartidos() {
     if (!isAdmin) return;
     const ok = nextRow.equipo1 && nextRow.equipo2 && nextRow.match_date && nextRow.competition;
     if (!ok) return;
-    // debounce por fila
     if (timersRef.current[i]) clearTimeout(timersRef.current[i]);
     timersRef.current[i] = setTimeout(async ()=>{
       try {
@@ -177,20 +204,21 @@ export default function VindeirosPartidos() {
     ]);
   }
 
-  async function onDelete(id) {
-    if (!isAdmin || !id) return;
-    await supabase.from("matches_vindeiros").delete().eq("id", id);
-    await loadList();
-  }
-
+  /* Vista:
+     - Solo admin ve temporales y puede editar.
+     - Público ve solo filas guardadas (con id).
+     - Numeración visual: mayor arriba → menor abajo.
+  */
   const view = useMemo(()=>{
     const base = isAdmin ? rows : rows.filter(r=>r?.id);
-    return base.map((r, idx)=>({ ...r, _num: idx+1 }));
+    const total = base.length;
+    return base.map((r, idx)=>({ ...r, _numDisp: pad2(total - idx) })); // menor queda abaixo
   }, [rows, isAdmin]);
 
   return (
     <main style={WRAP}>
       <h2 style={H1}>Axenda dos próximos encontros con data e hora confirmada</h2>
+
       {isAdmin && (
         <div style={BTN_ADD_WRAP}>
           <button type="button" style={BTN_ADD} onClick={onAdd}>
@@ -210,12 +238,20 @@ export default function VindeirosPartidos() {
 
           return (
             <article key={r.id || `n-${i}`} style={{ ...CARD, ...(savedStyle||{}) }}>
-              {/* Fila 1 */}
+              {/* Fila 1: número + ojo + equipos (campo integrado) */}
               <div style={ROW1}>
-                <div style={NUMBOX}>{String(r._num||i+1).padStart(2,"0")}</div>
-                <div style={TEAMLINE}>
+                <div style={NUMBOX}>{r._numDisp}</div>
+
+                <a href="/resultados-ultima-alineacion" title="Revisar resultados" style={EYE_BTN} aria-label="Revisar resultados">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" stroke="#0f172a" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="12" cy="12" r="3" stroke="#0f172a" strokeWidth="1.6"/>
+                  </svg>
+                </a>
+
+                <div style={TEAMWRAP}>
                   <input
-                    style={INPUT_TEAM(editable)}
+                    style={TEAM_INPUT(editable)}
                     value={r.equipo1 || ""}
                     onInput={(e)=> editable && setLocal(i, { equipo1: e.currentTarget.value })}
                     placeholder="Equipo 1"
@@ -223,7 +259,7 @@ export default function VindeirosPartidos() {
                   />
                   <span style={VS}>vs</span>
                   <input
-                    style={INPUT_TEAM(editable)}
+                    style={TEAM_INPUT(editable)}
                     value={r.equipo2 || ""}
                     onInput={(e)=> editable && setLocal(i, { equipo2: e.currentTarget.value })}
                     placeholder="Equipo 2"
@@ -232,7 +268,7 @@ export default function VindeirosPartidos() {
                 </div>
               </div>
 
-              {/* Fila 2 */}
+              {/* Fila 2: data + competición */}
               <div style={ROW2}>
                 <input
                   type="date"
@@ -248,7 +284,7 @@ export default function VindeirosPartidos() {
                 />
 
                 <div style={SELECT_WRAP}>
-                  {/* Trofeo máis grande e celeste */}
+                  {/* Trofeo celeste grande */}
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={ICON_TROPHY} aria-hidden="true">
                     <path d="M7 4h10v3a5 5 0 01-10 0V4Z" stroke="#0ea5e9" strokeWidth="1.8"/>
                     <path d="M9 14h6v3H9z" stroke="#0ea5e9" strokeWidth="1.8"/>
@@ -269,28 +305,6 @@ export default function VindeirosPartidos() {
                   </svg>
                 </div>
               </div>
-
-              {/* Accións só admin (eliminar manual) */}
-              {isAdmin && r.id && (
-                <div style={{ marginTop:8, display:"flex", justifyContent:"flex-end" }}>
-                  <button
-                    type="button"
-                    onClick={()=> onDelete(r.id)}
-                    title="Eliminar"
-                    style={{
-                      padding:"8px 12px",
-                      border:"1px solid #ef4444",
-                      color:"#ef4444",
-                      background:"#fff",
-                      borderRadius:10,
-                      font:"700 12px/1 Montserrat,system-ui,sans-serif",
-                      cursor:"pointer"
-                    }}
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              )}
             </article>
           );
         })}
