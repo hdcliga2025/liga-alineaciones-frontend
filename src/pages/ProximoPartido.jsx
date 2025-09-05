@@ -1,4 +1,3 @@
-// src/pages/ProximoPartido.jsx
 import { h } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
@@ -12,7 +11,7 @@ const PANEL = {
   borderRadius: 18,
   background: "#fff",
   boxShadow: "0 6px 18px rgba(0,0,0,.06)",
-  padding: "18px 16px",
+  padding: "22px 16px 18px", // + padding top para no pisar borde
 };
 
 const TITLE_LINE = {
@@ -36,9 +35,9 @@ const LINE_GRAY = {
 
 const HR = { border: 0, borderTop: "1px solid #e5e7eb", margin: "14px 0" };
 
-/* ===== Admin form ===== */
+/* Admin form */
 const ADMIN_BOX = {
-  marginTop: 16,
+  marginTop: 20,
   padding: 16,
   border: "1px dashed #cbd5e1",
   borderRadius: 14,
@@ -67,41 +66,12 @@ const BTN_SAVE     = { marginTop: 10, width: "100%", padding: "12px 14px", borde
 const INFO         = { marginTop: 10, color: "#065f46", fontSize: 14 };
 const ERR          = { marginTop: 10, color: "#b91c1c", fontSize: 14 };
 
-/* Ocultar icono nativo do date (dereita) */
 const STYLE_HIDE_NATIVE_DATE = `
   .nm-date::-webkit-calendar-picker-indicator{ display:none; }
   .nm-date{ -webkit-appearance:none; appearance:none; }
 `;
 
-/* ===== Utilidades ===== */
-function toLongGalician(dateObj) {
-  try {
-    return new Intl.DateTimeFormat("gl-ES", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      timeZone: "Europe/Madrid",
-    }).format(dateObj);
-  } catch {
-    return dateObj?.toLocaleDateString("gl-ES") || "";
-  }
-}
-const capFirst = (s="") => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
-
-function timeOptions() {
-  const opts = [];
-  for (let h = 12; h <= 23; h++) {
-    for (let m of [0, 15, 30, 45]) {
-      const hh = String(h).padStart(2, "0");
-      const mm = String(m).padStart(2, "0");
-      opts.push(`${hh}:${mm}`);
-    }
-  }
-  return opts;
-}
-
-/* === Meteo 2A (front) === */
+/* === Meteo === */
 async function fetchMeteoFor(lugar, matchISO) {
   try {
     if (!lugar || !matchISO) return null;
@@ -142,7 +112,6 @@ async function fetchMeteoFor(lugar, matchISO) {
     const wind = wx.hourly.wind_speed_10m?.[idx] ?? null;
     const ppop = wx.hourly.precipitation_probability?.[idx] ?? null;
 
-    const text_gl = `${temp!=null?`${Math.round(temp)} °C`:"—"} · vento ${wind!=null?`${Math.round(wind)} km/h`:"—"} · chuvia ${ppop!=null?`${ppop}%`:"—"}`;
     return {
       source: "open-meteo",
       fetched_at: new Date().toISOString(),
@@ -152,10 +121,8 @@ async function fetchMeteoFor(lugar, matchISO) {
       wind_kmh: wind,
       precip_prob_pct: ppop,
       icon: "auto",
-      text_gl,
     };
-  } catch (e) {
-    console.warn("fetchMeteoFor error", e);
+  } catch {
     return null;
   }
 }
@@ -174,7 +141,6 @@ export default function ProximoPartido() {
   const [row, setRow] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Form admin
   const [teamLocal, setTeamLocal] = useState("");
   const [teamAway,  setTeamAway]  = useState("");
   const [lugar,     setLugar]     = useState("");
@@ -187,20 +153,8 @@ export default function ProximoPartido() {
 
   const [meteo, setMeteo] = useState(null);
 
-  // === Mostrar mensaxe post-reload durante 5s se existe en sessionStorage
-  useEffect(() => {
-    const msg = sessionStorage.getItem("pp_saved_msg");
-    if (msg) {
-      setInfo(msg);
-      sessionStorage.removeItem("pp_saved_msg");
-      const t = setTimeout(() => setInfo(""), 5000);
-      return () => clearTimeout(t);
-    }
-  }, []);
-
   useEffect(() => {
     let alive = true;
-    const safety = setTimeout(() => { if (alive) setLoading(false); }, 1600);
 
     (async () => {
       try {
@@ -248,32 +202,13 @@ export default function ProximoPartido() {
             setDateStr(""); setTimeStr("");
           }
           setMeteo(nm.weather_json || null);
-
-          if (nm.match_iso) {
-            const ms = new Date(nm.match_iso).getTime() - Date.now();
-            const within48h = ms <= 48 * 3600 * 1000;
-            const staleOrMissing = !nm.weather_json;
-            if (within48h && staleOrMissing && nm.lugar) {
-              const wx = await fetchMeteoFor(nm.lugar, nm.match_iso);
-              if (alive && wx) {
-                setMeteo(wx);
-                if (admin) {
-                  await supabase.from("next_match").update({
-                    weather_json: wx,
-                    updated_at: new Date().toISOString(),
-                  }).eq("id", 1);
-                }
-              }
-            }
-          }
         }
       } finally {
         if (alive) setLoading(false);
-        clearTimeout(safety);
       }
     })();
 
-    return () => { alive = false; clearTimeout(safety); };
+    return () => { alive = false; };
   }, []);
 
   const teamA = useMemo(() => (row?.equipo1 || teamLocal || "").toUpperCase(), [row, teamLocal]);
@@ -285,15 +220,32 @@ export default function ProximoPartido() {
     return null;
   }, [row, dateStr, timeStr]);
 
-  const longDate = useMemo(() => (dateObj ? toLongGalician(dateObj) : null), [dateObj]);
+  const longDate = useMemo(() => {
+    if (!dateObj) return null;
+    try {
+      return new Intl.DateTimeFormat("gl-ES", {
+        weekday: "long", year: "numeric", month: "long", day: "numeric",
+        timeZone: "Europe/Madrid",
+      }).format(dateObj);
+    } catch { return dateObj.toLocaleDateString("gl-ES"); }
+  }, [dateObj]);
 
-  const [isMobileView, setIsMobileView] = useState(false);
-  useEffect(() => {
-    const m = () => setIsMobileView(window.innerWidth <= 560);
-    m();
-    window.addEventListener("resize", m);
-    return () => window.removeEventListener("resize", m);
-  }, []);
+  const showEscudo = (!isMobile && true) || (isMobile && !isAdmin);
+
+  const justTime = useMemo(() => {
+    if (!dateObj) return null;
+    try {
+      return new Intl.DateTimeFormat("gl-ES", {
+        hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Europe/Madrid",
+      }).format(dateObj);
+    } catch {
+      const hh = String(dateObj.getHours()).padStart(2, "0");
+      const mm = String(dateObj.getMinutes()).padStart(2, "0");
+      return `${hh}:${mm}`;
+    }
+  }, [dateObj]);
+
+  const lugarLegend = (row?.lugar || lugar || "—").toUpperCase();
 
   async function onSave(e) {
     e?.preventDefault?.();
@@ -326,29 +278,19 @@ export default function ProximoPartido() {
       const { error } = await supabase.from("next_match").upsert(payload, { onConflict: "id" });
       if (error) throw error;
 
+      // Meteo <48h
       const ms = new Date(match_iso).getTime() - Date.now();
       if (ms <= 48 * 3600 * 1000) {
         const wx = await fetchMeteoFor(payload.lugar, match_iso);
         if (wx) {
           setMeteo(wx);
-          await supabase.from("next_match").update({
-            weather_json: wx,
-            updated_at: new Date().toISOString(),
-          }).eq("id", 1);
+          await supabase.from("next_match").update({ weather_json: wx, updated_at: new Date().toISOString() }).eq("id", 1);
         }
       }
 
-      // Mensaxe + persistila para 5s tras o reload
-      const now = new Date();
-      const hh = String(now.getHours()).padStart(2, "0");
-      const mm = String(now.getMinutes()).padStart(2, "0");
-      const ss = String(now.getSeconds()).padStart(2, "0");
-      const msg = `Gardado e publicado ás ${hh}:${mm}:${ss}`;
-      setInfo(msg);
-      sessionStorage.setItem("pp_saved_msg", msg);
-
-      // pequeno reload para recolocar contador/header
-      setTimeout(() => { window.location.reload(); }, 600);
+      // feedback 5s
+      setInfo("Gardado e publicado ✅");
+      setTimeout(() => setInfo(""), 5000);
     } catch (e2) {
       console.error("[ProximoPartido] save error:", e2);
       setErr("Erro gardando os datos.");
@@ -359,33 +301,15 @@ export default function ProximoPartido() {
 
   if (loading) return <main style={WRAP}>Cargando…</main>;
 
-  const rightPad = !isMobile && true ? 210 : 0;
-
-  const justTime = useMemo(() => {
-    if (!dateObj) return null;
-    try {
-      return new Intl.DateTimeFormat("gl-ES", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: "Europe/Madrid",
-      }).format(dateObj);
-    } catch {
-      const hh = String(dateObj.getHours()).padStart(2, "0");
-      const mm = String(dateObj.getMinutes()).padStart(2, "0");
-      return `${hh}:${mm}`;
-    }
-  }, [dateObj]);
-
-  const lugarLegend = (row?.lugar || lugar || "—").toUpperCase();
+  const rightPad = !isMobile && showEscudo ? 240 : 0;
 
   return (
     <main style={WRAP}>
       <style>{STYLE_HIDE_NATIVE_DATE}</style>
 
       <section style={PANEL}>
-        {/* Escudo */}
-        {!isMobileView && (
+        {/* Escudo fijo, más grande, sin tapar el borde */}
+        {showEscudo && !isMobile && (
           <img
             src={ESCUDO_SRC}
             alt="Escudo RC Celta"
@@ -393,9 +317,9 @@ export default function ProximoPartido() {
             loading="eager"
             style={{
               position: "absolute",
-              top: 10,
-              right: 10,
-              width: 150,
+              top: 8,   // más arriba
+              right: 8, // hacia la izquierda al crecer
+              width: 220, // más grande
               height: "auto",
               opacity: 0.95,
               pointerEvents: "none",
@@ -404,7 +328,7 @@ export default function ProximoPartido() {
           />
         )}
 
-        {/* Contido principal */}
+        {/* Contenido */}
         <div style={{ position: "relative", zIndex: 1, paddingRight: rightPad }}>
           <h2 style={TITLE_LINE}>
             <span style={TEAM_NAME}>{teamA || "—"}</span>
@@ -412,44 +336,55 @@ export default function ProximoPartido() {
             <span style={TEAM_NAME}>{teamB || "—"}</span>
           </h2>
 
-          <p style={LINE_GRAY}>
-            Competición: <strong>{row?.competition || competition || "—"}</strong>
-          </p>
+          <p style={LINE_GRAY}>Competición: <strong>{row?.competition || competition || "—"}</strong></p>
+          <p style={LINE_GRAY}>Data: <strong>{longDate || "—"}</strong></p>
+          <p style={LINE_GRAY}>Hora: {justTime ? <strong>{justTime}</strong> : "—"}</p>
 
-          <p style={LINE_GRAY}>
-            Data: <strong>{capFirst(longDate || "—")}</strong>
-          </p>
-
-          <p style={LINE_GRAY}>
-            Hora: {justTime ? <strong>{justTime}</strong> : "—"}
-          </p>
-
-          {/* METEO */}
           <hr style={HR} />
+          {/* METEO */}
           <div style={{ position: "relative", marginTop: 14 }}>
             <span
               style={{
                 position: "absolute",
-                top: -12,
-                left: 12,
-                padding: "0 8px",
-                background: "#fff",
-                fontSize: 13,
-                fontWeight: 700,
-                color: "#334155",
+                top: -14, left: 12,
+                padding: "4px 10px",
+                background: "transparent",
+                fontSize: 14,
+                fontWeight: 800,
+                color: "#0ea5e9",
                 zIndex: 2,
                 pointerEvents: "none",
+                border: "1px solid #bae6fd",
+                borderRadius: 10,
+                boxShadow: "0 6px 16px rgba(14,165,233,.25)",
               }}
             >
-              METEO | Previsión en {lugarLegend} na data e hora do partido
+              METEO: {lugarLegend}
+            </span>
+
+            <span
+              style={{
+                position: "absolute",
+                top: 14, left: 14,
+                padding: "3px 8px",
+                background: "transparent",
+                fontSize: 12,
+                fontWeight: 600,
+                color: "#475569",
+                zIndex: 2,
+                border: "1px solid #cbd5e1",
+                borderRadius: 8,
+              }}
+            >
+              Previsión para a hora de partido
             </span>
 
             <div
               style={{
                 position: "relative",
-                border: "1px dashed #cbd5e1",
+                border: "2px dashed #9fb6c9",
                 borderRadius: 12,
-                padding: "16px 12px 12px",
+                padding: "42px 12px 12px",
                 background: "#fff",
                 zIndex: 1,
               }}
@@ -478,106 +413,86 @@ export default function ProximoPartido() {
           </div>
         </div>
 
-        {/* Formulario ADMIN */}
-        <form style={ADMIN_BOX} onSubmit={onSave}>
-          <div style={{ ...ROW, marginBottom: 12 }}>
-            <div>
-              <label style={LABEL}>Competición</label>
-              <div style={SELECT_WRAP}>
-                <select
-                  value={competition}
-                  onChange={(e) => setCompetition(e.currentTarget.value)}
-                  style={SELECT_BASE}
-                >
-                  <option value="">(selecciona)</option>
-                  <option value="LaLiga">LaLiga</option>
-                  <option value="Europa League">Europa League</option>
-                  <option value="Copa do Rei">Copa do Rei</option>
-                </select>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={SELECT_ARROW}>
-                  <path d="M6 9l6 6 6-6" stroke="#0f172a" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+        {/* Escudo móvil al final (no tapa) */}
+        {showEscudo && isMobile && (
+          <div style={{ marginTop: 16, display: "grid", placeItems: "center" }}>
+            <img src={ESCUDO_SRC} alt="Escudo RC Celta" decoding="async" loading="eager" style={{ width: 130, height: "auto", opacity: 0.98 }} />
+          </div>
+        )}
+
+        {/* Form ADMIN */}
+        {isAdmin && (
+          <form style={ADMIN_BOX} onSubmit={onSave}>
+            <div style={{ ...ROW, marginBottom: 12 }}>
+              <div>
+                <label style={LABEL}>Competición</label>
+                <div style={SELECT_WRAP}>
+                  <select value={competition} onChange={(e) => setCompetition(e.currentTarget.value)} style={SELECT_BASE}>
+                    <option value="">(selecciona)</option>
+                    <option value="LaLiga">LaLiga</option>
+                    <option value="Europa League">Europa League</option>
+                    <option value="Copa do Rei">Copa do Rei</option>
+                  </select>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={SELECT_ARROW}>
+                    <path d="M6 9l6 6 6-6" stroke="#0f172a" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
               </div>
-            </div>
-            <div>
-              <label style={LABEL}>Lugar</label>
-              <input
-                style={INPUT_LUGAR}
-                value={lugar}
-                onInput={(e) => setLugar(e.currentTarget.value.toUpperCase())}
-                placeholder="Ex.: VIGO"
-              />
-            </div>
-          </div>
-
-          <div style={{ ...ROW, marginBottom: 12 }}>
-            <div>
-              <label style={LABEL}>Equipo local</label>
-              <input
-                style={INPUT_EQ}
-                value={teamLocal}
-                onInput={(e) => setTeamLocal(e.currentTarget.value.toUpperCase())}
-                placeholder="(sen valor por defecto)"
-              />
-            </div>
-            <div>
-              <label style={LABEL}>Equipo visitante</label>
-              <input
-                style={INPUT_EQ}
-                value={teamAway}
-                onInput={(e) => setTeamAway(e.currentTarget.value.toUpperCase())}
-                placeholder="GIRONA"
-              />
-            </div>
-          </div>
-
-          <div style={{ ...ROW, marginBottom: 12 }}>
-            <div>
-              <label style={LABEL}>Data oficial confirmada</label>
-              <div style={{ position: "relative" }}>
-                <svg
-                  width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"
-                  style={{ position: "absolute", left: 10, top: 10 }}
-                >
-                  <rect x="3" y="4.5" width="18" height="16" rx="2" stroke="#0ea5e9" strokeWidth="1.8" />
-                  <path d="M7 2.5v4M17 2.5v4M3 9h18" stroke="#0ea5e9" strokeWidth="1.8" />
-                </svg>
-                <input
-                  id="nm-date" class="nm-date" type="date"
-                  style={INPUT_DATE}
-                  value={dateStr}
-                  onInput={(e) => setDateStr(e.currentTarget.value)}
-                />
+              <div>
+                <label style={LABEL}>Lugar</label>
+                <input style={INPUT_LUGAR} value={lugar} onInput={(e) => setLugar(e.currentTarget.value.toUpperCase())} placeholder="Ex.: VIGO" />
               </div>
             </div>
 
-            <div>
-              <label style={LABEL}>Hora confirmada</label>
-              <div style={SELECT_WRAP}>
-                <select
-                  style={SELECT_BASE}
-                  value={timeStr}
-                  onChange={(e) => setTimeStr(e.currentTarget.value)}
-                >
-                  <option value="">(selecciona)</option>
-                  {timeOptions().map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={SELECT_ARROW}>
-                  <path d="M6 9l6 6 6-6" stroke="#0f172a" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+            <div style={{ ...ROW, marginBottom: 12 }}>
+              <div>
+                <label style={LABEL}>Equipo local</label>
+                <input style={INPUT_EQ} value={teamLocal} onInput={(e) => setTeamLocal(e.currentTarget.value.toUpperCase())} placeholder="LOCAL" />
+              </div>
+              <div>
+                <label style={LABEL}>Equipo visitante</label>
+                <input style={INPUT_EQ} value={teamAway} onInput={(e) => setTeamAway(e.currentTarget.value.toUpperCase())} placeholder="VISITANTE" />
               </div>
             </div>
-          </div>
 
-          <button type="submit" style={BTN_SAVE} disabled={saving}>
-            {saving ? "Gardando…" : "Gardar"}
-          </button>
+            <div style={{ ...ROW, marginBottom: 12 }}>
+              <div>
+                <label style={LABEL}>Data oficial confirmada</label>
+                <div style={{ position: "relative" }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ position: "absolute", left: 10, top: 10 }}>
+                    <rect x="3" y="4.5" width="18" height="16" rx="2" stroke="#0ea5e9" strokeWidth="1.8" />
+                    <path d="M7 2.5v4M17 2.5v4M3 9h18" stroke="#0ea5e9" strokeWidth="1.8" />
+                  </svg>
+                  <input id="nm-date" class="nm-date" type="date" style={INPUT_DATE} value={dateStr} onInput={(e) => setDateStr(e.currentTarget.value)} />
+                </div>
+              </div>
+              <div>
+                <label style={LABEL}>Hora confirmada</label>
+                <div style={SELECT_WRAP}>
+                  <select style={SELECT_BASE} value={timeStr} onChange={(e) => setTimeStr(e.currentTarget.value)}>
+                    <option value="">(selecciona)</option>
+                    {Array.from({length:12*4},(_,i)=>i).map(i=>{
+                      const h = String(12 + Math.floor(i/4)).padStart(2,"0");
+                      const m = String((i%4)*15).padStart(2,"0");
+                      const t = `${h}:${m}`;
+                      return <option key={t} value={t}>{t}</option>;
+                    })}
+                  </select>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={SELECT_ARROW}>
+                    <path d="M6 9l6 6 6-6" stroke="#0f172a" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+              </div>
+            </div>
 
-          {info && <p style={INFO}>{info}</p>}
-          {err && <p style={ERR}>{err}</p>}
-        </form>
+            <button type="submit" style={BTN_SAVE} disabled={saving}>
+              {saving ? "Gardando…" : "Gardar"}
+            </button>
+
+            {info && <p style={INFO}>{info}</p>}
+            {err && <p style={ERR}>{err}</p>}
+          </form>
+        )}
       </section>
     </main>
   );
