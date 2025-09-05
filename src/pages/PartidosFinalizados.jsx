@@ -2,19 +2,21 @@ import { h } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
-/* ===== Estilos / layout: espejo de Vindeiros ===== */
+/* ===== Estilos espejo de Vindeiros ===== */
 const WRAP   = { maxWidth: 1080, margin: "0 auto", padding: "16px 12px 24px" };
 const H1     = { font:"700 20px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", margin:"0 0 8px" };
 
-const BTN_ADD_WRAP = { margin: "10px 0 16px" };
+const BTN_ADD_WRAP = { margin: "12px 0 16px" };
 const BTN_ADD = {
   display:"inline-flex", alignItems:"center", gap:10,
   border:"1px solid #38bdf8",
-  backgroundImage:"linear-gradient(180deg,#67b1ff,#5a8df5)",
+  backgroundImage:"linear-gradient(180deg,#6cc7ff,#4da7f3)",
   color:"#fff",
-  padding:"12px 40px", borderRadius:12, cursor:"pointer",
-  boxShadow:"0 12px 28px rgba(14,165,233,.28)",
-  font:"800 14px/1 Montserrat,system-ui,sans-serif", letterSpacing:".25px"
+  padding:"9px 56px",               // más largo, más delgado
+  borderRadius:12, cursor:"pointer",
+  boxShadow:"0 12px 28px rgba(14,165,233,.25)",
+  font:"800 14px/1 Montserrat,system-ui,sans-serif", letterSpacing:".25px",
+  userSelect:"none"
 };
 
 const LIST   = { display:"grid", gap:10 };
@@ -47,7 +49,8 @@ const TEAM_INPUT = (editable) => ({
   width:"100%", minWidth:0, border:"none", padding:"10px 12px",
   outline:"none", background:"transparent",
   font:`${editable ? "700" : "600"} 14px/1.2 Montserrat,system-ui,sans-serif`,
-  color:"#0f172a"
+  color:"#0f172a",
+  textTransform:"uppercase"
 });
 const VS = { padding:"0 10px", font:"700 13px/1 Montserrat,system-ui,sans-serif", color:"#64748b", borderLeft:"1px solid #e5e7eb", borderRight:"1px solid #e5e7eb" };
 
@@ -65,10 +68,20 @@ const SELECT_COMP = (editable) => ({
   background:"#fff", outline:"none",
   appearance:"none", WebkitAppearance:"none", MozAppearance:"none",
   font:`${editable ? "700" : "600"} 13px/1.1 Montserrat,system-ui,sans-serif`,
-  color:"#0f172a"
+  color:"#0f172a",
+  textTransform:"uppercase"
 });
 const ICON_TROPHY = { position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", pointerEvents:"none" };
 const ICON_CHEV   = { position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", pointerEvents:"none", opacity:.9 };
+
+/* Toast */
+const TOAST = (ok) => ({
+  position:"fixed", left:"50%", bottom:20, transform:"translateX(-50%)",
+  background: ok ? "rgba(16,185,129,.95)" : "rgba(239,68,68,.95)",
+  color:"#fff", padding:"10px 14px", borderRadius:10,
+  font:"700 13px/1 Montserrat,system-ui,sans-serif",
+  boxShadow:"0 10px 22px rgba(0,0,0,.25)", zIndex:9999
+});
 
 /* ===== Utils ===== */
 const pad2 = (n)=>String(n).padStart(2,"0");
@@ -89,6 +102,7 @@ export default function PartidosFinalizados() {
   const [rows, setRows] = useState([]); // {id, partido, match_date, competition}
   const [busy, setBusy] = useState(false);
   const timersRef = useRef({});
+  const [toast, setToast] = useState({ msg:"", ok:true });
 
   useEffect(() => {
     (async () => {
@@ -121,10 +135,15 @@ export default function PartidosFinalizados() {
   }
   useEffect(()=>{ loadList(); }, []);
 
+  function showToast(msg, ok=true) {
+    setToast({ msg, ok });
+    setTimeout(()=> setToast({ msg:"", ok:true }), 2000);
+  }
+
   async function saveRow(local) {
     const payload = {
       id: local.id || undefined,
-      partido: local.partido || null,
+      partido: (local.partido||"").toUpperCase(),
       competition: local.competition || null,
       match_date: local.match_date || null,
       updated_at: new Date().toISOString(),
@@ -139,8 +158,13 @@ export default function PartidosFinalizados() {
 
   function scheduleAutoSave(i, nextRow){
     if (!isAdmin) return;
-    const ok = nextRow.partido && nextRow.match_date && nextRow.competition;
+    // necesitamos Equipo1 y Equipo2 dentro de partido:
+    const parts = String(nextRow.partido||"").toUpperCase().split(/\s+VS\s+/);
+    const t1 = (parts[0]||"").trim();
+    const t2 = (parts[1]||"").trim();
+    const ok = t1 && t2 && !!nextRow.match_date && (nextRow.competition||"").trim();
     if (!ok) return;
+
     if (timersRef.current[i]) clearTimeout(timersRef.current[i]);
     timersRef.current[i] = setTimeout(async ()=>{
       try {
@@ -151,9 +175,13 @@ export default function PartidosFinalizados() {
           n[i] = { ...(n[i]||nextRow), id: saved?.id ?? n[i]?.id, __saved:true, _tmp:false };
           return n;
         });
+        showToast("[REGISTRADO]", true);
         await loadList();
+      } catch (e) {
+        console.error(e);
+        showToast("Erro gardando", false);
       } finally { setBusy(false); }
-    }, 600);
+    }, 400);
   }
 
   function setLocal(i, patch){
@@ -177,7 +205,14 @@ export default function PartidosFinalizados() {
   const view = useMemo(()=>{
     const base = isAdmin ? rows : rows.filter(r=>r?.id);
     const total = base.length;
-    return base.map((r, idx)=>({ ...r, _numDisp: pad2(total - idx) })); // menor queda abaixo
+    return base.map((r, idx)=>{
+      const parts = String(r.partido||"").toUpperCase().split(/\s+VS\s+/);
+      const t1 = (parts[0]||"").trim();
+      const t2 = (parts[1]||"").trim();
+      const savedPersist =
+        !!r?.id && t1 && t2 && !!r?.match_date && (r?.competition||"").trim();
+      return { ...r, _numDisp: pad2(total - idx), __saved: r.__saved || savedPersist };
+    });
   }, [rows, isAdmin]);
 
   return (
@@ -186,7 +221,7 @@ export default function PartidosFinalizados() {
 
       {isAdmin && (
         <div style={BTN_ADD_WRAP}>
-          <button type="button" style={BTN_ADD} onClick={onAdd}>
+          <button type="button" style={BTN_ADD} onClick={onAdd} disabled={busy}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{stroke:"#fff",strokeWidth:2}}>
               <path d="M12 5v14M5 12h14" />
             </svg>
@@ -195,17 +230,17 @@ export default function PartidosFinalizados() {
         </div>
       )}
 
-      <section style={LIST}>
+      <section style={{ display:"grid", gap:10 }}>
         {view.map((r, i) => {
           const editable = !!isAdmin;
-          const savedStyle = r.__saved ? CARD_SAVED : null;
           const ymd = isoToYMD(r.match_date);
+          const cardStyle = r.__saved ? { ...CARD, ...CARD_SAVED } : CARD;
           const parts = String(r.partido || "").split(/\s+vs\s+/i);
-          const t1 = (parts[0]||"").trim();
-          const t2 = (parts[1]||"").trim();
+          const t1 = (parts[0]||"").toUpperCase();
+          const t2 = (parts[1]||"").toUpperCase();
 
           return (
-            <article key={r.id || `n-${i}`} style={{ ...CARD, ...(savedStyle||{}) }}>
+            <article key={r.id || `n-${i}`} style={cardStyle}>
               {/* Fila 1: nº + ojo + equipos */}
               <div style={ROW1}>
                 <div style={NUMBOX}>{r._numDisp}</div>
@@ -221,16 +256,24 @@ export default function PartidosFinalizados() {
                   <input
                     style={TEAM_INPUT(editable)}
                     value={t1}
-                    onInput={(e)=> editable && setLocal(i, { partido: (e.currentTarget.value.toUpperCase()||"") + (t2?` vs ${t2.toUpperCase()}`:"") })}
-                    placeholder="Equipo 1"
+                    onInput={(e)=> {
+                      if (!editable) return;
+                      const left = (e.currentTarget.value||"").toUpperCase();
+                      setLocal(i, { partido: left + (t2 ? ` vs ${t2}` : "") });
+                    }}
+                    placeholder="EQUIPO 1"
                     readOnly={!editable}
                   />
                   <span style={VS}>vs</span>
                   <input
                     style={TEAM_INPUT(editable)}
                     value={t2}
-                    onInput={(e)=> editable && setLocal(i, { partido: (t1?`${t1.toUpperCase()} vs `:"") + (e.currentTarget.value.toUpperCase()||"") })}
-                    placeholder="Equipo 2"
+                    onInput={(e)=> {
+                      if (!editable) return;
+                      const right = (e.currentTarget.value||"").toUpperCase();
+                      setLocal(i, { partido: (t1 ? `${t1} vs ` : "EQUIPO 1 vs ") + right });
+                    }}
+                    placeholder="EQUIPO 2"
                     readOnly={!editable}
                   />
                 </div>
@@ -258,14 +301,14 @@ export default function PartidosFinalizados() {
                   </svg>
                   <select
                     style={SELECT_COMP(editable)}
-                    value={r.competition || ""}
+                    value={(r.competition || "").toUpperCase()}
                     disabled={!editable}
                     onChange={(e)=> editable && setLocal(i, { competition: e.currentTarget.value })}
                   >
-                    <option value="">(selecciona)</option>
-                    <option value="LaLiga">LaLiga</option>
-                    <option value="Europa League">Europa League</option>
-                    <option value="Copa do Rei">Copa do Rei</option>
+                    <option value="">(SELECCIONA)</option>
+                    <option value="LaLiga">LALIGA</option>
+                    <option value="Europa League">EUROPA LEAGUE</option>
+                    <option value="Copa do Rei">COPA DO REI</option>
                   </select>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={ICON_CHEV} aria-hidden="true">
                     <path d="M6 9l6 6 6-6" stroke="#0f172a" strokeWidth="2"/>
@@ -282,6 +325,8 @@ export default function PartidosFinalizados() {
           </p>
         )}
       </section>
+
+      {toast.msg && <div style={TOAST(toast.ok)}>{toast.msg}</div>}
     </main>
   );
 }
