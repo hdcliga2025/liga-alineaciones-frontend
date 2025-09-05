@@ -91,13 +91,20 @@ const ICON_STROKE = (accent="#0ea5e9") => ({
   fill:"none", stroke:accent, strokeWidth:1.8, strokeLinecap:"round", strokeLinejoin:"round"
 });
 
-/* ========= Compo ========= */
+/* ========= Componente ========= */
 export default function PartidosFinalizados() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [rows, setRows] = useState([]); // {id, match_date, team1, team2, competition}
   const [loading, setLoading] = useState(true);
   const [menuAt, setMenuAt] = useState(null);
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
   const limit = 60;
+
+  useEffect(() => {
+    const onR = () => setIsMobile(window.innerWidth <= 560);
+    window.addEventListener("resize", onR);
+    return () => window.removeEventListener("resize", onR);
+  }, []);
 
   // admin?
   useEffect(() => {
@@ -198,7 +205,25 @@ export default function PartidosFinalizados() {
     });
   }
 
+  async function bulkSavePrompt() {
+    if (!isAdmin) return;
+    const input = prompt("Indica os números de fila a gardar (ex.: 1,3,5):");
+    if (!input) return;
+    const list = String(input).split(",").map(s=>parseInt(s.trim(),10)).filter(n=>!isNaN(n) && n>=1 && n<=rows.length);
+    for (const n of list) {
+      await onSave(n-1);
+    }
+    await loadList();
+  }
+
   const view = useMemo(()=> rows.slice(0,60), [rows]);
+
+  // tamaños móvil
+  const fTeam = isMobile ? 13 : 14;
+  const fNum  = isMobile ? 13 : 14;
+  const hNum  = isMobile ? 24 : 28;
+  const padTeam = isMobile ? "8px 10px" : "10px 12px";
+  const fData = isMobile ? 12 : 13;
 
   if (loading) {
     return (
@@ -214,14 +239,25 @@ export default function PartidosFinalizados() {
       <h2 style={H1}>Partidos finalizados</h2>
       <p style={SUB}>Histórico dos encontros do Celta na tempada 2025/2026</p>
 
-      {isAdmin && (
-        <div style={{ marginBottom: 10 }}>
+      {/* Barra superior: Engadir (izq) + Guardar por nºs (der) */}
+      <div style={{ display:"grid", gridTemplateColumns:"1fr auto", alignItems:"center", marginBottom: 10 }}>
+        {isAdmin ? (
           <button onClick={addCard} style={{display:"inline-flex",alignItems:"center",gap:6, padding:"8px 10px", borderRadius:10, border:"1px solid #e5e7eb", background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)", font:"700 14px/1.2 Montserrat,system-ui,sans-serif"}}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 4v16M4 12h16" stroke="#0f172a" strokeWidth="2" strokeLinecap="round"/></svg>
             Engadir
           </button>
-        </div>
-      )}
+        ) : <span />}
+
+        {isAdmin && (
+          <button onClick={bulkSavePrompt} style={{ width:38, height:38, display:"grid", placeItems:"center", borderRadius:10, border:"1px solid #0ea5e9", background:"#fff", boxShadow:"0 2px 8px rgba(14,165,233,.35)" }} title="Gardar filas por número">
+            <svg width="18" height="18" viewBox="0 0 24 24" style={ICON_STROKE("#0ea5e9")}>
+              <path d="M4 4h12l4 4v12H4V4Z" />
+              <path d="M7 4v6h10V4" />
+              <path d="M8 16h8v4H8z" />
+            </svg>
+          </button>
+        )}
+      </div>
 
       {view.map((r, idx)=>{
         const dmy2 = r.match_date ? (/\d{4}-\d{2}-\d{2}/.test(r.match_date) ? toDMY2(r.match_date) : r.match_date) : "";
@@ -237,19 +273,24 @@ export default function PartidosFinalizados() {
             {/* Fila 1: nº + “E1 vs E2” */}
             <div style={FIRST_LINE}>
               <div style={matchCell}>
-                <span style={{ ...NUMBOX_BASE, background:isCeltaHome ? "#e0f2fe" : "#e2e8f0", border:`1px solid ${accent}` }}>
+                <span style={{
+                  ...NUMBOX_BASE,
+                  height: hNum, minWidth: hNum, border:`1px solid ${accent}`,
+                  background:isCeltaHome ? "#e0f2fe" : "#e2e8f0",
+                  font:`800 ${fNum}px/1 Montserrat,system-ui,sans-serif`,
+                }}>
                   {String(idx+1).padStart(2,"0")}
                 </span>
                 <input
-                  style={MATCH_INPUT}
+                  style={{ ...MATCH_INPUT, padding: padTeam, font:`700 ${fTeam}px/1.2 Montserrat,system-ui,sans-serif` }}
                   value={r.team1}
                   placeholder="LOCAL"
                   onInput={(e)=>updateRow(idx,{ team1: e.currentTarget.value.toUpperCase() })}
                   readOnly={!isAdmin}
                 />
-                <span style={VS}>vs</span>
+                <span style={{ ...VS, font:`800 ${isMobile?11:12}px/1 Montserrat,system-ui,sans-serif` }}>vs</span>
                 <input
-                  style={MATCH_INPUT}
+                  style={{ ...MATCH_INPUT, padding: padTeam, font:`700 ${fTeam}px/1.2 Montserrat,system-ui,sans-serif` }}
                   value={r.team2}
                   placeholder="VISITANTE"
                   onInput={(e)=>updateRow(idx,{ team2: e.currentTarget.value.toUpperCase() })}
@@ -260,7 +301,7 @@ export default function PartidosFinalizados() {
 
             {/* Fila 2: [Gardar] | [DATA + Competición] | [Ver] */}
             <div style={SECOND_LINE}>
-              {/* Gardar (esquerda) */}
+              {/* Guardar (izquierda) */}
               <button type="button" style={ICONBTN("#0ea5e9")} title="Gardar" onClick={()=>onSave(idx)} disabled={!isAdmin}>
                 <svg width="18" height="18" viewBox="0 0 24 24" style={ICON_STROKE("#0ea5e9")}>
                   <path d="M4 4h12l4 4v12H4V4Z" />
@@ -272,7 +313,7 @@ export default function PartidosFinalizados() {
               {/* Centro */}
               <div style={MID_WRAP}>
                 <input
-                  style={{ ...inputSoft, width: `${Math.max(8, (dmy2||"").length || 8)}ch` }}
+                  style={{ ...inputSoft, font:`700 ${fData}px/1.2 Montserrat,system-ui,sans-serif`, width: `${Math.max(8, (dmy2||"").length || 8)}ch` }}
                   size={Math.max(8, (dmy2||"").length || 8)}
                   value={dmy2}
                   placeholder="dd/mm/aa"
@@ -283,7 +324,7 @@ export default function PartidosFinalizados() {
                 <div style={{ position:"relative" }}>
                   <button
                     type="button"
-                    style={chip}
+                    style={{ ...chip, font:`700 ${isMobile?12:13}px/1.2 Montserrat,system-ui,sans-serif` }}
                     onClick={()=> setMenuAt(menuAt===idx ? null : idx)}
                     disabled={!isAdmin}
                     aria-haspopup="listbox"
@@ -308,7 +349,7 @@ export default function PartidosFinalizados() {
                 </div>
               </div>
 
-              {/* Ver (dereita) */}
+              {/* Ver (derecha) */}
               <button
                 type="button"
                 style={ICONBTN("#0ea5e9")}

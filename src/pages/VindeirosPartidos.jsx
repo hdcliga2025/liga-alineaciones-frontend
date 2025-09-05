@@ -23,15 +23,15 @@ const parseDMYToISO = (s) => {
   return Number.isNaN(d.getTime()) ? null : iso;
 };
 const COMP_OPTIONS = ["LaLiga", "Europa League", "Copa do Rei"];
-const COMP_MIN_CH = Math.max(...COMP_OPTIONS.map(s => s.length)); // para ancho mínimo do chip
-const lcKey = "hdc_vindeiros_cards_v4";
+const COMP_MIN_CH = Math.max(...COMP_OPTIONS.map(s => s.length)); // ancho mínimo chip
+const lcKey = "hdc_vindeiros_cards_v5";
 
 /* ========= Estilos base ========= */
 const WRAP = { maxWidth: 980, margin: "0 auto", padding: "16px 12px 24px" };
 const H1   = { font: "700 20px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", margin: "0 0 8px" };
 const SUB  = { color: "#475569", font: "400 13px/1.3 Montserrat,system-ui,sans-serif", margin: "0 0 14px" };
 
-/* Tarxeta con fondo gris claro (non os campos) */
+/* Tarjeta con fondo gris claro */
 const CARD_BASE = {
   background: "#f8fafc",
   border: "1px solid #e5e7eb",
@@ -41,7 +41,7 @@ const CARD_BASE = {
   marginBottom: 10,
 };
 
-/* Fila 1: nº + “E1 vs E2” dentro da MESMA cela */
+/* Fila 1: nº + “E1 vs E2” dentro de una sola celda */
 const FIRST_LINE = { display:"grid", gridTemplateColumns:"1fr", gap: 0, marginBottom: 10 };
 const MATCH_CELL_BASE = {
   display:"grid",
@@ -58,7 +58,7 @@ const NUMBOX_BASE = {
   marginRight: 6,
   minWidth: 28,
   height: 28,
-  borderRadius: 6,            // cuadrado con lixeiro radio
+  borderRadius: 6,
   background: "#e2e8f0",
   color:"#0f172a",
   display:"grid", placeItems:"center",
@@ -71,7 +71,7 @@ const MATCH_INPUT = {
 };
 const VS = { padding:"0 10px", font:"800 12px/1 Montserrat,system-ui,sans-serif", color:"#334155" };
 
-/* Fila 2: [Guardar]  [DATA + Competición]  [Borrar/Ver] */
+/* Fila 2: [Guardar]  [DATA + Competición]  [espacio (se quitó borrar por tarjeta)] */
 const SECOND_LINE = {
   display:"grid",
   gridTemplateColumns:"auto 1fr auto",
@@ -86,7 +86,7 @@ const INPUT_SOFT_BASE = {
   color:"#0f172a", outline:"none",
   background:"#fff"
 };
-/* wrapper central para DATA + COMP */
+/* wrapper central para DATA (izq) + COMP (der) */
 const MID_WRAP = { display:"grid", gridTemplateColumns:"auto auto", gap:8, alignItems:"center", justifyContent:"start" };
 
 const CHIP_BASE = {
@@ -107,15 +107,22 @@ const ICON_STROKE = (accent="#0ea5e9") => ({
   fill:"none", stroke:accent, strokeWidth:1.8, strokeLinecap:"round", strokeLinejoin:"round"
 });
 
-/* ========= Compo ========= */
+/* ========= Componente ========= */
 export default function VindeirosPartidos() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [rows, setRows] = useState([]); // [{id, date_iso, team1, team2, competition}]
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
   const [menuAt, setMenuAt] = useState(null);
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
   const dbEnabledRef = useRef(true);
   const limit = 10;
+
+  useEffect(() => {
+    const onR = () => setIsMobile(window.innerWidth <= 560);
+    window.addEventListener("resize", onR);
+    return () => window.removeEventListener("resize", onR);
+  }, []);
 
   // admin?
   useEffect(() => {
@@ -226,12 +233,17 @@ export default function VindeirosPartidos() {
     toast2("Gardado!");
   }
 
-  async function onDelete(idx){
+  async function deleteByRowNumber() {
+    if (!isAdmin) { toast2("Só admin pode borrar"); return; }
+    const input = prompt("Indica o número de fila a eliminar (1–10):");
+    if (!input) return;
+    const n = parseInt(String(input).trim(), 10);
+    if (!(n >= 1 && n <= limit)) { toast2("Número de fila inválido"); return; }
+    const idx = n - 1;
     const r = rows[idx];
-    if (!isAdmin){ toast2("Só admin pode borrar"); return; }
-    if (dbEnabledRef.current && r.id){
+    if (dbEnabledRef.current && r?.id) {
       const { error } = await supabase.from("matches_vindeiros").delete().eq("id", r.id);
-      if (error){ toast2("Erro borrando"); return; }
+      if (error) { toast2("Erro borrando"); return; }
     }
     setRows(prev => prev.filter((_,i)=>i!==idx));
     if (!dbEnabledRef.current){
@@ -242,6 +254,14 @@ export default function VindeirosPartidos() {
   }
 
   const view = useMemo(()=> rows.slice(0,limit), [rows]);
+
+  // ajustes de tamaños en móvil
+  const fTeam = isMobile ? 13 : 14;
+  const fNum  = isMobile ? 13 : 14;
+  const hNum  = isMobile ? 24 : 28;
+  const padTeam = isMobile ? "8px 10px" : "10px 12px";
+  const fData = isMobile ? 12 : 13;
+
   if (loading) {
     return (
       <main style={WRAP}>
@@ -256,14 +276,25 @@ export default function VindeirosPartidos() {
       <h2 style={H1}>Vindeiros partidos</h2>
       <p style={SUB}>Axenda dos próximos encontros con data e hora confirmada</p>
 
-      {isAdmin && (
-        <div style={{ marginBottom: 10 }}>
+      {/* Barra superior: Engadir (izq) + Borrar por nº (der) */}
+      <div style={{ display:"grid", gridTemplateColumns:"1fr auto", alignItems:"center", marginBottom: 10 }}>
+        {isAdmin ? (
           <button onClick={addCard} style={{display:"inline-flex",alignItems:"center",gap:6, padding:"8px 10px", borderRadius:10, border:"1px solid #e5e7eb", background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)", font:"700 14px/1.2 Montserrat,system-ui,sans-serif"}}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 4v16M4 12h16" stroke="#0f172a" strokeWidth="2" strokeLinecap="round"/></svg>
             Engadir
           </button>
-        </div>
-      )}
+        ) : <span />}
+
+        {isAdmin && (
+          <button onClick={deleteByRowNumber} style={{ width:38, height:38, display:"grid", placeItems:"center", borderRadius:10, border:"1px solid #0ea5e9", background:"#fff", boxShadow:"0 2px 8px rgba(14,165,233,.35)" }} title="Borrar por número de fila">
+            <svg width="18" height="18" viewBox="0 0 24 24" style={ICON_STROKE("#0ea5e9")}>
+              <path d="M3 6h18" />
+              <path d="M8 6V4h8v2" />
+              <path d="M7 6l1 14h8l1-14" />
+            </svg>
+          </button>
+        )}
+      </div>
 
       {view.map((r, idx)=>{
         const dmy2 = r.date_iso ? (/\d{4}-\d{2}-\d{2}/.test(r.date_iso) ? toDMY2(r.date_iso) : r.date_iso) : "";
@@ -276,22 +307,27 @@ export default function VindeirosPartidos() {
 
         return (
           <section key={r.id || `v-${idx}`} style={cardStyle}>
-            {/* Fila 1: nº + “E1 vs E2” unha única cela */}
+            {/* Fila 1: nº + “E1 vs E2” */}
             <div style={FIRST_LINE}>
               <div style={matchCell}>
-                <span style={{ ...NUMBOX_BASE, background:isCeltaHome ? "#e0f2fe" : "#e2e8f0", border:`1px solid ${accent}` }}>
+                <span style={{
+                  ...NUMBOX_BASE,
+                  height: hNum, minWidth: hNum, border:`1px solid ${accent}`,
+                  background:isCeltaHome ? "#e0f2fe" : "#e2e8f0",
+                  font:`800 ${fNum}px/1 Montserrat,system-ui,sans-serif`,
+                }}>
                   {String(idx+1).padStart(2,"0")}
                 </span>
                 <input
-                  style={MATCH_INPUT}
+                  style={{ ...MATCH_INPUT, padding: padTeam, font:`700 ${fTeam}px/1.2 Montserrat,system-ui,sans-serif` }}
                   value={r.team1}
                   placeholder="LOCAL"
                   onInput={(e)=>updateRow(idx,{ team1: e.currentTarget.value.toUpperCase() })}
                   readOnly={!isAdmin}
                 />
-                <span style={VS}>vs</span>
+                <span style={{ ...VS, font:`800 ${isMobile?11:12}px/1 Montserrat,system-ui,sans-serif` }}>vs</span>
                 <input
-                  style={MATCH_INPUT}
+                  style={{ ...MATCH_INPUT, padding: padTeam, font:`700 ${fTeam}px/1.2 Montserrat,system-ui,sans-serif` }}
                   value={r.team2}
                   placeholder="VISITANTE"
                   onInput={(e)=>updateRow(idx,{ team2: e.currentTarget.value.toUpperCase() })}
@@ -300,10 +336,10 @@ export default function VindeirosPartidos() {
               </div>
             </div>
 
-            {/* Fila 2: [Guardar] | [DATA + COMP] | [Borrar] */}
+            {/* Fila 2: [Guardar] | [DATA (izq) + Competición (der)] | [espacio] */}
             <div style={SECOND_LINE}>
-              {/* Guardar (esquerda) */}
-              <button type="button" style={ICONBTN(isCeltaHome ? "#0ea5e9" : "#0ea5e9")} title="Gardar" onClick={()=>onSave(idx)} disabled={!isAdmin}>
+              {/* Guardar (izquierda) */}
+              <button type="button" style={ICONBTN("#0ea5e9")} title="Gardar" onClick={()=>onSave(idx)} disabled={!isAdmin}>
                 <svg width="18" height="18" viewBox="0 0 24 24" style={ICON_STROKE("#0ea5e9")}>
                   <path d="M4 4h12l4 4v12H4V4Z" />
                   <path d="M7 4v6h10V4" />
@@ -311,29 +347,28 @@ export default function VindeirosPartidos() {
                 </svg>
               </button>
 
-              {/* Centro: DATA + Competición */}
+              {/* Centro: DATA (izquierda) + Competición (derecha) */}
               <div style={MID_WRAP}>
                 <input
-                  style={{ ...inputSoft, width: `${Math.max(8, (dmy2||"").length || 8)}ch` }}
+                  style={{ ...inputSoft, font:`700 ${fData}px/1.2 Montserrat,system-ui,sans-serif`, width: `${Math.max(8, (dmy2||"").length || 8)}ch` }}
                   size={Math.max(8, (dmy2||"").length || 8)}
                   value={dmy2}
                   placeholder="dd/mm/aa"
                   onInput={(e)=>updateRow(idx,{ date_iso: e.currentTarget.value })}
                   readOnly={!isAdmin}
                 />
+
                 <div style={{ position:"relative" }}>
                   <button
                     type="button"
-                    style={chip}
+                    style={{ ...chip, font:`700 ${isMobile?12:13}px/1.2 Montserrat,system-ui,sans-serif` }}
                     onClick={()=> setMenuAt(menuAt===idx ? null : idx)}
                     disabled={!isAdmin}
                     aria-haspopup="listbox"
                     title="Competición"
                   >
                     <span>{r.competition || "—"}</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" style={ICON_STROKE(isCeltaHome ? "#0ea5e9" : "#0ea5e9")}>
-                      <path d="M7 10l5 5 5-5" />
-                    </svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" style={ICON_STROKE("#0ea5e9")}><path d="M7 10l5 5 5-5" /></svg>
                   </button>
                   {menuAt===idx && (
                     <div style={{ position:"absolute", marginTop:4, left:0, background:"#fff", border:`1px solid ${accent}`, borderRadius:10, boxShadow:"0 10px 26px rgba(0,0,0,.12)", zIndex:30 }}>
@@ -351,14 +386,8 @@ export default function VindeirosPartidos() {
                 </div>
               </div>
 
-              {/* Borrar (dereita) */}
-              <button type="button" style={ICONBTN(isCeltaHome ? "#0ea5e9" : "#0ea5e9")} title="Borrar" onClick={()=>onDelete(idx)} disabled={!isAdmin}>
-                <svg width="18" height="18" viewBox="0 0 24 24" style={ICON_STROKE("#0ea5e9")}>
-                  <path d="M3 6h18" />
-                  <path d="M8 6V4h8v2" />
-                  <path d="M7 6l1 14h8l1-14" />
-                </svg>
-              </button>
+              {/* (derecha vacío) */}
+              <span />
             </div>
           </section>
         );
