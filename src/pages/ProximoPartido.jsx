@@ -1,3 +1,4 @@
+// src/pages/ProximoPartido.jsx
 import { h } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
@@ -5,45 +6,83 @@ import { supabase } from "../lib/supabaseClient.js";
 const ESCUDO_SRC = "/escudo.png";
 
 const WRAP = { maxWidth: 880, margin: "0 auto", padding: "16px" };
+
 const PANEL = {
   position: "relative",
   border: "1px solid #e5e7eb",
   borderRadius: 18,
   background: "#fff",
   boxShadow: "0 6px 18px rgba(0,0,0,.06)",
-  padding: "22px 16px 18px", // + padding top para no pisar borde
+  padding: "18px 16px",
 };
 
 const TITLE_LINE = {
   margin: "0 0 8px 0",
-  fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
+  fontFamily:
+    "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
   letterSpacing: ".3px",
   color: "#0f172a",
   lineHeight: 1.1,
   fontSize: 30,
 };
 const TEAM_NAME = { fontWeight: 700, textTransform: "uppercase" };
-const VS_STYLE  = { fontWeight: 600, fontSize: 22, margin: "0 8px" };
+const VS_STYLE = { fontWeight: 600, fontSize: 22, margin: "0 8px" };
 
 const LINE_GRAY = {
   margin: "6px 0 0",
-  fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
+  fontFamily:
+    "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
   fontSize: 20,
   color: "#6b7280",
   fontWeight: 600,
 };
 
-const HR = { border: 0, borderTop: "1px solid #e5e7eb", margin: "14px 0" };
+const HR = {
+  border: 0,
+  borderTop: "1px solid #e5e7eb",
+  margin: "14px 0",
+};
 
-/* Admin form */
+/* ===== Marcos/contedores ===== */
+const TOP_INFO_BOX = {
+  background: "#f8fafc", // gris claro
+  border: "1px solid #e5e7eb",
+  borderRadius: 14,
+  padding: "12px",
+  marginBottom: 14,
+};
+
+const METEO_FRAME = {
+  marginTop: 18,
+  background: "#f8fafc",
+  border: "1px solid #e5e7eb",
+  borderRadius: 14,
+  padding: "10px 10px 12px",
+};
+
+const METEO_BANNER = {
+  position: "relative",
+  border: "2px dashed #94a3b8", // un pelín más gruesa
+  borderRadius: 12,
+  padding: "16px 12px 12px",
+  background: "#fff",
+};
+
+/* ===== Admin form ===== */
 const ADMIN_BOX = {
-  marginTop: 20,
+  marginTop: 16,
   padding: 16,
   border: "1px dashed #cbd5e1",
   borderRadius: 14,
   background: "#f8fafc",
 };
-const LABEL = { display: "block", margin: "0 0 6px 6px", fontSize: 14, color: "#334155", fontWeight: 500 };
+const LABEL = {
+  display: "block",
+  margin: "0 0 6px 6px",
+  fontSize: 14,
+  color: "#334155",
+  fontWeight: 500,
+};
 const INPUT_BASE = {
   width: "100%",
   padding: "12px 12px",
@@ -55,35 +94,102 @@ const INPUT_BASE = {
   color: "#0f172a",
   background: "#fff",
 };
-const INPUT_EQ     = { ...INPUT_BASE, fontWeight: 800, textTransform: "uppercase" };
-const INPUT_LUGAR  = { ...INPUT_BASE, fontWeight: 800, textTransform: "uppercase" };
-const INPUT_DATE   = { ...INPUT_BASE, fontWeight: 800, paddingLeft: 40 };
-const ROW          = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 };
-const SELECT_BASE  = { ...INPUT_BASE, appearance: "none", WebkitAppearance: "none", MozAppearance: "none", fontWeight: 800, paddingRight: 48, cursor: "pointer" };
-const SELECT_WRAP  = { position: "relative" };
-const SELECT_ARROW = { position: "absolute", top: "50%", right: 18, transform: "translateY(-50%)", pointerEvents: "none", opacity: 0.95 };
-const BTN_SAVE     = { marginTop: 10, width: "100%", padding: "12px 14px", borderRadius: 12, border: "1px solid #60a5fa", color: "#fff", fontWeight: 800, letterSpacing: ".2px", cursor: "pointer", backgroundImage: "linear-gradient(180deg,#67b1ff,#5a8df5)", boxShadow: "0 8px 24px rgba(59,130,246,.35)" };
-const INFO         = { marginTop: 10, color: "#065f46", fontSize: 14 };
-const ERR          = { marginTop: 10, color: "#b91c1c", fontSize: 14 };
+const INPUT_EQ = { ...INPUT_BASE, fontWeight: 800, textTransform: "uppercase" };
+const INPUT_LUGAR = {
+  ...INPUT_BASE,
+  fontWeight: 800,
+  textTransform: "uppercase",
+};
+const INPUT_DATE = { ...INPUT_BASE, fontWeight: 800, paddingLeft: 40 };
+const ROW = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 };
+const SELECT_BASE = {
+  ...INPUT_BASE,
+  appearance: "none",
+  WebkitAppearance: "none",
+  MozAppearance: "none",
+  fontWeight: 800,
+  paddingRight: 48,
+  cursor: "pointer",
+};
+const SELECT_WRAP = { position: "relative" };
+const SELECT_ARROW = {
+  position: "absolute",
+  top: "50%",
+  right: 18,
+  transform: "translateY(-50%)",
+  pointerEvents: "none",
+  opacity: 0.95,
+};
+const BTN_SAVE = {
+  marginTop: 10,
+  width: "100%",
+  padding: "12px 14px",
+  borderRadius: 12,
+  border: "1px solid #60a5fa",
+  color: "#fff",
+  fontWeight: 800,
+  letterSpacing: ".2px",
+  cursor: "pointer",
+  backgroundImage: "linear-gradient(180deg,#67b1ff,#5a8df5)",
+  boxShadow: "0 8px 24px rgba(59,130,246,.35)",
+  fontSize: 16, // texto un poco más grande
+};
+const INFO = { marginTop: 10, color: "#065f46", fontSize: 14 };
+const ERR = { marginTop: 10, color: "#b91c1c", fontSize: 14 };
 
+/* Ocultar icono nativo do date (dereita) sen cubrir o borde */
 const STYLE_HIDE_NATIVE_DATE = `
   .nm-date::-webkit-calendar-picker-indicator{ display:none; }
   .nm-date{ -webkit-appearance:none; appearance:none; }
 `;
 
-/* === Meteo === */
+/* ===== Utilidades ===== */
+function toLongGalician(dateObj) {
+  try {
+    return new Intl.DateTimeFormat("gl-ES", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      timeZone: "Europe/Madrid",
+    }).format(dateObj);
+  } catch {
+    return dateObj?.toLocaleDateString("gl-ES") || "";
+  }
+}
+const capFirst = (s = "") =>
+  s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+
+function timeOptions() {
+  const opts = [];
+  for (let h = 12; h <= 23; h++) {
+    for (let m of [0, 15, 30, 45]) {
+      const hh = String(h).padStart(2, "0");
+      const mm = String(m).padStart(2, "0");
+      opts.push(`${hh}:${mm}`);
+    }
+  }
+  return opts;
+}
+
+/* === Meteo 2A (front) === */
 async function fetchMeteoFor(lugar, matchISO) {
   try {
     if (!lugar || !matchISO) return null;
-    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(lugar)}&count=1&language=gl&format=json`);
+    const geoRes = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
+        lugar
+      )}&count=1&language=gl&format=json`
+    );
     const geo = await geoRes.json();
     const loc = geo?.results?.[0];
     if (!loc) return null;
-    const lat = loc.latitude, lon = loc.longitude;
+    const lat = loc.latitude,
+      lon = loc.longitude;
 
     const wxRes = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-      `&hourly=temperature_2m,precipitation_probability,wind_speed_10m&timezone=Europe/Madrid&forecast_days=3`
+        `&hourly=temperature_2m,precipitation_probability,wind_speed_10m&timezone=Europe/Madrid&forecast_days=3`
     );
     const wx = await wxRes.json();
     const times = wx?.hourly?.time || [];
@@ -92,18 +198,33 @@ async function fetchMeteoFor(lugar, matchISO) {
     const target = new Date(matchISO);
     const fmt = new Intl.DateTimeFormat("sv-SE", {
       timeZone: "Europe/Madrid",
-      year: "numeric", month: "2-digit", day: "2-digit",
-      hour: "2-digit", minute: "2-digit", hour12: false
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
     });
-    const parts = fmt.formatToParts(target).reduce((a,p)=>{a[p.type]=p.value;return a;}, {});
+    const parts = fmt
+      .formatToParts(target)
+      .reduce((a, p) => {
+        a[p.type] = p.value;
+        return a;
+      }, {});
     const localISO = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
 
     let idx = times.indexOf(localISO);
     if (idx === -1) {
-      let best = 0, bestDiff = Infinity;
-      for (let i=0;i<times.length;i++){
-        const d = Math.abs(new Date(times[i]).getTime() - new Date(localISO).getTime());
-        if (d < bestDiff) { bestDiff = d; best = i; }
+      let best = 0,
+        bestDiff = Infinity;
+      for (let i = 0; i < times.length; i++) {
+        const d = Math.abs(
+          new Date(times[i]).getTime() - new Date(localISO).getTime()
+        );
+        if (d < bestDiff) {
+          bestDiff = d;
+          best = i;
+        }
       }
       idx = best;
     }
@@ -112,6 +233,11 @@ async function fetchMeteoFor(lugar, matchISO) {
     const wind = wx.hourly.wind_speed_10m?.[idx] ?? null;
     const ppop = wx.hourly.precipitation_probability?.[idx] ?? null;
 
+    const text_gl = `${
+      temp != null ? `${Math.round(temp)} °C` : "—"
+    } · vento ${wind != null ? `${Math.round(wind)} km/h` : "—"} · chuvia ${
+      ppop != null ? `${ppop}%` : "—"
+    }`;
     return {
       source: "open-meteo",
       fetched_at: new Date().toISOString(),
@@ -121,8 +247,10 @@ async function fetchMeteoFor(lugar, matchISO) {
       wind_kmh: wind,
       precip_prob_pct: ppop,
       icon: "auto",
+      text_gl,
     };
-  } catch {
+  } catch (e) {
+    console.warn("fetchMeteoFor error", e);
     return null;
   }
 }
@@ -141,9 +269,10 @@ export default function ProximoPartido() {
   const [row, setRow] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Form admin
   const [teamLocal, setTeamLocal] = useState("");
-  const [teamAway,  setTeamAway]  = useState("");
-  const [lugar,     setLugar]     = useState("");
+  const [teamAway, setTeamAway] = useState("");
+  const [lugar, setLugar] = useState("");
   const [competition, setCompetition] = useState("");
   const [dateStr, setDateStr] = useState("");
   const [timeStr, setTimeStr] = useState("");
@@ -155,17 +284,21 @@ export default function ProximoPartido() {
 
   useEffect(() => {
     let alive = true;
+    const safety = setTimeout(() => {
+      if (alive) setLoading(false);
+    }, 1600);
 
     (async () => {
       try {
         const { data: s } = await supabase.auth.getSession();
         const email = s?.session?.user?.email || "";
-        const uid   = s?.session?.user?.id || null;
+        const uid = s?.session?.user?.id || null;
 
         let admin = false;
         if (email) {
           const e = email.toLowerCase();
-          if (e === "hdcliga@gmail.com" || e === "hdcliga2@gmail.com") admin = true;
+          if (e === "hdcliga@gmail.com" || e === "hdcliga2@gmail.com")
+            admin = true;
         }
         if (!admin && uid) {
           const { data: prof } = await supabase
@@ -179,7 +312,9 @@ export default function ProximoPartido() {
 
         const { data: nm } = await supabase
           .from("next_match")
-          .select("id, equipo1, equipo2, lugar, match_iso, tz, competition, weather_json, updated_at")
+          .select(
+            "id, equipo1, equipo2, lugar, match_iso, tz, competition, weather_json, updated_at"
+          )
           .eq("id", 1)
           .maybeSingle();
 
@@ -199,20 +334,53 @@ export default function ProximoPartido() {
             setDateStr(`${yyyy}-${mm}-${dd}`);
             setTimeStr(`${hh}:${mi}`);
           } else {
-            setDateStr(""); setTimeStr("");
+            setDateStr("");
+            setTimeStr("");
           }
           setMeteo(nm.weather_json || null);
+
+          // Meteo 2A: <48h e non hai meteo -> traer; se admin, persistir
+          if (nm.match_iso) {
+            const ms = new Date(nm.match_iso).getTime() - Date.now();
+            const within48h = ms <= 48 * 3600 * 1000;
+            const staleOrMissing = !nm.weather_json;
+            if (within48h && staleOrMissing && nm.lugar) {
+              const wx = await fetchMeteoFor(nm.lugar, nm.match_iso);
+              if (alive && wx) {
+                setMeteo(wx);
+                if (admin) {
+                  await supabase
+                    .from("next_match")
+                    .update({
+                      weather_json: wx,
+                      updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", 1);
+                }
+              }
+            }
+          }
         }
       } finally {
         if (alive) setLoading(false);
+        clearTimeout(safety);
       }
     })();
 
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+      clearTimeout(safety);
+    };
   }, []);
 
-  const teamA = useMemo(() => (row?.equipo1 || teamLocal || "").toUpperCase(), [row, teamLocal]);
-  const teamB = useMemo(() => (row?.equipo2 || teamAway  || "").toUpperCase(), [row, teamAway]);
+  const teamA = useMemo(
+    () => (row?.equipo1 || teamLocal || "").toUpperCase(),
+    [row, teamLocal]
+  );
+  const teamB = useMemo(
+    () => (row?.equipo2 || teamAway || "").toUpperCase(),
+    [row, teamAway]
+  );
 
   const dateObj = useMemo(() => {
     if (row?.match_iso) return new Date(row.match_iso);
@@ -220,36 +388,17 @@ export default function ProximoPartido() {
     return null;
   }, [row, dateStr, timeStr]);
 
-  const longDate = useMemo(() => {
-    if (!dateObj) return null;
-    try {
-      return new Intl.DateTimeFormat("gl-ES", {
-        weekday: "long", year: "numeric", month: "long", day: "numeric",
-        timeZone: "Europe/Madrid",
-      }).format(dateObj);
-    } catch { return dateObj.toLocaleDateString("gl-ES"); }
-  }, [dateObj]);
+  const longDate = useMemo(
+    () => (dateObj ? toLongGalician(dateObj) : null),
+    [dateObj]
+  );
 
   const showEscudo = (!isMobile && true) || (isMobile && !isAdmin);
 
-  const justTime = useMemo(() => {
-    if (!dateObj) return null;
-    try {
-      return new Intl.DateTimeFormat("gl-ES", {
-        hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Europe/Madrid",
-      }).format(dateObj);
-    } catch {
-      const hh = String(dateObj.getHours()).padStart(2, "0");
-      const mm = String(dateObj.getMinutes()).padStart(2, "0");
-      return `${hh}:${mm}`;
-    }
-  }, [dateObj]);
-
-  const lugarLegend = (row?.lugar || lugar || "—").toUpperCase();
-
   async function onSave(e) {
     e?.preventDefault?.();
-    setInfo(""); setErr("");
+    setInfo("");
+    setErr("");
     try {
       if (!teamLocal.trim() || !teamAway.trim() || !lugar.trim()) {
         setErr("Completa equipo local, visitante e lugar.");
@@ -275,22 +424,36 @@ export default function ProximoPartido() {
         updated_at: new Date().toISOString(),
       };
 
-      const { error } = await supabase.from("next_match").upsert(payload, { onConflict: "id" });
+      const { error } = await supabase
+        .from("next_match")
+        .upsert(payload, { onConflict: "id" });
       if (error) throw error;
 
-      // Meteo <48h
+      // Meteo inmediata a <48h
       const ms = new Date(match_iso).getTime() - Date.now();
       if (ms <= 48 * 3600 * 1000) {
         const wx = await fetchMeteoFor(payload.lugar, match_iso);
         if (wx) {
           setMeteo(wx);
-          await supabase.from("next_match").update({ weather_json: wx, updated_at: new Date().toISOString() }).eq("id", 1);
+          await supabase
+            .from("next_match")
+            .update({
+              weather_json: wx,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", 1);
         }
       }
 
-      // feedback 5s
-      setInfo("Gardado e publicado ✅");
-      setTimeout(() => setInfo(""), 5000);
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, "0");
+      const mm = String(now.getMinutes()).padStart(2, "0");
+      const ss = String(now.getSeconds()).padStart(2, "0");
+      setInfo(`Gardado e publicado ás ${hh}:${mm}:${ss}`);
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 450);
     } catch (e2) {
       console.error("[ProximoPartido] save error:", e2);
       setErr("Erro gardando os datos.");
@@ -301,14 +464,32 @@ export default function ProximoPartido() {
 
   if (loading) return <main style={WRAP}>Cargando…</main>;
 
-  const rightPad = !isMobile && showEscudo ? 240 : 0;
+  const rightPad = !isMobile && showEscudo ? 210 : 0;
+
+  const justTime = useMemo(() => {
+    if (!dateObj) return null;
+    try {
+      return new Intl.DateTimeFormat("gl-ES", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: "Europe/Madrid",
+      }).format(dateObj);
+    } catch {
+      const hh = String(dateObj.getHours()).padStart(2, "0");
+      const mm = String(dateObj.getMinutes()).padStart(2, "0");
+      return `${hh}:${mm}`;
+    }
+  }, [dateObj]);
+
+  const lugarLegend = (row?.lugar || lugar || "—").toUpperCase();
 
   return (
     <main style={WRAP}>
       <style>{STYLE_HIDE_NATIVE_DATE}</style>
 
       <section style={PANEL}>
-        {/* Escudo fijo, más grande, sin tapar el borde */}
+        {/* Escudo: fixo, arriba dereita, sen tapar bordes */}
         {showEscudo && !isMobile && (
           <img
             src={ESCUDO_SRC}
@@ -317,9 +498,9 @@ export default function ProximoPartido() {
             loading="eager"
             style={{
               position: "absolute",
-              top: 8,   // más arriba
-              right: 8, // hacia la izquierda al crecer
-              width: 220, // más grande
+              top: 8,
+              right: 10,
+              width: 160, // lixeiramente máis grande
               height: "auto",
               opacity: 0.95,
               pointerEvents: "none",
@@ -328,67 +509,47 @@ export default function ProximoPartido() {
           />
         )}
 
-        {/* Contenido */}
+        {/* Contido principal por riba do escudo */}
         <div style={{ position: "relative", zIndex: 1, paddingRight: rightPad }}>
-          <h2 style={TITLE_LINE}>
-            <span style={TEAM_NAME}>{teamA || "—"}</span>
-            <span style={VS_STYLE}>vs</span>
-            <span style={TEAM_NAME}>{teamB || "—"}</span>
-          </h2>
+          {/* Marco superior (título + liñas) */}
+          <div style={TOP_INFO_BOX}>
+            <h2 style={TITLE_LINE}>
+              <span style={TEAM_NAME}>{teamA || "—"}</span>
+              <span style={VS_STYLE}>vs</span>
+              <span style={TEAM_NAME}>{teamB || "—"}</span>
+            </h2>
 
-          <p style={LINE_GRAY}>Competición: <strong>{row?.competition || competition || "—"}</strong></p>
-          <p style={LINE_GRAY}>Data: <strong>{longDate || "—"}</strong></p>
-          <p style={LINE_GRAY}>Hora: {justTime ? <strong>{justTime}</strong> : "—"}</p>
+            <p style={LINE_GRAY}>
+              Competición:{" "}
+              <strong>{row?.competition || competition || "—"}</strong>
+            </p>
 
-          <hr style={HR} />
-          {/* METEO */}
-          <div style={{ position: "relative", marginTop: 14 }}>
-            <span
-              style={{
-                position: "absolute",
-                top: -14, left: 12,
-                padding: "4px 10px",
-                background: "transparent",
-                fontSize: 14,
-                fontWeight: 800,
-                color: "#0ea5e9",
-                zIndex: 2,
-                pointerEvents: "none",
-                border: "1px solid #bae6fd",
-                borderRadius: 10,
-                boxShadow: "0 6px 16px rgba(14,165,233,.25)",
-              }}
-            >
-              METEO: {lugarLegend}
-            </span>
+            <p style={LINE_GRAY}>
+              Data: <strong>{capFirst(longDate || "—")}</strong>
+            </p>
 
-            <span
-              style={{
-                position: "absolute",
-                top: 14, left: 14,
-                padding: "3px 8px",
-                background: "transparent",
-                fontSize: 12,
-                fontWeight: 600,
-                color: "#475569",
-                zIndex: 2,
-                border: "1px solid #cbd5e1",
-                borderRadius: 8,
-              }}
-            >
-              Previsión para a hora de partido
-            </span>
+            <p style={LINE_GRAY}>
+              Hora: {justTime ? <strong>{justTime}</strong> : "—"}
+            </p>
+          </div>
 
+          {/* METEO: marco externo con leyenda arriba e subleyenda abaixo */}
+          <div style={METEO_FRAME}>
+            {/* Leyenda arriba */}
             <div
               style={{
-                position: "relative",
-                border: "2px dashed #9fb6c9",
-                borderRadius: 12,
-                padding: "42px 12px 12px",
-                background: "#fff",
-                zIndex: 1,
+                fontSize: 14,
+                fontWeight: 800,
+                color: "#334155",
+                margin: "0 0 8px 2px",
+                letterSpacing: ".2px",
               }}
             >
+              METEO | {lugarLegend}
+            </div>
+
+            {/* Banner (línea discontinua) */}
+            <div style={METEO_BANNER}>
               {meteo ? (
                 <div
                   style={{
@@ -400,58 +561,135 @@ export default function ProximoPartido() {
                     fontSize: 18,
                   }}
                 >
-                  <span>🌡️ <strong>{meteo.temp_c != null ? `${Math.round(meteo.temp_c)} °C` : "—"}</strong></span>
-                  <span>💨 <strong>{meteo.wind_kmh != null ? `${Math.round(meteo.wind_kmh)} km/h` : "—"}</strong></span>
-                  <span>☔ <strong>{meteo.precip_prob_pct != null ? `${meteo.precip_prob_pct}%` : "—"}</strong></span>
+                  <span>
+                    🌡️{" "}
+                    <strong>
+                      {meteo.temp_c != null
+                        ? `${Math.round(meteo.temp_c)} °C`
+                        : "—"}
+                    </strong>
+                  </span>
+                  <span>
+                    💨{" "}
+                    <strong>
+                      {meteo.wind_kmh != null
+                        ? `${Math.round(meteo.wind_kmh)} km/h`
+                        : "—"}
+                    </strong>
+                  </span>
+                  <span>
+                    ☔{" "}
+                    <strong>
+                      {meteo.precip_prob_pct != null
+                        ? `${meteo.precip_prob_pct}%`
+                        : "—"}
+                    </strong>
+                  </span>
                 </div>
               ) : (
                 <p style={{ margin: 0, color: "#64748b" }}>
-                  Información meteorolóxica dispoñible 48 horas antes do partido.
+                  Información meteorolóxica dispoñible 48 horas antes do
+                  partido.
                 </p>
               )}
+            </div>
+
+            {/* Subleyenda abaixo */}
+            <div
+              style={{
+                marginTop: 8,
+                fontSize: 13,
+                color: "#475569",
+                fontWeight: 600,
+                paddingLeft: 2,
+              }}
+            >
+              Previsión para a hora de partido.
             </div>
           </div>
         </div>
 
-        {/* Escudo móvil al final (no tapa) */}
+        {/* Escudo en móbil (non-admin) ao final, baixo todo */}
         {showEscudo && isMobile && (
           <div style={{ marginTop: 16, display: "grid", placeItems: "center" }}>
-            <img src={ESCUDO_SRC} alt="Escudo RC Celta" decoding="async" loading="eager" style={{ width: 130, height: "auto", opacity: 0.98 }} />
+            <img
+              src={ESCUDO_SRC}
+              alt="Escudo RC Celta"
+              decoding="async"
+              loading="eager"
+              style={{ width: 120, height: "auto", opacity: 0.98 }}
+            />
           </div>
         )}
 
-        {/* Form ADMIN */}
+        {/* Formulario ADMIN */}
         {isAdmin && (
           <form style={ADMIN_BOX} onSubmit={onSave}>
             <div style={{ ...ROW, marginBottom: 12 }}>
               <div>
                 <label style={LABEL}>Competición</label>
                 <div style={SELECT_WRAP}>
-                  <select value={competition} onChange={(e) => setCompetition(e.currentTarget.value)} style={SELECT_BASE}>
+                  <select
+                    value={competition}
+                    onChange={(e) => setCompetition(e.currentTarget.value)}
+                    style={SELECT_BASE}
+                  >
                     <option value="">(selecciona)</option>
                     <option value="LaLiga">LaLiga</option>
                     <option value="Europa League">Europa League</option>
                     <option value="Copa do Rei">Copa do Rei</option>
                   </select>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={SELECT_ARROW}>
-                    <path d="M6 9l6 6 6-6" stroke="#0f172a" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                    style={SELECT_ARROW}
+                  >
+                    <path
+                      d="M6 9l6 6 6-6"
+                      stroke="#0f172a"
+                      strokeWidth="2.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </div>
               </div>
               <div>
                 <label style={LABEL}>Lugar</label>
-                <input style={INPUT_LUGAR} value={lugar} onInput={(e) => setLugar(e.currentTarget.value.toUpperCase())} placeholder="Ex.: VIGO" />
+                <input
+                  style={INPUT_LUGAR}
+                  value={lugar}
+                  onInput={(e) => setLugar(e.currentTarget.value.toUpperCase())}
+                  placeholder="Ex.: VIGO"
+                />
               </div>
             </div>
 
             <div style={{ ...ROW, marginBottom: 12 }}>
               <div>
                 <label style={LABEL}>Equipo local</label>
-                <input style={INPUT_EQ} value={teamLocal} onInput={(e) => setTeamLocal(e.currentTarget.value.toUpperCase())} placeholder="LOCAL" />
+                <input
+                  style={INPUT_EQ}
+                  value={teamLocal}
+                  onInput={(e) =>
+                    setTeamLocal(e.currentTarget.value.toUpperCase())
+                  }
+                  placeholder="(sen valor por defecto)"
+                />
               </div>
               <div>
                 <label style={LABEL}>Equipo visitante</label>
-                <input style={INPUT_EQ} value={teamAway} onInput={(e) => setTeamAway(e.currentTarget.value.toUpperCase())} placeholder="VISITANTE" />
+                <input
+                  style={INPUT_EQ}
+                  value={teamAway}
+                  onInput={(e) =>
+                    setTeamAway(e.currentTarget.value.toUpperCase())
+                  }
+                  placeholder="GIRONA"
+                />
               </div>
             </div>
 
@@ -459,27 +697,71 @@ export default function ProximoPartido() {
               <div>
                 <label style={LABEL}>Data oficial confirmada</label>
                 <div style={{ position: "relative" }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ position: "absolute", left: 10, top: 10 }}>
-                    <rect x="3" y="4.5" width="18" height="16" rx="2" stroke="#0ea5e9" strokeWidth="1.8" />
-                    <path d="M7 2.5v4M17 2.5v4M3 9h18" stroke="#0ea5e9" strokeWidth="1.8" />
+                  {/* Icono calendario á esquerda (celeste) */}
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                    style={{ position: "absolute", left: 10, top: 10 }}
+                  >
+                    <rect
+                      x="3"
+                      y="4.5"
+                      width="18"
+                      height="16"
+                      rx="2"
+                      stroke="#0ea5e9"
+                      strokeWidth="1.8"
+                    />
+                    <path
+                      d="M7 2.5v4M17 2.5v4M3 9h18"
+                      stroke="#0ea5e9"
+                      strokeWidth="1.8"
+                    />
                   </svg>
-                  <input id="nm-date" class="nm-date" type="date" style={INPUT_DATE} value={dateStr} onInput={(e) => setDateStr(e.currentTarget.value)} />
+                  <input
+                    id="nm-date"
+                    class="nm-date"
+                    type="date"
+                    style={INPUT_DATE}
+                    value={dateStr}
+                    onInput={(e) => setDateStr(e.currentTarget.value)}
+                  />
                 </div>
               </div>
+
               <div>
                 <label style={LABEL}>Hora confirmada</label>
                 <div style={SELECT_WRAP}>
-                  <select style={SELECT_BASE} value={timeStr} onChange={(e) => setTimeStr(e.currentTarget.value)}>
+                  <select
+                    style={SELECT_BASE}
+                    value={timeStr}
+                    onChange={(e) => setTimeStr(e.currentTarget.value)}
+                  >
                     <option value="">(selecciona)</option>
-                    {Array.from({length:12*4},(_,i)=>i).map(i=>{
-                      const h = String(12 + Math.floor(i/4)).padStart(2,"0");
-                      const m = String((i%4)*15).padStart(2,"0");
-                      const t = `${h}:${m}`;
-                      return <option key={t} value={t}>{t}</option>;
-                    })}
+                    {timeOptions().map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
                   </select>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={SELECT_ARROW}>
-                    <path d="M6 9l6 6 6-6" stroke="#0f172a" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                    style={SELECT_ARROW}
+                  >
+                    <path
+                      d="M6 9l6 6 6-6"
+                      stroke="#0f172a"
+                      strokeWidth="2.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </div>
               </div>
