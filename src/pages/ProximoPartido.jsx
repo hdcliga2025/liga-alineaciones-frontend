@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabaseClient.js";
 
 const ESCUDO_SRC = "/escudo.png";
 
+/* ===== Layout base ===== */
 const WRAP = { maxWidth: 880, margin: "0 auto", padding: "16px" };
 
 const PANEL = {
@@ -16,14 +17,24 @@ const PANEL = {
   padding: "18px 16px",
 };
 
+/* ===== Bloque superior (texto) ===== */
+const TOP_BOX = {
+  background: "#f8fafc", // gris claro
+  border: "1px solid #e5e7eb",
+  borderRadius: 14,
+  padding: "14px 12px",
+  marginBottom: 12,
+};
+
 const TITLE_LINE = {
   margin: "0 0 8px 0",
   fontFamily:
     "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
   letterSpacing: ".3px",
   color: "#0f172a",
-  lineHeight: 1.1,
+  lineHeight: 1.08,
   fontSize: 30,
+  fontWeight: 700, // un punto menos de “peso visual” lo gestionamos con color y espaciado
 };
 const TEAM_NAME = { fontWeight: 700, textTransform: "uppercase" };
 const VS_STYLE = { fontWeight: 600, fontSize: 22, margin: "0 8px" };
@@ -32,41 +43,12 @@ const LINE_GRAY = {
   margin: "6px 0 0",
   fontFamily:
     "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
-  fontSize: 20,
-  color: "#6b7280",
+  fontSize: 19,
+  color: "#64748b",
   fontWeight: 600,
 };
 
-const HR = {
-  border: 0,
-  borderTop: "1px solid #e5e7eb",
-  margin: "14px 0",
-};
-
-/* ===== Marcos/contedores ===== */
-const TOP_INFO_BOX = {
-  background: "#f8fafc", // gris claro
-  border: "1px solid #e5e7eb",
-  borderRadius: 14,
-  padding: "12px",
-  marginBottom: 14,
-};
-
-const METEO_FRAME = {
-  marginTop: 18,
-  background: "#f8fafc",
-  border: "1px solid #e5e7eb",
-  borderRadius: 14,
-  padding: "10px 10px 12px",
-};
-
-const METEO_BANNER = {
-  position: "relative",
-  border: "2px dashed #94a3b8", // un pelín más gruesa
-  borderRadius: 12,
-  padding: "16px 12px 12px",
-  background: "#fff",
-};
+const HR = { border: 0, borderTop: "1px solid #e5e7eb", margin: "14px 0" };
 
 /* ===== Admin form ===== */
 const ADMIN_BOX = {
@@ -123,7 +105,7 @@ const SELECT_ARROW = {
 const BTN_SAVE = {
   marginTop: 10,
   width: "100%",
-  padding: "12px 14px",
+  padding: "13px 16px",
   borderRadius: 12,
   border: "1px solid #60a5fa",
   color: "#fff",
@@ -132,7 +114,7 @@ const BTN_SAVE = {
   cursor: "pointer",
   backgroundImage: "linear-gradient(180deg,#67b1ff,#5a8df5)",
   boxShadow: "0 8px 24px rgba(59,130,246,.35)",
-  fontSize: 16, // texto un poco más grande
+  fontSize: 16, // un poco más grande
 };
 const INFO = { marginTop: 10, color: "#065f46", fontSize: 14 };
 const ERR = { marginTop: 10, color: "#b91c1c", fontSize: 14 };
@@ -142,6 +124,39 @@ const STYLE_HIDE_NATIVE_DATE = `
   .nm-date::-webkit-calendar-picker-indicator{ display:none; }
   .nm-date{ -webkit-appearance:none; appearance:none; }
 `;
+
+/* ===== Marco METEO ===== */
+const METEO_FRAME = {
+  position: "relative",
+  border: "2px dashed #cbd5e1",
+  borderRadius: 14,
+  background: "#fff",
+  padding: "20px 14px 20px", // igual arriba e abaixo para dar aire ás “píldoras”
+};
+
+const METEO_LEGEND = {
+  position: "absolute",
+  top: -14, // para “morder” a liña discontinua
+  left: 14,
+  padding: "0 8px",
+  fontSize: 14,
+  fontWeight: 800,
+  color: "#0ea5e9", // celeste
+  background: "transparent", // transparente como pediches
+  lineHeight: 1,
+};
+
+const METEO_SUBLEGEND = {
+  position: "absolute",
+  bottom: -14,
+  left: 14,
+  padding: "0 8px",
+  fontSize: 13,
+  fontWeight: 600,
+  color: "#475569", // gris
+  background: "transparent",
+  lineHeight: 1,
+};
 
 /* ===== Utilidades ===== */
 function toLongGalician(dateObj) {
@@ -218,9 +233,8 @@ async function fetchMeteoFor(lugar, matchISO) {
       let best = 0,
         bestDiff = Infinity;
       for (let i = 0; i < times.length; i++) {
-        const d = Math.abs(
-          new Date(times[i]).getTime() - new Date(localISO).getTime()
-        );
+        const d =
+          Math.abs(new Date(times[i]).getTime() - new Date(localISO).getTime());
         if (d < bestDiff) {
           bestDiff = d;
           best = i;
@@ -297,8 +311,7 @@ export default function ProximoPartido() {
         let admin = false;
         if (email) {
           const e = email.toLowerCase();
-          if (e === "hdcliga@gmail.com" || e === "hdcliga2@gmail.com")
-            admin = true;
+          if (e === "hdcliga@gmail.com" || e === "hdcliga2@gmail.com") admin = true;
         }
         if (!admin && uid) {
           const { data: prof } = await supabase
@@ -453,7 +466,7 @@ export default function ProximoPartido() {
 
       setTimeout(() => {
         window.location.reload();
-      }, 450);
+      }, 650); // un poco más para asegurar recalculo contador/Meteo
     } catch (e2) {
       console.error("[ProximoPartido] save error:", e2);
       setErr("Erro gardando os datos.");
@@ -464,7 +477,9 @@ export default function ProximoPartido() {
 
   if (loading) return <main style={WRAP}>Cargando…</main>;
 
-  const rightPad = !isMobile && showEscudo ? 210 : 0;
+  /* ===== Escudo dimensionado para ocupar o lado dereito ===== */
+  const ESCUDO_W = isMobile ? 130 : 270; // más grande en PC
+  const rightPad = !isMobile && showEscudo ? ESCUDO_W + 24 : 0;
 
   const justTime = useMemo(() => {
     if (!dateObj) return null;
@@ -484,12 +499,15 @@ export default function ProximoPartido() {
 
   const lugarLegend = (row?.lugar || lugar || "—").toUpperCase();
 
+  // Tamaños de iconos METEO
+  const METEO_FZ = isMobile ? 16 : 22; // más grande en PC
+
   return (
     <main style={WRAP}>
       <style>{STYLE_HIDE_NATIVE_DATE}</style>
 
       <section style={PANEL}>
-        {/* Escudo: fixo, arriba dereita, sen tapar bordes */}
+        {/* Escudo fixo arriba dereita, sen tapar bordes */}
         {showEscudo && !isMobile && (
           <img
             src={ESCUDO_SRC}
@@ -498,21 +516,21 @@ export default function ProximoPartido() {
             loading="eager"
             style={{
               position: "absolute",
-              top: 8,
+              top: 6, // máis arriba
               right: 10,
-              width: 160, // lixeiramente máis grande
+              width: ESCUDO_W,
               height: "auto",
-              opacity: 0.95,
+              opacity: 0.96,
               pointerEvents: "none",
-              zIndex: 0,
+              zIndex: 0, // por detrás
             }}
           />
         )}
 
         {/* Contido principal por riba do escudo */}
         <div style={{ position: "relative", zIndex: 1, paddingRight: rightPad }}>
-          {/* Marco superior (título + liñas) */}
-          <div style={TOP_INFO_BOX}>
+          {/* Bloque superior en gris claro */}
+          <div style={TOP_BOX}>
             <h2 style={TITLE_LINE}>
               <span style={TEAM_NAME}>{teamA || "—"}</span>
               <span style={VS_STYLE}>vs</span>
@@ -521,64 +539,76 @@ export default function ProximoPartido() {
 
             <p style={LINE_GRAY}>
               Competición:{" "}
-              <strong>{row?.competition || competition || "—"}</strong>
+              <strong style={{ fontWeight: 700, color: "#0f172a" }}>
+                {row?.competition || competition || "—"}
+              </strong>
             </p>
 
             <p style={LINE_GRAY}>
-              Data: <strong>{capFirst(longDate || "—")}</strong>
+              Data:{" "}
+              <strong style={{ fontWeight: 700, color: "#0f172a" }}>
+                {capFirst(longDate || "—")}
+              </strong>
             </p>
 
             <p style={LINE_GRAY}>
-              Hora: {justTime ? <strong>{justTime}</strong> : "—"}
+              Hora:{" "}
+              {justTime ? (
+                <strong style={{ fontWeight: 700, color: "#0f172a" }}>
+                  {justTime}
+                </strong>
+              ) : (
+                "—"
+              )}
             </p>
           </div>
 
-          {/* METEO: marco externo con leyenda arriba e subleyenda abaixo */}
-          <div style={METEO_FRAME}>
-            {/* Leyenda arriba */}
-            <div
-              style={{
-                fontSize: 14,
-                fontWeight: 800,
-                color: "#334155",
-                margin: "0 0 8px 2px",
-                letterSpacing: ".2px",
-              }}
-            >
-              METEO | {lugarLegend}
-            </div>
+          <hr style={HR} />
 
-            {/* Banner (línea discontinua) */}
-            <div style={METEO_BANNER}>
+          {/* MARCO METEO */}
+          <div style={{ position: "relative", marginTop: 14 }}>
+            {/* Leyenda arriba (celeste) mordiendo a liña */}
+            <span style={METEO_LEGEND}>
+              METEO | {lugarLegend}
+            </span>
+
+            {/* Subleyenda abaixo (gris) mordiendo a liña */}
+            <span style={METEO_SUBLEGEND}>
+              Previsión para a hora de partido
+            </span>
+
+            <div style={METEO_FRAME}>
               {meteo ? (
                 <div
                   style={{
                     display: "flex",
-                    gap: 18,
+                    gap: 22,
                     flexWrap: "wrap",
                     alignItems: "center",
                     color: "#0f172a",
-                    fontSize: 18,
+                    fontSize: METEO_FZ,
                   }}
                 >
-                  <span>
-                    🌡️{" "}
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                    <span aria-hidden="true" style={{ fontSize: METEO_FZ + 2 }}>🌡️</span>
                     <strong>
                       {meteo.temp_c != null
                         ? `${Math.round(meteo.temp_c)} °C`
                         : "—"}
                     </strong>
                   </span>
-                  <span>
-                    💨{" "}
+
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                    <span aria-hidden="true" style={{ fontSize: METEO_FZ + 2 }}>💨</span>
                     <strong>
                       {meteo.wind_kmh != null
                         ? `${Math.round(meteo.wind_kmh)} km/h`
                         : "—"}
                     </strong>
                   </span>
-                  <span>
-                    ☔{" "}
+
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                    <span aria-hidden="true" style={{ fontSize: METEO_FZ + 2 }}>☔</span>
                     <strong>
                       {meteo.precip_prob_pct != null
                         ? `${meteo.precip_prob_pct}%`
@@ -588,28 +618,14 @@ export default function ProximoPartido() {
                 </div>
               ) : (
                 <p style={{ margin: 0, color: "#64748b" }}>
-                  Información meteorolóxica dispoñible 48 horas antes do
-                  partido.
+                  Información meteorolóxica dispoñible 48 horas antes do partido.
                 </p>
               )}
-            </div>
-
-            {/* Subleyenda abaixo */}
-            <div
-              style={{
-                marginTop: 8,
-                fontSize: 13,
-                color: "#475569",
-                fontWeight: 600,
-                paddingLeft: 2,
-              }}
-            >
-              Previsión para a hora de partido.
             </div>
           </div>
         </div>
 
-        {/* Escudo en móbil (non-admin) ao final, baixo todo */}
+        {/* Escudo en móbil (non-admin) ao final */}
         {showEscudo && isMobile && (
           <div style={{ marginTop: 16, display: "grid", placeItems: "center" }}>
             <img
@@ -617,7 +633,7 @@ export default function ProximoPartido() {
               alt="Escudo RC Celta"
               decoding="async"
               loading="eager"
-              style={{ width: 120, height: "auto", opacity: 0.98 }}
+              style={{ width: ESCUDO_W, height: "auto", opacity: 0.98 }}
             />
           </div>
         )}
@@ -662,7 +678,9 @@ export default function ProximoPartido() {
                 <input
                   style={INPUT_LUGAR}
                   value={lugar}
-                  onInput={(e) => setLugar(e.currentTarget.value.toUpperCase())}
+                  onInput={(e) =>
+                    setLugar(e.currentTarget.value.toUpperCase())
+                  }
                   placeholder="Ex.: VIGO"
                 />
               </div>
