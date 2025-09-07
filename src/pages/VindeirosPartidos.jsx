@@ -1,412 +1,292 @@
-// src/pages/VindeirosPartidos.jsx
 import { h } from "preact";
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
-/* ===== Paleta / estilos base (verde) ===== */
-const GREEN_500 = "#22c55e";
-const GREEN_400 = "#34d399";
-const GREEN_50  = "#f0fdf4"; // fondo muy suave
-const SHADOW    = "0 6px 18px rgba(0,0,0,.06)";
-const BORDER    = "1px solid #e5e7eb";
-
-const WRAP = { maxWidth: 1080, margin: "0 auto", padding: "16px 12px 26px" };
-const HEADER_ROW = {
-  display: "grid",
-  gridTemplateColumns: "1fr auto",
-  alignItems: "center",
-  gap: 12,
-  marginBottom: 12,
-};
-const H1 = { font: "800 20px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", margin: 0 };
-const SUB = { margin: "2px 0 0", font: "400 13px/1.2 Montserrat,system-ui,sans-serif", color: "#475569" };
-
-const BTN_ADD = {
-  borderRadius: 12,
-  padding: "10px 18px",
-  border: "1px solid " + GREEN_400,
-  backgroundImage: `linear-gradient(180deg,${GREEN_400},${GREEN_500})`,
-  color: "#fff",
-  font: "800 14px/1 Montserrat,system-ui,sans-serif",
-  letterSpacing: ".2px",
-  boxShadow: "0 8px 22px rgba(34,197,94,.25)",
-  cursor: "pointer",
-  whiteSpace: "nowrap",
-};
-
-const LIST = { display: "grid", gap: 12 };
-
-const CARD = {
-  background: GREEN_50,               // muy suave
-  border: `2px solid ${GREEN_500}`,   // marco verde
-  borderRadius: 16,
-  boxShadow: SHADOW,
-  padding: 12,
-};
-
-const TOPLINE = {
-  display: "grid",
-  gridTemplateColumns: "auto 1fr",
-  gap: 10,
-  alignItems: "center",
-};
-const NUM_BADGE = {
-  minWidth: 34,
-  height: 34,
-  padding: "0 8px",
-  display: "grid",
-  placeItems: "center",
-  borderRadius: 8,                     // cuadrado con esquinas
-  border: `2px solid ${GREEN_500}`,    // borde verde
-  background: "#fff",
-  font: "700 14px/1 Montserrat,system-ui,sans-serif",
-  color: "#0f172a",
-};
-
-const VS_WRAP = {
-  display: "grid",
-  gridTemplateColumns: "minmax(60px,1fr) auto minmax(60px,1fr)",
-  alignItems: "center",
-  gap: 8,
-};
-const INPUT_TEAM = (editable) => ({
-  width: "100%",
-  borderRadius: 10,
-  border: BORDER,
-  background: "#fff",
-  padding: "10px 10px",
-  font: "700 14px/1 Montserrat,system-ui,sans-serif",
-  color: "#0f172a",
-  textTransform: "uppercase",
-  outline: "none",
-  ...(editable ? {} : { background: "#f8fafc", color: "#334155" }),
-});
-const VS = { font: "800 14px/1 Montserrat,system-ui,sans-serif", color: "#0f172a" };
-
-const BOTLINE = {
-  display: "grid",
-  gridTemplateColumns: "minmax(120px,220px) 1fr auto",
-  gap: 10,
-  alignItems: "center",
-  marginTop: 10,
-};
-
-const INPUT_DATE = (editable) => ({
-  width: "100%",
-  borderRadius: 10,
-  border: BORDER,
-  background: "#fff",
-  padding: "10px 10px",
-  font: "700 14px/1 Montserrat,system-ui,sans-serif",
-  color: "#0f172a",
-  outline: "none",
-  ...(editable ? {} : { background: "#f8fafc", color: "#334155" }),
-});
-
-const COMP_WRAP = { display: "grid", gridTemplateColumns: "auto 1fr", alignItems: "center", gap: 8 };
-const TROPHY = (size=20,color=GREEN_500)=>(
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path d="M7 4h10v3a5 5 0 01-10 0V4Z" stroke={color} stroke-width="2"/>
-    <path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" stroke={color} stroke-width="2"/>
-    <path d="M9 14h6v3H9z" stroke={color} stroke-width="2"/>
-  </svg>
-);
-const SELECT_COMP = (editable) => ({
-  width: "100%",
-  borderRadius: 10,
-  border: BORDER,
-  background: "#fff",
-  padding: "10px 12px",
-  font: "700 14px/1 Montserrat,system-ui,sans-serif",
-  color: "#0f172a",
-  outline: "none",
-  appearance: "none",
-  WebkitAppearance: "none",
-  MozAppearance: "none",
-  ...(editable ? {} : { background: "#f8fafc", color: "#334155" }),
-});
-
-const RIGHT_ICONS = { display: "grid", gridAutoFlow: "column", gap: 8, alignItems: "center" };
-const ICON_BTN = {
-  width: 36, height: 36,
-  display: "grid", placeItems: "center",
-  borderRadius: 10,
-  border: BORDER,
-  background: "#fff",
-  boxShadow: "0 2px 8px rgba(0,0,0,.06)",
-  cursor: "pointer",
-};
-
-const UP_ARROW = (size=20, color=GREEN_500)=>(
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path d="M12 4l-7 7M12 4l7 7" stroke={color} stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M12 4v16" stroke={color} stroke-width="2.4" stroke-linecap="round"/>
-  </svg>
-);
-
-/* ===== Helpers ===== */
-const toDMY = (d, tz="Europe/Madrid") => {
-  try {
-    const dt = (d instanceof Date) ? d : new Date(d);
-    const y = new Intl.DateTimeFormat("sv-SE",{ timeZone: tz, year:"2-digit"}).format(dt); // “aa”
-    const m = new Intl.DateTimeFormat("sv-SE",{ timeZone: tz, month:"2-digit"}).format(dt);
-    const da= new Intl.DateTimeFormat("sv-SE",{ timeZone: tz, day:"2-digit"}).format(dt);
-    return `${da}/${m}/${y}`;
-  } catch { return ""; }
-};
-const parseDMY = (s) => {
-  const m = /^(\d{2})\/(\d{2})\/(\d{2})$/.exec(String(s||"").trim());
+/* ===== Fechas: dd/mm/aa <-> YYYY-MM-DD ===== */
+function dmyToISO(v) {
+  const s = String(v || "").trim();
+  const m = /^(\d{2})\/(\d{2})\/(\d{2}|\d{4})$/.exec(s);
   if (!m) return null;
-  const [_, dd, mm, yy] = m;
-  const yyyy = Number(yy) >= 70 ? `19${yy}` : `20${yy}`; // 70-99 → 19xx, resto → 20xx
-  const iso = `${yyyy}-${mm}-${dd}T00:00:00`;
-  const d = new Date(iso);
+  let [, dd, mm, yy] = m;
+  if (yy.length === 2) yy = `20${yy}`;
+  const iso = `${yy}-${mm}-${dd}`;
+  const d = new Date(iso + "T00:00:00");
   return Number.isNaN(d.getTime()) ? null : iso;
+}
+function isoToDMY(iso) {
+  try {
+    const [y, m, d] = String(iso || "").slice(0, 10).split("-");
+    if (!y || !m || !d) return "";
+    return `${d}/${m}/${String(y).slice(2)}`;
+  } catch { return ""; }
+}
+
+const COMP_OPTS = ["LaLiga", "Europa League", "Copa do Rei"];
+
+/* ===== Estilos compactos ===== */
+const WRAP   = { maxWidth: 960, margin: "0 auto", padding: "16px 12px 28px" };
+const H1     = { margin: "0 0 6px", color: "#0f172a", font: "700 22px/1.2 Montserrat,system-ui,sans-serif" };
+const SUB    = { margin: "0 0 14px", color: "#475569", font: "400 13px/1.35 Montserrat,system-ui,sans-serif" };
+const TOP    = { display: "flex", alignItems: "center", gap: 10, marginBottom: 10 };
+const BTNADD = {
+  display: "inline-flex", alignItems: "center", gap: 8,
+  padding: "10px 22px", borderRadius: 12, border: 0,
+  background: "linear-gradient(180deg,#34d399,#10b981)", color: "#fff",
+  font: "700 13px/1 Montserrat,system-ui,sans-serif", letterSpacing: ".2px",
+  boxShadow: "0 6px 14px rgba(16,185,129,.25)", cursor: "pointer"
 };
+const TOAST  = {
+  marginLeft: "auto", background: "#10b981", color:"#fff",
+  font:"700 12px/1 Montserrat,system-ui,sans-serif", padding:"8px 10px",
+  borderRadius:10, boxShadow:"0 6px 14px rgba(16,185,129,.25)"
+};
+const ERR    = { margin:"8px 0 0", color:"#dc2626", font:"600 13px/1.25 Montserrat,system-ui,sans-serif" };
 
-export default function VindeirosPartidos(){
+const CARD = (saved) => ({
+  background: saved ? "linear-gradient(180deg,#f8fbff,#f3f7fb)" : "#fff",
+  border: `2px solid ${saved ? "#38bdf8" : "#e5e7eb"}`, borderRadius: 16,
+  boxShadow: "0 4px 12px rgba(0,0,0,.06)", padding: 12
+});
+const ROW1   = { display:"grid", gridTemplateColumns:"64px 1fr", gap:10, alignItems:"center", marginBottom:8 };
+const ROW2   = { display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, alignItems:"center" };
+const NUMBOX = (saved) => ({
+  height: 40, borderRadius: 10, border:`2px solid ${saved ? "#38bdf8":"#e5e7eb"}`,
+  display:"grid", placeItems:"center", font:"700 14px/1 Montserrat,system-ui,sans-serif",
+  color:"#0f172a", background:"#fff"
+});
+const MATCHBOX = {
+  display:"grid", gridTemplateColumns:"1fr auto 1fr", alignItems:"center",
+  gap:8, border:"1px solid #e5e7eb", borderRadius:12, padding:"8px 10px", background:"#fff"
+};
+const VS = { font:"700 12px/1 Montserrat,system-ui,sans-serif", color:"#64748b" };
+const INPUT = (editable) => ({
+  width:"100%", border:0, outline:"none", background:"transparent",
+  font:"700 14px/1.2 Montserrat,system-ui,sans-serif",
+  color: editable ? "#0f172a" : "#64748b", textTransform:"uppercase"
+});
+const FIELD = { display:"flex", alignItems:"center", gap:10, border:"1px solid #e5e7eb", borderRadius:12, padding:"8px 10px", background:"#fff" };
+const DATEINPUT = (editable) => ({
+  width:"100%", border:0, outline:"none", background:"transparent",
+  font:"700 13px/1.2 Montserrat,system-ui,sans-serif",
+  color: editable ? "#0f172a" : "#64748b", textTransform:"uppercase"
+});
+const SELECT = (editable) => ({
+  width:"100%", border:0, outline:"none", background:"transparent",
+  font:"700 13px/1.2 Montserrat,system-ui,sans-serif",
+  color: editable ? "#0f172a" : "#64748b", textTransform:"uppercase", appearance:"none"
+});
+
+/* ===== Página ===== */
+export default function VindeirosPartidos() {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [rows, setRows] = useState([]); // { id, team1, team2, match_date, competition, created_at }
-  const [busy, setBusy]   = useState(false);
+  const [rows, setRows]     = useState([]);   // registros DB
+  const [locals, setLocals] = useState([]);   // tarjetas nuevas (tmp)
+  const [errorMsg, setErrorMsg] = useState("");
 
-  // Admin?
+  // Toast
+  const [toast, setToast] = useState("");
+  const tRef = useRef(null);
+  const showToast = (msg) => {
+    setToast(msg);
+    clearTimeout(tRef.current);
+    tRef.current = setTimeout(() => setToast(""), 2000);
+  };
+
+  // ¿Admin?
   useEffect(() => {
+    let alive = true;
     (async () => {
-      const { data: s } = await supabase.auth.getSession();
-      const email = s?.session?.user?.email || "";
-      const uid   = s?.session?.user?.id   || null;
-      let admin = false;
-      if (email) {
-        const e = email.toLowerCase();
-        if (e === "hdcliga@gmail.com" || e === "hdcliga2@gmail.com") admin = true;
+      try {
+        const { data } = await supabase.rpc("is_admin");
+        if (alive) setIsAdmin(!!data);
+      } catch {
+        const { data: s } = await supabase.auth.getSession();
+        const email = (s?.session?.user?.email || "").toLowerCase();
+        const ok = ["hdcliga@gmail.com", "hdcliga2@gmail.com"].includes(email);
+        if (alive) setIsAdmin(ok);
       }
-      if (!admin && uid) {
-        const { data: prof } = await supabase.from("profiles").select("role").eq("id", uid).maybeSingle();
-        if ((prof?.role||"").toLowerCase() === "admin") admin = true;
-      }
-      setIsAdmin(admin);
     })();
+    return () => { alive = false; clearTimeout(tRef.current); };
   }, []);
 
-  async function loadList() {
-    try{
-      const { data } = await supabase
-        .from("matches_vindeiros")
-        .select("id, team1, team2, match_date, competition, created_at")
-        .order("match_date", { ascending: true, nullsFirst: false })
-        .limit(120);
-      setRows(data || []);
-    }catch(e){
-      console.warn("Vindeiros: loadList error", e);
-      setRows([]); // vacío pero visible
-    }
+  async function load() {
+    setErrorMsg("");
+    const { data, error } = await supabase
+      .from("matches_vindeiros")
+      .select("id, home, away, match_date, competition")
+      .order("match_date", { ascending: true, nullsFirst: false });
+
+    if (error) { setErrorMsg(error.message || "Erro cargando datos."); return; }
+    setRows((data || []).map(r => ({ ...r, _saved: true })));
   }
-  useEffect(()=>{ loadList(); }, []);
+  useEffect(() => { load(); }, []);
 
-  const viewRows = useMemo(()=>{
-    // numeración 01.. de arriba a abajo (próximos primero)
-    return (rows || []).map((r, idx) => ({...r, __n: String(idx+1).padStart(2,"0") }));
-  },[rows]);
+  // Vista ordenada por fecha (sin fecha al final) y numerada 01..N
+  const viewList = useMemo(() => {
+    const all = [...rows, ...locals];
+    const withKey = all.map((r, i) => ({ ...r, _k: r.id || r._tempId || `k-${i}` }));
+    const dated = [], nodate = [];
+    for (const r of withKey) (r.match_date ? dated : nodate).push(r);
+    dated.sort((a,b) => new Date(a.match_date) - new Date(b.match_date));
+    return [...dated, ...nodate].map((r, i) => ({ ...r, _num: String(i+1).padStart(2,"0") }));
+  }, [rows, locals]);
 
-  const editable = isAdmin;
-
-  function setLocal(i, patch){
-    setRows(prev => {
-      const nxt = prev.slice();
-      nxt[i] = { ...nxt[i], ...patch, updated_at: new Date().toISOString() };
-      return nxt;
-    });
+  function addLocal() {
+    if (!isAdmin) return;
+    setLocals(l => [{
+      _tempId: `tmp-${Date.now()}`, home:"", away:"", match_date:"", competition:"", _saved:false
+    }, ...l]);
   }
-
-  async function ensureRow(i){
-    // si no tiene id, insertar vacío para conseguir ID
-    if (rows[i]?.id) return rows[i].id;
-    try{
-      const { data, error } = await supabase
-        .from("matches_vindeiros")
-        .insert({ team1: null, team2: null, match_date: null, competition: null })
-        .select("id")
-        .single();
-      if (error) throw error;
-      setRows(prev=>{
-        const nxt = prev.slice();
-        nxt[i] = { ...nxt[i], id: data.id };
-        return nxt;
-      });
-      return data.id;
-    }catch(e){
-      console.warn("ensureRow", e);
-      return null;
-    }
+  function setLocalField(tmp, patch) {
+    setLocals(l => l.map(r => r._tempId === tmp ? { ...r, ...patch, _saved:false } : r));
   }
+  function setRowField(id, patch) {
+    setRows(l => l.map(r => r.id === id ? { ...r, ...patch, _saved:false } : r));
+  }
+  const isComplete = (r) =>
+    (r.home||"").trim() && (r.away||"").trim() && (r.match_date||"").trim() && (r.competition||"").trim();
 
-  async function saveRow(i){
-    if (!editable) return;
-    const r = rows[i];
-    if (!r) return;
-    // normaliza TEAMs a MAYÚSCULAS
-    const team1 = (r.team1 || "").toUpperCase().trim();
-    const team2 = (r.team2 || "").toUpperCase().trim();
-    // admite dd/mm/aa o iso
-    let match_iso = null;
-    if (r.match_date){
-      if (/^\d{2}\/\d{2}\/\d{2}$/.test(r.match_date)) {
-        match_iso = parseDMY(r.match_date);
-      } else {
-        const d = new Date(r.match_date);
-        match_iso = Number.isNaN(d.getTime()) ? null : d.toISOString();
+  async function persist(r) {
+    setErrorMsg("");
+    try {
+      // normaliza fecha
+      let iso = r.match_date;
+      if (/^\d{2}\/\d{2}\/\d{2,4}$/.test(iso)) {
+        iso = dmyToISO(iso);
+        if (!iso) throw new Error("Formato de data inválido.");
       }
-    }
-    const competition = (r.competition || "").trim() || null;
-
-    // upsert si hay id; si no, insert
-    try{
-      setBusy(true);
-      const id = await ensureRow(i);
-      if (!id) return;
-
+      const home = (r.home||"").toUpperCase().trim();
+      const away = (r.away||"").toUpperCase().trim();
       const payload = {
-        team1: team1 || null,
-        team2: team2 || null,
-        match_date: match_iso,
-        competition,
-        updated_at: new Date().toISOString(),
+        home, away,
+        match_date: iso,
+        competition: r.competition,
+        partido: `${home} vs ${away}`.trim()
       };
 
-      const { error } = await supabase
-        .from("matches_vindeiros")
-        .update(payload)
-        .eq("id", id);
-      if (error) throw error;
-
-      // refresca para reordenar por fecha
-      await loadList();
-    }catch(e){
-      console.warn("saveRow", e);
-    }finally{
-      setBusy(false);
+      if (r.id) {
+        const { error } = await supabase.from("matches_vindeiros").update(payload).eq("id", r.id);
+        if (error) throw error;
+        setRows(list => list.map(x => x.id === r.id ? { ...x, ...payload, _saved:true } : x));
+      } else {
+        const { data, error } = await supabase
+          .from("matches_vindeiros")
+          .insert(payload)
+          .select("id, home, away, match_date, competition")
+          .single();
+        if (error) throw error;
+        // elimina tmp y añade real
+        setLocals(list => list.filter(x => x._tempId !== r._tempId));
+        setRows(list => [{ ...data, _saved:true }, ...list]);
+      }
+      showToast("REGISTRADO");
+    } catch (e) {
+      setErrorMsg(e?.message || "Erro gardando.");
     }
   }
 
-  async function onAdd(){
-    if (!editable) return;
-    try{
-      const { data, error } = await supabase
-        .from("matches_vindeiros")
-        .insert({ team1:null, team2:null, match_date:null, competition:null })
-        .select("id, team1, team2, match_date, competition, created_at")
-        .single();
-      if (error) throw error;
-      setRows(prev => [ data, ...prev ]);
-    }catch(e){
-      console.warn("add", e);
-    }
-  }
+  // Autoguardado al completar 4 campos (sólo admin)
+  useEffect(() => {
+    if (!isAdmin) return;
+    for (const r of locals) if (!r._saved && isComplete(r)) persist(r);
+    for (const r of rows)   if (!r._saved && isComplete(r)) persist(r);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locals, rows, isAdmin]);
 
-  // ======= RENDER =======
+  const renderMatch = (r, editable) => {
+    const onHome = (e) => {
+      const v = e.currentTarget.value.toUpperCase();
+      r.id ? setRowField(r.id,{home:v}) : setLocalField(r._tempId,{home:v});
+    };
+    const onAway = (e) => {
+      const v = e.currentTarget.value.toUpperCase();
+      r.id ? setRowField(r.id,{away:v}) : setLocalField(r._tempId,{away:v});
+    };
+    return (
+      <div style={MATCHBOX}>
+        <input style={INPUT(editable)} placeholder="HOME" value={r.home||""}
+               onInput={editable ? onHome : undefined} disabled={!editable}/>
+        <span style={VS}>VS</span>
+        <input style={INPUT(editable)} placeholder="AWAY" value={r.away||""}
+               onInput={editable ? onAway : undefined} disabled={!editable}/>
+      </div>
+    );
+  };
+
+  const renderDate = (r, editable) => {
+    const val = r.match_date
+      ? (/^\d{2}\/\d{2}\/\d{2,4}$/.test(r.match_date) ? r.match_date : isoToDMY(r.match_date))
+      : "";
+    const onInput = (e) => {
+      const v = e.currentTarget.value.toUpperCase();
+      r.id ? setRowField(r.id,{match_date:v}) : setLocalField(r._tempId,{match_date:v});
+    };
+    return (
+      <div style={FIELD}>
+        <input style={DATEINPUT(editable)} placeholder="DD/MM/AA" value={val}
+               onInput={editable ? onInput : undefined} disabled={!editable}/>
+      </div>
+    );
+  };
+
+  const renderComp = (r, editable) => {
+    const onChange = (e) => {
+      const v = e.currentTarget.value;
+      r.id ? setRowField(r.id,{competition:v}) : setLocalField(r._tempId,{competition:v});
+    };
+    return (
+      <div style={FIELD}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{flex:"0 0 auto"}}>
+          <path d="M7 4h10v3a5 5 0 01-10 0V4Z" stroke="#0ea5e9" strokeWidth="1.8"/>
+          <path d="M7 7H5a3 3 0 0 0 3 3M17 7h2a3 3 0 0 1-3 3" stroke="#0ea5e9" strokeWidth="1.8"/>
+          <path d="M9 14h6v3H9z" stroke="#0ea5e9" strokeWidth="1.8"/>
+        </svg>
+        <select style={SELECT(editable)} value={r.competition||""}
+                onChange={editable ? onChange : undefined} disabled={!editable}>
+          <option value="" disabled>—</option>
+          {COMP_OPTS.map(o => <option key={o} value={o}>{o.toUpperCase()}</option>)}
+        </select>
+      </div>
+    );
+  };
+
   return (
     <main style={WRAP}>
-      <div style={HEADER_ROW}>
-        <div>
-          <h2 style={H1}>VINDEIROS PARTIDOS</h2>
-          <p style={SUB}>Próximos partidos a xogar polo Celta con data programada</p>
-        </div>
-        {editable && (
-          <button type="button" style={BTN_ADD} onClick={onAdd} disabled={busy}>
+      <h2 style={H1}>Vindeiros partidos</h2>
+      <p style={SUB}>Axenda dos próximos encontros con data e hora confirmada.</p>
+
+      <div style={TOP}>
+        {isAdmin && (
+          <button type="button" style={BTNADD} onClick={addLocal}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M12 5v14M5 12h14" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
             Engadir
           </button>
         )}
+        {toast && <span style={TOAST}>{toast}</span>}
       </div>
 
-      <section style={LIST}>
-        {viewRows.map((r, i) => {
-          const dmy = r.match_date
-            ? (/^\d{2}\/\d{2}\/\d{2}$/.test(r.match_date) ? r.match_date : toDMY(r.match_date))
-            : "";
+      {errorMsg && <p style={ERR}>{errorMsg}</p>}
 
-        return (
-          <article key={r.id || `v-${i}`} style={CARD}>
-            {/* Línea 1: Nº + (Equipo1 vs Equipo2) */}
-            <div style={TOPLINE}>
-              <div style={NUM_BADGE}>{r.__n}</div>
-              <div style={VS_WRAP}>
-                <input
-                  style={INPUT_TEAM(editable)}
-                  value={r.team1 || ""}
-                  placeholder="EQUIPO 1"
-                  disabled={!editable}
-                  onInput={(e)=> editable && setLocal(i, { team1: e.currentTarget.value.toUpperCase() })}
-                  onBlur={()=> saveRow(i)}
-                />
-                <span style={VS}>vs</span>
-                <input
-                  style={INPUT_TEAM(editable)}
-                  value={r.team2 || ""}
-                  placeholder="EQUIPO 2"
-                  disabled={!editable}
-                  onInput={(e)=> editable && setLocal(i, { team2: e.currentTarget.value.toUpperCase() })}
-                  onBlur={()=> saveRow(i)}
-                />
+      <div style={{ display:"grid", gap:12 }}>
+        {viewList.map((r) => {
+          const saved = !!r._saved || !!r.id;
+          const editable = isAdmin;
+          return (
+            <section key={r._k} style={CARD(saved)}>
+              <div style={ROW1}>
+                <div style={NUMBOX(saved)}>{r._num}</div>
+                {renderMatch(r, editable)}
               </div>
-            </div>
-
-            {/* Línea 2: Data + Competición + Icono (flecha arriba) */}
-            <div style={BOTLINE}>
-              <input
-                style={INPUT_DATE(editable)}
-                value={dmy}
-                placeholder="DD/MM/AA"
-                disabled={!editable}
-                onInput={(e)=> editable && setLocal(i, { match_date: e.currentTarget.value.toUpperCase() })}
-                onBlur={()=> saveRow(i)}
-              />
-
-              <div style={COMP_WRAP}>
-                {TROPHY(22, GREEN_500)}
-                <select
-                  style={SELECT_COMP(editable)}
-                  value={r.competition || ""}
-                  disabled={!editable}
-                  onChange={(e)=> editable && setLocal(i, { competition: e.currentTarget.value })}
-                  onBlur={()=> saveRow(i)}
-                >
-                  <option value="">(selecciona)</option>
-                  <option value="LaLiga">LaLiga</option>
-                  <option value="Europa League">Europa League</option>
-                  <option value="Copa do Rei">Copa do Rei</option>
-                </select>
+              <div style={ROW2}>
+                {renderDate(r, editable)}
+                {renderComp(r, editable)}
               </div>
-
-              <div style={RIGHT_ICONS}>
-                <button
-                  type="button"
-                  title="Enviar arriba"
-                  style={ICON_BTN}
-                  onClick={()=> window.scrollTo({ top: 0, behavior: "smooth" })}
-                >
-                  {UP_ARROW(20, GREEN_500)}
-                </button>
-              </div>
-            </div>
-          </article>
-        );})}
-
-        {viewRows.length === 0 && (
-          <div
-            style={{
-              border: BORDER,
-              borderRadius: 16,
-              background: "#fff",
-              padding: 16,
-              textAlign: "center",
-              color: "#64748b",
-              font: "400 14px/1.2 Montserrat,system-ui,sans-serif",
-            }}
-          >
-            Aínda non hai encontros programados.
-          </div>
-        )}
-      </section>
+            </section>
+          );
+        })}
+      </div>
     </main>
   );
 }
