@@ -1,276 +1,341 @@
 // src/pages/PartidosFinalizados.jsx
 import { h } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
+import { route } from "preact-router";
 import { supabase } from "../lib/supabaseClient.js";
 
-const TABLE = "matches_finalizados";
-
-// Esquemas posibles en la BD.
-// El componente probará en este orden hasta que uno funcione.
-const CANDIDATE_SCHEMAS = [
-  { home: "home",      away: "away",        date: "match_date", competition: "competition" },
-  { home: "local",     away: "visitante",   date: "match_date", competition: "competition" },
-  { home: "equipo1",   away: "equipo2",     date: "match_date", competition: "competition" },
-];
-
-// UI helpers
-const fmt = (d) => {
-  if (!d) return "";
-  try {
-    const dd = new Date(d);
-    const day = String(dd.getDate()).padStart(2, "0");
-    const mon = String(dd.getMonth() + 1).padStart(2, "0");
-    const yy = String(dd.getFullYear()).slice(-2);
-    return `${day}/${mon}/${yy}`;
-  } catch { return ""; }
+/* ===== Estilos compartidos con Vindeiros ===== */
+const WRAP = { maxWidth: 880, margin: "0 auto", padding: "16px" };
+const PAGE_HEAD = { margin: "0 0 6px", font: "700 22px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a" };
+const PAGE_SUB  = { margin: "0 0 16px", font: "400 13px/1.4 Montserrat,system-ui,sans-serif", color: "#475569" };
+const CARD = {
+  border: "1px solid #e5e7eb",
+  borderRadius: 14,
+  background: "#f8fafc",
+  padding: 12,
+  boxShadow: "0 6px 18px rgba(0,0,0,.05)",
+  marginBottom: 12,
 };
+const ROW = { display: "grid", gridTemplateColumns: "auto 1fr", gap: 10, alignItems: "center" };
+const NUMBOX = {
+  minWidth: 34,
+  height: 34,
+  borderRadius: 8,
+  border: "1px solid #cbd5e1",
+  background: "#fff",
+  display: "grid",
+  placeItems: "center",
+  font: "700 14px/1 Montserrat,system-ui,sans-serif",
+  color: "#0f172a",
+};
+const TOPFIELDS = { display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "center" };
+const TEAMS = { display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 8, alignItems: "center" };
+const VS = { font: "700 14px/1 Montserrat,system-ui,sans-serif", color: "#0f172a" };
+const LUGAR = { font: "700 13px/1 Montserrat,system-ui,sans-serif", color: "#0f172a", textTransform: "uppercase" };
+const BTM = { marginTop: 8, display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 8, alignItems: "center" };
+const INPUT = {
+  width: "100%",
+  borderRadius: 10,
+  border: "1px solid #dbe2f0",
+  background: "#fff",
+  padding: "10px 12px",
+  font: "800 14px/1.1 Montserrat,system-ui,sans-serif",
+  color: "#0f172a",
+  textTransform: "uppercase",
+  outline: "none",
+};
+const INPUT_SOFT = { ...INPUT, fontWeight: 700, textTransform: "none" };
+const SELECT = {
+  ...INPUT,
+  appearance: "none",
+  WebkitAppearance: "none",
+  MozAppearance: "none",
+  paddingRight: 36,
+  cursor: "pointer",
+};
+const DATEBOX = { ...INPUT_SOFT, textTransform: "none" };
+const TIMEBOX = { ...INPUT_SOFT, textTransform: "none" };
+const ACTIONS = { display: "flex", gap: 8, justifySelf: "end" };
+const ICONBTN = {
+  width: 38,
+  height: 38,
+  borderRadius: 10,
+  border: "1px solid #e2e8f0",
+  background: "#fff",
+  boxShadow: "0 2px 8px rgba(0,0,0,.06)",
+  display: "grid",
+  placeItems: "center",
+  cursor: "pointer",
+};
+const BADGE_SAVED = { border: "2px solid #0ea5e9", background: "#f1fafe" };
+const ERRBAR = { margin: "10px 0", padding: "10px 12px", borderRadius: 10, background: "#fee2e2", color: "#991b1b", font: "600 13px/1.3 Montserrat,sans-serif" };
 
-export default function PartidosFinalizados() {
-  const [schema, setSchema] = useState(null);      // {home, away, date, competition}
-  const [rows, setRows] = useState([]);            // [{id,home,away,date,competition}]
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState("");
+const SVGI = { fill: "none", stroke: "#0f172a", strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round" };
 
-  // Detecta qué columnas existen y carga filas
-  useEffect(() => {
-    let alive = true;
-
-    async function detectAndLoad() {
-      setErr("");
-      setLoading(true);
-
-      // 1) Detectar esquema
-      let chosen = null;
-      for (const cand of CANDIDATE_SCHEMAS) {
-        const sel = ["id", cand.date, cand.competition, cand.home, cand.away]
-          .filter(Boolean)
-          .join(",");
-        const { error } = await supabase.from(TABLE).select(sel).limit(1);
-        if (!error) { chosen = cand; break; }
-      }
-
-      if (!chosen) {
-        setErr("Non foi posible detectar o esquema da táboa matches_finalizados.");
-        setLoading(false);
-        return;
-      }
-      if (!alive) return;
-      setSchema(chosen);
-
-      // 2) Cargar datos reales
-      const sel = ["id", chosen.date, chosen.competition, chosen.home, chosen.away].join(",");
-      const { data, error } = await supabase.from(TABLE).select(sel);
-      if (error) {
-        setErr(error.message || "Erro cargando datos.");
-        setLoading(false);
-        return;
-      }
-      if (!alive) return;
-
-      const canon = (data || []).map((r) => ({
-        id: r.id,
-        home: r[chosen.home] || "",
-        away: r[chosen.away] || "",
-        date: r[chosen.date] || null,
-        competition: r[chosen.competition] || "",
-      }));
-
-      // Orden: máis recente arriba
-      canon.sort((a, b) => {
-        const ta = a.date ? new Date(a.date).getTime() : 0;
-        const tb = b.date ? new Date(b.date).getTime() : 0;
-        return tb - ta;
-      });
-
-      setRows(canon);
-      setLoading(false);
-    }
-
-    detectAndLoad();
-    return () => { alive = false; };
-  }, []);
-
-  // Guardado de una fila (insert/update) usando el esquema detectado
-  async function saveRow(idx, row) {
-    if (!schema) return;
-
-    // Requisitos mínimos: 4 campos cubertos
-    const ok =
-      row.home?.trim() && row.away?.trim() &&
-      row.date && row.competition?.trim();
-
-    if (!ok) return; // non garda aínda
-
-    const payload = {
-      [schema.home]: row.home.trim().toUpperCase(),
-      [schema.away]: row.away.trim().toUpperCase(),
-      [schema.date]: row.date,
-      [schema.competition]: row.competition.trim(),
-    };
-
-    let error;
-    if (row.id) {
-      ({ error } = await supabase.from(TABLE).update(payload).eq("id", row.id));
-    } else {
-      const { data, error: e2 } = await supabase.from(TABLE).insert(payload).select("id").single();
-      error = e2;
-      if (!e2 && data?.id) row.id = data.id;
-    }
-    if (error) {
-      setErr(error.message || "Erro gardando os datos.");
-      return;
-    }
-
-    // Marca visual de gardado (borde celeste + fondo moi suave)
-    setRows((prev) => {
-      const next = [...prev];
-      next[idx] = { ...row, _saved: true };
-      return next;
-    });
+const pad2 = (n) => String(n).padStart(2, "0");
+function mapRow(raw) {
+  const r = raw || {};
+  const equipo1 = r.equipo1 || r.team1 || r.home || "";
+  const equipo2 = r.equipo2 || r.team2 || r.away || "";
+  const lugar   = r.lugar   || r.location || "";
+  const comp    = r.competition || r.torneo || "";
+  const match_iso = r.match_iso || r.match_datetime || (r.match_date ? new Date(r.match_date).toISOString() : null);
+  return {
+    id: r.id ?? null,
+    equipo1, equipo2, lugar,
+    competition: comp,
+    match_iso,
+    updated_at: r.updated_at || null,
+  };
+}
+function sortDescByDate(a, b) {
+  const ta = a.match_iso ? new Date(a.match_iso).getTime() : -Infinity;
+  const tb = b.match_iso ? new Date(b.match_iso).getTime() : -Infinity;
+  return tb - ta;
+}
+function dmyWithWeekday(isoLike, tz = "Europe/Madrid") {
+  if (!isoLike) return "";
+  const d = new Date(isoLike);
+  try {
+    const w = new Intl.DateTimeFormat("gl-ES", { weekday: "long", timeZone: tz }).format(d);
+    const dd = pad2(d.getDate());
+    const mm = pad2(d.getMonth() + 1);
+    const yyyy = d.getFullYear();
+    return `${w}, ${dd}/${mm}/${yyyy}`;
+  } catch {
+    const dd = pad2(d.getDate());
+    const mm = pad2(d.getMonth() + 1);
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
   }
-
-  function setLocal(idx, patch) {
-    setRows((prev) => {
-      const next = [...prev];
-      next[idx] = { ...next[idx], ...patch, _saved: false };
-      return next;
-    });
-  }
-
-  function addBlank() {
-    setRows((prev) => [
-      {
-        id: null,
-        home: "",
-        away: "",
-        date: null,
-        competition: "",
-        _saved: false,
-      },
-      ...prev,
-    ]);
-  }
-
-  const title = "PARTIDOS FINALIZADOS";
-  const subtitle = "Listado dos encontros xa xogados polo Celta na tempada 2025/2026.";
-
-  return (
-    <main style={{ padding: "1rem" }}>
-      <h2 style={{ margin: "0 0 6px" }}>{title}</h2>
-      <p style={{ margin: "0 0 14px", color: "#475569" }}>{subtitle}</p>
-
-      <div style={{ marginBottom: 12 }}>
-        <button
-          onClick={addBlank}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            background: "linear-gradient(180deg,#22c55e,#16a34a)",
-            color: "#fff",
-            border: "none",
-            borderRadius: 10,
-            padding: "10px 16px",
-            cursor: "pointer",
-          }}
-        >
-          <span style={{ fontSize: 18, lineHeight: 0 }}>＋</span>
-          Engadir outro partido
-        </button>
-      </div>
-
-      {err && (
-        <p style={{ color: "#b91c1c", marginBottom: 12 }}>{err}</p>
-      )}
-
-      {loading && <p>Cargando…</p>}
-
-      {!loading && rows.map((r, i) => (
-        <article
-          key={r.id ?? `tmp-${i}`}
-          style={{
-            border: r._saved ? "2px solid #0ea5e9" : "1px solid #e5e7eb",
-            background: r._saved ? "rgba(14,165,233,0.06)" : "#f8fafc",
-            borderRadius: 14,
-            padding: 12,
-            marginBottom: 12,
-          }}
-        >
-          {/* Fila 1: EQUIPO1 vs EQUIPO2 */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "1fr auto 1fr",
-            alignItems: "center",
-            gap: 8,
-            marginBottom: 8,
-          }}>
-            <input
-              placeholder="EQUIPO 1"
-              value={r.home}
-              onInput={(e) => setLocal(i, { home: e.currentTarget.value })}
-              style={inp()}
-            />
-            <div style={{ textAlign: "center", color: "#6b7280", fontWeight: 600 }}>vs</div>
-            <input
-              placeholder="EQUIPO 2"
-              value={r.away}
-              onInput={(e) => setLocal(i, { away: e.currentTarget.value })}
-              style={inp()}
-            />
-          </div>
-
-          {/* Fila 2: DATA + COMPETICIÓN + (autoguardado) */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "160px 1fr auto",
-            gap: 8,
-            alignItems: "center",
-          }}>
-            <input
-              type="date"
-              value={r.date ? new Date(r.date).toISOString().slice(0,10) : ""}
-              onInput={(e) => setLocal(i, { date: e.currentTarget.value || null })}
-              style={inp()}
-            />
-            <select
-              value={r.competition}
-              onChange={(e) => setLocal(i, { competition: e.currentTarget.value })}
-              style={inp()}
-            >
-              <option value="">— Competición —</option>
-              <option>LaLiga</option>
-              <option>Europa League</option>
-              <option>Copa do Rei</option>
-            </select>
-
-            <button
-              onClick={() => saveRow(i, rows[i])}
-              style={{
-                border: "1px solid #e2e8f0",
-                background: "#fff",
-                borderRadius: 10,
-                padding: "10px 12px",
-                cursor: "pointer",
-              }}
-              title="Gardar agora"
-            >
-              💾
-            </button>
-          </div>
-        </article>
-      ))}
-    </main>
-  );
 }
 
-function inp() {
-  return {
-    width: "100%",
-    border: "1px solid #e5e7eb",
-    background: "#fff",
-    borderRadius: 10,
-    padding: "10px 12px",
-    fontWeight: 600,
-    textTransform: "uppercase",
-  };
+export default function PartidosFinalizados() {
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [err, setErr] = useState("");
+  const [editSet, setEditSet] = useState(() => new Set());
+  const [local, setLocal] = useState({});
+
+  useEffect(() => {
+    (async () => {
+      const { data: s } = await supabase.auth.getSession();
+      const email = s?.session?.user?.email || "";
+      const uid   = s?.session?.user?.id || null;
+      let admin = false;
+      if (email) {
+        const e = email.toLowerCase();
+        if (e === "hdcliga@gmail.com" || e === "hdcliga2@gmail.com") admin = true;
+      }
+      if (!admin && uid) {
+        const { data: prof } = await supabase.from("profiles").select("role").eq("id", uid).maybeSingle();
+        if ((prof?.role||"").toLowerCase() === "admin") admin = true;
+      }
+      setIsAdmin(admin);
+      await loadList();
+    })();
+  }, []);
+
+  async function loadList() {
+    setErr("");
+    try {
+      const { data, error } = await supabase.from("matches_finalizados").select("*");
+      if (error) throw error;
+      const m = (data || []).map(mapRow).sort(sortDescByDate);
+      setRows(m);
+      setLocal({});
+      setEditSet(new Set());
+    } catch (e) {
+      console.error(e);
+      setErr("Erro cargando Finalizados.");
+    }
+  }
+
+  function toggleEdit(id) {
+    if (!isAdmin) return;
+    const next = new Set(editSet);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setEditSet(next);
+    if (id != null && !local[id]) {
+      const r = rows.find(x => x.id === id) || {};
+      const dt = r.match_iso ? new Date(r.match_iso) : null;
+      const dateStr = dt ? `${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}` : "";
+      const timeStr = dt ? `${pad2(dt.getHours())}:${pad2(dt.getMinutes())}` : "";
+      setLocal(prev => ({ ...prev, [id]: {
+        equipo1: r.equipo1 || "", equipo2: r.equipo2 || "",
+        lugar: r.lugar || "", competition: r.competition || "",
+        dateStr, timeStr
+      }}));
+    }
+  }
+
+  function setDraft(id, patch) {
+    setLocal(prev => ({ ...prev, [id]: { ...(prev[id]||{}), ...patch } }));
+  }
+
+  async function onBlurSave(id) {
+    if (!isAdmin) return;
+    const d = local[id]; if (!d) return;
+    const eq1 = (d.equipo1||"").trim().toUpperCase();
+    const eq2 = (d.equipo2||"").trim().toUpperCase();
+    const lugar = (d.lugar||"").trim().toUpperCase();
+    const comp = (d.competition||"").trim();
+    const iso = (d.dateStr && d.timeStr) ? new Date(`${d.dateStr}T${d.timeStr}:00`).toISOString() : null;
+    const patch = {
+      equipo1: eq1 || null,
+      equipo2: eq2 || null,
+      lugar: lugar || null,
+      competition: comp || null,
+      ...(iso ? { match_iso: iso } : {}),
+      updated_at: new Date().toISOString(),
+    };
+    try {
+      const { error } = await supabase.from("matches_finalizados").update(patch).eq("id", id);
+      if (error) throw error;
+      await loadList();
+    } catch (e) {
+      console.error(e);
+      setErr("Erro gardando cambios.");
+    }
+  }
+
+  const view = useMemo(() => rows, [rows]);
+
+  return (
+    <main style={WRAP}>
+      <h2 style={PAGE_HEAD}>PARTIDOS FINALIZADOS</h2>
+      <p style={PAGE_SUB}>Listado dos encontros xa xogados polo Celta na tempada 2025/2026.</p>
+
+      {err && <div style={ERRBAR}>{err}</div>}
+
+      {view.map((r, idx) => {
+        const inEdit = editSet.has(r.id);
+        const d = local[r.id] || {};
+        const n = String(idx + 1).padStart(2, "0");
+
+        const isoShow = d.dateStr && d.timeStr ? new Date(`${d.dateStr}T${d.timeStr}:00`).toISOString() : r.match_iso;
+        const niceDate = isoShow ? dmyWithWeekday(isoShow) : "—";
+
+        const allDone = !!(r.equipo1 && r.equipo2 && r.lugar && r.competition && r.match_iso);
+
+        return (
+          <article key={r.id ?? `k-${idx}`} style={{ ...CARD, ...(allDone ? BADGE_SAVED : {}) }}>
+            <div style={ROW}>
+              <div style={NUMBOX}>{n}</div>
+
+              <div style={TOPFIELDS}>
+                <div style={TEAMS}>
+                  {inEdit ? (
+                    <>
+                      <input
+                        style={INPUT}
+                        placeholder="EQUIPO 1"
+                        value={d.equipo1 ?? r.equipo1 ?? ""}
+                        onInput={(e)=> setDraft(r.id, { equipo1: e.currentTarget.value })}
+                        onBlur={()=>onBlurSave(r.id)}
+                      />
+                      <span style={VS}>vs</span>
+                      <input
+                        style={INPUT}
+                        placeholder="EQUIPO 2"
+                        value={d.equipo2 ?? r.equipo2 ?? ""}
+                        onInput={(e)=> setDraft(r.id, { equipo2: e.currentTarget.value })}
+                        onBlur={()=>onBlurSave(r.id)}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ ...INPUT, border:"none", background:"transparent", padding:0 }}>{(r.equipo1||"").toUpperCase() || "—"}</div>
+                      <span style={VS}>vs</span>
+                      <div style={{ ...INPUT, border:"none", background:"transparent", padding:0 }}>{(r.equipo2||"").toUpperCase() || "—"}</div>
+                    </>
+                  )}
+                </div>
+
+                {inEdit ? (
+                  <input
+                    style={{ ...INPUT, width: 180 }}
+                    placeholder="LUGAR"
+                    value={(d.lugar ?? r.lugar ?? "").toUpperCase()}
+                    onInput={(e)=> setDraft(r.id, { lugar: e.currentTarget.value })}
+                    onBlur={()=>onBlurSave(r.id)}
+                  />
+                ) : (
+                  <div style={LUGAR}>{(r.lugar||"").toUpperCase() || "—"}</div>
+                )}
+              </div>
+            </div>
+
+            <div style={BTM}>
+              {inEdit ? (
+                <div style={{ display:"grid", gridTemplateColumns:"1fr auto", gap:8 }}>
+                  <input
+                    type="date"
+                    style={DATEBOX}
+                    value={d.dateStr ?? ""}
+                    onInput={(e)=> setDraft(r.id, { dateStr: e.currentTarget.value })}
+                    onBlur={()=>onBlurSave(r.id)}
+                  />
+                  <input
+                    type="time"
+                    style={TIMEBOX}
+                    value={d.timeStr ?? ""}
+                    onInput={(e)=> setDraft(r.id, { timeStr: e.currentTarget.value })}
+                    onBlur={()=>onBlurSave(r.id)}
+                  />
+                </div>
+              ) : (
+                <div style={{ ...DATEBOX, border:"none", background:"transparent", padding:0, fontWeight:800 }}>
+                  {niceDate}
+                </div>
+              )}
+
+              {inEdit ? (
+                <select
+                  style={SELECT}
+                  value={d.competition ?? r.competition ?? ""}
+                  onChange={(e)=> setDraft(r.id, { competition: e.currentTarget.value })}
+                  onBlur={()=>onBlurSave(r.id)}
+                >
+                  <option value="">(selecciona)</option>
+                  <option value="LaLiga">LaLiga</option>
+                  <option value="Europa League">Europa League</option>
+                  <option value="Copa do Rei">Copa do Rei</option>
+                </select>
+              ) : (
+                <div style={{ ...INPUT, border:"none", background:"transparent", padding:0 }}>
+                  {r.competition || "—"}
+                </div>
+              )}
+
+              <div style={ACTIONS}>
+                {/* Ojo */}
+                <button
+                  type="button"
+                  style={ICONBTN}
+                  title="Ver resultados da última aliñación"
+                  onClick={()=> route("/resultados-ultima-alineacion")}
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" style={SVGI} aria-hidden="true">
+                    <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+
+                {/* Editar (admin) */}
+                {isAdmin && (
+                  <button type="button" style={ICONBTN} title={inEdit ? "Pechar edición" : "Editar"} onClick={()=>toggleEdit(r.id)}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" style={SVGI} aria-hidden="true">
+                      {inEdit ? <path d="M6 18L18 6M6 6l12 12" /> : <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" />}
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+          </article>
+        );
+      })}
+    </main>
+  );
 }

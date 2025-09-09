@@ -1,158 +1,175 @@
+// src/pages/VindeirosPartidos.jsx
 import { h } from "preact";
-import { useEffect, useMemo, useRef, useState } from "preact/hooks";
-import { supabase } from "../lib/supabaseClient";
+import { useEffect, useMemo, useState } from "preact/hooks";
+import { route } from "preact-router";
+import { supabase } from "../lib/supabaseClient.js";
 
-// ====== Estilos ======
-const WRAP = { maxWidth: 1080, margin: "0 auto", padding: "16px 12px 28px" };
-const HEADER = { marginBottom: 10 };
-const H1 = { font: "700 22px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", margin: 0 };
-const SUB = { font: "500 14.5px/1.35 Montserrat,system-ui,sans-serif", color: "#475569", margin: "6px 0 12px" };
+/* ===== Estilos (inspirados en el TOP_BOX de ProximoPartido) ===== */
+const WRAP = { maxWidth: 880, margin: "0 auto", padding: "16px" };
+const PAGE_HEAD = { margin: "0 0 10px", font: "700 22px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a" };
+const PAGE_SUB  = { margin: "0 0 16px", font: "400 14px/1.4 Montserrat,system-ui,sans-serif", color: "#475569" };
 
-const BAR_ERR = {
-  background: "rgba(239,68,68,.09)",
-  border: "1px solid rgba(239,68,68,.25)",
-  color: "#b91c1c",
-  borderRadius: 12,
-  padding: "10px 12px",
-  margin: "8px 0 14px",
+const CARD = {
+  border: "1px solid #e5e7eb",
+  borderRadius: 14,
+  background: "#f8fafc",
+  padding: 12,
+  boxShadow: "0 6px 18px rgba(0,0,0,.05)",
+  marginBottom: 12,
 };
-
-const CTA = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 8,
-  height: 36,
-  padding: "0 16px",
-  borderRadius: 999,
-  border: "1px solid rgba(16,185,129,.35)",
-  background: "linear-gradient(180deg, rgba(16,185,129,.14), rgba(16,185,129,.06))",
-  color: "#059669",
-  font: "600 14px/1 Montserrat,system-ui,sans-serif",
-  cursor: "pointer",
-  userSelect: "none",
-};
-
-const LIST = { display: "grid", gap: 12, marginTop: 12 };
-
-const CARD = (saved) => ({
-  background: saved ? "linear-gradient(180deg, rgba(14,165,233,.05), rgba(14,165,233,.03))" : "#fff",
-  border: `2px solid ${saved ? "#0ea5e9" : "#e5e7eb"}`,
-  borderRadius: 18,
-  boxShadow: "0 6px 18px rgba(0,0,0,.06)",
-  padding: "10px 12px 12px",
-});
-
-const ROW_TOP = { display: "grid", gridTemplateColumns: "56px 1fr", gap: 10, alignItems: "center", paddingBottom: 6 };
-
-const NBOX = (saved=false) => ({
+const ROW = { display: "grid", gridTemplateColumns: "auto 1fr", gap: 10, alignItems: "center" };
+const NUMBOX = {
+  minWidth: 34,
+  height: 34,
+  borderRadius: 8,
+  border: "1px solid #cbd5e1",
+  background: "#fff",
   display: "grid",
   placeItems: "center",
-  height: 34,
-  borderRadius: 10,
-  border: `2px solid ${saved ? "#0ea5e9" : "#cbd5e1"}`,
-  color: saved ? "#0ea5e9" : "#64748b",
   font: "700 14px/1 Montserrat,system-ui,sans-serif",
-  background: "#fff",
-});
-
-const TOP_INPUT_WRAP = {
+  color: "#0f172a",
+};
+const TOPFIELDS = { display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "center" };
+const TEAMS = {
   display: "grid",
-  gridTemplateColumns: "1fr 42px 1fr",
-  alignItems: "center",
+  gridTemplateColumns: "1fr auto 1fr",
   gap: 8,
-  minHeight: 40,
-  border: "1px dashed rgba(148,163,184,.45)",
-  borderRadius: 12,
-  padding: "6px 10px",
-  background: "#f8fafc",
+  alignItems: "center",
 };
+const VS = { font: "700 14px/1 Montserrat,system-ui,sans-serif", color: "#0f172a" };
+const LUGAR = { font: "700 13px/1 Montserrat,system-ui,sans-serif", color: "#0f172a", textTransform: "uppercase" };
 
-const VS = { font: "700 13px/1 Montserrat,system-ui,sans-serif", color: "#64748b", textAlign: "center" };
-
-const TXT = (editable=true) => ({
-  width: "100%",
-  border: "1px solid #e5e7eb",
-  borderRadius: 10,
-  padding: "8px 10px",
-  font: "700 13px/1.1 Montserrat,system-ui,sans-serif",
-  textTransform: "uppercase",
-  color: "#0f172a",
-  background: editable ? "#fff" : "#f1f5f9",
-  outline: "none",
-});
-
-const ROW_BOTTOM = {
+const BTM = {
+  marginTop: 8,
   display: "grid",
-  gridTemplateColumns: "minmax(160px, 220px) minmax(180px, 260px) 48px", // fecha, comp, flecha
-  gap: 10,
+  gridTemplateColumns: "1fr 1fr auto",
+  gap: 8,
   alignItems: "center",
 };
 
-const INPUT_DATE = (editable=true) => ({
+const INPUT = {
   width: "100%",
-  border: "1px solid #e5e7eb",
   borderRadius: 10,
-  padding: "8px 12px",
-  font: "700 13px/1.1 Montserrat,system-ui,sans-serif",
+  border: "1px solid #dbe2f0",
+  background: "#fff",
+  padding: "10px 12px",
+  font: "800 14px/1.1 Montserrat,system-ui,sans-serif",
   color: "#0f172a",
-  background: editable ? "#fff" : "#f1f5f9",
-  outline: "none",
   textTransform: "uppercase",
-});
-
-const SELECT_WRAP = { position: "relative" };
-const TROPHY = {
-  position: "absolute",
-  left: 10,
-  top: "50%",
-  transform: "translateY(-50%)",
-  pointerEvents: "none", // MUY IMPORTANTE: no bloquear el click
-};
-const SEL_BOX = (editable=true) => ({
-  width: "100%",
-  border: "1px solid #e5e7eb",
-  borderRadius: 10,
-  padding: "8px 34px 8px 38px",
-  font: "700 13px/1.1 Montserrat,system-ui,sans-serif",
-  color: "#0f172a",
-  background: editable ? "#fff" : "#f1f5f9",
   outline: "none",
+};
+const INPUT_SOFT = { ...INPUT, fontWeight: 700, textTransform: "none" };
+const SELECT = {
+  ...INPUT,
   appearance: "none",
   WebkitAppearance: "none",
-  backgroundImage:
-    "linear-gradient(45deg, transparent 50%, #64748b 50%), linear-gradient(135deg, #64748b 50%, transparent 50%)",
-  backgroundPosition: "calc(100% - 14px) 13px, calc(100% - 8px) 13px",
-  backgroundSize: "6px 6px, 6px 6px",
-  backgroundRepeat: "no-repeat",
-});
+  MozAppearance: "none",
+  paddingRight: 36,
+  cursor: "pointer",
+};
+const DATEWRAP = { position: "relative" };
+const DATEBOX = { ...INPUT_SOFT, textTransform: "none" };
+const TIMEBOX = { ...INPUT_SOFT, textTransform: "none" };
 
-const BTN_PROMOTE = {
+const ACTIONS = { display: "flex", gap: 8, justifySelf: "end" };
+const ICONBTN = {
+  width: 38,
+  height: 38,
+  borderRadius: 10,
+  border: "1px solid #e2e8f0",
+  background: "#fff",
+  boxShadow: "0 2px 8px rgba(0,0,0,.06)",
   display: "grid",
   placeItems: "center",
-  width: 44,
-  height: 40,
-  border: "1px solid rgba(16,185,129,.45)",
-  borderRadius: 12,
-  background: "linear-gradient(180deg, rgba(16,185,129,.12), rgba(16,185,129,.06))",
-  boxShadow: "0 3px 10px rgba(0,0,0,.06)",
   cursor: "pointer",
 };
 
-// ====== Utils ======
-const compList = ["LaLiga", "Europa League", "Copa do Rei"];
+const BADGE_SAVED = { border: "2px solid #0ea5e9", background: "#f1fafe" }; // contorno celeste + fondo gris muy suave
+const ERRBAR = { margin: "10px 0", padding: "10px 12px", borderRadius: 10, background: "#fee2e2", color: "#991b1b", font: "600 13px/1.3 Montserrat,sans-serif" };
+const ADDWRAP = { display: "flex", alignItems: "center", gap: 10, margin: "10px 0 16px" };
+const ADDBTN = {
+  padding: "10px 14px",
+  borderRadius: 999,
+  border: "1px solid #22c55e",
+  background: "linear-gradient(180deg,#34d399,#22c55e)",
+  color: "#fff",
+  font: "800 13px/1 Montserrat,system-ui,sans-serif",
+  letterSpacing: ".2px",
+  cursor: "pointer",
+  boxShadow: "0 6px 18px rgba(34,197,94,.30)",
+};
 
-// ====== Pagina ======
+const SVGI = { fill: "none", stroke: "#0f172a", strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round" };
+const SVG_GREEN = { ...SVGI, stroke: "#16a34a" };
+
+/* ===== Utils ===== */
+const pad2 = (n) => String(n).padStart(2, "0");
+
+function toISOFromParts(dateStr /* yyyy-mm-dd */, timeStr /* HH:MM */, tz = "Europe/Madrid") {
+  if (!dateStr || !timeStr) return null;
+  const iso = `${dateStr}T${timeStr}:00`;
+  try {
+    const dt = new Date(iso);
+    return isNaN(dt.getTime()) ? null : dt.toISOString();
+  } catch {
+    return null;
+  }
+}
+
+function dmyWithWeekday(isoLike, tz = "Europe/Madrid") {
+  if (!isoLike) return "";
+  const d = new Date(isoLike);
+  try {
+    const w = new Intl.DateTimeFormat("gl-ES", { weekday: "long", timeZone: tz }).format(d);
+    const dd = pad2(d.getDate());
+    const mm = pad2(d.getMonth() + 1);
+    const yyyy = d.getFullYear();
+    return `${w}, ${dd}/${mm}/${yyyy}`;
+  } catch {
+    const dd = pad2(d.getDate());
+    const mm = pad2(d.getMonth() + 1);
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  }
+}
+
+function mapRow(raw) {
+  const r = raw || {};
+  const equipo1 = r.equipo1 || r.team1 || r.home || "";
+  const equipo2 = r.equipo2 || r.team2 || r.away || "";
+  const lugar   = r.lugar   || r.location || "";
+  const comp    = r.competition || r.torneo || "";
+  const match_iso = r.match_iso || r.match_datetime || (r.match_date ? new Date(r.match_date).toISOString() : null);
+  return {
+    id: r.id ?? null,
+    equipo1, equipo2, lugar,
+    competition: comp,
+    match_iso,
+    updated_at: r.updated_at || null,
+  };
+}
+
+function sortAscByDate(a, b) {
+  const ta = a.match_iso ? new Date(a.match_iso).getTime() : Infinity;
+  const tb = b.match_iso ? new Date(b.match_iso).getTime() : Infinity;
+  return ta - tb;
+}
+
+/* ===== Página ===== */
 export default function VindeirosPartidos() {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [local, setLocal] = useState([]); // edición (id, home, away, match_date(ISO), competition, _saved)
+  const [rows, setRows] = useState([]);
   const [err, setErr] = useState("");
+  const [savingId, setSavingId] = useState(null);
+  const [editSet, setEditSet] = useState(() => new Set()); // ids en edición
+  const [local, setLocal] = useState({}); // id -> draft
 
-  // admin?
   useEffect(() => {
     (async () => {
+      // Admin?
       const { data: s } = await supabase.auth.getSession();
       const email = s?.session?.user?.email || "";
-      const uid = s?.session?.user?.id || null;
+      const uid   = s?.session?.user?.id || null;
       let admin = false;
       if (email) {
         const e = email.toLowerCase();
@@ -160,263 +177,319 @@ export default function VindeirosPartidos() {
       }
       if (!admin && uid) {
         const { data: prof } = await supabase.from("profiles").select("role").eq("id", uid).maybeSingle();
-        if ((prof?.role || "").toLowerCase() === "admin") admin = true;
+        if ((prof?.role||"").toLowerCase() === "admin") admin = true;
       }
       setIsAdmin(admin);
+      await loadList();
     })();
   }, []);
 
-  const load = async () => {
+  async function loadList() {
     setErr("");
-    const { data, error } = await supabase
-      .from("matches_vindeiros")
-      .select("id, match_date, home, away, competition")
-      .order("match_date", { ascending: true, nullsFirst: false });
-    if (error) {
-      setErr(error.message || "Erro cargando datos.");
-      setLocal([]);
-      return;
+    try {
+      const { data, error } = await supabase.from("matches_vindeiros").select("*");
+      if (error) throw error;
+      const m = (data || []).map(mapRow).sort(sortAscByDate);
+      setRows(m);
+      setLocal({});
+      setEditSet(new Set());
+    } catch (e) {
+      console.error(e);
+      setErr("Erro cargando Vindeiros.");
     }
-    setLocal((data || []).map((r) => ({ ...r, _saved: true })));
-  };
+  }
 
-  useEffect(() => {
-    load();
-    const onVis = () => { if (!document.hidden) load(); };
-    window.addEventListener("visibilitychange", onVis);
-    window.addEventListener("focus", load);
-    return () => {
-      window.removeEventListener("visibilitychange", onVis);
-      window.removeEventListener("focus", load);
-    };
-  }, []);
+  const view = useMemo(() => rows, [rows]);
 
-  // Orden por data (vacías al final)
-  const view = useMemo(() => {
-    const arr = [...local];
-    arr.sort((a, b) => {
-      const ai = a?.match_date ? new Date(a.match_date).getTime() : Infinity;
-      const bi = b?.match_date ? new Date(b.match_date).getTime() : Infinity;
-      if (ai !== bi) return ai - bi;
-      return (a?.id || 0) - (b?.id || 0);
-    });
-    return arr;
-  }, [local]);
-
-  const setField = (rowRef, patch) => {
-    setLocal((prev) => {
-      const copy = prev.slice();
-      const idx = copy.indexOf(rowRef);
-      if (idx === -1) return prev;
-      copy[idx] = { ...copy[idx], ...patch, _saved: false };
-      return copy;
-    });
-  };
-
-  const canAutoSave = (r) =>
-    !!(String(r?.home || "").trim() &&
-       String(r?.away || "").trim() &&
-       String(r?.match_date || "").trim() &&
-       String(r?.competition || "").trim());
-
-  // Toast
-  const toastTimer = useRef(null);
-  const toast = (msg) => {
-    clearTimeout(toastTimer.current);
-    const el = document.createElement("div");
-    el.textContent = msg;
-    Object.assign(el.style, {
-      position: "fixed", left: "50%", top: "16px", transform: "translateX(-50%)",
-      background: "#0ea5e9", color: "#fff",
-      font: "700 12.5px/1 Montserrat,system-ui,sans-serif",
-      padding: "8px 12px", borderRadius: "999px", boxShadow: "0 8px 22px rgba(0,0,0,.18)", zIndex: 1000,
-    });
-    document.body.appendChild(el);
-    toastTimer.current = setTimeout(() => el.remove(), 1600);
-  };
-
-  const doSave = async (rowRef) => {
+  function toggleEdit(id) {
     if (!isAdmin) return;
-    const r = rowRef;
-    if (!canAutoSave(r)) {
-      setErr("Cumprimenta os 4 campos para gardar automaticamente.");
-      setTimeout(() => setErr(""), 1800);
-      return;
+    const next = new Set(editSet);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setEditSet(next);
+    if (id != null && !local[id]) {
+      const r = rows.find(x => x.id === id) || {};
+      const dt = r.match_iso ? new Date(r.match_iso) : null;
+      const dateStr = dt ? `${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}` : "";
+      const timeStr = dt ? `${pad2(dt.getHours())}:${pad2(dt.getMinutes())}` : "";
+      setLocal(prev => ({ ...prev, [id]: {
+        equipo1: r.equipo1 || "", equipo2: r.equipo2 || "",
+        lugar: r.lugar || "", competition: r.competition || "",
+        dateStr, timeStr
+      }}));
     }
+  }
+
+  function setDraft(id, patch) {
+    setLocal(prev => ({ ...prev, [id]: { ...(prev[id]||{}), ...patch } }));
+  }
+
+  async function onAdd() {
+    if (!isAdmin) return;
+    setErr("");
+    try {
+      const tempId = `tmp_${Date.now()}`;
+      setRows(prev => [{ id: tempId, equipo1:"", equipo2:"", lugar:"", competition:"", match_iso:null }, ...prev]);
+      setEditSet(s => new Set([...s, tempId]));
+      setLocal(prev => ({ ...prev, [tempId]: { equipo1:"", equipo2:"", lugar:"", competition:"", dateStr:"", timeStr:"" } }));
+    } catch (e) {
+      setErr("Erro engadindo.");
+    }
+  }
+
+  async function onSave(id) {
+    if (!isAdmin) return;
+    const d = local[id] || {};
+    const eq1 = ((d?.equipo1 ?? rows.find(x=>x.id===id)?.equipo1) || "").trim().toUpperCase();
+    const eq2 = ((d?.equipo2 ?? rows.find(x=>x.id===id)?.equipo2) || "").trim().toUpperCase();
+    const lugar = ((d?.lugar ?? rows.find(x=>x.id===id)?.lugar) || "").trim().toUpperCase();
+    const comp = ((d?.competition ?? rows.find(x=>x.id===id)?.competition) || "").trim();
+    const iso = (d?.dateStr && d?.timeStr) ? toISOFromParts(d.dateStr, d.timeStr) : (rows.find(x=>x.id===id)?.match_iso || null);
+
+    if (!eq1 || !eq2 || !lugar || !comp || !iso) {
+      if (!confirm("Faltan campos. ¿Gardar igualmente?")) return;
+    } else {
+      if (!confirm("Gardar cambios desta tarxeta?")) return;
+    }
+    setSavingId(id);
+    setErr("");
     try {
       const payload = {
-        home: String(r.home || "").toUpperCase(),
-        away: String(r.away || "").toUpperCase(),
-        match_date: r.match_date || null, // yyyy-mm-dd
-        competition: r.competition || null,
-        partido: `${String(r.home || "").toUpperCase()} vs ${String(r.away || "").toUpperCase()}`,
+        equipo1: eq1 || null,
+        equipo2: eq2 || null,
+        lugar:   lugar || null,
+        competition: comp || null,
+        match_iso: iso || null,
+        updated_at: new Date().toISOString(),
       };
-      if (r.id) {
-        const { error } = await supabase.from("matches_vindeiros").update(payload).eq("id", r.id);
+
+      if (String(id).startsWith("tmp_") || id == null) {
+        const { data, error } = await supabase.from("matches_vindeiros").insert(payload).select("*").single();
         if (error) throw error;
+        setRows(prev => {
+          const others = prev.filter(x => x.id !== id);
+          return [mapRow(data), ...others].sort(sortAscByDate);
+        });
+        setLocal(prev => { const c = { ...prev }; delete c[id]; c[data.id] = { ...d }; return c; });
+        toggleEdit(id);
+        toggleEdit(data.id);
       } else {
-        const { data, error } = await supabase
-          .from("matches_vindeiros")
-          .insert(payload)
-          .select("id")
-          .single();
+        const { error } = await supabase.from("matches_vindeiros").update(payload).eq("id", id);
         if (error) throw error;
-        const newId = data?.id;
-        setLocal((prev) =>
-          prev.map((x) => (x === rowRef ? { ...x, id: newId } : x))
-        );
+        await loadList();
       }
-      setLocal((prev) => prev.map((x) => (x === rowRef ? { ...x, _saved: true } : x)));
-      toast("REGISTRADO");
     } catch (e) {
-      setErr(e?.message || "Erro gardando os datos.");
+      console.error(e);
+      setErr("Erro gardando cambios.");
+    } finally {
+      setSavingId(null);
     }
-  };
+  }
 
-  const addBlank = () => {
+  async function onPromote(id) {
     if (!isAdmin) return;
-    setLocal((prev) => [...prev, { id: null, home: "", away: "", match_date: "", competition: "", _saved: false }]);
-  };
+    const d = local[id] || {};
+    const base = rows.find(x => x.id === id) || {};
+    const eq1 = ((d?.equipo1 ?? base.equipo1) || "").trim().toUpperCase();
+    const eq2 = ((d?.equipo2 ?? base.equipo2) || "").trim().toUpperCase();
+    const lugar = ((d?.lugar ?? base.lugar) || "").trim().toUpperCase();
+    const comp  = ((d?.competition ?? base.competition) || "").trim();
+    const iso   = (d?.dateStr && d?.timeStr) ? toISOFromParts(d.dateStr, d.timeStr) : (base.match_iso || null);
 
-  // Promover a Próximo Partido + borrar de vindeiros
-  const promote = async (rowRef) => {
-    if (!isAdmin) return;
-    const r = rowRef;
-    if (!canAutoSave(r)) {
-      setErr("Completa os 4 campos antes de subir a Próximo Partido.");
-      setTimeout(() => setErr(""), 1800);
+    if (!eq1 || !eq2 || !lugar || !comp || !iso) {
+      alert("Completa Equipo 1, Equipo 2, Lugar, Data e Competición antes de subir a Próximo Partido.");
       return;
     }
+    if (!confirm("Subir este partido a 'Próximo Partido'? Isto borrará a tarxeta de Vindeiros.")) return;
+
+    setSavingId(id);
+    setErr("");
     try {
-      const { error: e1 } = await supabase
-        .from("next_match")
-        .update({
-          equipo1: String(r.home || "").toUpperCase(),
-          equipo2: String(r.away || "").toUpperCase(),
-          competition: r.competition || null,
-          match_iso: r.match_date ? new Date(r.match_date + "T00:00:00Z").toISOString() : null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", 1);
-      if (e1) throw e1;
+      const payload = {
+        id: 1,
+        equipo1: eq1,
+        equipo2: eq2,
+        lugar,
+        competition: comp || null,
+        match_iso: iso,
+        tz: "Europe/Madrid",
+        updated_at: new Date().toISOString(),
+      };
+      const { error: upErr } = await supabase.from("next_match").upsert(payload, { onConflict: "id" });
+      if (upErr) throw upErr;
 
-      if (r.id) {
-        const { error: e2 } = await supabase.from("matches_vindeiros").delete().eq("id", r.id);
-        if (e2) throw e2;
-      }
-      toast("REGISTRADO");
-      await load();
+      const { error: delErr } = await supabase.from("matches_vindeiros").delete().eq("id", id);
+      if (delErr) throw delErr;
+
+      await loadList();
     } catch (e) {
-      setErr(e?.message || "Erro ao subir o partido.");
+      console.error(e);
+      setErr("Erro subindo a Próximo Partido.");
+    } finally {
+      setSavingId(null);
     }
-  };
+  }
 
-  // ====== Render ======
+  function hasAllFields(r, d) {
+    const eq1   = (((d?.equipo1 ?? r.equipo1) || "")).trim();
+    const eq2   = (((d?.equipo2 ?? r.equipo2) || "")).trim();
+    const lugar = (((d?.lugar   ?? r.lugar)   || "")).trim();
+    const comp  = (((d?.competition ?? r.competition) || "")).trim();
+    const iso   = d?.dateStr && d?.timeStr ? toISOFromParts(d.dateStr, d.timeStr) : (r.match_iso || "");
+    return !!(eq1 && eq2 && lugar && comp && iso);
+  }
+
   return (
     <main style={WRAP}>
-      <header style={HEADER}>
-        <h2 style={H1}>Vindeiros partidos</h2>
-        <p style={SUB}>Axenda dos próximos encontros con data e hora confirmada.</p>
+      <h2 style={PAGE_HEAD}>Vindeiros partidos</h2>
+      <p style={PAGE_SUB}>Próximos partidos a xogar polo Celta con data programada.</p>
 
-        {isAdmin && (
-          <button type="button" onClick={addBlank} style={CTA}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
+      {isAdmin && (
+        <div style={ADDWRAP}>
+          <button type="button" style={ADDBTN} onClick={onAdd}>
             Engadir outro partido
           </button>
-        )}
-      </header>
+        </div>
+      )}
 
-      {err ? <div style={BAR_ERR}>{err}</div> : null}
+      {err && <div style={ERRBAR}>{err}</div>}
 
-      <section style={LIST}>
-        {view.map((r, idx) => (
-          <article key={r?.id ?? `tmp-${idx}`} style={CARD(!!r._saved)}>
-            {/* Fila 1: Nº + EQUIPO1 vs EQUIPO2 */}
-            <div style={ROW_TOP}>
-              <div style={NBOX(!!r._saved)}>{String(idx + 1).padStart(2, "0")}</div>
+      {view.map((r, idx) => {
+        const inEdit = editSet.has(r.id);
+        const d = local[r.id] || {};
+        const showSavedStyle = hasAllFields(r, d);
+        const n = String(idx + 1).padStart(2, "0");
 
-              <div style={TOP_INPUT_WRAP}>
-                <input
-                  style={TXT(isAdmin)}
-                  disabled={!isAdmin}
-                  value={(r.home || "").toUpperCase()}
-                  onInput={(e) => isAdmin && setField(r, { home: e.currentTarget.value.toUpperCase() })}
-                  onBlur={() => isAdmin && canAutoSave(r) && doSave(r)}
-                  placeholder="EQUIPO 1"
-                />
-                <span style={VS}>vs</span>
-                <input
-                  style={TXT(isAdmin)}
-                  disabled={!isAdmin}
-                  value={(r.away || "").toUpperCase()}
-                  onInput={(e) => isAdmin && setField(r, { away: e.currentTarget.value.toUpperCase() })}
-                  onBlur={() => isAdmin && canAutoSave(r) && doSave(r)}
-                  placeholder="EQUIPO 2"
-                />
+        const isoShow = d.dateStr && d.timeStr ? toISOFromParts(d.dateStr, d.timeStr) : r.match_iso;
+        const niceDate = isoShow ? dmyWithWeekday(isoShow) : "—";
+
+        return (
+          <article key={r.id ?? `k-${idx}`} style={{ ...CARD, ...(showSavedStyle ? BADGE_SAVED : {}) }}>
+            <div style={ROW}>
+              <div style={NUMBOX}>{n}</div>
+
+              <div style={TOPFIELDS}>
+                {/* Equipos */}
+                <div style={TEAMS}>
+                  {inEdit ? (
+                    <>
+                      <input
+                        style={INPUT}
+                        placeholder="EQUIPO 1"
+                        value={d.equipo1 ?? r.equipo1 ?? ""}
+                        onInput={(e)=> setDraft(r.id, { equipo1: e.currentTarget.value })}
+                      />
+                      <span style={VS}>vs</span>
+                      <input
+                        style={INPUT}
+                        placeholder="EQUIPO 2"
+                        value={d.equipo2 ?? r.equipo2 ?? ""}
+                        onInput={(e)=> setDraft(r.id, { equipo2: e.currentTarget.value })}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ ...INPUT, border:"none", background:"transparent", padding:0 }}>{(r.equipo1||"").toUpperCase() || "—"}</div>
+                      <span style={VS}>vs</span>
+                      <div style={{ ...INPUT, border:"none", background:"transparent", padding:0 }}>{(r.equipo2||"").toUpperCase() || "—"}</div>
+                    </>
+                  )}
+                </div>
+
+                {/* Lugar */}
+                {inEdit ? (
+                  <input
+                    style={{ ...INPUT, width: 180 }}
+                    placeholder="LUGAR"
+                    value={(d.lugar ?? r.lugar ?? "").toUpperCase()}
+                    onInput={(e)=> setDraft(r.id, { lugar: e.currentTarget.value })}
+                  />
+                ) : (
+                  <div style={LUGAR}>{(r.lugar||"").toUpperCase() || "—"}</div>
+                )}
               </div>
             </div>
 
-            {/* Fila 2: DATA + COMPETICIÓN + FLECHA */}
-            <div style={ROW_BOTTOM}>
-              {/* DATA con picker nativo */}
-              <input
-                type="date"
-                style={INPUT_DATE(isAdmin)}
-                disabled={!isAdmin}
-                value={r.match_date || ""}
-                onChange={(e) => {
-                  if (!isAdmin) return;
-                  const iso = e.currentTarget.value; // yyyy-mm-dd
-                  setField(r, { match_date: iso });
-                  if (canAutoSave({ ...r, match_date: iso })) doSave({ ...r, match_date: iso });
-                }}
-              />
-
-              {/* COMPETICIÓN con select */}
-              <div style={SELECT_WRAP}>
-                <div style={TROPHY} aria-hidden="true">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M7 4h10v3a5 5 0 0 1-10 0V4Z" />
-                    <path d="M9 14h6v3H9z" />
-                  </svg>
+            {/* Fila inferior: Data + Competición + acciones */}
+            <div style={BTM}>
+              {/* Data */}
+              {inEdit ? (
+                <div style={{ display:"grid", gridTemplateColumns:"1fr auto", gap:8 }}>
+                  <div style={DATEWRAP}>
+                    <input
+                      type="date"
+                      style={DATEBOX}
+                      value={d.dateStr ?? ""}
+                      onInput={(e)=> setDraft(r.id, { dateStr: e.currentTarget.value })}
+                    />
+                  </div>
+                  <input
+                    type="time"
+                    style={TIMEBOX}
+                    value={d.timeStr ?? ""}
+                    onInput={(e)=> setDraft(r.id, { timeStr: e.currentTarget.value })}
+                  />
                 </div>
-                <select
-                  style={SEL_BOX(isAdmin)}
-                  disabled={!isAdmin}
-                  value={r.competition || ""}
-                  onChange={(e) => {
-                    if (!isAdmin) return;
-                    const v = e.currentTarget.value;
-                    setField(r, { competition: v });
-                    if (canAutoSave({ ...r, competition: v })) doSave({ ...r, competition: v });
-                  }}
-                >
-                  <option value="" disabled>— COMPETICIÓN —</option>
-                  {compList.map((c) => (
-                    <option value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
+              ) : (
+                <div style={{ ...DATEBOX, border:"none", background:"transparent", padding:0, fontWeight:800 }}>
+                  {niceDate}
+                </div>
+              )}
 
-              {/* FLECHA (promover) en la MISMA FILA */}
-              <button
-                type="button"
-                title="Subir a Próximo Partido"
-                style={BTN_PROMOTE}
-                disabled={!isAdmin}
-                onClick={() => promote(r)}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M12 19V6" />
-                  <path d="M7 10l5-5 5 5" />
-                </svg>
-              </button>
+              {/* Competición */}
+              {inEdit ? (
+                <select
+                  style={SELECT}
+                  value={d.competition ?? r.competition ?? ""}
+                  onChange={(e)=> setDraft(r.id, { competition: e.currentTarget.value })}
+                >
+                  <option value="">(selecciona)</option>
+                  <option value="LaLiga">LaLiga</option>
+                  <option value="Europa League">Europa League</option>
+                  <option value="Copa do Rei">Copa do Rei</option>
+                </select>
+              ) : (
+                <div style={{ ...INPUT, border:"none", background:"transparent", padding:0 }}>
+                  {r.competition || "—"}
+                </div>
+              )}
+
+              {/* Acciones */}
+              <div style={ACTIONS}>
+                {/* Editar (admin) */}
+                {isAdmin && (
+                  <button type="button" style={ICONBTN} title={inEdit ? "Pechar edición" : "Editar"} onClick={()=>toggleEdit(r.id)}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" style={SVGI} aria-hidden="true">
+                      {inEdit ? <path d="M6 18L18 6M6 6l12 12" /> : <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" />}
+                    </svg>
+                  </button>
+                )}
+
+                {/* Guardar (admin, confirm) */}
+                {isAdmin && inEdit && (
+                  <button type="button" style={ICONBTN} title="Gardar cambios" onClick={()=>onSave(r.id)} disabled={savingId===r.id}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" style={SVGI} aria-hidden="true">
+                      <path d="M4 4h12l4 4v12H4z" />
+                      <path d="M8 4v6h8V4" />
+                      <path d="M8 20v-6h8v6" />
+                    </svg>
+                  </button>
+                )}
+
+                {/* Flecha (promote a Próximo Partido) */}
+                {isAdmin && (
+                  <button type="button" style={ICONBTN} title="Subir a Próximo Partido" onClick={()=>onPromote(r.id)} disabled={savingId===r.id}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" style={SVG_GREEN} aria-hidden="true">
+                      <path d="M12 19V5" />
+                      <path d="M5 12l7-7 7 7" />
+                    </svg>
+                  </button>
+                )}
+              </div>
             </div>
           </article>
-        ))}
-      </section>
+        );
+      })}
     </main>
   );
 }
