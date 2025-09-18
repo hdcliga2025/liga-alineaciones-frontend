@@ -13,7 +13,6 @@ function fmtDT(iso) {
   } catch { return { fecha: "-", hora: "-" }; }
 }
 function safeDecode(s = "") { try { return decodeURIComponent(s); } catch { return s.replace(/%20/g, " "); } }
-// NN-Nome-POR|DEF|CEN|DEL.(jpg|jpeg|png|webp)
 function parseFromFilename(url = "") {
   const last = (url.split("?")[0].split("#")[0].split("/").pop() || "").trim();
   const m = last.match(/^(\d+)-(.+)-(POR|DEF|CEN|DEL)\.(jpg|jpeg|png|webp)$/i);
@@ -44,8 +43,8 @@ export default function ConvocatoriaProximo() {
   const [toast, setToast] = useState("");
 
   // Marco informativo
-  const [topVindeiro, setTopVindeiro] = useState(null);   // {equipo1,equipo2,match_iso}
-  const [nextMatch, setNextMatch] = useState(null);       // {equipo1,equipo2,match_iso}
+  const [topVindeiro, setTopVindeiro] = useState(null);
+  const [nextMatch, setNextMatch] = useState(null);
 
   useEffect(() => {
     let alive = true;
@@ -69,7 +68,7 @@ export default function ConvocatoriaProximo() {
         if (!alive) return;
         setIsAdmin(admin);
 
-        // Plantilla (posición inferida del nombre del archivo)
+        // Plantilla
         const { data: js } = await supabase
           .from("jugadores")
           .select("id,nombre,dorsal,foto_url")
@@ -128,7 +127,7 @@ export default function ConvocatoriaProximo() {
     return () => { alive = false; };
   }, []);
 
-  // Agrupador por posición. Si no admin, solo los convocados.
+  // Agrupación por posición. Si no admin, mostramos sólo convocados.
   const grouped = useMemo(() => {
     const g = { POR: [], DEF: [], CEN: [], DEL: [] };
     for (const p of players || []) {
@@ -141,7 +140,7 @@ export default function ConvocatoriaProximo() {
     return g;
   }, [players, convIds, isAdmin]);
 
-  // Descarta / restaura
+  // Toggle descartado
   const toggleDiscard = (id) => {
     if (!isAdmin) return;
     setDiscarded(prev => {
@@ -151,27 +150,29 @@ export default function ConvocatoriaProximo() {
     });
   };
 
-  // Guardar con doble confirmación
+  // Guardar (doble confirmación). Siempre pulsable; si falta encontro, avisamos.
   const onConfirm = async () => {
-    if (!isAdmin || !encuentro?.id || !players?.length) return;
-    const ok1 = window.confirm("Vas gardar a convocatoria. ¿Confirmas?");
+    if (!isAdmin) return;
+    if (!encuentro?.id) {
+      alert("Non hai encontro aberto para asociar a convocatoria.\n\nVai a Calendario → crea/abre o encontro futuro.");
+      return;
+    }
+    const ok1 = window.confirm("Vas gardar a convocatoria deste encontro. ¿Confirmas?");
     if (!ok1) return;
-    const ok2 = window.confirm("Última confirmación: gardar e publicar para usuarias/os. ¿Confirmas?");
+    const ok2 = window.confirm("Publicar para usuarias/os agora mesmo. ¿Última confirmación?");
     if (!ok2) return;
 
     setSaving(true);
     try {
       const allIds = players.map(p => p.id);
       const convocados = allIds.filter(id => !discarded.has(id));
-      // reset convocatoria do encontro
       await supabase.from("convocatorias").delete().eq("partido_id", encuentro.id);
-      // inserta nova
       if (convocados.length) {
         const rows = convocados.map(jid => ({ partido_id: encuentro.id, jugador_id: jid }));
         const { error } = await supabase.from("convocatorias").insert(rows);
         if (error) throw error;
       }
-      setConvIds(convocados); // publica inmediatamente para non-admin (o filtro usa convIds)
+      setConvIds(convocados);
       setToast("Convocatoria gardada");
       setTimeout(() => setToast(""), 3000);
     } catch (e) {
@@ -186,7 +187,6 @@ export default function ConvocatoriaProximo() {
   const h1 = { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" };
   const sub = { margin: "0 0 10px", color: "#475569", fontSize: 15 };
 
-  // Marco informativo (debajo del título)
   const resumenBox = {
     margin: "0 0 14px",
     padding: "12px 14px",
@@ -205,12 +205,12 @@ export default function ConvocatoriaProximo() {
     fontWeight: 700,
     color: "#0c4a6e",
     borderLeft: "4px solid #7dd3fc",
-    borderBottom: "2px solid #e2e8f0" // subrayado a todo o ancho
+    borderBottom: "2px solid #e2e8f0"
   };
   const grid4 = { display: "grid", gridTemplateColumns: "repeat(4, minmax(0,1fr))", gap: 12 };
   const card = (isOut) => ({
     position: "relative",
-    border: "1px solid #eef2ff",
+    border: isOut ? "2px solid rgba(220,38,38,.8)" : "1px solid #eef2ff",
     borderRadius: 16,
     padding: 10,
     boxShadow: "0 2px 8px rgba(0,0,0,.06)",
@@ -223,7 +223,7 @@ export default function ConvocatoriaProximo() {
   const name = { margin: "8px 0 0", font: "700 15px/1.2 Montserrat, system-ui, sans-serif", color: "#0f172a", textAlign: "center" };
   const meta = { margin: "2px 0 0", color: "#475569", fontSize: 13, textAlign: "center" };
 
-  // Overlay del número SOLO para dorsais 29, 32 y 39 → fino y gris
+  // Dorsais 29,32,39 finos e gris
   const OVERLAY_SET = new Set([29, 32, 39]);
   const NumberOverlay = ({ dorsal }) => {
     if (!OVERLAY_SET.has(Number(dorsal))) return null;
@@ -234,10 +234,10 @@ export default function ConvocatoriaProximo() {
           top: 8,
           left: 10,
           fontFamily: "Montserrat, system-ui, sans-serif",
-          fontWeight: 600,       // más fino
+          fontWeight: 600,
           fontSize: 36,
           lineHeight: 1,
-          color: "#9aa4b2",      // gris
+          color: "#9aa4b2",
           textShadow: "0 1px 2px rgba(0,0,0,.25)",
           userSelect: "none",
           pointerEvents: "none",
@@ -249,47 +249,38 @@ export default function ConvocatoriaProximo() {
     );
   };
 
-  // Ensombrecido claro cuando está descartado
+  // Ensombrecido MUCHO más visible + badge
   const Shade = ({ show=false }) => show ? (
-    <div style={{
-      position:"absolute", inset:0, background:"rgba(2,6,23,.35)"
-    }}/>
+    <>
+      <div style={{
+        position:"absolute", inset:0,
+        background:"rgba(2,6,23,.62)"
+      }}/>
+      <div style={{
+        position:"absolute", top:10, right:10,
+        background:"rgba(220,38,38,.92)", color:"#fff",
+        fontWeight:800, fontSize:12, padding:"4px 8px",
+        borderRadius:999, letterSpacing:.4
+      }}>
+        DESCARTADO
+      </div>
+    </>
   ) : null;
 
-  const BigSaveBtn = ({ disabled }) => (
+  const SaveBtn = ({ small=false }) => (
     <button
       onClick={onConfirm}
-      disabled={disabled || saving}
+      disabled={saving || !isAdmin}
       style={{
-        width: "100%",
-        padding: "14px 16px",
+        width: small ? "auto" : "100%",
+        padding: small ? "10px 12px" : "14px 16px",
         borderRadius: 14,
-        background: disabled ? "#bae6fd" : "linear-gradient(180deg,#bae6fd,#7dd3fc)",
+        background: "linear-gradient(180deg,#bae6fd,#7dd3fc)",
         color: "#0c4a6e",
         fontWeight: 800,
         border: "1px solid #38bdf8",
-        cursor: disabled ? "not-allowed" : "pointer",
-        boxShadow: "0 10px 22px rgba(2,132,199,.25)"
-      }}
-      aria-label="Gardar convocatoria"
-    >
-      {saving ? "Gardando…" : "GARDAR CONVOCATORIA"}
-    </button>
-  );
-
-  const SmallSaveBtn = ({ disabled }) => (
-    <button
-      onClick={onConfirm}
-      disabled={disabled || saving}
-      style={{
-        padding: "10px 12px",
-        borderRadius: 12,
-        background: disabled ? "#bae6fd" : "linear-gradient(180deg,#bae6fd,#7dd3fc)",
-        color: "#0c4a6e",
-        fontWeight: 800,
-        border: "1px solid #38bdf8",
-        cursor: disabled ? "not-allowed" : "pointer",
-        boxShadow: "0 6px 16px rgba(2,132,199,.20)",
+        cursor: saving || !isAdmin ? "not-allowed" : "pointer",
+        boxShadow: small ? "0 6px 16px rgba(2,132,199,.20)" : "0 10px 22px rgba(2,132,199,.25)",
         whiteSpace: "nowrap"
       }}
       aria-label="Gardar convocatoria"
@@ -299,7 +290,7 @@ export default function ConvocatoriaProximo() {
     </button>
   );
 
-  // Datos del marco (prioridad: Vindeiros #1 → next_match → encontro futuro)
+  // Datos do marco
   const source =
     topVindeiro ||
     nextMatch ||
@@ -314,37 +305,49 @@ export default function ConvocatoriaProximo() {
   const teamsLine = source ? `${(source.equipo1 || "—").toUpperCase()} vs ${(source.equipo2 || "—").toUpperCase()}` : null;
   const { fecha: sFecha, hora: sHora } = fmtDT(source?.match_iso);
 
-  const canSave = isAdmin && !!encuentro?.id && players.length > 0;
-
   return (
     <main style={wrap}>
       <h1 style={h1}>Convocatoria oficial</h1>
       <p style={sub}>Lista de xogadores que poderían estar na aliñación para o seguinte partido.</p>
 
-      {/* Marco informativo con botón pequeño a la derecha */}
+      {/* Marco informativo con botón pequeno á dereita */}
       {source ? (
-        <div style={resumenBox} aria-label="Información do próximo partido">
-          <div style={resumenGrid}>
+        <div style={{
+          margin:"0 0 14px",
+          padding:"12px 14px",
+          borderRadius:12,
+          border:"1px solid #dbeafe",
+          background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)",
+          color:"#0f172a"
+        }} aria-label="Información do próximo partido">
+          <div style={{ display:"grid", gridTemplateColumns:"1fr auto", alignItems:"center", gap:10 }}>
             <div>
-              <p style={resumeText}>{teamsLine}</p>
-              <p style={resumeText2}>{sFecha} | {sHora}</p>
+              <p style={{ margin:0, fontSize:18, fontWeight:400, letterSpacing:"0.35px", lineHeight:1.45 }}>{teamsLine}</p>
+              <p style={{ margin:0, fontSize:18, fontWeight:400, letterSpacing:"0.35px", opacity:.9 }}>{sFecha} | {sHora}</p>
             </div>
-            {isAdmin && <SmallSaveBtn disabled={!canSave} />}
+            {isAdmin && <SaveBtn small />}
           </div>
         </div>
       ) : (
         <p style={{ margin: 0, fontSize: 15 }}>Non hai encontro próximo dispoñíbel.</p>
       )}
 
-      {/* Bloques por posición (non mesturar) */}
+      {/* Bloques por posición */}
       {(["POR","DEF","CEN","DEL"]).map((k) => {
         const arr = (grouped[k] || []);
         if (!arr.length) return null;
         const label = k === "POR" ? "Porteiros" : k === "DEF" ? "Defensas" : k === "CEN" ? "Medios" : "Dianteiros";
         return (
           <section key={k}>
-            <div style={posHeader}>{label}</div>
-            <div style={grid4}>
+            <div style={{
+              margin:"16px 0 10px",
+              padding:"2px 4px 8px",
+              fontWeight:700,
+              color:"#0c4a6e",
+              borderLeft:"4px solid #7dd3fc",
+              borderBottom:"2px solid #e2e8f0"
+            }}>{label}</div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(4, minmax(0,1fr))", gap:12 }}>
               {arr.map((p) => {
                 const out = discarded.has(p.id);
                 const { dorsal, nombre, pos } = p;
@@ -387,14 +390,13 @@ export default function ConvocatoriaProximo() {
         );
       })}
 
-      {/* Botón grande abajo */}
+      {/* Botón grande abaixo */}
       {isAdmin && (
         <div style={{ marginTop: 16 }}>
-          <BigSaveBtn disabled={!canSave} />
+          <SaveBtn />
         </div>
       )}
 
-      {/* Toast */}
       {toast && (
         <div
           role="status"
