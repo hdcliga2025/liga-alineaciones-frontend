@@ -35,7 +35,7 @@ const OVERLAY_NUMS = new Set([29,32,39]);
 
 const S = {
   wrap: { maxWidth: 1080, margin: "0 auto", padding: 16 },
-  h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
+  h1: { fontFamily: "Montserrat, system-ui, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
   sub: { margin: "0 0 12px", color: "#475569", fontSize: 14 },
   resumen: {
     margin:"0 0 14px", padding:"12px 14px", borderRadius:12,
@@ -95,13 +95,10 @@ const NumOverlay = ({ dorsal }) => {
 export default function ConvocatoriaProximo() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [players, setPlayers] = useState([]);
-  const [convIds, setConvIds] = useState([]);          // no se usa para filtrar (publicación), pero nos vale si ya hay algo
   const [discarded, setDiscarded] = useState(new Set());
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
-
-  // Cabecera desde Vindeiros (prioridad) o next_match (fallback)
-  const [header, setHeader] = useState(null); // {equipo1,equipo2,match_iso}
+  const [header, setHeader] = useState(null);
 
   // ===== Carga inicial
   useEffect(() => {
@@ -112,9 +109,8 @@ export default function ConvocatoriaProximo() {
       let admin = false;
       if (uid) {
         const { data: prof } = await supabase
-          .from("profiles").select("role,email").eq("id", uid).maybeSingle();
-        const role = (prof?.role || "").toLowerCase();
-        admin = role === "admin";
+          .from("profiles").select("role").eq("id", uid).maybeSingle();
+        admin = (prof?.role || "").toLowerCase() === "admin";
       }
       setIsAdmin(admin);
 
@@ -130,28 +126,8 @@ export default function ConvocatoriaProximo() {
         .from("matches_vindeiros")
         .select("equipo1,equipo2,match_iso")
         .order("match_iso", { ascending: true }).limit(1).maybeSingle();
-
       if (top?.match_iso) {
         setHeader({ equipo1: cap(top.equipo1||""), equipo2: cap(top.equipo2||""), match_iso: top.match_iso });
-      } else {
-        const { data: nm } = await supabase
-          .from("next_match")
-          .select("equipo1,equipo2,match_iso")
-          .eq("id",1).maybeSingle();
-        if (nm?.match_iso) setHeader({ equipo1: cap(nm.equipo1||""), equipo2: cap(nm.equipo2||""), match_iso: nm.match_iso });
-        else setHeader(null);
-      }
-
-      // si hubiera una convocatoria publicada, precargo por comodidad
-      const { data: pub } = await supabase
-        .from("convocatoria_publica")
-        .select("jugador_id");
-      const published = new Set((pub||[]).map(r=>r.jugador_id));
-      if (admin && js?.length) {
-        const allIds = new Set(js.map(p=>p.id));
-        const disc = new Set([...allIds].filter(id => !published.has(id)));
-        setDiscarded(disc);
-        setConvIds([...published]);
       }
     })().catch(e=>console.error("[Convocatoria] init", e));
   }, []);
@@ -176,35 +152,22 @@ export default function ConvocatoriaProximo() {
 
   async function saveAndPublish() {
     if (!isAdmin) return;
-    if (!header) {
-      // aviso celeste, sencillo
-      setToast("Non hai datos de cabeceira. Engade en Vindeiros o seguinte encontro.");
-      setTimeout(()=>setToast(""), 2500);
-      return;
-    }
     setSaving(true);
     try {
       const allIds = players.map(p => p.id);
       const convocados = allIds.filter(id => !discarded.has(id));
-      // publicar como singleton
-      await supabase.rpc("noop"); // inerte si no existe; evita “no op” warnings en logs de Supabase Free
-      await supabase.from("convocatoria_publica").delete().neq("jugador_id", "00000000-0000-0000-0000-000000000000"); // borro todo
+      await supabase.from("convocatoria_publica").delete().neq("jugador_id","00000000-0000-0000-0000-000000000000");
       if (convocados.length) {
         const rows = convocados.map(jid => ({ jugador_id: jid, updated_at: new Date().toISOString() }));
-        const { error } = await supabase.from("convocatoria_publica").insert(rows);
-        if (error) throw error;
+        await supabase.from("convocatoria_publica").insert(rows);
       }
-      setConvIds(convocados);
-      setToast("Convocatoria gardada");
-      setTimeout(()=>setToast(""), 1500);
-      // espejo inmediato
-      window.location.href = "/haz-tu-11";
+      setToast("CONFIGURACIÓN CONVOCATORIA REALIZADA");
     } catch(e) {
       console.error(e);
       setToast("Erro ao gardar");
-      setTimeout(()=>setToast(""), 2500);
     } finally {
       setSaving(false);
+      setTimeout(()=>setToast(""), 4000);
     }
   }
 
@@ -212,27 +175,23 @@ export default function ConvocatoriaProximo() {
     <main style={S.wrap}>
       <h1 style={S.h1}>Convocatoria oficial</h1>
       <p style={S.sub}>Lista de xogadores que poderían estar na aliñación para o seguinte partido.</p>
-
-      {/* Cabecera resumida (sin negrita, texto algo maior, fondo celeste degradado) */}
-      {header ? (
-        <div style={S.resumen}>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr auto", alignItems:"center", gap:10 }}>
-            <div>
-              <p style={S.resumeLine}>{cap(header.equipo1)} vs {cap(header.equipo2)}</p>
-              <p style={{...S.resumeLine, opacity:.9}}>{sFecha} | {sHora}</p>
-            </div>
-            {isAdmin && (
-              <button style={S.save(false)} onClick={saveAndPublish} disabled={saving}>
-                {saving ? "Gardando…" : "GARDAR CONVOCATORIA"}
-              </button>
-            )}
-          </div>
-        </div>
-      ) : (
-        <p style={{ margin:0 }}>Engade o seguinte encontro en Vindeiros para amosar a cabeceira.</p>
+      {toast && (
+        <p style={{ color:"red", fontWeight:700, marginBottom:12 }}>{toast}</p>
       )}
 
-      {(["POR","DEF","CEN","DEL"]).map((k) => {
+      {header ? (
+        <div style={S.resumen}>
+          <p style={S.resumeLine}>{cap(header.equipo1)} vs {cap(header.equipo2)}</p>
+          <p style={{...S.resumeLine, opacity:.9}}>{sFecha} | {sHora}</p>
+          {isAdmin && (
+            <button style={S.save(false)} onClick={saveAndPublish} disabled={saving}>
+              {saving ? "Gardando…" : "GARDAR CONVOCATORIA"}
+            </button>
+          )}
+        </div>
+      ) : null}
+
+      {["POR","DEF","CEN","DEL"].map((k) => {
         const arr = (grouped[k] || []);
         if (!arr.length) return null;
         const label = k === "POR" ? "Porteiros" : k === "DEF" ? "Defensas" : k === "CEN" ? "Medios" : "Dianteiros";
@@ -244,15 +203,14 @@ export default function ConvocatoriaProximo() {
                 const out = discarded.has(p.id);
                 const { dorsal, nombre, pos } = p;
                 return (
-                  <article key={p.id} style={S.card(out)} onClick={()=>toggleDiscard(p.id)} title={out?"Descartado":"Clic para descartar"}>
+                  <article key={p.id} style={S.card(out)} onClick={()=>toggleDiscard(p.id)}>
                     <div style={S.frame}>
                       {p.foto_url ? (
                         <>
                           <img
                             src={p.foto_url}
                             alt={`Foto de ${nombre}`}
-                            style={{ width:"100%", height:"100%", objectFit:"contain", background:"#0b1e2a" }}
-                            loading="lazy" decoding="async" crossOrigin="anonymous" referrerPolicy="no-referrer"
+                            style={{ width:"100%", height:"100%", objectFit:"contain" }}
                           />
                           <NumOverlay dorsal={dorsal}/>
                           <Shade show={out}/>
@@ -270,24 +228,6 @@ export default function ConvocatoriaProximo() {
           </section>
         );
       })}
-
-      {isAdmin && (
-        <div style={{ marginTop: 16 }}>
-          <button style={S.save(true)} onClick={saveAndPublish} disabled={saving}>
-            {saving ? "Gardando…" : "GARDAR CONVOCATORIA"}
-          </button>
-        </div>
-      )}
-
-      {toast && (
-        <div role="status" aria-live="polite" style={{
-          position:"fixed", bottom:18, left:"50%", transform:"translateX(-50%)",
-          background:"#0ea5e9", color:"#fff", padding:"10px 16px",
-          borderRadius:12, boxShadow:"0 10px 22px rgba(2,132,199,.35)", fontWeight:700
-        }}>
-          {toast}
-        </div>
-      )}
     </main>
   );
 }

@@ -24,10 +24,10 @@ const IMG_H = 320;
 
 const S = {
   wrap: { maxWidth: 1080, margin: "0 auto", padding: 16 },
-  h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
-  sub: { margin: "0 0 12px", color: "#475569", fontSize: 14 },
+  h1: { fontFamily: "Montserrat, system-ui, sans-serif", fontSize: 28, margin: "6px 0 2px", color:"#0f172a" },
+  sub: { margin: "0 0 18px", color: "#475569", fontSize: 18, fontWeight:600 },
   posHeader: { margin:"16px 0 10px", padding:"2px 4px 8px", fontWeight:700, color:"#0c4a6e", borderLeft:"4px solid #7dd3fc", borderBottom:"2px solid #e2e8f0" },
-  grid3: { display:"grid", gridTemplateColumns:"repeat(3, minmax(0,1fr))", gap:12 },
+  grid4: { display:"grid", gridTemplateColumns:"repeat(4, minmax(0,1fr))", gap:12 },
   card: { display:"grid", gridTemplateRows: `${IMG_H}px auto`, background:"#fff", border:"1px solid #eef2ff", borderRadius:16, padding:10, boxShadow:"0 2px 8px rgba(0,0,0,.06)", alignItems:"center", textAlign:"center" },
   name: { margin:"8px 0 0", font:"700 15px/1.2 Montserrat, system-ui, sans-serif", color:"#0f172a" },
   meta: { margin:"2px 0 0", color:"#475569", fontSize:13 }
@@ -48,8 +48,6 @@ function ImgWithOverlay({ src, alt, dorsal }) {
           loading="lazy"
           decoding="async"
           style={{ width:"100%", height:"100%", objectFit:"contain", background:"#0b1e2a" }}
-          crossOrigin="anonymous"
-          referrerPolicy="no-referrer"
         />
       ) : (
         <div style={{ color:"#cbd5e1" }}>Sen foto</div>
@@ -74,7 +72,6 @@ export default function HazTu11() {
 
   useEffect(() => {
     (async () => {
-      // Trae la convocatoria publicada y la junta con los datos del jugador
       const { data: pub } = await supabase
         .from("convocatoria_publica")
         .select("jugador_id");
@@ -87,7 +84,6 @@ export default function HazTu11() {
         .in("id", ids)
         .order("dorsal", { ascending: true });
 
-      // Garantizamos el orden de publicación por dorsal
       const byId = new Map((js||[]).map(j => [j.id, j]));
       const ordered = ids.map(id => byId.get(id)).filter(Boolean);
       setJugadores(ordered);
@@ -108,8 +104,8 @@ export default function HazTu11() {
 
   return (
     <main style={S.wrap}>
-      <h1 style={S.h1}>Fai o teu 11</h1>
-      <p style={S.sub}>Convocatoria publicada polo club. (Vista só lectura)</p>
+      <h1 style={S.h1}>Fai aquí a túa aliñación</h1>
+      <p style={S.sub}>É aquí onde demostras o Giráldez que levas dentro</p>
 
       {["POR","DEF","CEN","DEL"].map(k => {
         const arr = grouped[k] || [];
@@ -118,7 +114,7 @@ export default function HazTu11() {
         return (
           <section key={k}>
             <div style={S.posHeader}>{label}</div>
-            <div style={S.grid3}>
+            <div style={S.grid4}>
               {arr.map(p => {
                 const { dorsal, nombre, pos } = finalFromAll(p);
                 return (
