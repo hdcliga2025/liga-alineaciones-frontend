@@ -1,281 +1,348 @@
+// src/pages/ConvocatoriaProximo.jsx
 import { h } from "preact";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
-const POSICIONES = {
-  POR: "PORTEIROS",
-  DEF: "DEFENSAS", 
-  MED: "CENTROCAMPISTAS",
-  DEL: "DELANTEROS"
-};
-
-// Función optimizada para nombres de archivo
-const generarNombreArchivo = (jugador) => {
+/* ===== Utils ===== */
+function fmtDT(iso) {
   try {
-    const nombreNormalizado = jugador.nombre
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/\s+/g, '-')
-      .toLowerCase();
-    
-    return `${jugador.dorsal}-${nombreNormalizado}-${jugador.posicion}.jpg`;
-  } catch (error) {
-    return `${jugador.dorsal}.jpg`;
-  }
-};
-
-// Manejador de errores de imagen optimizado
-const handleImageError = (e, jugador) => {
-  e.target.src = `https://fotos-celta-2025.vercel.app/${jugador.dorsal}.jpg`;
-  e.target.onerror = () => {
-    e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'%3E%3Ccircle cx='25' cy='25' r='20' fill='%23e5e7eb'/%3E%3C/svg%3E";
-    e.target.onerror = null;
+    const d = new Date(iso);
+    const fecha = d.toLocaleDateString("gl-ES", { day: "2-digit", month: "2-digit", year: "numeric" });
+    const hora  = d.toLocaleTimeString("gl-ES", { hour: "2-digit", minute: "2-digit" });
+    return { fecha, hora };
+  } catch { return { fecha: "-", hora: "-" }; }
+}
+function safeDecode(s = "") { try { return decodeURIComponent(s); } catch { return s.replace(/%20/g, " "); } }
+// NN-Nome-POR|DEF|CEN|DEL.(jpg|jpeg|png|webp)
+function parseFromFilename(url = "") {
+  const last = (url.split("?")[0].split("#")[0].split("/").pop() || "").trim();
+  const m = last.match(/^(\d+)-(.+)-(POR|DEF|CEN|DEL)\.(jpg|jpeg|png|webp)$/i);
+  if (!m) return { dorsalFile: null, nameFile: null, posFile: null };
+  return { dorsalFile: parseInt(m[1],10), nameFile: safeDecode(m[2].replace(/_/g," ")), posFile: m[3].toUpperCase() };
+}
+function canonPos(val="") {
+  const s = String(val).trim().toUpperCase();
+  if (["POR","PORTERO","PORTEIRO","GK","PORTEIROS"].includes(s)) return "POR";
+  if (["DEF","DEFENSA","DF","LATERAL","CENTRAL","DEFENSAS"].includes(s)) return "DEF";
+  if (["CEN","MED","MEDIO","MC","MCD","MCO","CENTROCAMPISTA","CENTROCAMPISTAS","MEDIOS"].includes(s)) return "CEN";
+  if (["DEL","DELANTERO","FW","DC","EXTREMO","PUNTA","DELANTEROS"].includes(s)) return "DEL";
+  return "";
+}
+function finalFromAll(p = {}) {
+  const { dorsalFile, nameFile, posFile } = parseFromFilename(p.foto_url || "");
+  return {
+    dorsal: dorsalFile ?? (p.dorsal ?? null),
+    pos: posFile || canonPos(p.posicion || p.position || ""),
+    nombre: (nameFile || p.nombre || "").trim()
   };
-};
+}
 
+/* ===== Página ===== */
 export default function ConvocatoriaProximo() {
-  const [jugadores, setJugadores] = useState([]);
-  const [convocados, setConvocados] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [proximoPartido, setProximoPartido] = useState(null);
+  const [players, setPlayers] = useState([]);
+  const [encuentro, setEncuentro] = useState(null);
+  const [convIds, setConvIds] = useState([]);
+  const [discarded, setDiscarded] = useState(new Set());
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState("");
 
-  // Precargar imágenes para mejor rendimiento
-  useEffect(() => {
-    if (jugadores.length > 0) {
-      jugadores.forEach(jugador => {
-        if (jugador.dorsal) {
-          const img = new Image();
-          img.src = `https://fotos-celta-2025.vercel.app/${generarNombreArchivo(jugador)}`;
-        }
-      });
-    }
-  }, [jugadores]);
+  // Marco informativo (orde: Vindeiros #1 → next_match → encontro)
+  const [topVindeiro, setTopVindeiro] = useState(null);
+  const [nextMatch, setNextMatch] = useState(null);
 
-  // Cargar datos
   useEffect(() => {
-    const loadData = async () => {
+    (async () => {
       try {
-        // Verificar si es admin
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.email === 'hdcliga@gmail.com' || user?.email === 'hdcliga2@gmail.com') {
-          setIsAdmin(true);
+        // Admin?
+        const { data: sess } = await supabase.auth.getSession();
+        const email = (sess?.session?.user?.email || "").toLowerCase();
+        const uid   = sess?.session?.user?.id || null;
+        let admin = false;
+        if (uid) {
+          const { data: prof } = await supabase
+            .from("profiles")
+            .select("role,email")
+            .eq("id", uid)
+            .maybeSingle();
+          const role = (prof?.role || "").toLowerCase();
+          const em   = (prof?.email || email || "").toLowerCase();
+          admin = role === "admin" || ["hdcliga@gmail.com","hdcliga2@gmail.com"].includes(em);
         }
+        setIsAdmin(admin);
 
-        // Cargar jugadores
-        const { data: jugadoresData } = await supabase
-          .from('jugadores')
-          .select('*')
-          .order('dorsal', { ascending: true });
+        // Plantilla completa
+        const { data: js } = await supabase
+          .from("jugadores")
+          .select("id, nombre, dorsal, posicion, position, foto_url")
+          .order("dorsal", { ascending: true });
+        setPlayers(js || []);
 
-        setJugadores(jugadoresData || []);
+        // next_match
+        const { data: nm } = await supabase
+          .from("next_match")
+          .select("equipo1,equipo2,match_iso")
+          .eq("id",1).maybeSingle();
+        setNextMatch(nm || null);
 
-        // Cargar próximo partido
-        const { data: partidoData } = await supabase
-          .from('next_match')
-          .select('*')
-          .eq('id', 1)
-          .single();
+        // Vindeiros #1
+        const { data: top } = await supabase
+          .from("matches_vindeiros")
+          .select("equipo1,equipo2,match_iso")
+          .order("match_iso", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        setTopVindeiro(top || null);
 
-        setProximoPartido(partidoData);
+        // Encontro futuro para vincular convocatoria
+        const { data: enc } = await supabase
+          .from("encuentros")
+          .select("id, titulo, fecha_hora, equipo1, equipo2")
+          .gte("fecha_hora", new Date().toISOString())
+          .order("fecha_hora", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        setEncuentro(enc || null);
 
-      } catch (error) {
-        console.error('Error loading data:', error);
-      } finally {
-        setLoading(false);
+        if (enc?.id) {
+          const { data: cv } = await supabase
+            .from("convocatorias")
+            .select("jugador_id")
+            .eq("partido_id", enc.id);
+          const ids = (cv || []).map(r => r.jugador_id);
+          setConvIds(ids);
+
+          // pre-marca descartes (admin: “todos menos convocados”)
+          if (admin && js?.length) {
+            const allIds = new Set(js.map(p => p.id));
+            const convSet = new Set(ids);
+            setDiscarded(new Set([...allIds].filter(id => !convSet.has(id))));
+          }
+        }
+      } catch (e) {
+        console.error("[Convocatoria] init:", e);
       }
-    };
-    loadData();
+    })();
   }, []);
 
-  const toggleConvocado = (jugador) => {
-    if (!isAdmin) return;
-    
-    setConvocados(prev => 
-      prev.includes(jugador.id) 
-        ? prev.filter(id => id !== jugador.id)
-        : [...prev, jugador.id]
-    );
-  };
-
-  const guardarConvocatoria = async () => {
-    if (!isAdmin || convocados.length === 0) return;
-
-    try {
-      const partidoId = proximoPartido?.uuid_id;
-      
-      if (!partidoId) {
-        alert('Error: No hay partido configurado');
-        return;
-      }
-
-      const convocatoriaInserts = convocados.map(jugadorId => ({
-        partido_id: partidoId,
-        jugador_id: jugadorId
-      }));
-
-      const { error } = await supabase
-        .from('convocatorias')
-        .insert(convocatoriaInserts);
-
-      if (error) throw error;
-
-      alert(`✅ Convocatoria gardada con ${convocados.length} xogadores`);
-      setConvocados([]);
-
-    } catch (error) {
-      console.error('Error saving convocatoria:', error);
-      alert('❌ Erro ao gardar a convocatoria');
+  const grouped = useMemo(() => {
+    const g = { POR: [], DEF: [], CEN: [], DEL: [] };
+    for (const p of players || []) {
+      const info = finalFromAll(p);
+      if (info.pos && g[info.pos]) g[info.pos].push({ ...p, ...info });
     }
+    // usuario normal → solo convocados (si existen)
+    if (!isAdmin && convIds.length) {
+      for (const k of Object.keys(g)) g[k] = g[k].filter(p => convIds.includes(p.id));
+    }
+    return g;
+  }, [players, convIds, isAdmin]);
+
+  const toggleDiscard = (id) => {
+    if (!isAdmin) return;
+    setDiscarded(prev => {
+      const n = new Set(prev);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
   };
 
-  if (loading) return <div style={{ padding: "72px 16px", textAlign: "center" }}>Cargando...</div>;
+  const onConfirm = async () => {
+    if (!isAdmin || !encuentro?.id || !players?.length) return;
+    setSaving(true);
+    try {
+      const allIds = players.map(p => p.id);
+      const convocados = allIds.filter(id => !discarded.has(id));
+      await supabase.from("convocatorias").delete().eq("partido_id", encuentro.id);
+      if (convocados.length) {
+        const rows = convocados.map(jid => ({ partido_id: encuentro.id, jugador_id: jid }));
+        const { error } = await supabase.from("convocatorias").insert(rows);
+        if (error) throw error;
+      }
+      setConvIds(convocados);
+      setToast("Convocatoria gardada");
+      setTimeout(() => setToast(""), 3000);
+    } catch (e) {
+      console.error("save err:", e);
+      setToast("Erro ao gardar");
+      setTimeout(() => setToast(""), 3000);
+    } finally { setSaving(false); }
+  };
+
+  /* ===== Estilos ===== */
+  const wrap = { maxWidth: 1080, margin: "0 auto", padding: "16px" };
+  const h1 = { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" };
+  const sub = { margin: "0 0 10px", color: "#475569", fontSize: 15 };
+
+  // Marco informativo
+  const infoBox = {
+    margin: "0 0 14px",
+    padding: 12,
+    borderRadius: 12,
+    border: "1px solid #cfe8ff",
+    background: "linear-gradient(135deg,#dff3ff,#9dd8ff)",
+    color: "#0f172a",
+    lineHeight: 1.25,
+    display: "grid",
+    gridTemplateColumns: "1fr auto",
+    gap: 10,
+    alignItems: "center"
+  };
+  const infoTexts = { display: "grid", gap: 2 };
+  const infoLine = { margin: 0, fontSize: 16, fontWeight: 500 };   // sin bold pesado
+  const infoLine2 = { margin: 0, fontSize: 15, fontWeight: 500 };
+
+  const confirmSmall = {
+    padding: "10px 14px",
+    borderRadius: 12,
+    background: "linear-gradient(180deg,#bae6fd,#7dd3fc)",
+    color: "#0c4a6e",
+    fontWeight: 800,
+    border: "1px solid #38bdf8",
+    cursor: saving ? "wait" : "pointer",
+    boxShadow: "0 10px 22px rgba(2,132,199,.25)"
+  };
+
+  const posHeader = { margin: "16px 0 10px", padding: "2px 4px", fontWeight: 700, color: "#0c4a6e", borderLeft: "4px solid #7dd3fc" };
+  const grid4 = { display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))", gap: 12 };
+  if (typeof window !== "undefined" && window.innerWidth >= 640) grid4.gridTemplateColumns = "repeat(3, minmax(0,1fr))";
+  if (typeof window !== "undefined" && window.innerWidth >= 960) grid4.gridTemplateColumns = "repeat(4, minmax(0,1fr))";
+
+  const card = (isOut) => ({
+    position: "relative",
+    border: "1px solid #eef2ff",
+    borderRadius: 16,
+    padding: 10,
+    boxShadow: "0 2px 8px rgba(0,0,0,.06)",
+    background: "#fff",
+    cursor: isAdmin ? "pointer" : "default",
+    outline: "none",
+    userSelect: "none"
+  });
+  const frame = { width: "100%", height: 320, borderRadius: 12, overflow: "hidden", background: "#ffffff", display: "grid", placeItems: "center", border: "1px solid #e5e7eb" };
+  const name = { margin: "8px 0 0", font: "700 15px/1.2 Montserrat, system-ui, sans-serif", color: "#0f172a", textAlign: "center" };
+  const meta = { margin: "2px 0 0", color: "#475569", fontSize: 13, textAlign: "center" };
+
+  const Cross = ({ show=false }) => show ? (
+    <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ position:"absolute", inset:10, borderRadius:12, pointerEvents:"none" }}>
+      <rect x="0" y="0" width="100" height="100" fill="rgba(220,38,38,.18)" rx="12" />
+      <path d="M10 10 L90 90 M90 10 L10 90" stroke="rgba(220,38,38,.85)" strokeWidth="8" strokeLinecap="round" />
+    </svg>
+  ) : null;
+
+  const ConfirmBtn = ({ disabled, full = false }) => (
+    <button
+      onClick={onConfirm}
+      disabled={disabled || saving}
+      style={{
+        ...(full
+          ? {
+              gridColumn: "1 / -1",
+              padding: "14px 16px",
+              borderRadius: 14,
+              background: disabled ? "#bae6fd" : "linear-gradient(180deg,#bae6fd,#7dd3fc)",
+              color: "#0c4a6e",
+              fontWeight: 800,
+              border: "1px solid #38bdf8",
+              cursor: disabled ? "not-allowed" : "pointer",
+              boxShadow: "0 10px 22px rgba(2,132,199,.25)",
+              marginTop: 12
+            }
+          : confirmSmall
+        )
+      }}
+      aria-label="Confirmar convocatoria"
+    >
+      {saving ? "Gardando…" : "CONFIRMAR"}
+    </button>
+  );
+
+  const { fecha, hora } = fmtDT(
+    (topVindeiro?.match_iso ?? nextMatch?.match_iso) ??
+    (encuentro?.fecha_hora ?? null)
+  );
+  const eq1 = (topVindeiro?.equipo1 ?? nextMatch?.equipo1 ?? (encuentro?.equipo1 || encuentro?.titulo) ?? "—") + "";
+  const eq2 = (topVindeiro?.equipo2 ?? nextMatch?.equipo2 ?? encuentro?.equipo2 ?? "—") + "";
 
   return (
-    <main style={{ padding: "72px 16px 24px", maxWidth: 1200, margin: "0 auto" }}>
-      {/* TÍTULO Y LEYENDA */}
-      <h1 style={{ fontFamily: "Montserrat, system-ui", fontWeight: 700, fontSize: 28, marginBottom: 8 }}>
-        Convocatoria
-      </h1>
-      <p style={{ fontFamily: "Montserrat, system-ui", color: "#64748b", marginBottom: 32 }}>
-        Xogadores pre-seleccionados para o próximo partido
-      </p>
+    <main style={wrap}>
+      <h1 style={h1}>Convocatoria oficial</h1>
+      <p style={sub}>Lista de xogadores que poderían estar na aliñación para o seguinte partido.</p>
 
-      {/* INFORMACIÓN DEL PRÓXIMO PARTIDO */}
-      {proximoPartido && (
-        <div style={{
-          background: "#f8fafc",
-          border: "1px solid #e5e7eb",
-          borderRadius: 14,
-          padding: 20,
-          marginBottom: 32,
-          fontFamily: "Montserrat, system-ui"
-        }}>
-          <h3 style={{ margin: "0 0 12px 0", color: "#0f172a", fontSize: 18 }}>
-            {proximoPartido.team1} vs {proximoPartido.team2}
-          </h3>
-          <p style={{ margin: "4px 0", color: "#475569" }}>
-            <strong>Competición:</strong> {proximoPartido.competition}
-          </p>
-          <p style={{ margin: "4px 0", color: "#475569" }}>
-            <strong>Lugar:</strong> {proximoPartido.venue}
-          </p>
-          <p style={{ margin: "4px 0", color: "#475569" }}>
-            <strong>Data:</strong> {new Date(proximoPartido.kickoff_utc).toLocaleDateString('gl-ES')}
-          </p>
-          <p style={{ margin: "4px 0", color: "#475569" }}>
-            <strong>Hora:</strong> {new Date(proximoPartido.kickoff_utc).toLocaleTimeString('gl-ES', { hour: '2-digit', minute: '2-digit' })}
-          </p>
+      {/* Marco informativo con botón a la derecha */}
+      <section style={infoBox} aria-label="Información do próximo partido">
+        <div style={infoTexts}>
+          <p style={infoLine}>{eq1.toUpperCase()} vs {eq2.toUpperCase()}</p>
+          <p style={infoLine2}>{fecha} | {hora}</p>
         </div>
-      )}
+        {isAdmin && <ConfirmBtn disabled={!encuentro?.id || !players.length} />}
+      </section>
 
-      {/* JUGADORES POR POSICIÓN */}
-      {isAdmin && Object.entries(POSICIONES).map(([key, label]) => {
-        const jugadoresPosicion = jugadores.filter(j => j.posicion === key);
-        if (jugadoresPosicion.length === 0) return null;
-        
+      {/* Bloques por posición (non se mesturan) */}
+      {(["POR","DEF","CEN","DEL"]).map((k) => {
+        const arr = (grouped[k] || []);
+        if (!arr.length) return null;
+        const label = k === "POR" ? "Porteiros" : k === "DEF" ? "Defensas" : k === "CEN" ? "Medios" : "Dianteiros";
         return (
-          <div key={key} style={{ marginBottom: 32 }}>
-            <h2 style={{
-              fontFamily: "Montserrat, system-ui",
-              fontWeight: 600,
-              color: "#0f172a",
-              marginBottom: 16,
-              borderBottom: "2px solid #0ea5e9",
-              paddingBottom: 4
-            }}>
-              {label}
-            </h2>
-            
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: 12
-            }}>
-              {jugadoresPosicion.map(jugador => (
-                <div
-                  key={jugador.id}
-                  onClick={() => toggleConvocado(jugador)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    padding: 12,
-                    border: convocados.includes(jugador.id) 
-                      ? "3px solid #ef4444" 
-                      : "1px solid #e5e7eb",
-                    borderRadius: 8,
-                    background: convocados.includes(jugador.id) ? "#fef2f2" : "#fff",
-                    cursor: isAdmin ? "pointer" : "default",
-                    transition: "all 0.2s"
-                  }}
-                >
-                  <img
-                    src={`https://fotos-celta-2025.vercel.app/${generarNombreArchivo(jugador)}`}
-                    alt={jugador.nombre}
-                    style={{
-                      width: 50,
-                      height: 50,
-                      borderRadius: 8,
-                      objectFit: "cover"
-                    }}
-                    onError={(e) => handleImageError(e, jugador)}
-                  />
-                  <div>
-                    <div style={{ fontWeight: 600, fontFamily: "Montserrat, system-ui" }}>
-                      {jugador.nombre}
+          <section key={k}>
+            <div style={posHeader}>{label}</div>
+            <div style={grid4}>
+              {arr.map((p) => {
+                const out = discarded.has(p.id);
+                const { dorsal, nombre, pos } = p;
+                return (
+                  <article
+                    key={p.id}
+                    style={card(out)}
+                    onClick={() => toggleDiscard(p.id)}
+                    aria-pressed={out ? "true" : "false"}
+                    title={isAdmin ? (out ? "Descartado (clic para restaurar)" : "Clic para descartar") : undefined}
+                  >
+                    <div style={frame}>
+                      {p.foto_url ? (
+                        <img
+                          src={p.foto_url}
+                          alt={`Foto de ${nombre}`}
+                          style={{ width:"100%", height:"100%", objectFit:"contain", background:"#ffffff" }}
+                          loading="lazy"
+                          onError={(e)=>{ e.currentTarget.alt = "Imaxe non dispoñíbel"; }}
+                        />
+                      ) : (
+                        <div style={{ color:"#cbd5e1" }}>Sen foto</div>
+                      )}
                     </div>
-                    <div style={{ color: "#64748b", fontSize: 14, fontFamily: "Montserrat, system-ui" }}>
-                      #{jugador.dorsal} • {jugador.posicion}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                    <Cross show={out} />
+                    <p style={name}>
+                      {dorsal != null ? `${String(dorsal).padStart(2,"0")} · ` : ""}{nombre}
+                    </p>
+                    <p style={meta}>{pos}</p>
+                  </article>
+                );
+              })}
             </div>
-          </div>
+          </section>
         );
       })}
 
-      {/* BOTÓN GUARDAR */}
-      {isAdmin && convocados.length > 0 && (
-        <div style={{ marginTop: 32 }}>
-          <button
-            onClick={guardarConvocatoria}
-            style={{
-              width: "100%",
-              padding: "16px",
-              background: "#22c55e",
-              color: "white",
-              border: "none",
-              borderRadius: 8,
-              fontWeight: 700,
-              fontSize: 16,
-              cursor: "pointer",
-              fontFamily: "Montserrat, system-ui"
-            }}
-          >
-            GARDAR CONVOCATORIA ({convocados.length} xogadores)
-          </button>
-          
-          <p style={{ 
-            textAlign: "center", 
-            color: "#64748b", 
-            marginTop: 12,
-            fontFamily: "Montserrat, system-ui" 
-          }}>
-            Os xogadores seleccionados desaparecerán da lista após gardar
-          </p>
+      {/* Botón confirmar grande ao final */}
+      {isAdmin && (
+        <div style={{ marginTop: 10 }}>
+          <ConfirmBtn disabled={!encuentro?.id || !players.length} full />
         </div>
       )}
 
-      {!isAdmin && (
-        <div style={{ 
-          textAlign: "center", 
-          padding: 40, 
-          color: "#64748b",
-          fontFamily: "Montserrat, system-ui" 
-        }}>
-          ⚠️ Solo os administradores poden xestionar a convocatoria
+      {/* Toast */}
+      {toast && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            position:"fixed", bottom:18, left:"50%", transform:"translateX(-50%)",
+            background:"#0ea5e9", color:"#fff", padding:"10px 16px",
+            borderRadius:12, boxShadow:"0 10px 22px rgba(2,132,199,.35)", fontWeight:700
+          }}
+        >
+          {toast}
         </div>
       )}
     </main>

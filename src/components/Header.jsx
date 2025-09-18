@@ -5,7 +5,7 @@ import { Link } from "preact-router/match";
 export default function Header() {
   const wrap = {
     padding: "8px 14px",
-    background: "rgba(0, 64, 128, 0.06)",     // lo máis transparente posible pero visible
+    background: "rgba(0, 64, 128, 0.06)",
     color: "white",
     display: "flex",
     alignItems: "center",
@@ -23,10 +23,7 @@ export default function Header() {
     borderRadius: "8px",
   };
 
-  const linkActive = {
-    ...link,
-    background: "rgba(255,255,255,0.18)",
-  };
+  const linkActive = { ...link, background: "rgba(255,255,255,0.18)" };
 
   return (
     <header style={wrap}>
@@ -39,7 +36,8 @@ export default function Header() {
           Partidos
         </Link>
         <span style={{ opacity: 0.35 }}>|</span>
-        <Link activeClassName="active" href="/haztu11" style={link} activeStyle={linkActive}>
+        {/* Ruta coherente con App.jsx */}
+        <Link activeClassName="active" href="/haz-tu-11" style={link} activeStyle={linkActive}>
           Fai o teu 11
         </Link>
         <span style={{ opacity: 0.35 }}>|</span>
@@ -50,4 +48,3 @@ export default function Header() {
     </header>
   );
 }
-

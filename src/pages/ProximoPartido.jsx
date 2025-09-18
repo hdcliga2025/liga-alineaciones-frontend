@@ -8,18 +8,19 @@ const ESCUDO_SRC = "/escudo.png";
 /* ===== Layout base ===== */
 const WRAP = { maxWidth: 880, margin: "0 auto", padding: "16px" };
 
+/* Panel principal: fondo BLANCO y borde celeste */
 const PANEL = {
   position: "relative",
-  border: "2px solid #0ea5e9", // celeste
+  border: "1px solid #cfe8ff",
   borderRadius: 18,
   background: "#fff",
   boxShadow: "0 6px 18px rgba(0,0,0,.06)",
   padding: "18px 16px",
 };
 
-/* ===== Bloque superior (texto) ===== */
+/* Bloque de texto: fondo CELESTE suave (intocable el banner de meteo) */
 const TOP_BOX = {
-  background: "#f8fafc",
+  background: "linear-gradient(180deg, rgba(224,242,254,0.55), rgba(191,219,254,0.45))",
   border: "1px solid #e5e7eb",
   borderRadius: 14,
   padding: "14px 12px",
@@ -46,15 +47,12 @@ const LINE_GRAY = {
   fontWeight: 600,
 };
 
-const HR = { border: 0, borderTop: "1px solid #e5e7eb", margin: "14px 0" };
-
-/* ===== Banner METEO (full-bleed) ===== */
+/* ===== Banner METEO (full-bleed, intocable) ===== */
 const BLEED_WRAP = {
   width: "100vw",
   marginLeft: "50%",
   transform: "translateX(-50%)",
 };
-
 const METEO_BANNER = (isMobile) => ({
   position: "relative",
   width: "100%",
@@ -63,7 +61,6 @@ const METEO_BANNER = (isMobile) => ({
   borderTop: "1px solid #bae6fd",
   borderBottom: "1px solid #93c5fd",
 });
-
 const METEO_BAR = (isMobile) => ({
   display: "flex",
   gap: isMobile ? 18 : 28,
@@ -76,7 +73,6 @@ const METEO_BAR = (isMobile) => ({
   fontSize: isMobile ? 18 : 22,
   fontWeight: 700,
 });
-
 const METEO_LEGEND_TOP = (isMobile) => ({
   position: "absolute",
   top: 6,
@@ -87,7 +83,6 @@ const METEO_LEGEND_TOP = (isMobile) => ({
   color: "#0284c7",
   letterSpacing: ".3px",
 });
-
 const METEO_SUBLEGEND_AFTER = (isMobile) => ({
   textAlign: "center",
   marginTop: isMobile ? 6 : 8,
@@ -113,6 +108,40 @@ function toLongGalician(dateObj) {
 }
 const capFirst = (s = "") => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
+// Cache simple 24h en localStorage
+const WX_TTL_MS = 24 * 3600 * 1000;
+function wxKey(lugar, matchISO, tz="Europe/Madrid") {
+  if (!lugar || !matchISO) return null;
+  const target = new Date(matchISO);
+  const fmt = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hour12: false,
+  });
+  const parts = fmt.formatToParts(target).reduce((a,p)=>{a[p.type]=p.value;return a;}, {});
+  const localISO = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+  return `wx:${lugar}:${localISO}`;
+}
+function getCachedWx(lugar, matchISO) {
+  const k = wxKey(lugar, matchISO);
+  if (!k) return null;
+  try {
+    const raw = localStorage.getItem(k);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (!obj || !obj.t || !obj.v) return null;
+    if (Date.now() - obj.t > WX_TTL_MS) return null; // caducado
+    return obj.v;
+  } catch { return null; }
+}
+function setCachedWx(lugar, matchISO, val) {
+  const k = wxKey(lugar, matchISO);
+  if (!k) return;
+  try {
+    localStorage.setItem(k, JSON.stringify({ t: Date.now(), v: val }));
+  } catch {}
+}
+
+/* Meteo auxiliar (actualiza ata 7-8 días vista; escolle a hora máis próxima) */
 async function fetchMeteoFor(lugar, matchISO) {
   try {
     if (!lugar || !matchISO) return null;
@@ -122,41 +151,34 @@ async function fetchMeteoFor(lugar, matchISO) {
     const geo = await geoRes.json();
     const loc = geo?.results?.[0];
     if (!loc) return null;
+    const lat = loc.latitude, lon = loc.longitude;
 
+    // ata 8 días para cubrir “unha semana”
     const wxRes = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}` +
-        `&hourly=temperature_2m,precipitation_probability,wind_speed_10m&timezone=Europe/Madrid&forecast_days=3`
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+      `&hourly=temperature_2m,precipitation_probability,wind_speed_10m&timezone=Europe/Madrid&forecast_days=8`
     );
     const wx = await wxRes.json();
     const times = wx?.hourly?.time || [];
     if (!times.length) return null;
 
+    // data local
     const target = new Date(matchISO);
     const fmt = new Intl.DateTimeFormat("sv-SE", {
-      timeZone: "Europe/Madrid",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
+      timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", hour12: false,
     });
-    const parts = fmt.formatToParts(target).reduce((a, p) => {
-      a[p.type] = p.value;
-      return a;
-    }, {});
+    const parts = fmt.formatToParts(target).reduce((a, p) => { a[p.type] = p.value; return a; }, {});
     const localISO = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
 
+    // exacto ou máis próximo
     let idx = times.indexOf(localISO);
     if (idx === -1) {
-      let best = 0,
-        bestDiff = Infinity;
+      let best = 0, bestDiff = Infinity;
+      const targetMs = new Date(localISO+":00").getTime();
       for (let i = 0; i < times.length; i++) {
-        const d = Math.abs(new Date(times[i]).getTime() - new Date(localISO).getTime());
-        if (d < bestDiff) {
-          bestDiff = d;
-          best = i;
-        }
+        const d = Math.abs(new Date(times[i]+":00").getTime() - targetMs);
+        if (d < bestDiff) { bestDiff = d; best = i; }
       }
       idx = best;
     }
@@ -165,6 +187,7 @@ async function fetchMeteoFor(lugar, matchISO) {
       temp_c: wx.hourly.temperature_2m?.[idx] ?? null,
       wind_kmh: wx.hourly.wind_speed_10m?.[idx] ?? null,
       precip_prob_pct: wx.hourly.precipitation_probability?.[idx] ?? null,
+      src: "open-meteo",
     };
   } catch {
     return null;
@@ -172,7 +195,9 @@ async function fetchMeteoFor(lugar, matchISO) {
 }
 
 export default function ProximoPartido() {
-  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth <= 560 : false
+  );
   useEffect(() => {
     const onR = () => setIsMobile(window.innerWidth <= 560);
     window.addEventListener("resize", onR);
@@ -183,6 +208,12 @@ export default function ProximoPartido() {
   const [loading, setLoading] = useState(true);
   const [meteo, setMeteo] = useState(null);
 
+  // helper para decidir refresco diario
+  function shouldRefreshDaily(existing) {
+    // usamos cache local con TTL 24h; se non hai, refrescamos
+    return !existing;
+  }
+
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -192,46 +223,77 @@ export default function ProximoPartido() {
         .eq("id", 1)
         .maybeSingle();
 
-      if (alive) {
-        setRow(nm || null);
-        setMeteo(nm?.weather_json || null);
+      if (!alive) return;
+      setRow(nm || null);
 
-        if (nm?.match_iso && !nm?.weather_json) {
-          const ms = new Date(nm.match_iso).getTime() - Date.now();
-          if (ms <= 48 * 3600 * 1000 && nm.lugar) {
-            const wx = await fetchMeteoFor(nm.lugar, nm.match_iso);
-            if (alive && wx) setMeteo(wx);
+      // 1) intenta cache local
+      let wx = getCachedWx(nm?.lugar, nm?.match_iso) || nm?.weather_json || null;
+      if (wx) setMeteo(wx);
+
+      // 2) criterio: ata 8 días vista e refresco diario (se non hai cache válida)
+      if (nm?.match_iso && nm?.lugar && shouldRefreshDaily(wx)) {
+        const dMs = new Date(nm.match_iso).getTime() - Date.now();
+        const within8days = dMs <= 8 * 24 * 3600 * 1000;
+        if (within8days) {
+          const fresh = await fetchMeteoFor(nm.lugar, nm.match_iso);
+          if (alive && fresh) {
+            setMeteo(fresh);
+            setCachedWx(nm.lugar, nm.match_iso, fresh);
+            // tentar persistir en BD (se RLS permite)
+            try {
+              await supabase.from("next_match").update({ weather_json: fresh, updated_at: new Date().toISOString() }).eq("id", 1);
+            } catch {}
           }
         }
-        setLoading(false);
       }
+
+      setLoading(false);
     })();
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, []);
 
   if (loading) return <main style={WRAP}>Cargando…</main>;
 
+  // Sen partido → mensaxe centrada
+  if (!row) {
+    return (
+      <>
+        <main style={WRAP}>
+          <section style={PANEL}>
+            <div style={{
+              display: "grid",
+              placeItems: "center",
+              textAlign: "center",
+              padding: "28px 12px",
+              fontFamily: "Montserrat, system-ui, sans-serif",
+              color: "#0f172a"
+            }}>
+              <h2 style={{ margin: 0, fontWeight: 800 }}>Agardando novo Próximo Partido</h2>
+              <p style={{ margin: "10px 0 0", color: "#475569" }}>
+                Os administradores establecerán un novo encontro en breve. Visítanos axiña; é probábel que en poucas horas esta páxina volva estar actualizada. Grazas!
+              </p>
+            </div>
+          </section>
+        </main>
+      </>
+    );
+  }
+
   const teamA = (row?.equipo1 || "—").toUpperCase();
   const teamB = (row?.equipo2 || "—").toUpperCase();
-  const lugar = (row?.lugar || "—").toUpperCase();
+  const lugar = row?.lugar || "—";
   const competition = row?.competition || "—";
 
   const dateObj = row?.match_iso ? new Date(row.match_iso) : null;
   const longDate = dateObj ? toLongGalician(dateObj) : "—";
   const justTime = dateObj
     ? new Intl.DateTimeFormat("gl-ES", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: "Europe/Madrid",
+        hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Europe/Madrid",
       }).format(dateObj)
     : "—";
 
-  const ESCUDO_W = isMobile ? 260 : 170;
-  const showEscudo = true;
-  const rightPad = !isMobile && showEscudo ? ESCUDO_W + 24 : 0;
+  const ESCUDO_W = isMobile ? 300 : 200;
+  const rightPad = !isMobile ? ESCUDO_W + 24 : 0;
 
   const meteoContent = (
     <div style={METEO_BAR(isMobile)}>
@@ -243,7 +305,7 @@ export default function ProximoPartido() {
 
   return (
     <>
-      {/* ===== Banner METEO ===== */}
+      {/* Banner METEO (intocable) */}
       <div style={BLEED_WRAP}>
         <div style={METEO_BANNER(isMobile)}>
           <div style={METEO_LEGEND_TOP(isMobile)}>METEO | {lugar}</div>
@@ -252,20 +314,24 @@ export default function ProximoPartido() {
         </div>
       </div>
 
-      {/* ===== Contenido principal ===== */}
+      {/* Contido principal */}
       <main style={WRAP}>
         <section style={PANEL}>
-          {!isMobile && showEscudo && (
+          {!isMobile && (
             <img
               src={ESCUDO_SRC}
               alt="Escudo RC Celta"
+              decoding="async"
+              loading="eager"
               style={{
                 position: "absolute",
                 top: 2,
                 right: 10,
                 width: ESCUDO_W,
+                height: "auto",
                 opacity: 0.96,
                 pointerEvents: "none",
+                zIndex: 0,
               }}
             />
           )}
@@ -278,17 +344,34 @@ export default function ProximoPartido() {
                 <span style={TEAM_NAME}>{teamB}</span>
               </h2>
 
-              <p style={LINE_GRAY}>Competición: <strong>{competition}</strong></p>
-              <p style={LINE_GRAY}>Data: <strong>{capFirst(longDate)}</strong></p>
-              <p style={LINE_GRAY}>Hora: <strong>{justTime}</strong></p>
+              <p style={LINE_GRAY}>
+                Competición:{" "}
+                <strong style={{ fontWeight: 700, color: "#0f172a" }}>{competition}</strong>
+              </p>
+              <p style={LINE_GRAY}>
+                Lugar:{" "}
+                <strong style={{ fontWeight: 700, color: "#0f172a" }}>{lugar}</strong>
+              </p>
+              <p style={LINE_GRAY}>
+                Data:{" "}
+                <strong style={{ fontWeight: 700, color: "#0f172a" }}>{capFirst(longDate)}</strong>
+              </p>
+              <p style={LINE_GRAY}>
+                Hora:{" "}
+                <strong style={{ fontWeight: 700, color: "#0f172a" }}>{justTime}</strong>
+              </p>
             </div>
-
-            <hr style={HR} />
           </div>
 
-          {isMobile && showEscudo && (
+          {isMobile && (
             <div style={{ marginTop: 16, display: "grid", placeItems: "center" }}>
-              <img src={ESCUDO_SRC} alt="Escudo RC Celta" style={{ width: ESCUDO_W, opacity: 0.98 }} />
+              <img
+                src={ESCUDO_SRC}
+                alt="Escudo RC Celta"
+                decoding="async"
+                loading="eager"
+                style={{ width: ESCUDO_W, height: "auto", opacity: 0.98 }}
+              />
             </div>
           )}
         </section>

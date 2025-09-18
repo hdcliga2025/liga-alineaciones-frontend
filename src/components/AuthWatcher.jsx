@@ -1,6 +1,7 @@
-﻿import { h } from "preact";
+﻿// src/components/AuthWatcher.jsx
+import { h } from "preact";
 import { useEffect, useRef } from "preact/hooks";
-import { supabase } from "../lib/supabaseClient";
+import { supabase } from "../lib/supabaseClient.js";
 import { route } from "preact-router";
 
 export default function AuthWatcher() {
@@ -62,7 +63,6 @@ export default function AuthWatcher() {
       const sess = data?.session || null;
       const p = location.pathname;
 
-      // perfiles públicos
       const isPublic = p === "/" || p.startsWith("/login") || p.startsWith("/register");
       if (sess) {
         await upsertOwnProfile();
@@ -74,7 +74,7 @@ export default function AuthWatcher() {
 
     handleInitial();
 
-    const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event) => {
       if (!active) return;
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
         await upsertOwnProfile();
@@ -90,7 +90,6 @@ export default function AuthWatcher() {
 
     const onVis = async () => {
       if (document.hidden) return;
-      // tocar sesión para forzar token vivo
       try { await supabase.auth.getSession(); } catch {}
     };
     document.addEventListener("visibilitychange", onVis);
@@ -104,4 +103,3 @@ export default function AuthWatcher() {
 
   return null;
 }
-
