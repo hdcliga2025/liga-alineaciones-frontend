@@ -38,11 +38,22 @@ const S = {
   h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
   sub: { margin: "0 0 18px", color: "#475569", fontSize: 16 },
 
-  // Cabecera (bloque + botón a la derecha, fuera del bloque)
-  headerRow: { display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", marginBottom: 12 },
+  headerRow: (isNarrow) => ({
+    display: "grid",
+    gridTemplateColumns: isNarrow ? "1fr" : "70% 30%",
+    gap: 12,
+    alignItems: "center",
+    marginBottom: 12,
+  }),
   resumen: {
-    padding:"12px 14px", borderRadius:12,
-    border:"1px solid #dbeafe", background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)", color:"#0f172a"
+    padding:"12px 14px",
+    borderRadius:12,
+    border:"1px solid #dbeafe",
+    background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)",
+    color:"#0f172a",
+    minHeight: 78,
+    display: "grid",
+    alignContent: "center"
   },
   resumeLine: { margin: 0, fontSize: 19, fontWeight: 400, letterSpacing: ".35px", lineHeight: 1.5 },
 
@@ -58,10 +69,9 @@ const S = {
   name: { margin:"8px 0 0", font:"700 15px/1.2 Montserrat, system-ui, sans-serif", color:"#0f172a", textAlign:"center" },
   meta: { margin:"2px 0 0", color:"#475569", fontSize:13, textAlign:"center" },
 
-  // Botones (sin borde/outline “de caja”)
   btn: (full)=>({
     width: full ? "100%" : "auto",
-    padding: full ? "14px 16px" : "10px 12px",
+    padding: full ? "14px 16px" : "12px 14px",
     borderRadius: 14,
     background:"linear-gradient(180deg,#bae6fd,#7dd3fc)",
     color:"#0c4a6e",
@@ -72,7 +82,7 @@ const S = {
     whiteSpace:"nowrap"
   }),
 
-  savedMsg: { color:"#dc2626", fontSize:18, fontWeight:600, margin:"8px 0 0" }
+  savedMsg: { color:"#dc2626", fontSize:19, fontWeight:600, margin:"10px 0 0" }
 };
 
 const Shade = ({ show=false }) => show ? (
@@ -110,10 +120,18 @@ export default function ConvocatoriaProximo() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // Cabecera desde Vindeiros (prioridad) o next_match (fallback si quisieras activarlo)
   const [header, setHeader] = useState(null);
+  const [isNarrow, setIsNarrow] = useState(
+    typeof window !== "undefined" ? window.innerWidth <= 680 : false
+  );
 
-  // ===== Carga inicial (paralela, rápida y sin saltos)
+  useEffect(() => {
+    const onR = () => setIsNarrow(window.innerWidth <= 680);
+    window.addEventListener("resize", onR);
+    return () => window.removeEventListener("resize", onR);
+  }, []);
+
+  // ===== Carga inicial (paralela)
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -126,7 +144,6 @@ export default function ConvocatoriaProximo() {
 
         if (!alive) return;
 
-        // admin?
         const uid = sess?.session?.user?.id || null;
         if (uid) {
           const { data: prof } = await supabase
@@ -173,15 +190,13 @@ export default function ConvocatoriaProximo() {
   const { fecha: sFecha, hora: sHora } = fmtDT(header?.match_iso);
 
   async function saveAndPublish() {
-    if (!isAdmin) return;
-    if (saving) return;
+    if (!isAdmin || saving) return;
     setSaving(true);
-
     try {
       const allIds = players.map(p => p.id);
       const convocados = allIds.filter(id => !discarded.has(id));
 
-      // Guardado rápido, sin navegar
+      // Publicación simple (borra y crea)
       await supabase
         .from("convocatoria_publica")
         .delete()
@@ -193,8 +208,7 @@ export default function ConvocatoriaProximo() {
         if (error) throw error;
       }
 
-      // UI inmediata, persistente hasta que cambies algo
-      setSaved(true);
+      setSaved(true); // mensaje fijo (arriba y abajo)
     } catch (e) {
       console.error("[Convocatoria] save", e);
     } finally {
@@ -207,16 +221,16 @@ export default function ConvocatoriaProximo() {
       <h1 style={S.h1}>Convocatoria oficial</h1>
       <p style={S.sub}>Lista de xogadores que poderían estar na aliñación para o seguinte partido.</p>
 
-      {/* Cabecera + botón a la derecha (botón fuera del cuadro, fijo) */}
+      {/* Cabecera al 70% + botón al 30% */}
       {header && (
-        <div style={S.headerRow}>
+        <div style={S.headerRow(isNarrow)}>
           <div style={S.resumen}>
             <p style={S.resumeLine}>{cap(header.equipo1)} vs {cap(header.equipo2)}</p>
             <p style={{...S.resumeLine, opacity:.9}}>{sFecha} | {sHora}</p>
           </div>
 
           {isAdmin && (
-            <div style={{ display:"flex", alignItems:"center" }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent: isNarrow ? "flex-start" : "flex-end" }}>
               <button
                 style={S.btn(false)}
                 onClick={saveAndPublish}
