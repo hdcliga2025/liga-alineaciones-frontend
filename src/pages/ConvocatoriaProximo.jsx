@@ -69,7 +69,7 @@ export default function ConvocatoriaProximo() {
         if (!alive) return;
         setIsAdmin(admin);
 
-        // Plantilla (no pedimos 'position'; se infiere del nombre del fichero)
+        // Plantilla (inferimos posición desde el nombre del archivo)
         const { data: js } = await supabase
           .from("jugadores")
           .select("id,nombre,dorsal,foto_url")
@@ -95,7 +95,7 @@ export default function ConvocatoriaProximo() {
         if (!alive) return;
         setTopVindeiro(top || null);
 
-        // Encontro futuro (para vincular convocatoria a ese id)
+        // Encontro futuro
         const { data: enc } = await supabase
           .from("encuentros")
           .select("id, titulo, fecha_hora, equipo1, equipo2")
@@ -115,7 +115,6 @@ export default function ConvocatoriaProximo() {
           if (!alive) return;
           setConvIds(ids);
 
-          // pre-marca descartes (admin: “todos menos convocados”)
           if (admin && js?.length) {
             const allIds = new Set(js.map(p => p.id));
             const convSet = new Set(ids);
@@ -135,7 +134,6 @@ export default function ConvocatoriaProximo() {
       const info = finalFromAll(p);
       if (info.pos && g[info.pos]) g[info.pos].push({ ...p, ...info });
     }
-    // usuario normal → solo convocados (si existen)
     if (!isAdmin && convIds.length) {
       for (const k of Object.keys(g)) g[k] = g[k].filter(p => convIds.includes(p.id));
     }
@@ -178,7 +176,7 @@ export default function ConvocatoriaProximo() {
   const h1 = { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" };
   const sub = { margin: "0 0 10px", color: "#475569", fontSize: 15 };
 
-  // Marco informativo (baixo do título)
+  // Marco informativo (debajo del título)
   const resumenBox = {
     margin: "0 0 14px",
     padding: "12px 14px",
@@ -186,10 +184,9 @@ export default function ConvocatoriaProximo() {
     border: "1px solid #dbeafe",
     background: "linear-gradient(180deg,#f0f9ff,#e0f2fe)",
     color: "#0f172a",
-    lineHeight: 1.35
   };
   const resumenGrid = { display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 10 };
-  const resumeText = { margin: 0, fontSize: 16, fontWeight: 400, letterSpacing: "0.2px" }; // sen bold, un pouco maior
+  const resumeText = { margin: 0, fontSize: 18, fontWeight: 400, letterSpacing: "0.35px", lineHeight: 1.45 }; // +grande y “más largo”
   const resumeText2 = { ...resumeText, opacity: 0.9 };
 
   const posHeader = {
@@ -198,7 +195,7 @@ export default function ConvocatoriaProximo() {
     fontWeight: 700,
     color: "#0c4a6e",
     borderLeft: "4px solid #7dd3fc",
-    borderBottom: "2px solid #e2e8f0" // subliñado a todo o ancho
+    borderBottom: "2px solid #e2e8f0" // subrayado a todo o ancho
   };
   const grid4 = { display: "grid", gridTemplateColumns: "repeat(4, minmax(0,1fr))", gap: 12 };
   const card = (isOut) => ({
@@ -213,9 +210,35 @@ export default function ConvocatoriaProximo() {
     userSelect: "none",
     opacity: isOut ? 0.55 : 1
   });
-  const frame = { width: "100%", height: 320, borderRadius: 12, overflow: "hidden", background: "#0b1e2a", display: "grid", placeItems: "center", border: "1px solid #e5e7eb" };
+  const frame = { width: "100%", height: 320, borderRadius: 12, overflow: "hidden", background: "#0b1e2a", display: "grid", placeItems: "center", border: "1px solid #e5e7eb", position: "relative" };
   const name = { margin: "8px 0 0", font: "700 15px/1.2 Montserrat, system-ui, sans-serif", color: "#0f172a", textAlign: "center" };
   const meta = { margin: "2px 0 0", color: "#475569", fontSize: 13, textAlign: "center" };
+
+  // Mostrar overlay SOLO para dorsais 29, 32 y 39
+  const OVERLAY_SET = new Set([29, 32, 39]);
+  const NumberOverlay = ({ dorsal }) => {
+    if (!OVERLAY_SET.has(Number(dorsal))) return null;
+    return (
+      <span
+        style={{
+          position: "absolute",
+          top: 8,
+          left: 10,
+          fontFamily: "Montserrat, system-ui, sans-serif",
+          fontWeight: 800,
+          fontSize: 38,
+          lineHeight: 1,
+          color: "#eef4ff",
+          textShadow: "0 2px 4px rgba(0,0,0,.6)",
+          userSelect: "none",
+          pointerEvents: "none",
+          letterSpacing: "1px"
+        }}
+      >
+        {dorsal}
+      </span>
+    );
+  };
 
   const BigSaveBtn = ({ disabled }) => (
     <button
@@ -256,17 +279,17 @@ export default function ConvocatoriaProximo() {
       aria-label="Gardar convocatoria"
       title="Gardar convocatoria"
     >
-      {saving ? "Gardando…" : "GARDAR"}
+      {saving ? "Gardando…" : "GARDAR CONVOCATORIA"}
     </button>
   );
 
-  // Datos do marco (prioridade: Vindeiros #1 → next_match → encontro futuro)
+  // Datos del marco (prioridad: Vindeiros #1 → next_match → encontro futuro)
   const source =
     topVindeiro ||
     nextMatch ||
     (encuentro
       ? {
-          equipo1: ((encuentro.equipo1 || encontro.titulo || "") + "").toUpperCase(),
+          equipo1: ((encuentro.equipo1 || encuentro.titulo || "") + "").toUpperCase(),
           equipo2: ((encuentro.equipo2 || "") + "").toUpperCase(),
           match_iso: encuentro.fecha_hora,
         }
@@ -282,7 +305,7 @@ export default function ConvocatoriaProximo() {
       <h1 style={h1}>Convocatoria oficial</h1>
       <p style={sub}>Lista de xogadores que poderían estar na aliñación para o seguinte partido.</p>
 
-      {/* Marco informativo con botón pequeno á dereita */}
+      {/* Marco informativo con botón pequeño a la derecha */}
       {source ? (
         <div style={resumenBox} aria-label="Información do próximo partido">
           <div style={resumenGrid}>
@@ -297,7 +320,7 @@ export default function ConvocatoriaProximo() {
         <p style={{ margin: 0, fontSize: 15 }}>Non hai encontro próximo dispoñíbel.</p>
       )}
 
-      {/* Bloques por posición: non mesturar posicións */}
+      {/* Bloques por posición (non mesturar) */}
       {(["POR","DEF","CEN","DEL"]).map((k) => {
         const arr = (grouped[k] || []);
         if (!arr.length) return null;
@@ -308,6 +331,7 @@ export default function ConvocatoriaProximo() {
             <div style={grid4}>
               {arr.map((p) => {
                 const out = discarded.has(p.id);
+                const { dorsal, nombre, pos } = p; // ya viene fusionado en grouped
                 return (
                   <article
                     key={p.id}
@@ -318,23 +342,26 @@ export default function ConvocatoriaProximo() {
                   >
                     <div style={frame}>
                       {p.foto_url ? (
-                        <img
-                          src={p.foto_url}
-                          alt={`Foto de ${p.nombre}`}
-                          style={{ width:"100%", height:"100%", objectFit:"contain" }}
-                          loading="lazy"
-                          decoding="async"
-                          crossOrigin="anonymous"
-                          referrerPolicy="no-referrer"
-                        />
+                        <>
+                          <img
+                            src={p.foto_url}
+                            alt={`Foto de ${nombre}`}
+                            style={{ width:"100%", height:"100%", objectFit:"contain", background:"#0b1e2a" }}
+                            loading="lazy"
+                            decoding="async"
+                            crossOrigin="anonymous"
+                            referrerPolicy="no-referrer"
+                          />
+                          <NumberOverlay dorsal={dorsal} />
+                        </>
                       ) : (
                         <div style={{ color:"#cbd5e1" }}>Sen foto</div>
                       )}
                     </div>
                     <p style={name}>
-                      {p.dorsal != null ? `${String(p.dorsal).padStart(2,"0")} · ` : ""}{p.nombre}
+                      {dorsal != null ? `${String(dorsal).padStart(2,"0")} · ` : ""}{nombre}
                     </p>
-                    <p style={meta}>{p.pos}</p>
+                    <p style={meta}>{pos}</p>
                   </article>
                 );
               })}
@@ -343,7 +370,7 @@ export default function ConvocatoriaProximo() {
         );
       })}
 
-      {/* Botón grande abaixo de todo */}
+      {/* Botón grande abajo */}
       {isAdmin && (
         <div style={{ marginTop: 16 }}>
           <BigSaveBtn disabled={!canSave} />
