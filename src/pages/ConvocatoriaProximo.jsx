@@ -2,7 +2,7 @@ import { h } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
-/* ===== Utils compactas ===== */
+/* ===== Utils ===== */
 const cap = (s="") => (s || "").toUpperCase();
 function fmtDT(iso) {
   if (!iso) return { fecha: "-", hora: "-" };
@@ -35,8 +35,8 @@ const OVERLAY_NUMS = new Set([29,32,39]);
 
 const S = {
   wrap: { maxWidth: 1080, margin: "0 auto", padding: 16 },
-  h1: { fontFamily: "Montserrat, system-ui, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
-  sub: { margin: "0 0 12px", color: "#475569", fontSize: 14 },
+  h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
+  sub: { margin: "0 0 16px", color: "#475569", fontSize: 16 },
   resumen: {
     margin:"0 0 14px", padding:"12px 14px", borderRadius:12,
     border:"1px solid #dbeafe", background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)", color:"#0f172a"
@@ -58,7 +58,7 @@ const S = {
     padding: full ? "14px 16px" : "10px 12px",
     borderRadius: 14,
     background:"linear-gradient(180deg,#bae6fd,#7dd3fc)", color:"#0c4a6e",
-    fontWeight:800, border:"1px solid #38bdf8",
+    fontWeight:800, border:"none",
     cursor:"pointer", boxShadow: full ? "0 10px 22px rgba(2,132,199,.25)" : "0 6px 16px rgba(2,132,199,.2)",
     whiteSpace:"nowrap"
   })
@@ -69,7 +69,7 @@ const Shade = ({ show=false }) => show ? (
     <div style={{ position:"absolute", inset:0, background:"rgba(2,6,23,.58)" }}/>
     <div style={{
       position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)",
-      padding:"10px 14px", borderRadius:999, fontWeight:800, fontSize:12,
+      padding:"10px 14px", borderRadius:999, fontWeight:700, fontSize:12,
       letterSpacing:.4, color:"#fff",
       background:"linear-gradient(180deg, rgba(248,113,113,.95), rgba(239,68,68,.85))",
       boxShadow:"0 10px 24px rgba(0,0,0,.25)"
@@ -97,7 +97,9 @@ export default function ConvocatoriaProximo() {
   const [players, setPlayers] = useState([]);
   const [discarded, setDiscarded] = useState(new Set());
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState("");
+  const [saved, setSaved] = useState(false);
+
+  // Cabecera desde Vindeiros o next_match
   const [header, setHeader] = useState(null);
 
   // ===== Carga inicial
@@ -110,7 +112,8 @@ export default function ConvocatoriaProximo() {
       if (uid) {
         const { data: prof } = await supabase
           .from("profiles").select("role").eq("id", uid).maybeSingle();
-        admin = (prof?.role || "").toLowerCase() === "admin";
+        const role = (prof?.role || "").toLowerCase();
+        admin = role === "admin";
       }
       setIsAdmin(admin);
 
@@ -121,7 +124,7 @@ export default function ConvocatoriaProximo() {
         .order("dorsal", { ascending: true });
       setPlayers(js || []);
 
-      // cabecera: vindeiros #1
+      // cabecera
       const { data: top } = await supabase
         .from("matches_vindeiros")
         .select("equipo1,equipo2,match_iso")
@@ -129,7 +132,7 @@ export default function ConvocatoriaProximo() {
       if (top?.match_iso) {
         setHeader({ equipo1: cap(top.equipo1||""), equipo2: cap(top.equipo2||""), match_iso: top.match_iso });
       }
-    })().catch(e=>console.error("[Convocatoria] init", e));
+    })();
   }, []);
 
   const grouped = useMemo(() => {
@@ -159,15 +162,14 @@ export default function ConvocatoriaProximo() {
       await supabase.from("convocatoria_publica").delete().neq("jugador_id","00000000-0000-0000-0000-000000000000");
       if (convocados.length) {
         const rows = convocados.map(jid => ({ jugador_id: jid, updated_at: new Date().toISOString() }));
-        await supabase.from("convocatoria_publica").insert(rows);
+        const { error } = await supabase.from("convocatoria_publica").insert(rows);
+        if (error) throw error;
       }
-      setToast("CONFIGURACIÓN CONVOCATORIA REALIZADA");
+      setSaved(true);
     } catch(e) {
       console.error(e);
-      setToast("Erro ao gardar");
     } finally {
       setSaving(false);
-      setTimeout(()=>setToast(""), 4000);
     }
   }
 
@@ -175,11 +177,14 @@ export default function ConvocatoriaProximo() {
     <main style={S.wrap}>
       <h1 style={S.h1}>Convocatoria oficial</h1>
       <p style={S.sub}>Lista de xogadores que poderían estar na aliñación para o seguinte partido.</p>
-      {toast && (
-        <p style={{ color:"red", fontWeight:700, marginBottom:12 }}>{toast}</p>
+      {saved && (
+        <p style={{color:"red",fontSize:18,margin:"12px 0 18px"}}>
+          CONFIGURACIÓN DA CONVOCATORIA GARDADA
+        </p>
       )}
 
-      {header ? (
+      {/* Cabecera resumida */}
+      {header && (
         <div style={S.resumen}>
           <p style={S.resumeLine}>{cap(header.equipo1)} vs {cap(header.equipo2)}</p>
           <p style={{...S.resumeLine, opacity:.9}}>{sFecha} | {sHora}</p>
@@ -189,9 +194,9 @@ export default function ConvocatoriaProximo() {
             </button>
           )}
         </div>
-      ) : null}
+      )}
 
-      {["POR","DEF","CEN","DEL"].map((k) => {
+      {(["POR","DEF","CEN","DEL"]).map((k) => {
         const arr = (grouped[k] || []);
         if (!arr.length) return null;
         const label = k === "POR" ? "Porteiros" : k === "DEF" ? "Defensas" : k === "CEN" ? "Medios" : "Dianteiros";
@@ -207,11 +212,7 @@ export default function ConvocatoriaProximo() {
                     <div style={S.frame}>
                       {p.foto_url ? (
                         <>
-                          <img
-                            src={p.foto_url}
-                            alt={`Foto de ${nombre}`}
-                            style={{ width:"100%", height:"100%", objectFit:"contain" }}
-                          />
+                          <img src={p.foto_url} alt={`Foto de ${nombre}`} style={{ width:"100%", height:"100%", objectFit:"contain" }}/>
                           <NumOverlay dorsal={dorsal}/>
                           <Shade show={out}/>
                         </>
@@ -228,6 +229,14 @@ export default function ConvocatoriaProximo() {
           </section>
         );
       })}
+
+      {isAdmin && (
+        <div style={{ marginTop: 16 }}>
+          <button style={S.save(true)} onClick={saveAndPublish} disabled={saving}>
+            {saving ? "Gardando…" : "GARDAR CONVOCATORIA"}
+          </button>
+        </div>
+      )}
     </main>
   );
 }

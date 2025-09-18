@@ -2,7 +2,6 @@ import { h } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
-/* Utils */
 function safeDecode(s = "") { try { return decodeURIComponent(s); } catch { return s.replace(/%20/g, " "); } }
 function parseFromFilename(url = "") {
   const last = (url.split("?")[0].split("#")[0].split("/").pop() || "").trim();
@@ -24,12 +23,12 @@ const IMG_H = 320;
 
 const S = {
   wrap: { maxWidth: 1080, margin: "0 auto", padding: 16 },
-  h1: { fontFamily: "Montserrat, system-ui, sans-serif", fontSize: 28, margin: "6px 0 2px", color:"#0f172a" },
-  sub: { margin: "0 0 18px", color: "#475569", fontSize: 18, fontWeight:600 },
+  h1: { fontFamily: "Montserrat, system-ui, sans-serif", fontSize: 26, margin: "6px 0 2px", color: "#0f172a" },
+  sub: { margin: "0 0 16px", color: "#475569", fontSize: 18, fontWeight: 400 },
   posHeader: { margin:"16px 0 10px", padding:"2px 4px 8px", fontWeight:700, color:"#0c4a6e", borderLeft:"4px solid #7dd3fc", borderBottom:"2px solid #e2e8f0" },
   grid4: { display:"grid", gridTemplateColumns:"repeat(4, minmax(0,1fr))", gap:12 },
-  card: { display:"grid", gridTemplateRows: `${IMG_H}px auto`, background:"#fff", border:"1px solid #eef2ff", borderRadius:16, padding:10, boxShadow:"0 2px 8px rgba(0,0,0,.06)", alignItems:"center", textAlign:"center" },
-  name: { margin:"8px 0 0", font:"700 15px/1.2 Montserrat, system-ui, sans-serif", color:"#0f172a" },
+  card: { display:"grid", gridTemplateRows: `${IMG_H}px auto`, background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)", border:"1px solid #eef2ff", borderRadius:16, padding:10, boxShadow:"0 2px 8px rgba(0,0,0,.06)", alignItems:"center", textAlign:"center" },
+  name: { margin:"8px 0 0", font:"700 15px/1.2 Montserrat, sans-serif", color:"#0f172a" },
   meta: { margin:"2px 0 0", color:"#475569", fontSize:13 }
 };
 
@@ -42,22 +41,16 @@ function ImgWithOverlay({ src, alt, dorsal }) {
       background:"#f8fafc", border:"1px solid #e5e7eb", overflow:"hidden"
     }}>
       {src ? (
-        <img
-          src={src}
-          alt={alt}
-          loading="lazy"
-          decoding="async"
-          style={{ width:"100%", height:"100%", objectFit:"contain", background:"#0b1e2a" }}
-        />
+        <img src={src} alt={alt} style={{ width:"100%", height:"100%", objectFit:"contain" }}/>
       ) : (
         <div style={{ color:"#cbd5e1" }}>Sen foto</div>
       )}
       {showNum && (
         <span style={{
           position:"absolute", top: 18, left: 24,
-          fontFamily:"Montserrat, system-ui, sans-serif",
+          fontFamily:"Montserrat, sans-serif",
           fontWeight: 600, fontSize: 36, lineHeight: 1, color: "#9aa4b2",
-          textShadow:"0 1px 2px rgba(0,0,0,.22)", letterSpacing:"0.5px", userSelect:"none"
+          textShadow:"0 1px 2px rgba(0,0,0,.22)", letterSpacing:"0.5px"
         }}>
           {Number(dorsal)}
         </span>
@@ -72,23 +65,22 @@ export default function HazTu11() {
 
   useEffect(() => {
     (async () => {
-      const { data: pub } = await supabase
-        .from("convocatoria_publica")
-        .select("jugador_id");
-      const ids = (pub || []).map(r => r.jugador_id);
-      if (!ids.length) { setJugadores([]); setLoading(false); return; }
-
-      const { data: js } = await supabase
-        .from("jugadores")
-        .select("id, nombre, dorsal, foto_url")
-        .in("id", ids)
-        .order("dorsal", { ascending: true });
-
-      const byId = new Map((js||[]).map(j => [j.id, j]));
-      const ordered = ids.map(id => byId.get(id)).filter(Boolean);
-      setJugadores(ordered);
+      try {
+        const { data: pub } = await supabase.from("convocatoria_publica").select("jugador_id");
+        const ids = (pub || []).map(r => r.jugador_id);
+        if (!ids.length) { setJugadores([]); setLoading(false); return; }
+        const { data: js } = await supabase.from("jugadores")
+          .select("id, nombre, dorsal, foto_url")
+          .in("id", ids)
+          .order("dorsal", { ascending: true });
+        const byId = new Map((js||[]).map(j => [j.id, j]));
+        const ordered = ids.map(id => byId.get(id)).filter(Boolean);
+        setJugadores(ordered);
+      } catch(e) {
+        console.error(e);
+      }
       setLoading(false);
-    })().catch(e => { console.error(e); setLoading(false); });
+    })();
   }, []);
 
   const grouped = useMemo(() => {
