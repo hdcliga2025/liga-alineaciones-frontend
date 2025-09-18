@@ -101,7 +101,7 @@ export default function ConvocatoriaProximo() {
   const [saved, setSaved] = useState(false);
   const [header, setHeader] = useState(null); // {equipo1,equipo2,match_iso}
 
-  // Carga inicial (defensiva y sin redirecciones)
+  // Carga inicial
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -127,7 +127,11 @@ export default function ConvocatoriaProximo() {
 
         const top = vindRes?.data || null;
         if (top?.match_iso) setHeader({ equipo1: cap(top.equipo1||""), equipo2: cap(top.equipo2||""), match_iso: top.match_iso });
-        else setHeader(null);
+        else {
+          const { data: nm } = await supabase.from("next_match").select("equipo1,equipo2,match_iso").eq("id",1).maybeSingle();
+          if (nm?.match_iso) setHeader({ equipo1: cap(nm.equipo1||""), equipo2: cap(nm.equipo2||""), match_iso: nm.match_iso });
+          else setHeader(null);
+        }
       } catch (e) {
         console.error("[Convocatoria] init", e);
         setPlayers((p)=>p||[]);
@@ -187,10 +191,10 @@ export default function ConvocatoriaProximo() {
         <p style={{ ...S.resumeLine, opacity: .9 }}>{sFecha} | {sHora}</p>
       </div>
 
-      {/* Botón igual al inferior, justo bajo el cuadro */}
+      {/* Botón superior: ahora FULL WIDTH igual al inferior */}
       {isAdmin && (
         <div style={{ marginBottom: 8 }}>
-          <button style={S.btn(false)} onClick={saveAndPublish} disabled={saving} aria-label="Gardar convocatoria (superior)">
+          <button style={S.btn(true)} onClick={saveAndPublish} disabled={saving} aria-label="Gardar convocatoria (superior)">
             {saving ? "Gardando…" : "GARDAR CONVOCATORIA"}
           </button>
         </div>
