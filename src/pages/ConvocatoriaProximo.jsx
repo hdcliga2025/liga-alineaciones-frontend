@@ -17,22 +17,18 @@ function safeDecode(s = "") { try { return decodeURIComponent(s); } catch { retu
 function parseFromFilename(url = "") {
   const last = (url.split("?")[0].split("#")[0].split("/").pop() || "").trim();
   const m = last.match(/^(\d+)-(.+)-(POR|DEF|CEN|DEL)\.(jpg|jpeg|png|webp)$/i);
-  if (!m) return { dorsalFile: null, nameFile: null, posFile: null };
-  return { dorsalFile: parseInt(m[1],10), nameFile: safeDecode(m[2].replace(/_/g," ")), posFile: m[3].toUpperCase() };
-}
-function canonPos(val="") {
-  const s = String(val).trim().toUpperCase();
-  if (["POR","PORTERO","PORTEIRO","GK","PORTEIROS"].includes(s)) return "POR";
-  if (["DEF","DEFENSA","DF","LATERAL","CENTRAL","DEFENSAS"].includes(s)) return "DEF";
-  if (["CEN","MED","MEDIO","MC","MCD","MCO","CENTROCAMPISTA","CENTROCAMPISTAS","MEDIOS"].includes(s)) return "CEN";
-  if (["DEL","DELANTERO","FW","DC","EXTREMO","PUNTA","DELANTEROS"].includes(s)) return "DEL";
-  return "";
+  if (!m) return { dorsalFile: null, nameFile: null, posFile: "" };
+  return {
+    dorsalFile: parseInt(m[1],10),
+    nameFile: safeDecode(m[2].replace(/_/g," ")),
+    posFile: (m[3]||"").toUpperCase()
+  };
 }
 function finalFromAll(p = {}) {
   const { dorsalFile, nameFile, posFile } = parseFromFilename(p.foto_url || "");
   return {
     dorsal: dorsalFile ?? (p.dorsal ?? null),
-    pos: posFile || canonPos(p.posicion || p.position || ""),
+    pos: posFile || "",
     nombre: (nameFile || p.nombre || "").trim()
   };
 }
@@ -47,11 +43,12 @@ export default function ConvocatoriaProximo() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
 
-  // Marco informativo (orde: Vindeiros #1 → next_match → encontro)
-  const [topVindeiro, setTopVindeiro] = useState(null);
-  const [nextMatch, setNextMatch] = useState(null);
+  // Marco informativo
+  const [topVindeiro, setTopVindeiro] = useState(null);   // {equipo1,equipo2,match_iso}
+  const [nextMatch, setNextMatch] = useState(null);       // {equipo1,equipo2,match_iso}
 
   useEffect(() => {
+    let alive = true;
     (async () => {
       try {
         // Admin?
@@ -69,13 +66,15 @@ export default function ConvocatoriaProximo() {
           const em   = (prof?.email || email || "").toLowerCase();
           admin = role === "admin" || ["hdcliga@gmail.com","hdcliga2@gmail.com"].includes(em);
         }
+        if (!alive) return;
         setIsAdmin(admin);
 
-        // Plantilla completa
+        // Plantilla (no pedimos 'position'; se infiere del nombre del fichero)
         const { data: js } = await supabase
           .from("jugadores")
-          .select("id, nombre, dorsal, posicion, position, foto_url")
+          .select("id,nombre,dorsal,foto_url")
           .order("dorsal", { ascending: true });
+        if (!alive) return;
         setPlayers(js || []);
 
         // next_match
@@ -83,6 +82,7 @@ export default function ConvocatoriaProximo() {
           .from("next_match")
           .select("equipo1,equipo2,match_iso")
           .eq("id",1).maybeSingle();
+        if (!alive) return;
         setNextMatch(nm || null);
 
         // Vindeiros #1
@@ -92,9 +92,10 @@ export default function ConvocatoriaProximo() {
           .order("match_iso", { ascending: true })
           .limit(1)
           .maybeSingle();
+        if (!alive) return;
         setTopVindeiro(top || null);
 
-        // Encontro futuro para vincular convocatoria
+        // Encontro futuro (para vincular convocatoria a ese id)
         const { data: enc } = await supabase
           .from("encuentros")
           .select("id, titulo, fecha_hora, equipo1, equipo2")
@@ -102,6 +103,7 @@ export default function ConvocatoriaProximo() {
           .order("fecha_hora", { ascending: true })
           .limit(1)
           .maybeSingle();
+        if (!alive) return;
         setEncuentro(enc || null);
 
         if (enc?.id) {
@@ -110,6 +112,7 @@ export default function ConvocatoriaProximo() {
             .select("jugador_id")
             .eq("partido_id", enc.id);
           const ids = (cv || []).map(r => r.jugador_id);
+          if (!alive) return;
           setConvIds(ids);
 
           // pre-marca descartes (admin: “todos menos convocados”)
@@ -123,6 +126,7 @@ export default function ConvocatoriaProximo() {
         console.error("[Convocatoria] init:", e);
       }
     })();
+    return () => { alive = false; };
   }, []);
 
   const grouped = useMemo(() => {
@@ -169,45 +173,34 @@ export default function ConvocatoriaProximo() {
     } finally { setSaving(false); }
   };
 
-  /* ===== Estilos ===== */
+  /* ===== estilos ===== */
   const wrap = { maxWidth: 1080, margin: "0 auto", padding: "16px" };
   const h1 = { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" };
   const sub = { margin: "0 0 10px", color: "#475569", fontSize: 15 };
 
-  // Marco informativo
-  const infoBox = {
+  // Marco informativo (baixo do título)
+  const resumenBox = {
     margin: "0 0 14px",
-    padding: 12,
+    padding: "12px 14px",
     borderRadius: 12,
-    border: "1px solid #cfe8ff",
-    background: "linear-gradient(135deg,#dff3ff,#9dd8ff)",
+    border: "1px solid #dbeafe",
+    background: "linear-gradient(180deg,#f0f9ff,#e0f2fe)",
     color: "#0f172a",
-    lineHeight: 1.25,
-    display: "grid",
-    gridTemplateColumns: "1fr auto",
-    gap: 10,
-    alignItems: "center"
+    lineHeight: 1.35
   };
-  const infoTexts = { display: "grid", gap: 2 };
-  const infoLine = { margin: 0, fontSize: 16, fontWeight: 500 };   // sin bold pesado
-  const infoLine2 = { margin: 0, fontSize: 15, fontWeight: 500 };
+  const resumenGrid = { display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 10 };
+  const resumeText = { margin: 0, fontSize: 16, fontWeight: 400, letterSpacing: "0.2px" }; // sen bold, un pouco maior
+  const resumeText2 = { ...resumeText, opacity: 0.9 };
 
-  const confirmSmall = {
-    padding: "10px 14px",
-    borderRadius: 12,
-    background: "linear-gradient(180deg,#bae6fd,#7dd3fc)",
+  const posHeader = {
+    margin: "16px 0 10px",
+    padding: "2px 4px 8px",
+    fontWeight: 700,
     color: "#0c4a6e",
-    fontWeight: 800,
-    border: "1px solid #38bdf8",
-    cursor: saving ? "wait" : "pointer",
-    boxShadow: "0 10px 22px rgba(2,132,199,.25)"
+    borderLeft: "4px solid #7dd3fc",
+    borderBottom: "2px solid #e2e8f0" // subliñado a todo o ancho
   };
-
-  const posHeader = { margin: "16px 0 10px", padding: "2px 4px", fontWeight: 700, color: "#0c4a6e", borderLeft: "4px solid #7dd3fc" };
-  const grid4 = { display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))", gap: 12 };
-  if (typeof window !== "undefined" && window.innerWidth >= 640) grid4.gridTemplateColumns = "repeat(3, minmax(0,1fr))";
-  if (typeof window !== "undefined" && window.innerWidth >= 960) grid4.gridTemplateColumns = "repeat(4, minmax(0,1fr))";
-
+  const grid4 = { display: "grid", gridTemplateColumns: "repeat(4, minmax(0,1fr))", gap: 12 };
   const card = (isOut) => ({
     position: "relative",
     border: "1px solid #eef2ff",
@@ -217,68 +210,94 @@ export default function ConvocatoriaProximo() {
     background: "#fff",
     cursor: isAdmin ? "pointer" : "default",
     outline: "none",
-    userSelect: "none"
+    userSelect: "none",
+    opacity: isOut ? 0.55 : 1
   });
-  const frame = { width: "100%", height: 320, borderRadius: 12, overflow: "hidden", background: "#ffffff", display: "grid", placeItems: "center", border: "1px solid #e5e7eb" };
+  const frame = { width: "100%", height: 320, borderRadius: 12, overflow: "hidden", background: "#0b1e2a", display: "grid", placeItems: "center", border: "1px solid #e5e7eb" };
   const name = { margin: "8px 0 0", font: "700 15px/1.2 Montserrat, system-ui, sans-serif", color: "#0f172a", textAlign: "center" };
   const meta = { margin: "2px 0 0", color: "#475569", fontSize: 13, textAlign: "center" };
 
-  const Cross = ({ show=false }) => show ? (
-    <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ position:"absolute", inset:10, borderRadius:12, pointerEvents:"none" }}>
-      <rect x="0" y="0" width="100" height="100" fill="rgba(220,38,38,.18)" rx="12" />
-      <path d="M10 10 L90 90 M90 10 L10 90" stroke="rgba(220,38,38,.85)" strokeWidth="8" strokeLinecap="round" />
-    </svg>
-  ) : null;
-
-  const ConfirmBtn = ({ disabled, full = false }) => (
+  const BigSaveBtn = ({ disabled }) => (
     <button
       onClick={onConfirm}
       disabled={disabled || saving}
       style={{
-        ...(full
-          ? {
-              gridColumn: "1 / -1",
-              padding: "14px 16px",
-              borderRadius: 14,
-              background: disabled ? "#bae6fd" : "linear-gradient(180deg,#bae6fd,#7dd3fc)",
-              color: "#0c4a6e",
-              fontWeight: 800,
-              border: "1px solid #38bdf8",
-              cursor: disabled ? "not-allowed" : "pointer",
-              boxShadow: "0 10px 22px rgba(2,132,199,.25)",
-              marginTop: 12
-            }
-          : confirmSmall
-        )
+        width: "100%",
+        padding: "14px 16px",
+        borderRadius: 14,
+        background: disabled ? "#bae6fd" : "linear-gradient(180deg,#bae6fd,#7dd3fc)",
+        color: "#0c4a6e",
+        fontWeight: 800,
+        border: "1px solid #38bdf8",
+        cursor: disabled ? "not-allowed" : "pointer",
+        boxShadow: "0 10px 22px rgba(2,132,199,.25)"
       }}
-      aria-label="Confirmar convocatoria"
+      aria-label="Gardar convocatoria"
     >
-      {saving ? "Gardando…" : "CONFIRMAR"}
+      {saving ? "Gardando…" : "GARDAR CONVOCATORIA"}
     </button>
   );
 
-  const { fecha, hora } = fmtDT(
-    (topVindeiro?.match_iso ?? nextMatch?.match_iso) ??
-    (encuentro?.fecha_hora ?? null)
+  const SmallSaveBtn = ({ disabled }) => (
+    <button
+      onClick={onConfirm}
+      disabled={disabled || saving}
+      style={{
+        padding: "10px 12px",
+        borderRadius: 12,
+        background: disabled ? "#bae6fd" : "linear-gradient(180deg,#bae6fd,#7dd3fc)",
+        color: "#0c4a6e",
+        fontWeight: 800,
+        border: "1px solid #38bdf8",
+        cursor: disabled ? "not-allowed" : "pointer",
+        boxShadow: "0 6px 16px rgba(2,132,199,.20)",
+        whiteSpace: "nowrap"
+      }}
+      aria-label="Gardar convocatoria"
+      title="Gardar convocatoria"
+    >
+      {saving ? "Gardando…" : "GARDAR"}
+    </button>
   );
-  const eq1 = (topVindeiro?.equipo1 ?? nextMatch?.equipo1 ?? (encuentro?.equipo1 || encuentro?.titulo) ?? "—") + "";
-  const eq2 = (topVindeiro?.equipo2 ?? nextMatch?.equipo2 ?? encuentro?.equipo2 ?? "—") + "";
+
+  // Datos do marco (prioridade: Vindeiros #1 → next_match → encontro futuro)
+  const source =
+    topVindeiro ||
+    nextMatch ||
+    (encuentro
+      ? {
+          equipo1: ((encuentro.equipo1 || encontro.titulo || "") + "").toUpperCase(),
+          equipo2: ((encuentro.equipo2 || "") + "").toUpperCase(),
+          match_iso: encuentro.fecha_hora,
+        }
+      : null);
+
+  const teamsLine = source ? `${(source.equipo1 || "—").toUpperCase()} vs ${(source.equipo2 || "—").toUpperCase()}` : null;
+  const { fecha: sFecha, hora: sHora } = fmtDT(source?.match_iso);
+
+  const canSave = isAdmin && !!encuentro?.id && players.length > 0;
 
   return (
     <main style={wrap}>
       <h1 style={h1}>Convocatoria oficial</h1>
       <p style={sub}>Lista de xogadores que poderían estar na aliñación para o seguinte partido.</p>
 
-      {/* Marco informativo con botón a la derecha */}
-      <section style={infoBox} aria-label="Información do próximo partido">
-        <div style={infoTexts}>
-          <p style={infoLine}>{eq1.toUpperCase()} vs {eq2.toUpperCase()}</p>
-          <p style={infoLine2}>{fecha} | {hora}</p>
+      {/* Marco informativo con botón pequeno á dereita */}
+      {source ? (
+        <div style={resumenBox} aria-label="Información do próximo partido">
+          <div style={resumenGrid}>
+            <div>
+              <p style={resumeText}>{teamsLine}</p>
+              <p style={resumeText2}>{sFecha} | {sHora}</p>
+            </div>
+            {isAdmin && <SmallSaveBtn disabled={!canSave} />}
+          </div>
         </div>
-        {isAdmin && <ConfirmBtn disabled={!encuentro?.id || !players.length} />}
-      </section>
+      ) : (
+        <p style={{ margin: 0, fontSize: 15 }}>Non hai encontro próximo dispoñíbel.</p>
+      )}
 
-      {/* Bloques por posición (non se mesturan) */}
+      {/* Bloques por posición: non mesturar posicións */}
       {(["POR","DEF","CEN","DEL"]).map((k) => {
         const arr = (grouped[k] || []);
         if (!arr.length) return null;
@@ -289,7 +308,6 @@ export default function ConvocatoriaProximo() {
             <div style={grid4}>
               {arr.map((p) => {
                 const out = discarded.has(p.id);
-                const { dorsal, nombre, pos } = p;
                 return (
                   <article
                     key={p.id}
@@ -302,20 +320,21 @@ export default function ConvocatoriaProximo() {
                       {p.foto_url ? (
                         <img
                           src={p.foto_url}
-                          alt={`Foto de ${nombre}`}
-                          style={{ width:"100%", height:"100%", objectFit:"contain", background:"#ffffff" }}
+                          alt={`Foto de ${p.nombre}`}
+                          style={{ width:"100%", height:"100%", objectFit:"contain" }}
                           loading="lazy"
-                          onError={(e)=>{ e.currentTarget.alt = "Imaxe non dispoñíbel"; }}
+                          decoding="async"
+                          crossOrigin="anonymous"
+                          referrerPolicy="no-referrer"
                         />
                       ) : (
                         <div style={{ color:"#cbd5e1" }}>Sen foto</div>
                       )}
                     </div>
-                    <Cross show={out} />
                     <p style={name}>
-                      {dorsal != null ? `${String(dorsal).padStart(2,"0")} · ` : ""}{nombre}
+                      {p.dorsal != null ? `${String(p.dorsal).padStart(2,"0")} · ` : ""}{p.nombre}
                     </p>
-                    <p style={meta}>{pos}</p>
+                    <p style={meta}>{p.pos}</p>
                   </article>
                 );
               })}
@@ -324,10 +343,10 @@ export default function ConvocatoriaProximo() {
         );
       })}
 
-      {/* Botón confirmar grande ao final */}
+      {/* Botón grande abaixo de todo */}
       {isAdmin && (
-        <div style={{ marginTop: 10 }}>
-          <ConfirmBtn disabled={!encuentro?.id || !players.length} full />
+        <div style={{ marginTop: 16 }}>
+          <BigSaveBtn disabled={!canSave} />
         </div>
       )}
 
