@@ -18,17 +18,7 @@ function finalFromAll(p = {}) {
     nombre: (nameFile || p.nombre || "").trim()
   };
 }
-function fmtDT(iso) {
-  if (!iso) return { fecha: "—", hora: "—" };
-  try {
-    const d = new Date(iso);
-    return {
-      fecha: d.toLocaleDateString("gl-ES", { day: "2-digit", month: "2-digit", year: "numeric" }),
-      hora:  d.toLocaleTimeString("gl-ES", { hour: "2-digit", minute: "2-digit" })
-    };
-  } catch { return { fecha: "—", hora: "—" }; }
-}
-const cap = (s="") => (s||"").toUpperCase();
+const cap = (s="") => (s || "").toUpperCase();
 
 const OVERLAY_NUMS = new Set([29,32,39]);
 const IMG_H = 320;
@@ -36,23 +26,20 @@ const IMG_H = 320;
 const S = {
   wrap: { maxWidth: 1080, margin: "0 auto", padding: 16 },
   h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
-  sub: { margin: "0 0 12px", color: "#475569", fontSize: 14, fontWeight: 400 },
-
-  // MISMO cuadro que en Convocatoria
+  sub: { margin: "0 0 16px", color: "#475569", fontSize: 16, fontWeight: 400 },
   resumen: {
-    width: "100%",
-    padding: "12px 14px",
-    borderRadius: 12,
-    border: "1px solid #dbeafe",
-    background: "linear-gradient(180deg,#f0f9ff,#e0f2fe)",
-    color: "#0f172a",
-    marginBottom: 10,
+    margin:"0 0 14px", padding:"12px 14px", borderRadius:12,
+    border:"1px solid #dbeafe",
+    background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)", color:"#0f172a"
   },
   resumeLine: { margin: 0, fontSize: 19, fontWeight: 400, letterSpacing: ".35px", lineHeight: 1.5 },
-
   posHeader: { margin:"16px 0 10px", padding:"2px 4px 8px", fontWeight:700, color:"#0c4a6e", borderLeft:"4px solid #7dd3fc", borderBottom:"2px solid #e2e8f0" },
-  grid3: { display:"grid", gridTemplateColumns:"repeat(3, minmax(0,1fr))", gap:12 },
-  card: { display:"grid", gridTemplateRows: `${IMG_H}px auto`, background:"#fff", border:"1px solid #eef2ff", borderRadius:16, padding:10, boxShadow:"0 2px 8px rgba(0,0,0,.06)", alignItems:"center", textAlign:"center" },
+  grid4: { display:"grid", gridTemplateColumns:"repeat(4, minmax(0,1fr))", gap:12 },
+  card: { display:"grid", gridTemplateRows: `${IMG_H}px auto`,
+    background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)", // celeste degradado
+    border:"1px solid #dbeafe", borderRadius:16, padding:10, boxShadow:"0 2px 8px rgba(0,0,0,.06)",
+    alignItems:"center", textAlign:"center"
+  },
   name: { margin:"8px 0 0", font:"700 15px/1.2 Montserrat, system-ui, sans-serif", color:"#0f172a" },
   meta: { margin:"2px 0 0", color:"#475569", fontSize:13 }
 };
@@ -63,8 +50,7 @@ function ImgWithOverlay({ src, alt, dorsal }) {
     <div style={{
       position:"relative", width:"100%", height: IMG_H,
       borderRadius:12, display:"grid", placeItems:"center",
-      background:"linear-gradient(180deg,#e0f2fe,#f0f9ff)", // fondo celeste degradado
-      border:"1px solid #e5e7eb", overflow:"hidden"
+      background:"#f8fafc", border:"1px solid #e5e7eb", overflow:"hidden"
     }}>
       {src ? (
         <img
@@ -96,17 +82,23 @@ function ImgWithOverlay({ src, alt, dorsal }) {
 export default function HazTu11() {
   const [jugadores, setJugadores] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [header, setHeader] = useState(null); // {equipo1,equipo2,match_iso}
+
+  // Cabecera espejo desde Vindeiros/next_match (igual que Convocatoria)
+  const [header, setHeader] = useState(null);
 
   useEffect(() => {
     (async () => {
-      // 1) Cabecera: igual que Convocatoria (vindeiros → next_match)
+      // Trae la convocatoria publicada y la junta con los datos del jugador
+      const { data: pub } = await supabase
+        .from("convocatoria_publica")
+        .select("jugador_id");
+      const ids = (pub || []).map(r => r.jugador_id);
+
+      // Header (mismo criterio que Convocatoria)
       const { data: top } = await supabase
         .from("matches_vindeiros")
         .select("equipo1,equipo2,match_iso")
-        .order("match_iso", { ascending: true })
-        .limit(1)
-        .maybeSingle();
+        .order("match_iso", { ascending: true }).limit(1).maybeSingle();
 
       if (top?.match_iso) {
         setHeader({ equipo1: cap(top.equipo1||""), equipo2: cap(top.equipo2||""), match_iso: top.match_iso });
@@ -119,11 +111,6 @@ export default function HazTu11() {
         else setHeader(null);
       }
 
-      // 2) Trae la convocatoria publicada y junta datos jugador
-      const { data: pub } = await supabase
-        .from("convocatoria_publica")
-        .select("jugador_id");
-      const ids = (pub || []).map(r => r.jugador_id);
       if (!ids.length) { setJugadores([]); setLoading(false); return; }
 
       const { data: js } = await supabase
@@ -132,6 +119,7 @@ export default function HazTu11() {
         .in("id", ids)
         .order("dorsal", { ascending: true });
 
+      // Garantizamos el orden de publicación por dorsal
       const byId = new Map((js||[]).map(j => [j.id, j]));
       const ordered = ids.map(id => byId.get(id)).filter(Boolean);
       setJugadores(ordered);
@@ -148,22 +136,31 @@ export default function HazTu11() {
     return g;
   }, [jugadores]);
 
-  if (loading) return <main style={S.wrap}>Cargando…</main>;
+  const { fecha: sFecha, hora: sHora } = (function(){
+    if (!header?.match_iso) return { fecha:"-", hora:"-" };
+    try {
+      const d = new Date(header.match_iso);
+      return {
+        fecha: d.toLocaleDateString("gl-ES", { day: "2-digit", month: "2-digit", year: "numeric" }),
+        hora:  d.toLocaleTimeString("gl-ES", { hour: "2-digit", minute: "2-digit" })
+      };
+    } catch { return { fecha:"-", hora:"-" }; }
+  })();
 
-  const { fecha: sFecha, hora: sHora } = fmtDT(header?.match_iso);
-  const e1 = cap(header?.equipo1 || "—");
-  const e2 = cap(header?.equipo2 || "—");
+  if (loading) return <main style={S.wrap}>Cargando…</main>;
 
   return (
     <main style={S.wrap}>
-      <h1 style={S.h1}>Fai o teu 11</h1>
-      <p style={S.sub}>Convocatoria publicada polo club. (Vista só lectura)</p>
+      <h1 style={S.h1}>Fai aquí a túa aliñación</h1>
+      <p style={S.sub}>Aquí é onde demostras o Giráldez que levas dentro.</p>
 
-      {/* MISMO cuadro de campos que en Convocatoria */}
-      <div style={S.resumen}>
-        <p style={S.resumeLine}>{e1} vs {e2}</p>
-        <p style={{ ...S.resumeLine, opacity: .9 }}>{sFecha} | {sHora}</p>
-      </div>
+      {/* Cuadro de campos (idéntico a Convocatoria) */}
+      {header && (
+        <div style={S.resumen}>
+          <p style={S.resumeLine}>{cap(header.equipo1)} vs {cap(header.equipo2)}</p>
+          <p style={{...S.resumeLine, opacity:.9}}>{sFecha} | {sHora}</p>
+        </div>
+      )}
 
       {["POR","DEF","CEN","DEL"].map(k => {
         const arr = grouped[k] || [];
@@ -172,12 +169,18 @@ export default function HazTu11() {
         return (
           <section key={k}>
             <div style={S.posHeader}>{label}</div>
-            <div style={S.grid3}>
+            <div style={S.grid4}>
               {arr.map(p => {
                 const { dorsal, nombre, pos } = finalFromAll(p);
                 return (
                   <article key={p.id} style={S.card}>
-                    <ImgWithOverlay src={p.foto_url} alt={`Foto de ${nombre}`} dorsal={dorsal}/>
+                    <div style={{
+                      position:"relative", width:"100%", height: IMG_H,
+                      borderRadius:12, display:"grid", placeItems:"center",
+                      background:"#f8fafc", border:"1px solid #e5e7eb", overflow:"hidden"
+                    }}>
+                      <ImgWithOverlay src={p.foto_url} alt={`Foto de ${nombre}`} dorsal={dorsal}/>
+                    </div>
                     <div>
                       <p style={S.name}>{dorsal != null ? `${String(dorsal).padStart(2,"0")} · ` : ""}{nombre}</p>
                       <p style={S.meta}>{pos}</p>
