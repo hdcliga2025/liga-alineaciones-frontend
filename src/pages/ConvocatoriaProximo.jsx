@@ -36,12 +36,16 @@ const OVERLAY_NUMS = new Set([29,32,39]);
 const S = {
   wrap: { maxWidth: 1080, margin: "0 auto", padding: 16 },
   h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
-  sub: { margin: "0 0 16px", color: "#475569", fontSize: 16 },
+  sub: { margin: "0 0 18px", color: "#475569", fontSize: 16 },
+
+  // Cabecera (bloque + botón a la derecha, fuera del bloque)
+  headerRow: { display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", marginBottom: 12 },
   resumen: {
-    margin:"0 0 14px", padding:"12px 14px", borderRadius:12,
+    padding:"12px 14px", borderRadius:12,
     border:"1px solid #dbeafe", background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)", color:"#0f172a"
   },
   resumeLine: { margin: 0, fontSize: 19, fontWeight: 400, letterSpacing: ".35px", lineHeight: 1.5 },
+
   posHeader: { margin:"16px 0 10px", padding:"2px 4px 8px", fontWeight:700, color:"#0c4a6e", borderLeft:"4px solid #7dd3fc", borderBottom:"2px solid #e2e8f0" },
   grid4: { display:"grid", gridTemplateColumns:"repeat(4, minmax(0,1fr))", gap:12 },
   card: (out)=>({
@@ -53,15 +57,22 @@ const S = {
   frame: { width:"100%", height:320, borderRadius:12, overflow:"hidden", background:"#0b1e2a", display:"grid", placeItems:"center", border:"1px solid #e5e7eb", position:"relative" },
   name: { margin:"8px 0 0", font:"700 15px/1.2 Montserrat, system-ui, sans-serif", color:"#0f172a", textAlign:"center" },
   meta: { margin:"2px 0 0", color:"#475569", fontSize:13, textAlign:"center" },
-  save: (full)=>({
+
+  // Botones (sin borde/outline “de caja”)
+  btn: (full)=>({
     width: full ? "100%" : "auto",
     padding: full ? "14px 16px" : "10px 12px",
     borderRadius: 14,
-    background:"linear-gradient(180deg,#bae6fd,#7dd3fc)", color:"#0c4a6e",
-    fontWeight:800, border:"none",
-    cursor:"pointer", boxShadow: full ? "0 10px 22px rgba(2,132,199,.25)" : "0 6px 16px rgba(2,132,199,.2)",
+    background:"linear-gradient(180deg,#bae6fd,#7dd3fc)",
+    color:"#0c4a6e",
+    fontWeight:800,
+    border:"none",
+    cursor:"pointer",
+    boxShadow: full ? "0 10px 22px rgba(2,132,199,.25)" : "0 6px 16px rgba(2,132,199,.2)",
     whiteSpace:"nowrap"
-  })
+  }),
+
+  savedMsg: { color:"#dc2626", fontSize:18, fontWeight:600, margin:"8px 0 0" }
 };
 
 const Shade = ({ show=false }) => show ? (
@@ -99,40 +110,46 @@ export default function ConvocatoriaProximo() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // Cabecera desde Vindeiros o next_match
+  // Cabecera desde Vindeiros (prioridad) o next_match (fallback si quisieras activarlo)
   const [header, setHeader] = useState(null);
 
-  // ===== Carga inicial
+  // ===== Carga inicial (paralela, rápida y sin saltos)
   useEffect(() => {
+    let alive = true;
     (async () => {
-      // admin?
-      const { data: sess } = await supabase.auth.getSession();
-      const uid = sess?.session?.user?.id || null;
-      let admin = false;
-      if (uid) {
-        const { data: prof } = await supabase
-          .from("profiles").select("role").eq("id", uid).maybeSingle();
-        const role = (prof?.role || "").toLowerCase();
-        admin = role === "admin";
-      }
-      setIsAdmin(admin);
+      try {
+        const [{ data: sess }, jugadoresRes, vindeirosRes] = await Promise.all([
+          supabase.auth.getSession(),
+          supabase.from("jugadores").select("id, nombre, dorsal, foto_url").order("dorsal", { ascending: true }),
+          supabase.from("matches_vindeiros").select("equipo1,equipo2,match_iso").order("match_iso",{ascending:true}).limit(1).maybeSingle(),
+        ]);
 
-      // plantilla completa
-      const { data: js } = await supabase
-        .from("jugadores")
-        .select("id, nombre, dorsal, foto_url")
-        .order("dorsal", { ascending: true });
-      setPlayers(js || []);
+        if (!alive) return;
 
-      // cabecera
-      const { data: top } = await supabase
-        .from("matches_vindeiros")
-        .select("equipo1,equipo2,match_iso")
-        .order("match_iso", { ascending: true }).limit(1).maybeSingle();
-      if (top?.match_iso) {
-        setHeader({ equipo1: cap(top.equipo1||""), equipo2: cap(top.equipo2||""), match_iso: top.match_iso });
+        // admin?
+        const uid = sess?.session?.user?.id || null;
+        if (uid) {
+          const { data: prof } = await supabase
+            .from("profiles").select("role").eq("id", uid).maybeSingle();
+          const role = (prof?.role || "").toLowerCase();
+          setIsAdmin(role === "admin");
+        } else {
+          setIsAdmin(false);
+        }
+
+        setPlayers(jugadoresRes?.data || []);
+
+        const top = vindeirosRes || null;
+        if (top?.match_iso) {
+          setHeader({ equipo1: cap(top.equipo1||""), equipo2: cap(top.equipo2||""), match_iso: top.match_iso });
+        } else {
+          setHeader(null);
+        }
+      } catch (e) {
+        console.error("[Convocatoria] init", e);
       }
     })();
+    return () => { alive = false; };
   }, []);
 
   const grouped = useMemo(() => {
@@ -147,7 +164,9 @@ export default function ConvocatoriaProximo() {
   const toggleDiscard = (id) => {
     if (!isAdmin) return;
     setDiscarded(prev => {
-      const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n;
+      const n = new Set(prev);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
     });
   };
 
@@ -155,19 +174,29 @@ export default function ConvocatoriaProximo() {
 
   async function saveAndPublish() {
     if (!isAdmin) return;
+    if (saving) return;
     setSaving(true);
+
     try {
       const allIds = players.map(p => p.id);
       const convocados = allIds.filter(id => !discarded.has(id));
-      await supabase.from("convocatoria_publica").delete().neq("jugador_id","00000000-0000-0000-0000-000000000000");
+
+      // Guardado rápido, sin navegar
+      await supabase
+        .from("convocatoria_publica")
+        .delete()
+        .neq("jugador_id","00000000-0000-0000-0000-000000000000");
+
       if (convocados.length) {
         const rows = convocados.map(jid => ({ jugador_id: jid, updated_at: new Date().toISOString() }));
         const { error } = await supabase.from("convocatoria_publica").insert(rows);
         if (error) throw error;
       }
+
+      // UI inmediata, persistente hasta que cambies algo
       setSaved(true);
-    } catch(e) {
-      console.error(e);
+    } catch (e) {
+      console.error("[Convocatoria] save", e);
     } finally {
       setSaving(false);
     }
@@ -177,23 +206,33 @@ export default function ConvocatoriaProximo() {
     <main style={S.wrap}>
       <h1 style={S.h1}>Convocatoria oficial</h1>
       <p style={S.sub}>Lista de xogadores que poderían estar na aliñación para o seguinte partido.</p>
-      {saved && (
-        <p style={{color:"red",fontSize:18,margin:"12px 0 18px"}}>
-          CONFIGURACIÓN DA CONVOCATORIA GARDADA
-        </p>
-      )}
 
-      {/* Cabecera resumida */}
+      {/* Cabecera + botón a la derecha (botón fuera del cuadro, fijo) */}
       {header && (
-        <div style={S.resumen}>
-          <p style={S.resumeLine}>{cap(header.equipo1)} vs {cap(header.equipo2)}</p>
-          <p style={{...S.resumeLine, opacity:.9}}>{sFecha} | {sHora}</p>
+        <div style={S.headerRow}>
+          <div style={S.resumen}>
+            <p style={S.resumeLine}>{cap(header.equipo1)} vs {cap(header.equipo2)}</p>
+            <p style={{...S.resumeLine, opacity:.9}}>{sFecha} | {sHora}</p>
+          </div>
+
           {isAdmin && (
-            <button style={S.save(false)} onClick={saveAndPublish} disabled={saving}>
-              {saving ? "Gardando…" : "GARDAR CONVOCATORIA"}
-            </button>
+            <div style={{ display:"flex", alignItems:"center" }}>
+              <button
+                style={S.btn(false)}
+                onClick={saveAndPublish}
+                disabled={saving}
+                aria-label="Gardar convocatoria"
+              >
+                {saving ? "Gardando…" : "GARDAR CONVOCATORIA"}
+              </button>
+            </div>
           )}
         </div>
+      )}
+
+      {/* Mensaje fijo superior si ya se guardó */}
+      {saved && (
+        <p style={S.savedMsg}>CONFIGURACIÓN DA CONVOCATORIA GARDADA</p>
       )}
 
       {(["POR","DEF","CEN","DEL"]).map((k) => {
@@ -208,11 +247,21 @@ export default function ConvocatoriaProximo() {
                 const out = discarded.has(p.id);
                 const { dorsal, nombre, pos } = p;
                 return (
-                  <article key={p.id} style={S.card(out)} onClick={()=>toggleDiscard(p.id)}>
+                  <article
+                    key={p.id}
+                    style={S.card(out)}
+                    onClick={()=>toggleDiscard(p.id)}
+                    title={out ? "Descartado (clic para restaurar)" : "Clic para descartar"}
+                  >
                     <div style={S.frame}>
                       {p.foto_url ? (
                         <>
-                          <img src={p.foto_url} alt={`Foto de ${nombre}`} style={{ width:"100%", height:"100%", objectFit:"contain" }}/>
+                          <img
+                            src={p.foto_url}
+                            alt={`Foto de ${nombre}`}
+                            style={{ width:"100%", height:"100%", objectFit:"contain", background:"#0b1e2a" }}
+                            loading="lazy" decoding="async" crossOrigin="anonymous" referrerPolicy="no-referrer"
+                          />
                           <NumOverlay dorsal={dorsal}/>
                           <Shade show={out}/>
                         </>
@@ -220,7 +269,9 @@ export default function ConvocatoriaProximo() {
                         <div style={{ color:"#cbd5e1" }}>Sen foto</div>
                       )}
                     </div>
-                    <p style={S.name}>{dorsal != null ? `${String(dorsal).padStart(2,"0")} · ` : ""}{nombre}</p>
+                    <p style={S.name}>
+                      {dorsal != null ? `${String(dorsal).padStart(2,"0")} · ` : ""}{nombre}
+                    </p>
                     <p style={S.meta}>{pos}</p>
                   </article>
                 );
@@ -232,9 +283,21 @@ export default function ConvocatoriaProximo() {
 
       {isAdmin && (
         <div style={{ marginTop: 16 }}>
-          <button style={S.save(true)} onClick={saveAndPublish} disabled={saving}>
+          <button
+            style={S.btn(true)}
+            onClick={saveAndPublish}
+            disabled={saving}
+            aria-label="Gardar convocatoria (inferior)"
+          >
             {saving ? "Gardando…" : "GARDAR CONVOCATORIA"}
           </button>
+
+          {/* Mensaje fijo inferior idéntico */}
+          {saved && (
+            <p style={{ ...S.savedMsg, textAlign:"center", marginTop: 10 }}>
+              CONFIGURACIÓN DA CONVOCATORIA GARDADA
+            </p>
+          )}
         </div>
       )}
     </main>
