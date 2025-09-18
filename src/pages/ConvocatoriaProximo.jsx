@@ -69,7 +69,7 @@ export default function ConvocatoriaProximo() {
         if (!alive) return;
         setIsAdmin(admin);
 
-        // Plantilla (inferimos posición desde el nombre del archivo)
+        // Plantilla (posición inferida del nombre del archivo)
         const { data: js } = await supabase
           .from("jugadores")
           .select("id,nombre,dorsal,foto_url")
@@ -128,6 +128,7 @@ export default function ConvocatoriaProximo() {
     return () => { alive = false; };
   }, []);
 
+  // Agrupador por posición. Si no admin, solo los convocados.
   const grouped = useMemo(() => {
     const g = { POR: [], DEF: [], CEN: [], DEL: [] };
     for (const p of players || []) {
@@ -140,6 +141,7 @@ export default function ConvocatoriaProximo() {
     return g;
   }, [players, convIds, isAdmin]);
 
+  // Descarta / restaura
   const toggleDiscard = (id) => {
     if (!isAdmin) return;
     setDiscarded(prev => {
@@ -149,19 +151,27 @@ export default function ConvocatoriaProximo() {
     });
   };
 
+  // Guardar con doble confirmación
   const onConfirm = async () => {
     if (!isAdmin || !encuentro?.id || !players?.length) return;
+    const ok1 = window.confirm("Vas gardar a convocatoria. ¿Confirmas?");
+    if (!ok1) return;
+    const ok2 = window.confirm("Última confirmación: gardar e publicar para usuarias/os. ¿Confirmas?");
+    if (!ok2) return;
+
     setSaving(true);
     try {
       const allIds = players.map(p => p.id);
       const convocados = allIds.filter(id => !discarded.has(id));
+      // reset convocatoria do encontro
       await supabase.from("convocatorias").delete().eq("partido_id", encuentro.id);
+      // inserta nova
       if (convocados.length) {
         const rows = convocados.map(jid => ({ partido_id: encuentro.id, jugador_id: jid }));
         const { error } = await supabase.from("convocatorias").insert(rows);
         if (error) throw error;
       }
-      setConvIds(convocados);
+      setConvIds(convocados); // publica inmediatamente para non-admin (o filtro usa convIds)
       setToast("Convocatoria gardada");
       setTimeout(() => setToast(""), 3000);
     } catch (e) {
@@ -186,7 +196,7 @@ export default function ConvocatoriaProximo() {
     color: "#0f172a",
   };
   const resumenGrid = { display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 10 };
-  const resumeText = { margin: 0, fontSize: 18, fontWeight: 400, letterSpacing: "0.35px", lineHeight: 1.45 }; // +grande y “más largo”
+  const resumeText = { margin: 0, fontSize: 18, fontWeight: 400, letterSpacing: "0.35px", lineHeight: 1.45 };
   const resumeText2 = { ...resumeText, opacity: 0.9 };
 
   const posHeader = {
@@ -207,14 +217,13 @@ export default function ConvocatoriaProximo() {
     background: "#fff",
     cursor: isAdmin ? "pointer" : "default",
     outline: "none",
-    userSelect: "none",
-    opacity: isOut ? 0.55 : 1
+    userSelect: "none"
   });
   const frame = { width: "100%", height: 320, borderRadius: 12, overflow: "hidden", background: "#0b1e2a", display: "grid", placeItems: "center", border: "1px solid #e5e7eb", position: "relative" };
   const name = { margin: "8px 0 0", font: "700 15px/1.2 Montserrat, system-ui, sans-serif", color: "#0f172a", textAlign: "center" };
   const meta = { margin: "2px 0 0", color: "#475569", fontSize: 13, textAlign: "center" };
 
-  // Mostrar overlay SOLO para dorsais 29, 32 y 39
+  // Overlay del número SOLO para dorsais 29, 32 y 39 → fino y gris
   const OVERLAY_SET = new Set([29, 32, 39]);
   const NumberOverlay = ({ dorsal }) => {
     if (!OVERLAY_SET.has(Number(dorsal))) return null;
@@ -225,20 +234,27 @@ export default function ConvocatoriaProximo() {
           top: 8,
           left: 10,
           fontFamily: "Montserrat, system-ui, sans-serif",
-          fontWeight: 800,
-          fontSize: 38,
+          fontWeight: 600,       // más fino
+          fontSize: 36,
           lineHeight: 1,
-          color: "#eef4ff",
-          textShadow: "0 2px 4px rgba(0,0,0,.6)",
+          color: "#9aa4b2",      // gris
+          textShadow: "0 1px 2px rgba(0,0,0,.25)",
           userSelect: "none",
           pointerEvents: "none",
-          letterSpacing: "1px"
+          letterSpacing: "0.5px"
         }}
       >
         {dorsal}
       </span>
     );
   };
+
+  // Ensombrecido claro cuando está descartado
+  const Shade = ({ show=false }) => show ? (
+    <div style={{
+      position:"absolute", inset:0, background:"rgba(2,6,23,.35)"
+    }}/>
+  ) : null;
 
   const BigSaveBtn = ({ disabled }) => (
     <button
@@ -331,7 +347,7 @@ export default function ConvocatoriaProximo() {
             <div style={grid4}>
               {arr.map((p) => {
                 const out = discarded.has(p.id);
-                const { dorsal, nombre, pos } = p; // ya viene fusionado en grouped
+                const { dorsal, nombre, pos } = p;
                 return (
                   <article
                     key={p.id}
@@ -353,6 +369,7 @@ export default function ConvocatoriaProximo() {
                             referrerPolicy="no-referrer"
                           />
                           <NumberOverlay dorsal={dorsal} />
+                          <Shade show={out} />
                         </>
                       ) : (
                         <div style={{ color:"#cbd5e1" }}>Sen foto</div>
