@@ -18,7 +18,7 @@ const PANEL = {
   padding: "18px 16px",
 };
 
-/* Bloque de texto */
+/* Bloque de texto (tarxeta) */
 const TOP_BOX = {
   background: "linear-gradient(180deg, rgba(224,242,254,0.55), rgba(191,219,254,0.45))",
   border: "1px solid #e5e7eb",
@@ -27,26 +27,34 @@ const TOP_BOX = {
   marginBottom: 12,
 };
 
-/* ===== Título EQUIPO1 vs EQUIPO2 ===== */
+/* === Escala -10% textos de la TARJETA === */
+const SCALE = 0.9;
+
+/* Título EQUIPO1 vs EQUIPO2 (aplica -10% a móvil y desktop) */
 const TITLE_LINE_BASE = {
   margin: "0 0 8px 0",
   fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
   letterSpacing: ".3px",
   color: "#0f172a",
   lineHeight: 1.08,
-  fontSize: 30,
   fontWeight: 700,
 };
-/* MÓVIL: -20% del tamaño del campo Equipo1/Equipo2 => bajamos el h2 completo a ~18px */
-const TITLE_LINE = (isMobile) => ({ ...TITLE_LINE_BASE, fontSize: isMobile ? 18 : 30 });
+const TITLE_LINE = (isMobile) => ({
+  ...TITLE_LINE_BASE,
+  fontSize: (isMobile ? 18 : 30) * SCALE, // 18→16.2 | 30→27
+});
 const TEAM_NAME = { fontWeight: 700, textTransform: "uppercase" };
-const VS_STYLE_BASE = { fontWeight: 600, fontSize: 22, margin: "0 8px" };
-const VS_STYLE = (isMobile) => ({ ...VS_STYLE_BASE, fontSize: isMobile ? 17 : 22 });
+const VS_STYLE = (isMobile) => ({
+  fontWeight: 600,
+  fontSize: (isMobile ? 17 : 22) * SCALE, // 17→15.3 | 22→19.8
+  margin: "0 8px",
+});
 
+/* Líneas secundarias (Competición/Lugar/Data/Hora) */
 const LINE_GRAY = {
   margin: "6px 0 0",
   fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
-  fontSize: 19,
+  fontSize: 19 * SCALE, // 19→17.1
   color: "#64748b",
   fontWeight: 600,
 };
@@ -77,7 +85,7 @@ const METEO_BAR = (isMobile) => ({
   fontWeight: 700,
 });
 
-/* Leyenda bajo el banner (gl) */
+/* Leyenda baixo o banner (gl) */
 const METEO_LEGEND_OUT = {
   textAlign: "center",
   margin: "6px 0 10px",
@@ -121,7 +129,8 @@ function getCachedWx(lugar, matchISO) {
   const k = wxKey(lugar, matchISO);
   if (!k) return null;
   try {
-    const raw = localStorage.getItem(k); if (!raw) return null;
+    const raw = localStorage.getItem(k);
+    if (!raw) return null;
     const obj = JSON.parse(raw);
     if (!obj || !obj.t || !obj.v) return null;
     if (Date.now() - obj.t > WX_TTL_MS) return null;
@@ -129,7 +138,8 @@ function getCachedWx(lugar, matchISO) {
   } catch { return null; }
 }
 function setCachedWx(lugar, matchISO, val) {
-  const k = wxKey(lugar, matchISO); if (!k) return;
+  const k = wxKey(lugar, matchISO);
+  if (!k) return;
   try { localStorage.setItem(k, JSON.stringify({ t: Date.now(), v: val })); } catch {}
 }
 
@@ -141,7 +151,8 @@ async function fetchMeteoFor(lugar, matchISO) {
       { cache: "no-store" }
     );
     const geo = await geoRes.json();
-    const loc = geo?.results?.[0]; if (!loc) return null;
+    const loc = geo?.results?.[0];
+    if (!loc) return null;
     const { latitude: lat, longitude: lon } = loc;
 
     const wxRes = await fetch(
@@ -150,7 +161,8 @@ async function fetchMeteoFor(lugar, matchISO) {
       { cache: "no-store" }
     );
     const wx = await wxRes.json();
-    const times = wx?.hourly?.time || []; if (!times.length) return null;
+    const times = wx?.hourly?.time || [];
+    if (!times.length) return null;
 
     const target = new Date(matchISO);
     const fmt = new Intl.DateTimeFormat("sv-SE", {
@@ -195,6 +207,7 @@ export default function ProximoPartido() {
     return () => window.removeEventListener("resize", onR);
   }, []);
 
+  // refresh silencioso de sesión
   useEffect(() => { supabase.auth.getSession().then(() => supabase.auth.refreshSession().catch(()=>{})); }, []);
 
   function shouldRefreshDaily(existing) { return !existing; }
@@ -294,11 +307,9 @@ export default function ProximoPartido() {
     <>
       {/* Banner METEO (solo iconos) */}
       <div style={BLEED_WRAP}>
-        <div style={METEO_BANNER(isMobile)}>
-          {meteoContent}
-        </div>
+        <div style={METEO_BANNER(isMobile)}>{meteoContent}</div>
       </div>
-      {/* Leyenda fuera, justo debajo (gl) */}
+      {/* Leyenda fora (gl) */}
       <div style={METEO_LEGEND_OUT}>
         Meteo en <strong>{lugar}</strong> á hora do partido
       </div>
@@ -314,7 +325,7 @@ export default function ProximoPartido() {
               loading="eager"
               style={{
                 position: "absolute",
-                top: -4,            // escudo más arriba
+                top: -4,
                 right: 10,
                 width: ESCUDO_W,
                 height: "auto",
