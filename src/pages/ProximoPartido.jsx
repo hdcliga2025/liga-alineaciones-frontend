@@ -72,17 +72,17 @@ const METEO_BAR = (isMobile) => ({
   maxWidth: 1000,
   margin: "0 auto",
   color: "#0f172a",
-  fontSize: isMobile ? 20 : 22, // móvil -10% ya aplicado
+  fontSize: isMobile ? 20 : 22,
   fontWeight: 700,
 });
 
-/* Leyenda bajo el banner */
+/* Leyenda bajo el banner (en gallego, sen bold agás o lugar) */
 const METEO_LEGEND_OUT = {
   textAlign: "center",
   margin: "6px 0 10px",
   fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
-  fontSize: 15, // +15% respecto a ~13px
-  fontWeight: 700,
+  fontSize: 15,
+  fontWeight: 400, // sen bold
   color: "#0369a1",
   letterSpacing: ".2px",
 };
@@ -292,13 +292,11 @@ export default function ProximoPartido() {
     <>
       {/* Banner METEO (solo iconos) */}
       <div style={BLEED_WRAP}>
-        <div style={METEO_BANNER(isMobile)}>
-          {meteoContent}
-        </div>
+        <div style={METEO_BANNER(isMobile)}>{meteoContent}</div>
       </div>
-      {/* Leyenda fuera, justo debajo */}
+      {/* Nova lenda, fóra do banner (gl) */}
       <div style={METEO_LEGEND_OUT}>
-        PREVISIÓN METEREOLOGICA A LA HORA DE PARTIDO | {lugar}
+        Meteo <strong style={{ fontWeight: 700 }}>{lugar}</strong> á hora do partido
       </div>
 
       {/* Contido principal */}
