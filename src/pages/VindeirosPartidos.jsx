@@ -23,10 +23,20 @@ const CARD_ACTIVE = {
   boxShadow: "0 10px 24px rgba(22,163,74,.22)"
 };
 
-const ROW = { display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "start" };
+const ROW = (isMobile) => ({
+  display: "grid",
+  gridTemplateColumns: isMobile ? "1fr" : "1fr auto",
+  gap: 8,
+  alignItems: "start"
+});
 const CARD_CONTENT = { paddingLeft: 48 };
 
-const TEAMS_LINE = { font: "600 16px/1.12 Montserrat,system-ui,sans-serif", color: "#0f172a", textTransform: "uppercase" };
+/* Título equipos: desktop 16px, móvil -20% = 13px */
+const TEAMS_LINE = (isMobile) => ({
+  font: `600 ${isMobile ? 13 : 16}px/1.12 Montserrat,system-ui,sans-serif`,
+  color: "#0f172a",
+  textTransform: "uppercase"
+});
 const LINE = { font: "400 13px/1.12 Montserrat,system-ui,sans-serif", color: "#334155", marginTop: 2 };
 
 const BADGE = { position:"absolute", top:8, left:8, font:"700 12px/1 Montserrat,system-ui,sans-serif", background:"#22c55e", color:"#fff", padding:"4px 7px", borderRadius:999 };
@@ -67,8 +77,15 @@ export default function VindeirosPartidos() {
   const [saving, setSaving] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [nextMatchIso, setNextMatchIso] = useState(null);
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
 
   const [draft, setDraft] = useState({ equipo1:"", equipo2:"", lugar:"", competition:"", dateStr:"", timeStr:"" });
+
+  useEffect(() => {
+    const onR = () => setIsMobile(window.innerWidth <= 560);
+    window.addEventListener("resize", onR);
+    return () => window.removeEventListener("resize", onR);
+  }, []);
 
   async function resolveAdminAndNext() {
     const { data: s } = await supabase.auth.getSession();
@@ -236,19 +253,40 @@ export default function VindeirosPartidos() {
         const timeStr = r.match_iso ? new Date(r.match_iso).toLocaleTimeString("gl-ES", { hour: "2-digit", minute:"2-digit", hour12: false }) : "—";
         const number = idx + 1;
         const isActive = nextMatchIso && r.match_iso && (new Date(r.match_iso).getTime() === new Date(nextMatchIso).getTime());
+
         return (
           <article key={r.id} style={isActive ? CARD_ACTIVE : CARD}>
             <span style={BADGE}>{number}</span>
-            <div style={ROW}>
+
+            <div style={ROW(isMobile)}>
               <div style={CARD_CONTENT}>
-                <div style={TEAMS_LINE}>{(r.equipo1||"—").toUpperCase()} <span style={{ margin:"0 6px" }}>vs</span> {(r.equipo2||"—").toUpperCase()}</div>
+                <div style={TEAMS_LINE(isMobile)}>
+                  {(r.equipo1||"—").toUpperCase()}
+                  <span style={{ margin:"0 6px" }}>vs</span>
+                  {(r.equipo2||"—").toUpperCase()}
+                </div>
                 <div style={LINE}>Competición: <span>{r.competition || "—"}</span></div>
                 <div style={LINE}>Lugar: <span>{r.lugar || "—"}</span></div>
                 <div style={LINE}>Data: <span>{niceDate}</span></div>
-                <div style={LINE}>Hora: <span>{timeStr}</span></div>
+
+                {/* Hora + Acciones (solo móvil van juntos) */}
+                <div style={{ ...LINE, display:"grid", gridTemplateColumns: isMobile ? "1fr auto" : "1fr", alignItems:"center", gap: 8 }}>
+                  <span>Hora: <span>{timeStr}</span></span>
+                  {isAdmin && isMobile && (
+                    <div style={ACTIONS}>
+                      <button type="button" style={ICONBTN} title="Subir a Próximo Partido" onClick={()=> onPromote(r.id)} aria-label="Subir a Próximo Partido">
+                        <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_GREEN}><path d="M12 19V5" /><path d="M5 12l7-7 7 7" /></svg>
+                      </button>
+                      <button type="button" style={ICONBTN} title="Borrar tarxeta" onClick={()=> onDelete(r.id)} aria-label="Borrar tarxeta">
+                        <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_RED}><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /></svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {isAdmin && (
+              {/* Acciones a la derecha: solo desktop */}
+              {isAdmin && !isMobile && (
                 <div style={ACTIONS}>
                   <button type="button" style={ICONBTN} title="Subir a Próximo Partido" onClick={()=> onPromote(r.id)} aria-label="Subir a Próximo Partido">
                     <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_GREEN}><path d="M12 19V5" /><path d="M5 12l7-7 7 7" /></svg>

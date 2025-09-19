@@ -18,7 +18,7 @@ const PANEL = {
   padding: "18px 16px",
 };
 
-/* Bloque de texto: fondo CELESTE suave (intocable el banner de meteo) */
+/* Bloque de texto: fondo CELESTE suave */
 const TOP_BOX = {
   background: "linear-gradient(180deg, rgba(224,242,254,0.55), rgba(191,219,254,0.45))",
   border: "1px solid #e5e7eb",
@@ -39,7 +39,7 @@ const TITLE_LINE_BASE = {
 };
 const TITLE_LINE = (isMobile) => ({
   ...TITLE_LINE_BASE,
-  fontSize: isMobile ? 22 : 30, // móvil +5% respecto al ajuste anterior
+  fontSize: isMobile ? 22 : 30,
 });
 
 const TEAM_NAME = { fontWeight: 700, textTransform: "uppercase" };
@@ -57,7 +57,7 @@ const LINE_GRAY = {
   fontWeight: 600,
 };
 
-/* ===== Banner METEO (full-bleed) ===== */
+/* ===== Banner METEO (full-bleed, simétrico) ===== */
 const BLEED_WRAP = {
   width: "100vw",
   marginLeft: "50%",
@@ -68,8 +68,12 @@ const METEO_BANNER = (isMobile) => ({
   width: "100%",
   padding: isMobile ? "22px 14px" : "26px 20px",
   background: "linear-gradient(180deg, rgba(224,242,254,0.9), rgba(191,219,254,0.9))",
-  borderTop: "1px solid #bae6fd",
-  borderBottom: "none", // ✅ eliminar línea celeste bajo el subtexto (móvil y desktop)
+  border: "none",
+  boxShadow: "none",
+  outline: "none",
+  // simetría vertical respecto al subtexto
+  paddingTop: isMobile ? 28 : 30,   // ↑ añade el mismo aire que se percibe abajo
+  paddingBottom: isMobile ? 28 : 30 // ↓ mantiene el espacio inferior
 });
 const METEO_BAR = (isMobile) => ({
   display: "flex",
@@ -78,9 +82,9 @@ const METEO_BAR = (isMobile) => ({
   alignItems: "center",
   justifyContent: "center",
   maxWidth: 1000,
-  margin: isMobile ? "10px auto 0" : "0 auto", // espacio entre “METEO | Lugar” e iconos
+  margin: isMobile ? "10px auto 0" : "0 auto",
   color: "#0f172a",
-  fontSize: isMobile ? 20 : 22, // móvil -10% (22 → 20), desktop se mantiene
+  fontSize: isMobile ? 20 : 22, // móvil -10% (ya aplicado antes)
   fontWeight: 700,
 });
 const METEO_LEGEND_TOP = (isMobile) => ({
@@ -88,14 +92,15 @@ const METEO_LEGEND_TOP = (isMobile) => ({
   top: 6,
   left: "50%",
   transform: "translateX(-50%)",
-  fontSize: isMobile ? 13 : 13, // móvil +10% (12 → 13); desktop 13
+  fontSize: 15, // +15% en móvil y desktop
   fontWeight: 800,
   color: "#0284c7",
   letterSpacing: ".3px",
 });
 const METEO_SUBLEGEND_AFTER = (isMobile) => ({
   textAlign: "center",
-  marginTop: 0, // ✅ sin línea extra en móvil y desktop
+  marginTop: 0,
+  marginBottom: 0,
   fontSize: isMobile ? 11 : 12,
   fontWeight: 600,
   color: "#475569",
@@ -216,16 +221,14 @@ export default function ProximoPartido() {
     return () => window.removeEventListener("resize", onR);
   }, []);
 
-  // Refresca sesión ligera para evitar quedarse en "Cargando…" tras deploy
   useEffect(() => {
     supabase.auth.getSession().then(() => {
-      // intento de refresh no intrusivo
       supabase.auth.refreshSession().catch(() => {});
     });
   }, []);
 
   function shouldRefreshDaily(existing) {
-    return !existing; // cache local 24h
+    return !existing;
   }
 
   async function loadData() {
@@ -268,7 +271,6 @@ export default function ProximoPartido() {
     }
   }
 
-  // Guard anti-cargando eterno
   useEffect(() => {
     if (loading) {
       guardRef.current = setTimeout(() => setShowReload(true), 4500);
@@ -311,7 +313,6 @@ export default function ProximoPartido() {
     );
   }
 
-  // Sen partido → mensaxe centrada
   if (!row) {
     return (
       <>
@@ -361,7 +362,7 @@ export default function ProximoPartido() {
 
   return (
     <>
-      {/* Banner METEO */}
+      {/* Banner METEO simétrico */}
       <div style={BLEED_WRAP}>
         <div style={METEO_BANNER(isMobile)}>
           <div style={METEO_LEGEND_TOP(isMobile)}>METEO | {lugar}</div>
@@ -426,7 +427,7 @@ export default function ProximoPartido() {
           </div>
 
           {isMobile && (
-            <div style={{ marginTop: 16, display: "grid", placeItems: "center" }}>
+            <div style={{ marginTop: 4, display: "grid", placeItems: "center" }}>
               <img
                 src={ESCUDO_SRC}
                 alt="Escudo RC Celta"
