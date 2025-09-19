@@ -8,24 +8,41 @@ import { supabase } from "../lib/supabaseClient.js";
 const WRAP = { maxWidth: 880, margin: "0 auto", padding: "16px" };
 const PAGE_HEAD = { margin: "0 0 6px", font: "700 22px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a" };
 const PAGE_SUB_ROW = { display:"grid", gridTemplateColumns:"1fr auto", alignItems:"center", gap:10, marginBottom:12 };
-const PAGE_SUB  = { margin: 0, font: "400 16px/1.3 Montserrat,system-ui,sans-serif", color: "#475569" }; // ↑ un pouco máis grande
+const PAGE_SUB  = { margin: 0, font: "400 16px/1.3 Montserrat,system-ui,sans-serif", color: "#475569" };
 
-const PLUS_BTN_RED = { display:"inline-grid", placeItems:"center", width: 36, height: 36, borderRadius: 10, background: "linear-gradient(180deg,#f87171,#ef4444)", border: "1px solid #ef4444", boxShadow: "0 6px 18px rgba(239,68,68,.28)", cursor: "pointer" };
-const PLUS_SVG_RED = { fill:"none", stroke:"#ffffff", strokeWidth:1.6, strokeLinecap:"round", strokeLinejoin:"round" };
+const PLUS_BTN_RED = (isMobile) => ({
+  display:"inline-grid", placeItems:"center",
+  width: 36, height: 36, borderRadius: 10,
+  background: "linear-gradient(180deg,#f87171,#ef4444)",
+  border: "1px solid #ef4444",
+  boxShadow: "0 6px 18px rgba(239,68,68,.28)",
+  cursor: "pointer"
+});
+const PLUS_SVG_RED = (isMobile) => ({
+  fill:"none", stroke:"#ffffff",
+  strokeWidth: isMobile ? 2.2 : 1.6,
+  strokeLinecap:"round", strokeLinejoin:"round"
+});
 
 const CARD_BASE = { position:"relative", borderRadius: 14, padding: 12, boxShadow: "0 6px 18px rgba(0,0,0,.05)", marginBottom: 10 };
 const CARD = { ...CARD_BASE, border: "1px solid #ef4444", background: "linear-gradient(180deg,#fff5f5,#fff0f0)" };
 
-const ROW = { display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "start" };
+const ROW = (isMobile) => ({ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr auto", gap: 8, alignItems: "start" });
 const CARD_CONTENT = { paddingLeft: 48 };
 
 const RED = "#b91c1c";
-const TEAMS_LINE = { font: "600 16px/1.12 Montserrat,system-ui,sans-serif", color: RED, textTransform: "uppercase" };
-const LINE = { font: "400 13px/1.12 Montserrat,system-ui,sans-serif", color: RED, marginTop: 2 };
+/* Texto equipos: +5% tamaño, “vs” en minúsculas */
+const TEAMS_LINE = (isMobile) => ({
+  font: `600 ${isMobile ? 17 : 18}px/1.12 Montserrat,system-ui,sans-serif`,
+  color: RED, textTransform: "uppercase"
+});
+const LINE = { font: "400 14px/1.12 Montserrat,system-ui,sans-serif", color: RED, marginTop: 2 };
 
 const BADGE = { position:"absolute", top:8, left:8, font:"700 12px/1 Montserrat,system-ui,sans-serif", background:"#ef4444", color:"#fff", padding:"4px 7px", borderRadius:999 };
 
 const ACTIONS = { display: "flex", gap: 8, alignItems: "center" };
+const ACTIONS_MOBILE_COLUMN = { position:"absolute", left:8, top:36, display:"grid", gap:6 };
+
 const ICONBTN = { width: 34, height: 34, display: "grid", placeItems: "center", borderRadius: 10, border: "1px solid #e2e8f0", background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,.06)", cursor: "pointer" };
 const SVGI = { fill: "none", stroke: "#0f172a", strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round" };
 const SVG_RED = { ...SVGI, stroke: "#dc2626" };
@@ -58,9 +75,16 @@ export default function PartidosFinalizados() {
   const [toast, setToast] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
 
   const [draft, setDraft] = useState({ equipo1:"", equipo2:"", competition:"", lugar:"", dateStr:"", timeStr:"" });
   const allDraftFilled = (d)=> !!(d.equipo1.trim() && d.equipo2.trim() && d.competition.trim() && d.lugar.trim() && d.dateStr && d.timeStr);
+
+  useEffect(() => {
+    const onR = () => setIsMobile(window.innerWidth <= 560);
+    window.addEventListener("resize", onR);
+    return () => window.removeEventListener("resize", onR);
+  }, []);
 
   async function resolveAdmin() {
     const { data: s } = await supabase.auth.getSession();
@@ -147,8 +171,8 @@ export default function PartidosFinalizados() {
       <div style={PAGE_SUB_ROW}>
         <p style={PAGE_SUB}>Encontros xa disputados polo Celta.</p>
         {isAdmin && (
-          <button type="button" style={PLUS_BTN_RED} onClick={()=> setCreateOpen(v=>!v)} title="Crear novo partido finalizado" aria-label="Crear novo partido finalizado">
-            <svg width="26" height="26" viewBox="0 0 24 24" style={PLUS_SVG_RED}><path d="M12 5v14M5 12h14" /></svg>
+          <button type="button" style={PLUS_BTN_RED(isMobile)} onClick={()=> setCreateOpen(v=>!v)} title="Crear novo partido finalizado" aria-label="Crear novo partido finalizado">
+            <svg width="26" height="26" viewBox="0 0 24 24" style={PLUS_SVG_RED(isMobile)}><path d="M12 5v14M5 12h14" /></svg>
           </button>
         )}
       </div>
@@ -156,71 +180,49 @@ export default function PartidosFinalizados() {
       {toast && <div style={TOAST}>{toast}</div>}
       {err && <div style={{ ...TOAST, background:"#fee2e2", border:"1px solid #fecaca", color:"#b91c1c" }}>{err}</div>}
 
-      {isAdmin && createOpen && (
-        <section style={EDIT_CARD}>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr auto 1fr", gap:8, alignItems:"center" }}>
-            <input style={INPUT_UP} value={draft.equipo1} placeholder="Local" onInput={(e)=> setDraft(d => ({ ...d, equipo1: e.currentTarget.value }))}/>
-            <div style={{ font:"600 14px/1 Montserrat,system-ui,sans-serif", color: RED }}>vs</div>
-            <input style={INPUT_UP} value={draft.equipo2} placeholder="Visitante" onInput={(e)=> setDraft(d => ({ ...d, equipo2: e.currentTarget.value }))}/>
-          </div>
-
-          <div style={{ display:"grid", gridTemplateColumns:"1fr auto 1fr", gap:8, alignItems:"center", marginTop:10 }}>
-            <div style={FIELD_WITH_ICON}>
-              <div style={FIELD_ICON}>
-                <svg width="18" height="18" viewBox="0 0 24 24" style={{ fill:"none", stroke:"#64748b", strokeWidth:1.6, strokeLinecap:"round", strokeLinejoin:"round" }}>
-                  <path d="M8 21h8M12 17v4M6 3h12v4a6 6 0 0 1-12 0V3Z"/><path d="M18 5h2a2 2 0 0 1-2 2M6 5H4a2 2 0 0 0 2 2"/>
-                </svg>
-              </div>
-              <select style={SELECT} value={draft.competition} onChange={(e)=> setDraft(d => ({ ...d, competition: e.currentTarget.value }))}>
-                <option value="">Torneo</option>
-                <option value="LaLiga">LaLiga</option>
-                <option value="Europa League">Europa League</option>
-                <option value="Copa do Rei">Copa do Rei</option>
-              </select>
-            </div>
-            <div />
-            <input style={INPUT} value={draft.lugar} placeholder="Localidad" onInput={(e)=> setDraft(d => ({ ...d, lugar: e.currentTarget.value }))}/>
-          </div>
-
-          <div style={{ ...GRID3, marginTop:10 }}>
-            <input type="date" style={INPUT} value={draft.dateStr} onInput={(e)=> setDraft(d => ({ ...d, dateStr: e.currentTarget.value }))}/>
-            <select value={draft.timeStr} style={SELECT} onChange={(e)=> setDraft(d => ({ ...d, timeStr: e.currentTarget.value }))}>
-              <option value="">Establecer hora do encontro</option>
-              {timeOptions().map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-            <button type="button" style={SAVE_ICON_BTN} title="Gardar" onClick={onCreate} disabled={saving}>
-              <svg width="22" height="22" viewBox="0 0 24 24" style={SAVE_SVG}><path d="M4 4h12l4 4v12H4z"/><path d="M16 4v6H8V4"/><path d="M8 18h8"/></svg>
-            </button>
-          </div>
-        </section>
-      )}
-
       {view.map((r, idx) => {
         const niceDate = dmyWithWeekday(r.match_iso);
         const timeStr = r.match_iso ? new Date(r.match_iso).toLocaleTimeString("gl-ES", { hour: "2-digit", minute:"2-digit", hour12: false }) : "—";
-        const number = view.length - idx; // 1 abaixo
+        const number = view.length - idx;
+
         return (
           <article key={r.id} style={CARD}>
             <span style={BADGE}>{number}</span>
-            <div style={ROW}>
+
+            {/* Acciones en columna bajo número (solo móvil) */}
+            {isAdmin && isMobile && (
+              <div style={ACTIONS_MOBILE_COLUMN}>
+                <button type="button" style={ICONBTN} title="Ver resultados" onClick={()=> route("/resultados-ultima-alineacion")} aria-label="Ver resultados da última aliñación">
+                  <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                </button>
+                <button type="button" style={ICONBTN} title="Borrar partido" onClick={()=> onDelete(r.id)} aria-label="Borrar partido">
+                  <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_RED}><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /></svg>
+                </button>
+              </div>
+            )}
+
+            <div style={ROW(isMobile)}>
               <div style={CARD_CONTENT}>
-                <div style={TEAMS_LINE}>{(r.equipo1||"—").toUpperCase()} <span style={{ margin:"0 6px" }}>vs</span> {(r.equipo2||"—").toUpperCase()}</div>
+                <div style={TEAMS_LINE(isMobile)}>
+                  {(r.equipo1||"—").toUpperCase()} <span style={{ margin:"0 6px" }}>vs</span> {(r.equipo2||"—").toUpperCase()}
+                </div>
                 <div style={LINE}>Competición: <span>{r.competition || "—"}</span></div>
                 <div style={LINE}>Lugar: <span>{r.lugar || "—"}</span></div>
                 <div style={LINE}>Data: <span>{niceDate}</span></div>
                 <div style={LINE}>Hora: <span>{timeStr}</span></div>
               </div>
 
-              <div style={ACTIONS}>
-                <button type="button" style={ICONBTN} title="Ver resultados da última aliñación" onClick={()=> route("/resultados-ultima-alineacion")} aria-label="Ver resultados da última aliñación">
-                  <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
-                </button>
-                {isAdmin && (
+              {/* Acciones a la derecha en desktop */}
+              {isAdmin && !isMobile && (
+                <div style={ACTIONS}>
+                  <button type="button" style={ICONBTN} title="Ver resultados" onClick={()=> route("/resultados-ultima-alineacion")} aria-label="Ver resultados da última aliñación">
+                    <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                  </button>
                   <button type="button" style={ICONBTN} title="Borrar partido" onClick={()=> onDelete(r.id)} aria-label="Borrar partido">
                     <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_RED}><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /></svg>
                   </button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </article>
         );
