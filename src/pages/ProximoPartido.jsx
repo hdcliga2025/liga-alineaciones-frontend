@@ -38,7 +38,6 @@ const TITLE_LINE_BASE = {
   fontWeight: 700,
 };
 const TITLE_LINE = (isMobile) => ({ ...TITLE_LINE_BASE, fontSize: isMobile ? 22 : 30 });
-
 const TEAM_NAME = { fontWeight: 700, textTransform: "uppercase" };
 const VS_STYLE_BASE = { fontWeight: 600, fontSize: 22, margin: "0 8px" };
 const VS_STYLE = (isMobile) => ({ ...VS_STYLE_BASE, fontSize: isMobile ? 17 : 22 });
@@ -51,7 +50,7 @@ const LINE_GRAY = {
   fontWeight: 600,
 };
 
-/* ===== Banner METEO (solo iconos) ===== */
+/* ===== Banner METEO (full-bleed, SOLO ICONOS) ===== */
 const BLEED_WRAP = { width: "100vw", marginLeft: "50%", transform: "translateX(-50%)" };
 const METEO_BANNER = (isMobile) => ({
   position: "relative",
@@ -66,24 +65,24 @@ const METEO_BANNER = (isMobile) => ({
 });
 const METEO_BAR = (isMobile) => ({
   display: "flex",
-  gap: isMobile ? 20 : 28,
+  gap: isMobile ? 18 : 26,
   flexWrap: "wrap",
   alignItems: "center",
   justifyContent: "center",
   maxWidth: 1000,
   margin: "0 auto",
   color: "#0f172a",
-  fontSize: isMobile ? 20 : 22,
+  fontSize: isMobile ? 18 : 22, // iconos un poco más pequeños en móvil
   fontWeight: 700,
 });
 
-/* Leyenda bajo el banner (sin bold salvo lugar) */
+/* Leyenda bajo el banner (Gallego, sin bold salvo lugar) */
 const METEO_LEGEND_OUT = {
   textAlign: "center",
   margin: "6px 0 10px",
   fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
   fontSize: 15,
-  fontWeight: 500,
+  fontWeight: 400,
   color: "#0369a1",
   letterSpacing: ".2px",
 };
@@ -103,7 +102,7 @@ function toLongGalician(dateObj) {
 }
 const capFirst = (s = "") => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
-// Cache meteo 24h
+// Cache simple 24h (meteo)
 const WX_TTL_MS = 24 * 3600 * 1000;
 function wxKey(lugar, matchISO, tz = "Europe/Madrid") {
   if (!lugar || !matchISO) return null;
@@ -112,7 +111,7 @@ function wxKey(lugar, matchISO, tz = "Europe/Madrid") {
     timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit",
     hour: "2-digit", minute: "2-digit", hour12: false,
   });
-  const parts = fmt.formatToParts(target).reduce((a, p) => (a[p.type] = p.value, a), {});
+  const parts = fmt.formatToParts(target).reduce((a, p) => { a[p.type] = p.value; return a; }, {});
   const localISO = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
   return `wx:${lugar}:${localISO}`;
 }
@@ -120,34 +119,45 @@ function getCachedWx(lugar, matchISO) {
   const k = wxKey(lugar, matchISO);
   if (!k) return null;
   try {
-    const raw = localStorage.getItem(k);
-    if (!raw) return null;
+    const raw = localStorage.getItem(k); if (!raw) return null;
     const obj = JSON.parse(raw);
     if (!obj || !obj.t || !obj.v) return null;
     if (Date.now() - obj.t > WX_TTL_MS) return null;
     return obj.v;
   } catch { return null; }
 }
-function setCachedWx(lugar, matchISO, v) {
+function setCachedWx(lugar, matchISO, val) {
   const k = wxKey(lugar, matchISO); if (!k) return;
-  try { localStorage.setItem(k, JSON.stringify({ t: Date.now(), v })); } catch {}
+  try { localStorage.setItem(k, JSON.stringify({ t: Date.now(), v: val })); } catch {}
 }
 
 async function fetchMeteoFor(lugar, matchISO) {
   try {
     if (!lugar || !matchISO) return null;
-    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(lugar)}&count=1&language=gl&format=json`, { cache: "no-store" });
-    const loc = (await geoRes.json())?.results?.[0];
-    if (!loc) return null;
+    const geoRes = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(lugar)}&count=1&language=gl&format=json`,
+      { cache: "no-store" }
+    );
+    const geo = await geoRes.json();
+    const loc = geo?.results?.[0]; if (!loc) return null;
     const { latitude: lat, longitude: lon } = loc;
-    const wxRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation_probability,wind_speed_10m&timezone=Europe/Madrid&forecast_days=8`, { cache: "no-store" });
+
+    const wxRes = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+        `&hourly=temperature_2m,precipitation_probability,wind_speed_10m&timezone=Europe/Madrid&forecast_days=8`,
+      { cache: "no-store" }
+    );
     const wx = await wxRes.json();
-    const times = wx?.hourly?.time || [];
-    if (!times.length) return null;
+    const times = wx?.hourly?.time || []; if (!times.length) return null;
+
     const target = new Date(matchISO);
-    const fmt = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false });
-    const parts = fmt.formatToParts(target).reduce((a, p) => (a[p.type] = p.value, a), {});
+    const fmt = new Intl.DateTimeFormat("sv-SE", {
+      timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", hour12: false,
+    });
+    const parts = fmt.formatToParts(target).reduce((a, p) => { a[p.type] = p.value; return a; }, {});
     const localISO = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+
     let idx = times.indexOf(localISO);
     if (idx === -1) {
       let best = 0, bestDiff = Infinity;
@@ -158,6 +168,7 @@ async function fetchMeteoFor(lugar, matchISO) {
       }
       idx = best;
     }
+
     return {
       temp_c: wx.hourly.temperature_2m?.[idx] ?? null,
       wind_kmh: wx.hourly.wind_speed_10m?.[idx] ?? null,
@@ -184,7 +195,7 @@ export default function ProximoPartido() {
 
   useEffect(() => { supabase.auth.getSession().then(() => supabase.auth.refreshSession().catch(()=>{})); }, []);
 
-  const shouldRefreshDaily = (existing) => !existing;
+  function shouldRefreshDaily(existing) { return !existing; }
 
   async function loadData() {
     setError(null); setLoading(true);
@@ -281,11 +292,13 @@ export default function ProximoPartido() {
     <>
       {/* Banner METEO (solo iconos) */}
       <div style={BLEED_WRAP}>
-        <div style={METEO_BANNER(isMobile)}>{meteoContent}</div>
+        <div style={METEO_BANNER(isMobile)}>
+          {meteoContent}
+        </div>
       </div>
-      {/* Leyenda fuera */}
+      {/* Leyenda fuera, justo debajo (gl) */}
       <div style={METEO_LEGEND_OUT}>
-        Meteo <strong>{lugar}</strong> a hora do partido
+        Meteo en <strong>{lugar}</strong> á hora do partido
       </div>
 
       {/* Contido principal */}
@@ -297,7 +310,16 @@ export default function ProximoPartido() {
               alt="Escudo RC Celta"
               decoding="async"
               loading="eager"
-              style={{ position: "absolute", top: 2, right: 10, width: ESCUDO_W, height: "auto", opacity: 0.96, pointerEvents: "none", zIndex: 0 }}
+              style={{
+                position: "absolute",
+                top: -4,            // ⬅️ Subimos un poco para “casi tocar” el cuadro
+                right: 10,
+                width: ESCUDO_W,
+                height: "auto",
+                opacity: 0.96,
+                pointerEvents: "none",
+                zIndex: 0,
+              }}
             />
           )}
 
@@ -317,7 +339,7 @@ export default function ProximoPartido() {
           </div>
 
           {isMobile && (
-            <div style={{ marginTop: -4, display: "grid", placeItems: "center" }}>
+            <div style={{ marginTop: 4, display: "grid", placeItems: "center" }}>
               <img src={ESCUDO_SRC} alt="Escudo RC Celta" decoding="async" loading="eager" style={{ width: ESCUDO_W, height: "auto", opacity: 0.98 }} />
             </div>
           )}
