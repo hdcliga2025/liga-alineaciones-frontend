@@ -9,8 +9,13 @@ const PAGE_HEAD = { margin: "0 0 8px", font: "700 22px/1.2 Montserrat,system-ui,
 const PAGE_SUB_ROW = { display:"grid", gridTemplateColumns:"1fr auto", alignItems:"center", gap:10, marginBottom:12 };
 const PAGE_SUB  = { margin: 0, font: "400 15px/1.25 Montserrat,system-ui,sans-serif", color: "#475569" };
 
-/* Botón “+” verde (móbil: trazo máis groso) */
-const PLUS_BTN_GREEN = { display:"inline-grid", placeItems:"center", width: 36, height: 36, borderRadius: 10, background: "linear-gradient(180deg,#34d399,#22c55e)", border: "1px solid #22c55e", boxShadow: "0 6px 18px rgba(34,197,94,.28)", cursor: "pointer" };
+/* Botón “+” verde */
+const PLUS_BTN_GREEN = (isMobile) => ({
+  display:"inline-grid", placeItems:"center",
+  width: 36, height: 36, borderRadius: 10,
+  background: "linear-gradient(180deg,#34d399,#22c55e)", border: "1px solid #22c55e",
+  boxShadow: "0 6px 18px rgba(34,197,94,.28)", cursor: "pointer"
+});
 const PLUS_SVG_GREEN = (isMobile) => ({ fill:"none", stroke:"#ffffff", strokeWidth: isMobile ? 2.2 : 1.6, strokeLinecap:"round", strokeLinejoin:"round" });
 
 /* Tarxetas */
@@ -21,20 +26,18 @@ const CARD_ACTIVE = { ...CARD_BASE, border: "2px solid #16a34a", background: "li
 const ROW = (isMobile) => ({ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr auto", gap: 8, alignItems: "start" });
 const CARD_CONTENT = { paddingLeft: 48 };
 
-/* Tipografías (móbil +10%) */
-const TEAMS_LINE = (isMobile) => ({
-  font: `600 ${isMobile ? 14 : 16}px/1.12 Montserrat,system-ui,sans-serif`,
-  color: "#0f172a",
-  textTransform: "uppercase"
-});
-const LINE = (isMobile) => ({ font: `400 ${isMobile ? 14 : 13}px/1.12 Montserrat,system-ui,sans-serif`, color: "#334155", marginTop: 2 });
+/* Título equipos: +5% (desktop 17px, móvil 14px) y 'vs' minúsculas */
+const TEAMS_LINE = (isMobile) => ({ font: `600 ${isMobile ? 14 : 17}px/1.12 Montserrat,system-ui,sans-serif`, color: "#0f172a", textTransform: "uppercase" });
+/* Todos los campos +10% (13px → 14px) */
+const LINE = { font: "400 14px/1.12 Montserrat,system-ui,sans-serif", color: "#334155", marginTop: 2 };
 
 const BADGE = { position:"absolute", top:8, left:8, font:"700 12px/1 Montserrat,system-ui,sans-serif", background:"#22c55e", color:"#fff", padding:"4px 7px", borderRadius:999 };
 
-/* Accións: columna vertical baixo o número en móbil; iconos algo máis pequenos e apertados */
 const ACTIONS = { display: "flex", gap: 8, alignItems: "center" };
-const ACTIONS_MOBILE_COLUMN = { position:"absolute", left:8, top:36, display:"grid", gap:4 };
-const ICONBTN = (isMobile) => ({ width: isMobile ? 30 : 34, height: isMobile ? 30 : 34, display: "grid", placeItems: "center", borderRadius: 10, border: "1px solid #e2e8f0", background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,.06)", cursor: "pointer" });
+/* Columna vertical bajo el número (móvil) */
+const ACTIONS_MOBILE_COLUMN = { position:"absolute", left:8, top:36, display:"grid", gap:6 };
+
+const ICONBTN = { width: 32, height: 32, display: "grid", placeItems: "center", borderRadius: 10, border: "1px solid #e2e8f0", background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,.06)", cursor: "pointer" };
 const SVGI = { fill: "none", stroke: "#0f172a", strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round" };
 const SVG_GREEN = { ...SVGI, stroke: "#16a34a" };
 const SVG_RED = { ...SVGI, stroke: "#dc2626" };
@@ -166,14 +169,11 @@ export default function VindeirosPartidos() {
   async function onCreate() {
     if (!isAdmin) { showToast("Só admins poden gardar."); return; }
     if (saving) return;
-    const d = draft;
-    if (!(d.equipo1.trim() && d.equipo2.trim() && d.lugar.trim() && d.competition.trim() && d.dateStr && d.timeStr)) {
-      showToast("Rechea todos os campos para gardar."); return;
-    }
+    if (!allDraftFilled(draft)) { showToast("Rechea todos os campos para gardar."); return; }
     setSaving(true);
     try {
-      const iso = toISOFromParts(d.dateStr, d.timeStr);
-      const payload = { equipo1: d.equipo1.trim().toUpperCase(), equipo2: d.equipo2.trim().toUpperCase(), lugar: d.lugar.trim(), competition: d.competition.trim(), match_iso: iso, updated_at: new Date().toISOString() };
+      const iso = toISOFromParts(draft.dateStr, draft.timeStr);
+      const payload = { equipo1: draft.equipo1.trim().toUpperCase(), equipo2: draft.equipo2.trim().toUpperCase(), lugar: draft.lugar.trim(), competition: draft.competition.trim(), match_iso: iso, updated_at: new Date().toISOString() };
       const { data, error } = await supabase.from("matches_vindeiros").insert(payload).select("*").single();
       if (error) throw error;
       setRows((cur)=>[...cur, data].sort(sortAscByDate));
@@ -195,7 +195,7 @@ export default function VindeirosPartidos() {
       <div style={PAGE_SUB_ROW}>
         <p style={PAGE_SUB}>Próximos partidos a xogar polo Celta con data programada.</p>
         {isAdmin && (
-          <button type="button" style={PLUS_BTN_GREEN} onClick={()=> setCreateOpen(v=>!v)} title="Crear novo partido" aria-label="Crear novo partido">
+          <button type="button" style={PLUS_BTN_GREEN(isMobile)} onClick={()=> setCreateOpen(v=>!v)} title="Crear novo partido" aria-label="Crear novo partido">
             <svg width="26" height="26" viewBox="0 0 24 24" style={PLUS_SVG_GREEN(isMobile)}><path d="M12 5v14M5 12h14" /></svg>
           </button>
         )}
@@ -227,7 +227,7 @@ export default function VindeirosPartidos() {
               </select>
             </div>
             <div />
-            <input style={INPUT} value={draft.lugar} placeholder="Localidade" onInput={(e)=> setDraft(d => ({ ...d, lugar: e.currentTarget.value }))}/>
+            <input style={INPUT} value={draft.lugar} placeholder="Localidad" onInput={(e)=> setDraft(d => ({ ...d, lugar: e.currentTarget.value }))}/>
           </div>
 
           <div style={{ ...GRID3, marginTop:10 }}>
@@ -247,43 +247,42 @@ export default function VindeirosPartidos() {
         const niceDate = dmyWithWeekday(r.match_iso);
         const timeStr = r.match_iso ? new Date(r.match_iso).toLocaleTimeString("gl-ES", { hour: "2-digit", minute:"2-digit", hour12: false }) : "—";
         const number = idx + 1;
-        const isMobileHere = isMobile;
         const isActive = nextMatchIso && r.match_iso && (new Date(r.match_iso).getTime() === new Date(nextMatchIso).getTime());
 
         return (
           <article key={r.id} style={isActive ? CARD_ACTIVE : CARD}>
             <span style={BADGE}>{number}</span>
 
-            {/* Columna de accións en móbil (baixo o número) */}
-            {isAdmin && isMobileHere && (
+            {/* Columna de acciones vertical bajo el número (solo móvil) */}
+            {isAdmin && isMobile && (
               <div style={ACTIONS_MOBILE_COLUMN}>
-                <button type="button" style={ICONBTN(true)} title="Subir a Próximo Partido" onClick={()=> onPromote(r.id)} aria-label="Subir a Próximo Partido">
+                <button type="button" style={ICONBTN} title="Subir a Próximo Partido" onClick={()=> onPromote(r.id)} aria-label="Subir a Próximo Partido">
                   <svg width="18" height="18" viewBox="0 0 24 24" style={SVG_GREEN}><path d="M12 19V5" /><path d="M5 12l7-7 7 7" /></svg>
                 </button>
-                <button type="button" style={ICONBTN(true)} title="Borrar tarxeta" onClick={()=> onDelete(r.id)} aria-label="Borrar tarxeta">
+                <button type="button" style={ICONBTN} title="Borrar tarxeta" onClick={()=> onDelete(r.id)} aria-label="Borrar tarxeta">
                   <svg width="18" height="18" viewBox="0 0 24 24" style={SVG_RED}><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /></svg>
                 </button>
               </div>
             )}
 
-            <div style={ROW(isMobileHere)}>
+            <div style={ROW(isMobile)}>
               <div style={CARD_CONTENT}>
-                <div style={TEAMS_LINE(isMobileHere)}>
+                <div style={TEAMS_LINE(isMobile)}>
                   {(r.equipo1||"—").toUpperCase()} <span style={{ margin:"0 6px" }}>vs</span> {(r.equipo2||"—").toUpperCase()}
                 </div>
-                <div style={LINE(isMobileHere)}>Competición: <span>{r.competition || "—"}</span></div>
-                <div style={LINE(isMobileHere)}>Lugar: <span>{r.lugar || "—"}</span></div>
-                <div style={LINE(isMobileHere)}>Data: <span>{niceDate}</span></div>
-                <div style={LINE(isMobileHere)}>Hora: <span>{timeStr}</span></div>
+                <div style={LINE}>Competición: <span>{r.competition || "—"}</span></div>
+                <div style={LINE}>Lugar: <span>{r.lugar || "—"}</span></div>
+                <div style={LINE}>Data: <span>{niceDate}</span></div>
+                <div style={LINE}>Hora: <span>{timeStr}</span></div>
               </div>
 
-              {/* Accións dereita: só desktop */}
-              {isAdmin && !isMobileHere && (
+              {/* Acciones a la derecha: solo desktop */}
+              {isAdmin && !isMobile && (
                 <div style={ACTIONS}>
-                  <button type="button" style={ICONBTN(false)} title="Subir a Próximo Partido" onClick={()=> onPromote(r.id)} aria-label="Subir a Próximo Partido">
+                  <button type="button" style={ICONBTN} title="Subir a Próximo Partido" onClick={()=> onPromote(r.id)} aria-label="Subir a Próximo Partido">
                     <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_GREEN}><path d="M12 19V5" /><path d="M5 12l7-7 7 7" /></svg>
                   </button>
-                  <button type="button" style={ICONBTN(false)} title="Borrar tarxeta" onClick={()=> onDelete(r.id)} aria-label="Borrar tarxeta">
+                  <button type="button" style={ICONBTN} title="Borrar tarxeta" onClick={()=> onDelete(r.id)} aria-label="Borrar tarxeta">
                     <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_RED}><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /></svg>
                   </button>
                 </div>
