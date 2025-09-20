@@ -1,0 +1,20 @@
+// src/main.jsx
+import { h, render } from "preact";
+import App from "./App.jsx";
+
+// Montaje simple y estable (sin StrictMode para evitar dobles efectos de hooks)
+const mount = document.getElementById("app");
+
+if (mount) {
+  render(<App />, mount);
+} else {
+  const el = document.createElement("div");
+  el.id = "app";
+  document.body.appendChild(el);
+  render(<App />, el);
+}
+
+// Opcional: evitar saltos raros de scroll al cambiar de ruta en móbil
+try {
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+} catch {}
