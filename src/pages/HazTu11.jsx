@@ -1,311 +1,197 @@
-// src/pages/HazTu11.jsx
 import { h } from "preact";
-import { useMemo, useState, useEffect } from "preact/hooks";
+import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
-const POS_TABS = [
-  { key: "ALL",  label: "Todos" },
-  { key: "POR",  label: "Porteiros" },
-  { key: "DEF",  label: "Defensas" },
-  { key: "CEN",  label: "Medios" },
-  { key: "DEL",  label: "Dianteiros" },
-];
+/* Utils */
+function safeDecode(s = "") { try { return decodeURIComponent(s); } catch { return s.replace(/%20/g, " "); } }
+function parseFromFilename(url = "") {
+  const last = (url.split("?")[0].split("#")[0].split("/").pop() || "").trim();
+  const m = last.match(/^(\d+)-(.+)-(POR|DEF|CEN|DEL)\.(jpg|jpeg|png|webp)$/i);
+  if (!m) return { dorsalFile: null, nameFile: null, posFile: null };
+  return { dorsalFile: parseInt(m[1],10), nameFile: safeDecode(m[2].replace(/_/g," ")), posFile: m[3].toUpperCase() };
+}
+function finalFromAll(p = {}) {
+  const { dorsalFile, nameFile, posFile } = parseFromFilename(p.foto_url || "");
+  return {
+    dorsal: dorsalFile ?? (p.dorsal ?? null),
+    pos:    (posFile || "").toUpperCase(),
+    nombre: (nameFile || p.nombre || "").trim()
+  };
+}
+const cap = (s="") => (s || "").toUpperCase();
 
-// Silueta fallback (SVG outline, en liña co estilo da app)
-function Silhouette({ size = 72 }) {
+const OVERLAY_NUMS = new Set([29,32,39]);
+const IMG_H = 320;
+
+const S = {
+  wrap: { maxWidth: 1080, margin: "0 auto", padding: 16 },
+  h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
+  sub: { margin: "0 0 16px", color: "#475569", fontSize: 16, fontWeight: 400 },
+  resumen: {
+    margin:"0 0 14px", padding:"12px 14px", borderRadius:12,
+    border:"1px solid #dbeafe",
+    background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)", color:"#0f172a"
+  },
+  resumeLine: { margin: 0, fontSize: 19, fontWeight: 400, letterSpacing: ".35px", lineHeight: 1.5 },
+  posHeader: { margin:"16px 0 10px", padding:"2px 4px 8px", fontWeight:700, color:"#0c4a6e", borderLeft:"4px solid #7dd3fc", borderBottom:"2px solid #e2e8f0" },
+  grid4: { display:"grid", gridTemplateColumns:"repeat(4, minmax(0,1fr))", gap:12 },
+  card: { display:"grid", gridTemplateRows: `${IMG_H}px auto`,
+    background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)", // celeste degradado
+    border:"1px solid #dbeafe", borderRadius:16, padding:10, boxShadow:"0 2px 8px rgba(0,0,0,.06)",
+    alignItems:"center", textAlign:"center"
+  },
+  name: { margin:"8px 0 0", font:"700 15px/1.2 Montserrat, system-ui, sans-serif", color:"#0f172a" },
+  meta: { margin:"2px 0 0", color:"#475569", fontSize:13 }
+};
+
+function ImgWithOverlay({ src, alt, dorsal }) {
+  const showNum = OVERLAY_NUMS.has(Number(dorsal));
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
-      <circle cx="24" cy="16" r="8" stroke="#94a3b8" stroke-width="2" />
-      <path d="M8 42a16 16 0 0 1 32 0" stroke="#94a3b8" stroke-width="2" />
-    </svg>
+    <div style={{
+      position:"relative", width:"100%", height: IMG_H,
+      borderRadius:12, display:"grid", placeItems:"center",
+      background:"#f8fafc", border:"1px solid #e5e7eb", overflow:"hidden"
+    }}>
+      {src ? (
+        <img
+          src={src}
+          alt={alt}
+          loading="lazy"
+          decoding="async"
+          style={{ width:"100%", height:"100%", objectFit:"contain", background:"#0b1e2a" }}
+          crossOrigin="anonymous"
+          referrerPolicy="no-referrer"
+        />
+      ) : (
+        <div style={{ color:"#cbd5e1" }}>Sen foto</div>
+      )}
+      {showNum && (
+        <span style={{
+          position:"absolute", top: 18, left: 24,
+          fontFamily:"Montserrat, system-ui, sans-serif",
+          fontWeight: 600, fontSize: 36, lineHeight: 1, color: "#9aa4b2",
+          textShadow:"0 1px 2px rgba(0,0,0,.22)", letterSpacing:"0.5px", userSelect:"none"
+        }}>
+          {Number(dorsal)}
+        </span>
+      )}
+    </div>
   );
 }
 
 export default function HazTu11() {
-  const [tab, setTab] = useState("ALL");
-  const [q, setQ] = useState("");
-  const [imgError, setImgError] = useState({});
   const [jugadores, setJugadores] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [encuentrosAbiertos, setEncuentrosAbiertos] = useState([]);
-  const [encuentroSeleccionado, setEncuentroSeleccionado] = useState(null);
-  const [convocatoria, setConvocatoria] = useState([]);
-  const [jugadoresSeleccionados, setJugadoresSeleccionados] = useState([]);
 
-  // Obtener todos los jugadores de la base de datos
+  // Cabecera espejo desde Vindeiros/next_match (igual que Convocatoria)
+  const [header, setHeader] = useState(null);
+
   useEffect(() => {
-    const fetchJugadores = async () => {
-      const { data, error } = await supabase
-        .from('jugadores')
-        .select('*')
-        .order('dorsal', { ascending: true });
+    (async () => {
+      // Trae la convocatoria publicada y la junta con los datos del jugador
+      const { data: pub } = await supabase
+        .from("convocatoria_publica")
+        .select("jugador_id");
+      const ids = (pub || []).map(r => r.jugador_id);
 
-      if (!error) setJugadores(data);
+      // Header (mismo criterio que Convocatoria)
+      const { data: top } = await supabase
+        .from("matches_vindeiros")
+        .select("equipo1,equipo2,match_iso")
+        .order("match_iso", { ascending: true }).limit(1).maybeSingle();
+
+      if (top?.match_iso) {
+        setHeader({ equipo1: cap(top.equipo1||""), equipo2: cap(top.equipo2||""), match_iso: top.match_iso });
+      } else {
+        const { data: nm } = await supabase
+          .from("next_match")
+          .select("equipo1,equipo2,match_iso")
+          .eq("id",1).maybeSingle();
+        if (nm?.match_iso) setHeader({ equipo1: cap(nm.equipo1||""), equipo2: cap(nm.equipo2||""), match_iso: nm.match_iso });
+        else setHeader(null);
+      }
+
+      if (!ids.length) { setJugadores([]); setLoading(false); return; }
+
+      const { data: js } = await supabase
+        .from("jugadores")
+        .select("id, nombre, dorsal, foto_url")
+        .in("id", ids)
+        .order("dorsal", { ascending: true });
+
+      // Garantizamos el orden de publicación por dorsal
+      const byId = new Map((js||[]).map(j => [j.id, j]));
+      const ordered = ids.map(id => byId.get(id)).filter(Boolean);
+      setJugadores(ordered);
       setLoading(false);
-    };
-    fetchJugadores();
+    })().catch(e => { console.error(e); setLoading(false); });
   }, []);
 
-  // Obtener encuentros abiertos para predicciones
-  useEffect(() => {
-    const fetchEncuentrosAbiertos = async () => {
-      const { data, error } = await supabase
-        .from('encuentros')
-        .select('*')
-        .order('fecha_hora', { ascending: true });
-
-      if (!error) setEncuentrosAbiertos(data);
-    };
-    fetchEncuentrosAbiertos();
-  }, []);
-
-  // Obtener convocatoria cuando se selecciona un encuentro
-  const handleSeleccionEncuentro = async (encuentroId) => {
-    setEncuentroSeleccionado(encuentroId);
-    setLoading(true);
-    
-    const { data, error } = await supabase
-      .from('convocatorias')
-      .select(`
-        jugador_id,
-        jugadores:jugador_id (id, nombre, dorsal, position, foto_url)
-      `)
-      .eq('partido_id', encuentroId);
-
-    if (!error) {
-      const jugadoresConvocados = data.map(item => item.jugadores);
-      setConvocatoria(jugadoresConvocados);
-      
-      // Filtrar jugadores para mostrar solo los convocados
-      const jugadoresFiltrados = jugadores.filter(jugador => 
-        jugadoresConvocados.some(conv => conv.id === jugador.id)
-      );
-      setJugadores(jugadoresFiltrados);
+  const grouped = useMemo(() => {
+    const g = { POR: [], DEF: [], CEN: [], DEL: [] };
+    for (const p of jugadores || []) {
+      const { pos } = finalFromAll(p);
+      if (pos && g[pos]) g[pos].push(p);
     }
-    setLoading(false);
-  };
+    return g;
+  }, [jugadores]);
 
-  // Manejar selección de jugadores
-  const toggleJugador = (jugador) => {
-    const alreadySelected = jugadoresSeleccionados.some(j => j.id === jugador.id);
-    
-    if (alreadySelected) {
-      setJugadoresSeleccionados(prev => prev.filter(j => j.id !== jugador.id));
-    } else if (jugadoresSeleccionados.length < 11) {
-      setJugadoresSeleccionados(prev => [...prev, jugador]);
-    }
-  };
+  const { fecha: sFecha, hora: sHora } = (function(){
+    if (!header?.match_iso) return { fecha:"-", hora:"-" };
+    try {
+      const d = new Date(header.match_iso);
+      return {
+        fecha: d.toLocaleDateString("gl-ES", { day: "2-digit", month: "2-digit", year: "numeric" }),
+        hora:  d.toLocaleTimeString("gl-ES", { hour: "2-digit", minute: "2-digit" })
+      };
+    } catch { return { fecha:"-", hora:"-" }; }
+  })();
 
-  // Enviar predicción
-  const enviarPrediccion = async () => {
-    const jugadoresIds = jugadoresSeleccionados.map(j => j.id);
-    const user = (await supabase.auth.getUser()).data.user;
-
-    const { error } = await supabase
-      .from('alineaciones_predicciones')
-      .insert({
-        partido_id: encuentroSeleccionado,
-        jugadores_ids: jugadoresIds,
-        user_id: user.id
-      });
-
-    if (error) {
-      console.error('Error enviando predicción:', error);
-      alert('Erro ao enviar a predicción');
-    } else {
-      alert('Predicción enviada correctamente!');
-      setJugadoresSeleccionados([]);
-    }
-  };
-
-  // Filtrar jugadores por posición y búsqueda
-  const filtered = useMemo(() => {
-    const byPos = tab === "ALL" ? jugadores : jugadores.filter(p => p.position === tab);
-    const query = (q || "").trim().toLowerCase();
-    if (!query) return byPos;
-    return byPos.filter(p =>
-      `${p.dorsal} ${p.nombre}`.toLowerCase().includes(query)
-    );
-  }, [tab, q, jugadores]);
-
-  // --- estilos inline ---
-  const wrap = { maxWidth: 1080, margin: "0 auto", padding: "16px" };
-  const h1 = {
-    fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
-    fontSize: 24, margin: "6px 0 2px", color: "#0f172a"
-  };
-  const sub = { margin: "0 0 12px", color: "#475569", fontSize: 14 };
-  const tabs = { display: "flex", flexWrap: "wrap", gap: 8, margin: "10px 0 14px" };
-  const tabBtn = (active) => ({
-    padding: "8px 12px",
-    borderRadius: 12,
-    border: "1px solid #e5e7eb",
-    background: active ? "linear-gradient(180deg,#bae6fd,#7dd3fc)" : "#fff",
-    color: active ? "#0c4a6e" : "#0f172a",
-    fontWeight: 700, cursor: "pointer", boxShadow: active ? "0 8px 22px rgba(2,132,199,.25)" : "0 4px 12px rgba(0,0,0,.06)"
-  });
-  const searchRow = { display: "flex", gap: 10, alignItems: "center", marginBottom: 12 };
-  const search = {
-    flex: 1, padding: "10px 12px", borderRadius: 14,
-    border: "1px solid #e5e7eb", outline: "none",
-    fontSize: 14
-  };
-  const grid = {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: 12
-  };
-  const card = (seleccionado) => ({
-    display: "grid", gridTemplateColumns: "72px 1fr", gap: 10, alignItems: "center",
-    background: seleccionado ? "#e3f2fd" : "#fff",
-    border: seleccionado ? "2px solid #2196f3" : "1px solid #eef2ff",
-    borderRadius: 16,
-    padding: 10, boxShadow: "0 2px 8px rgba(0,0,0,.06)",
-    cursor: "pointer",
-    transition: "all 0.2s ease"
-  });
-  const avatarBox = {
-    width: 72, height: 72, borderRadius: 14,
-    display: "grid", placeItems: "center",
-    background: "linear-gradient(180deg,#f8fafc,#eef2ff)",
-    border: "1px solid #e5e7eb", overflow: "hidden"
-  };
-  const name = { margin: 0, font: "700 15px/1.2 Montserrat, system-ui, sans-serif", color: "#0f172a" };
-  const meta = { margin: "4px 0 0", color: "#475569", fontSize: 13 };
-
-  // Selector de encuentro
-  const selectorEncuentro = {
-    marginBottom: '20px',
-    padding: '10px',
-    borderRadius: '8px',
-    border: '1px solid #e5e7eb',
-    width: '100%',
-    fontSize: '16px'
-  };
-
-  // Responsivo
-  if (typeof window !== "undefined" && window.innerWidth >= 560) {
-    grid.gridTemplateColumns = "repeat(3, minmax(0, 1fr))";
-  }
-  if (typeof window !== "undefined" && window.innerWidth >= 960) {
-    grid.gridTemplateColumns = "repeat(4, minmax(0, 1fr))";
-  }
-
-  if (loading) return <main style={wrap}>Cargando…</main>;
+  if (loading) return <main style={S.wrap}>Cargando…</main>;
 
   return (
-    <main style={wrap}>
-      <h1 style={h1}>Fai o teu 11</h1>
-      <p style={sub}>Selecciona un partido e elixe os 11 xogadores titulares</p>
+    <main style={S.wrap}>
+      <h1 style={S.h1}>Fai aquí a túa aliñación</h1>
+      <p style={S.sub}>Aquí é onde demostras o Giráldez que levas dentro.</p>
 
-      {/* Selector de encuentro */}
-      <select 
-        onChange={(e) => handleSeleccionEncuentro(e.target.value)}
-        style={selectorEncuentro}
-        value={encuentroSeleccionado || ''}
-      >
-        <option value="">Selecciona un partido</option>
-        {encuentrosAbiertos.map(encuentro => (
-          <option key={encuentro.id} value={encuentro.id}>
-            {encuentro.titulo} - {new Date(encuentro.fecha_hora).toLocaleDateString('gl-ES')}
-          </option>
-        ))}
-      </select>
-
-      {encuentroSeleccionado && (
-        <>
-          {/* Tabs posición */}
-          <div style={tabs} role="tablist" aria-label="Filtrar por posición">
-            {POS_TABS.map(t => (
-              <button
-                key={t.key}
-                role="tab"
-                aria-selected={tab === t.key}
-                onClick={() => setTab(t.key)}
-                style={tabBtn(tab === t.key)}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Busca */}
-          <div style={searchRow}>
-            <input
-              type="search"
-              placeholder="Buscar por nome ou dorsal…"
-              value={q}
-              onInput={(e) => setQ(e.currentTarget.value)}
-              style={search}
-              aria-label="Buscar xogadores"
-            />
-          </div>
-
-          {/* Contador de seleccionados */}
-          <div style={{ marginBottom: '15px', fontWeight: 'bold', color: '#0c4a6e' }}>
-            Xogadores seleccionados: {jugadoresSeleccionados.length}/11
-          </div>
-
-          {/* Grid xogadores */}
-          <section style={grid} aria-live="polite">
-            {filtered.map((p) => {
-              const isSelected = jugadoresSeleccionados.some(j => j.id === p.id);
-              return (
-                <article 
-                  key={p.id} 
-                  style={card(isSelected)}
-                  onClick={() => toggleJugador(p)}
-                >
-                  <div style={avatarBox}>
-                    {p.foto_url ? (
-                      <img
-                        src={p.foto_url}
-                        alt={`Foto de ${p.nombre}`}
-                        width={72}
-                        height={72}
-                        decoding="async"
-                        loading="lazy"
-                        onError={() => setImgError((m) => ({ ...m, [p.foto_url]: true }))}
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                      />
-                    ) : (
-                      <Silhouette />
-                    )}
-                  </div>
-                  <div>
-                    <p style={name}>
-                      {p.dorsal != null ? `${String(p.dorsal).padStart(2,"0")} · ` : ""}{p.nombre}
-                    </p>
-                    <p style={meta}>{p.position}</p>
-                  </div>
-                </article>
-              );
-            })}
-          </section>
-
-          {/* Botón de envío */}
-          {jugadoresSeleccionados.length > 0 && (
-            <div style={{ marginTop: '20px', textAlign: 'center' }}>
-              <button 
-                onClick={enviarPrediccion}
-                disabled={jugadoresSeleccionados.length !== 11}
-                style={{ 
-                  padding: '12px 24px', 
-                  backgroundColor: jugadoresSeleccionados.length === 11 ? '#007bff' : '#ccc',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: jugadoresSeleccionados.length === 11 ? 'pointer' : 'not-allowed',
-                  fontWeight: 'bold',
-                  fontSize: '16px'
-                }}
-              >
-                Enviar Aliñación ({jugadoresSeleccionados.length}/11)
-              </button>
-            </div>
-          )}
-        </>
+      {/* Cuadro de campos (idéntico a Convocatoria) */}
+      {header && (
+        <div style={S.resumen}>
+          <p style={S.resumeLine}>{cap(header.equipo1)} vs {cap(header.equipo2)}</p>
+          <p style={{...S.resumeLine, opacity:.9}}>{sFecha} | {sHora}</p>
+        </div>
       )}
+
+      {["POR","DEF","CEN","DEL"].map(k => {
+        const arr = grouped[k] || [];
+        if (!arr.length) return null;
+        const label = k === "POR" ? "Porteiros" : k === "DEF" ? "Defensas" : k === "CEN" ? "Medios" : "Dianteiros";
+        return (
+          <section key={k}>
+            <div style={S.posHeader}>{label}</div>
+            <div style={S.grid4}>
+              {arr.map(p => {
+                const { dorsal, nombre, pos } = finalFromAll(p);
+                return (
+                  <article key={p.id} style={S.card}>
+                    <div style={{
+                      position:"relative", width:"100%", height: IMG_H,
+                      borderRadius:12, display:"grid", placeItems:"center",
+                      background:"#f8fafc", border:"1px solid #e5e7eb", overflow:"hidden"
+                    }}>
+                      <ImgWithOverlay src={p.foto_url} alt={`Foto de ${nombre}`} dorsal={dorsal}/>
+                    </div>
+                    <div>
+                      <p style={S.name}>{dorsal != null ? `${String(dorsal).padStart(2,"0")} · ` : ""}{nombre}</p>
+                      <p style={S.meta}>{pos}</p>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })}
     </main>
   );
 }
