@@ -37,6 +37,7 @@ const S = {
   wrap: { maxWidth: 1080, margin: "0 auto", padding: 16 },
   h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
   sub: { margin: "0 0 16px", color: "#475569", fontSize: 16 },
+
   resumen: {
     margin:"0 0 14px", padding:"12px 14px", borderRadius:12,
     border:"1px solid #dbeafe",
@@ -54,7 +55,7 @@ const S = {
     padding:10,
     boxShadow: active ? "0 8px 20px rgba(56,189,248,.30)" : "0 2px 8px rgba(0,0,0,.06)",
     background: active
-      ? "linear-gradient(180deg,#e0f2fe,#bae6fd)"  // celeste máis marcado cando está convocado
+      ? "linear-gradient(180deg,#e0f2fe,#bae6fd)"
       : "linear-gradient(180deg,#f0f9ff,#e0f2fe)",
     cursor:"pointer", userSelect:"none"
   }),
@@ -114,7 +115,7 @@ function ConvocadoOverlay({ show=false }) {
 export default function ConvocatoriaProximo() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [players, setPlayers] = useState([]);
-  const [selected, setSelected] = useState(new Set()); // ← NUEVO: selección explícita de convocados
+  const [selected, setSelected] = useState(new Set()); // jugadores marcados como CONVOCADOS
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
 
@@ -158,8 +159,7 @@ export default function ConvocatoriaProximo() {
         else setHeader(null);
       }
 
-      // Nota: NO traemos convocatoria_publica para preseleccionar:
-      // el admin debe marcar manualmente los convocados.
+      // No precargamos convocatoria_publica: el admin marca manualmente los convocados.
     })().catch(e=>console.error("[Convocatoria] init", e));
   }, []);
 
@@ -192,7 +192,7 @@ export default function ConvocatoriaProximo() {
     }
     setSaving(true);
     try {
-      // Publicar SOLO os seleccionados:
+      // Publicar SOLO los seleccionados (convocados):
       const ids = [...selected];
 
       // Limpiamos publicación anterior
@@ -207,7 +207,7 @@ export default function ConvocatoriaProximo() {
         if (error) throw error;
       }
 
-      // Feedback y redirección automática a HazTu11
+      // Redirección a “Convocados” (Fai aquí a túa aliñación)
       setToast("Convocatoria gardada. Cargando Fai aquí a túa aliñación…");
       setTimeout(() => route("/haz-tu-11"), 600);
     } catch(e) {
@@ -222,7 +222,8 @@ export default function ConvocatoriaProximo() {
   return (
     <main style={S.wrap}>
       <h1 style={S.h1}>Convocatoria oficial</h1>
-      <p style={S.sub}>Preme en cada xogador para **convocalo**. Garda para publicar.</p>
+      {/* Subleyenda nueva (sin instrucción de clic): */}
+      <p style={S.sub}>Lista de jugadores pre-seleccionados para jugar el partido.</p>
 
       {header ? (
         <div style={S.resumen}>
