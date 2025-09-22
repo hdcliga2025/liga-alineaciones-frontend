@@ -83,7 +83,7 @@ export default function HazTu11() {
   const [jugadores, setJugadores] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Cabeceira (coma Convocatoria)
+  // Cabeceira
   const [header, setHeader] = useState(null);
 
   useEffect(() => {
@@ -118,7 +118,6 @@ export default function HazTu11() {
         .in("id", ids)
         .order("dorsal", { ascending: true });
 
-      // Manter a orde segundo publicación
       const byId = new Map((js||[]).map(j => [j.id, j]));
       const ordered = ids.map(id => byId.get(id)).filter(Boolean);
       setJugadores(ordered);

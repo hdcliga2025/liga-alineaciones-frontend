@@ -34,22 +34,45 @@ function finalFromAll(p = {}) {
 const S = {
   wrap: { maxWidth: 1080, margin: "0 auto", padding: 16 },
   h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
-  sub: { margin: "0 0 16px", color: "#475569", fontSize: 16 }, // subleyenda GL
+  sub: { margin: "0 0 16px", color: "#475569", fontSize: 16 }, // gl
   resumen: {
     margin:"0 0 14px", padding:"12px 14px", borderRadius:12,
     border:"1px solid #dbeafe",
     background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)", color:"#0f172a"
   },
   resumeLine: { margin: 0, fontSize: 19, fontWeight: 400, letterSpacing: ".35px", lineHeight: 1.5 },
+
+  topActions: {
+    display:"grid",
+    gridTemplateColumns:"7fr 3fr",
+    gap:10,
+    marginTop: 10
+  },
+  btnSave: {
+    width: "100%", padding: "14px 16px",
+    borderRadius: 10,
+    background:"linear-gradient(180deg,#bae6fd,#7dd3fc)",
+    color:"#0c4a6e", fontWeight:800, border:"none",
+    cursor:"pointer", boxShadow:"0 10px 22px rgba(2,132,199,.25)"
+  },
+  btnReset: {
+    width:"100%", padding:"14px 16px",
+    borderRadius:10,
+    background:"linear-gradient(180deg,#fecaca,#f87171)",
+    color:"#7f1d1d", fontWeight:800, border:"1px solid #fecaca",
+    cursor:"pointer", boxShadow:"0 10px 22px rgba(239,68,68,.22)"
+  },
+
   posHeader: { margin:"16px 0 10px", padding:"2px 4px 8px", fontWeight:700, color:"#0c4a6e", borderLeft:"4px solid #7dd3fc", borderBottom:"2px solid #e2e8f0" },
   grid4: { display:"grid", gridTemplateColumns:"repeat(4, minmax(0,1fr))", gap:12 },
 
-  card: (selected)=>({
+  // Durante a selección: os elixidos visten celeste. Despois de gardar, amósanse limpos (sen celeste).
+  card: ({ selected, isSelecting }) => ({
     position:"relative",
-    border: selected ? "2px solid #38bdf8" : "1px solid #dbeafe",
+    border: (selected && isSelecting) ? "2px solid #38bdf8" : "1px solid #dbeafe",
     borderRadius:16, padding:10,
     boxShadow:"0 2px 8px rgba(0,0,0,.06)",
-    background: selected ? "linear-gradient(180deg,#e0f2fe,#bae6fd)" : "linear-gradient(180deg,#f0f9ff,#e0f2fe)",
+    background: (selected && isSelecting) ? "linear-gradient(180deg,#e0f2fe,#bae6fd)" : "linear-gradient(180deg,#f0f9ff,#e0f2fe)",
     cursor:"pointer", userSelect:"none", transition:"border-color .12s, background .12s"
   }),
   frame: {
@@ -60,20 +83,16 @@ const S = {
   name: { margin:"8px 0 0", font:"700 15px/1.2 Montserrat, system-ui, sans-serif", color:"#0f172a", textAlign:"center" },
   meta: { margin:"2px 0 0", color:"#475569", fontSize:13, textAlign:"center" },
 
-  saveBtn: {
-    width: "100%", padding: "14px 16px",
-    borderRadius: 10,
-    background:"linear-gradient(180deg,#bae6fd,#7dd3fc)",
-    color:"#0c4a6e", fontWeight:800, border:"none",
-    cursor:"pointer", boxShadow:"0 10px 22px rgba(2,132,199,.25)"
-  },
-
-  badgeConv: {
-    position:"absolute", top:12, left:12,
-    padding:"6px 10px", borderRadius:999,
-    background:"linear-gradient(180deg,#22d3ee,#06b6d4)",
-    color:"#083344", fontWeight:800, fontSize:12, letterSpacing:.3,
-    boxShadow:"0 6px 16px rgba(13,148,136,.25)"
+  // Overlay centrado e semi-transparente para “CONVOCADO”
+  overlayCenter: (show)=>({
+    position:"absolute", inset:0, display: show ? "grid" : "none",
+    placeItems:"center", background:"rgba(2,6,23,.35)"
+  }),
+  overlayPill: {
+    padding:"8px 14px", borderRadius:999,
+    backdropFilter:"blur(1px)",
+    background:"rgba(59,130,246,.85)",
+    color:"#fff", fontWeight:900, letterSpacing:.5, boxShadow:"0 8px 22px rgba(59,130,246,.35)"
   },
 
   toastInfo: {
@@ -83,9 +102,11 @@ const S = {
   }
 };
 
-const BadgeConvocado = ({ show=false }) => show ? (
-  <span style={S.badgeConv}>CONVOCADO</span>
-) : null;
+const ConvOverlay = ({ show=false }) => (
+  <div style={S.overlayCenter(show)}>
+    <span style={S.overlayPill}>CONVOCADO</span>
+  </div>
+);
 
 export default function ConvocatoriaProximo() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -99,7 +120,8 @@ export default function ConvocatoriaProximo() {
   // Cabeceira (desde Vindeiros ou fallback a next_match)
   const [header, setHeader] = useState(null); // {equipo1,equipo2,match_iso}
 
-  // Tras gardar → nesta páxina só se amosan os convocados
+  // Modo: antes de gardar -> selección (amosar todos + overlays nos elixidos)
+  // Despois de gardar -> só convocados, “limpos”.
   const [showOnlyConvocados, setShowOnlyConvocados] = useState(false);
 
   useEffect(() => () => clearTimeout(toastRef.current), []);
@@ -141,12 +163,12 @@ export default function ConvocatoriaProximo() {
         else setHeader(null);
       }
 
-      // Precarga dos xa publicados como seleccionados (convocados)
+      // Precarga dos convocados xa publicados
       const { data: pub } = await supabase.from("convocatoria_publica").select("jugador_id");
       const convSet = new Set((pub || []).map(r => r.jugador_id));
       setSelected(convSet);
 
-      // Ao entrar nun novo partido, volvemos amosar todo
+      // Ao entrar → modo selección (amosar todo e overlays cando se elixen)
       setShowOnlyConvocados(false);
     })().catch(e => console.error("[ConvocatoriaProximo] init", e));
   }, []);
@@ -160,7 +182,6 @@ export default function ConvocatoriaProximo() {
     return g;
   }, [players]);
 
-  // Lista de IDs visibles (depende de showOnlyConvocados)
   const visibleIdSet = useMemo(() => {
     if (!showOnlyConvocados) return null; // amosar todos
     return selected;
@@ -181,7 +202,7 @@ export default function ConvocatoriaProximo() {
     if (!isAdmin) return;
     setSaving(true);
     try {
-      // Persistir: borra e inserta lista de convocados actual
+      // Persistir convocatoria actual
       await supabase.from("convocatoria_publica").delete().neq("jugador_id", "00000000-0000-0000-0000-000000000000");
 
       const arr = Array.from(selected);
@@ -191,14 +212,35 @@ export default function ConvocatoriaProximo() {
         if (error) throw error;
       }
 
-      // Feedback e estado UI:
-      setShowOnlyConvocados(true); // agora nesta páxina só se ven os convocados
+      // UI: despois de gardar → só convocados e limpos (sen overlay nin celeste)
+      setShowOnlyConvocados(true);
       setToast("Convocatoria gardada");
       clearTimeout(toastRef.current);
-      toastRef.current = setTimeout(() => setToast(""), 1800);
+      toastRef.current = setTimeout(() => setToast(""), 1500);
     } catch (e) {
       console.error(e);
       setToast("Erro ao gardar a convocatoria");
+      clearTimeout(toastRef.current);
+      toastRef.current = setTimeout(() => setToast(""), 2200);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function restoreAll() {
+    if (!isAdmin) return;
+    setSaving(true);
+    try {
+      // Borrar a convocatoria gardada e volver ao modo selección con todo o plantel
+      await supabase.from("convocatoria_publica").delete().neq("jugador_id", "00000000-0000-0000-0000-000000000000");
+      setSelected(new Set());
+      setShowOnlyConvocados(false);
+      setToast("Convocatoria restabelecida");
+      clearTimeout(toastRef.current);
+      toastRef.current = setTimeout(() => setToast(""), 1500);
+    } catch (e) {
+      console.error(e);
+      setToast("Erro ao restabelecer");
       clearTimeout(toastRef.current);
       toastRef.current = setTimeout(() => setToast(""), 2200);
     } finally {
@@ -218,14 +260,23 @@ export default function ConvocatoriaProximo() {
           <p style={{...S.resumeLine, opacity:.9}}>{sFecha} | {sHora}</p>
 
           {isAdmin && (
-            <div style={{ marginTop: 10 }}>
+            <div style={S.topActions}>
               <button
-                style={S.saveBtn}
+                style={S.btnSave}
                 onClick={saveAndPublish}
                 disabled={saving}
                 aria-label="Gardar convocatoria"
               >
                 {saving ? "Gardando…" : "GARDAR CONVOCATORIA"}
+              </button>
+              <button
+                style={S.btnReset}
+                onClick={restoreAll}
+                disabled={saving}
+                aria-label="Restabelecer convocatoria"
+                title="Borrar a lista gardada e volver amosar todo o plantel"
+              >
+                RESTABLECER
               </button>
             </div>
           )}
@@ -238,6 +289,8 @@ export default function ConvocatoriaProximo() {
         if (!arr.length) return null;
 
         const label = k === "POR" ? "Porteiros" : k === "DEF" ? "Defensas" : k === "CEN" ? "Medios" : "Dianteiros";
+        const isSelecting = !showOnlyConvocados;
+
         return (
           <section key={k}>
             <div style={S.posHeader}>{label}</div>
@@ -248,8 +301,8 @@ export default function ConvocatoriaProximo() {
                 return (
                   <article
                     key={p.id}
-                    style={S.card(isSel)}
-                    onClick={() => toggleSelect(p.id)}
+                    style={S.card({ selected: isSel, isSelecting })}
+                    onClick={() => isSelecting && toggleSelect(p.id)}
                     title={isSel ? "Convocado" : "Preme para convocar"}
                   >
                     <div style={S.frame}>
@@ -261,7 +314,8 @@ export default function ConvocatoriaProximo() {
                             style={{ width:"100%", height:"100%", objectFit:"contain", background:"#0b1e2a" }}
                             loading="lazy" decoding="async" crossOrigin="anonymous" referrerPolicy="no-referrer"
                           />
-                          <BadgeConvocado show={isSel}/>
+                          {/* Overlay centrado só durante a selección */}
+                          <ConvOverlay show={isSelecting && isSel}/>
                         </>
                       ) : (
                         <div style={{ color:"#cbd5e1" }}>Sen foto</div>
