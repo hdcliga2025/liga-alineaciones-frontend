@@ -1,3 +1,4 @@
+// src/pages/HazTu11.jsx
 import { h } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
@@ -36,7 +37,7 @@ const S = {
   posHeader: { margin:"16px 0 10px", padding:"2px 4px 8px", fontWeight:700, color:"#0c4a6e", borderLeft:"4px solid #7dd3fc", borderBottom:"2px solid #e2e8f0" },
   grid4: { display:"grid", gridTemplateColumns:"repeat(4, minmax(0,1fr))", gap:12 },
   card: { display:"grid", gridTemplateRows: `${IMG_H}px auto`,
-    background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)", // celeste degradado
+    background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)",
     border:"1px solid #dbeafe", borderRadius:16, padding:10, boxShadow:"0 2px 8px rgba(0,0,0,.06)",
     alignItems:"center", textAlign:"center"
   },
@@ -83,18 +84,18 @@ export default function HazTu11() {
   const [jugadores, setJugadores] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Cabecera espejo desde Vindeiros/next_match (igual que Convocatoria)
+  // Cabecera espello (Vindeiros → fallback Next Match)
   const [header, setHeader] = useState(null);
 
   useEffect(() => {
     (async () => {
-      // Trae la convocatoria publicada y la junta con los datos del jugador
+      // Convocatoria publicada → ids
       const { data: pub } = await supabase
         .from("convocatoria_publica")
         .select("jugador_id");
       const ids = (pub || []).map(r => r.jugador_id);
 
-      // Header (mismo criterio que Convocatoria)
+      // Header (igual que Convocatoria)
       const { data: top } = await supabase
         .from("matches_vindeiros")
         .select("equipo1,equipo2,match_iso")
@@ -113,15 +114,17 @@ export default function HazTu11() {
 
       if (!ids.length) { setJugadores([]); setLoading(false); return; }
 
+      // Datos dos xogadores convocados
       const { data: js } = await supabase
         .from("jugadores")
         .select("id, nombre, dorsal, foto_url")
         .in("id", ids)
         .order("dorsal", { ascending: true });
 
-      // Garantizamos el orden de publicación por dorsal
+      // Mantemos a orde da convocatoria
       const byId = new Map((js||[]).map(j => [j.id, j]));
       const ordered = ids.map(id => byId.get(id)).filter(Boolean);
+
       setJugadores(ordered);
       setLoading(false);
     })().catch(e => { console.error(e); setLoading(false); });
@@ -154,7 +157,7 @@ export default function HazTu11() {
       <h1 style={S.h1}>Fai aquí a túa aliñación</h1>
       <p style={S.sub}>Aquí é onde demostras o Giráldez que levas dentro.</p>
 
-      {/* Cuadro de campos (idéntico a Convocatoria) */}
+      {/* Cadro de campos (idéntico a Convocatoria) */}
       {header && (
         <div style={S.resumen}>
           <p style={S.resumeLine}>{cap(header.equipo1)} vs {cap(header.equipo2)}</p>
@@ -165,7 +168,7 @@ export default function HazTu11() {
       {["POR","DEF","CEN","DEL"].map(k => {
         const arr = grouped[k] || [];
         if (!arr.length) return null;
-        const label = k === "POR" ? "Porteiros" : k === "DEF" ? "Defensas" : k === "CEN" ? "Medios" : "Dianteiros";
+        const label = k === "POR" ? "Porteiros" : k === "DEF" ? "Defensas" : k === "CEN" ? "Medios" : k === "DEL" ? "Dianteiros" : "Dianteiros";
         return (
           <section key={k}>
             <div style={S.posHeader}>{label}</div>
