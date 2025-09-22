@@ -1,4 +1,3 @@
-// src/pages/ConvocatoriaProximo.jsx
 import { h } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
@@ -49,7 +48,8 @@ const S = {
   card: (out)=>({
     position:"relative",
     border: out ? "2px solid rgba(220,38,38,.8)" : "1px solid #dbeafe",
-    borderRadius:16, padding:10, boxShadow:"0 2px 8px rgba(0,0,0,.06)",
+    borderRadius:16, padding:10,
+    boxShadow:"0 2px 8px rgba(0,0,0,.06)",
     background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)",
     cursor:"pointer", userSelect:"none"
   }),
@@ -100,6 +100,7 @@ const NumOverlay = ({ dorsal }) => {
   );
 };
 
+/* ===== Página ===== */
 export default function ConvocatoriaProximo() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [players, setPlayers] = useState([]);
@@ -132,7 +133,6 @@ export default function ConvocatoriaProximo() {
         .from("matches_vindeiros")
         .select("equipo1,equipo2,match_iso")
         .order("match_iso", { ascending: true }).limit(1).maybeSingle();
-
       if (top?.match_iso) {
         setHeader({ equipo1: cap(top.equipo1||""), equipo2: cap(top.equipo2||""), match_iso: top.match_iso });
       } else {
@@ -141,7 +141,6 @@ export default function ConvocatoriaProximo() {
           .select("equipo1,equipo2,match_iso")
           .eq("id",1).maybeSingle();
         if (nm?.match_iso) setHeader({ equipo1: cap(nm.equipo1||""), equipo2: cap(nm.equipo2||""), match_iso: nm.match_iso });
-        else setHeader(null);
       }
 
       const { data: pub } = await supabase
@@ -214,7 +213,7 @@ export default function ConvocatoriaProximo() {
           <p style={{...S.resumeLine, opacity:.9}}>{sFecha} | {sHora}</p>
           {isAdmin && (
             <div style={{ marginTop: 10 }}>
-              <button style={S.saveInline} onClick={saveAndPublish} disabled={saving} aria-label="Gardar convocatoria">
+              <button style={S.saveInline} onClick={saveAndPublish} disabled={saving}>
                 {saving ? "Gardando…" : "GARDAR CONVOCATORIA"}
               </button>
             </div>
@@ -227,7 +226,7 @@ export default function ConvocatoriaProximo() {
         <p style={{ margin:0 }}>Engade o seguinte encontro en Vindeiros para amosar a cabeceira.</p>
       )}
 
-      {(["POR","DEF","CEN","DEL"]).map((k) => {
+      {["POR","DEF","CEN","DEL"].map((k) => {
         const arr = (grouped[k] || []);
         if (!arr.length) return null;
         const label = k === "POR" ? "Porteiros" : k === "DEF" ? "Defensas" : k === "CEN" ? "Medios" : "Dianteiros";
@@ -239,11 +238,16 @@ export default function ConvocatoriaProximo() {
                 const out = discarded.has(p.id);
                 const { dorsal, nombre, pos } = p;
                 return (
-                  <article key={p.id} style={S.card(out)} onClick={()=>toggleDiscard(p.id)} title={out?"Descartado":"Clic para descartar"}>
+                  <article key={p.id} style={S.card(out)} onClick={()=>toggleDiscard(p.id)}>
                     <div style={S.frame}>
                       {p.foto_url ? (
                         <>
-                          <img src={p.foto_url} alt={`Foto de ${nombre}`} style={{ width:"100%", height:"100%", objectFit:"contain", background:"#0b1e2a" }} loading="lazy" decoding="async" crossOrigin="anonymous" referrerPolicy="no-referrer" />
+                          <img
+                            src={p.foto_url}
+                            alt={`Foto de ${nombre}`}
+                            style={{ width:"100%", height:"100%", objectFit:"contain", background:"#0b1e2a" }}
+                            loading="lazy" decoding="async" crossOrigin="anonymous" referrerPolicy="no-referrer"
+                          />
                           <NumOverlay dorsal={dorsal}/>
                           <Shade show={out}/>
                         </>
@@ -263,12 +267,22 @@ export default function ConvocatoriaProximo() {
 
       {isAdmin && (
         <div style={{ marginTop: 16 }}>
-          <button style={S.saveFull} onClick={saveAndPublish} disabled={saving} aria-label="Gardar convocatoria ao final">
+          <button style={S.saveFull} onClick={saveAndPublish} disabled={saving}>
             {saving ? "Gardando…" : "GARDAR CONVOCATORIA"}
           </button>
           {toast && toast.toUpperCase().includes("GARDADA") && (
             <div style={S.fixedNote}>CONFIGURACIÓN CONVOCATORIA GARDADA</div>
           )}
+        </div>
+      )}
+
+      {toast && !toast.toUpperCase().includes("GARDADA") && (
+        <div role="status" aria-live="polite" style={{
+          position:"fixed", bottom:18, left:"50%", transform:"translateX(-50%)",
+          background:"#0ea5e9", color:"#fff", padding:"10px 16px",
+          borderRadius:12, boxShadow:"0 10px 22px rgba(2,132,199,.35)", fontWeight:700
+        }}>
+          {toast}
         </div>
       )}
     </main>

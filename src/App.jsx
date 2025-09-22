@@ -3,9 +3,9 @@ import { h } from "preact";
 import { useState } from "preact/hooks";
 import { Router } from "preact-router";
 
+/* Infra */
 import AuthWatcher from "./components/AuthWatcher.jsx";
 import NavBar from "./components/NavBar.jsx";
-import AppErrorBoundary from "./components/AppErrorBoundary.jsx";
 
 /* Públicas */
 import LandingPage from "./pages/LandingPage.jsx";
@@ -21,7 +21,7 @@ import HazTu11 from "./pages/HazTu11.jsx";
 import Clasificacion from "./pages/Clasificacion.jsx";
 import Admin from "./pages/Admin.jsx";
 
-/* Subcards / novas páxinas */
+/* Subpáginas */
 import ProximoPartido from "./pages/ProximoPartido.jsx";
 import VindeirosPartidos from "./pages/VindeirosPartidos.jsx";
 import PartidosFinalizados from "./pages/PartidosFinalizados.jsx";
@@ -29,7 +29,9 @@ import PartidosFinalizados from "./pages/PartidosFinalizados.jsx";
 /* Convocatoria oficial como páxina propia */
 import ConvocatoriaProximo from "./pages/ConvocatoriaProximo.jsx";
 
-/* 404 */
+/* Logout forzado (si lo usas) */
+import ForceLogout from "./pages/ForceLogout.jsx";
+
 const NotFound = () => (
   <main style={{ padding: "1rem" }}>
     <h2>Páxina non atopada</h2>
@@ -53,43 +55,35 @@ export default function App() {
   return (
     <>
       <AuthWatcher />
-
       {!shouldHideNav && <NavBar currentPath={currentPath} />}
 
-      <AppErrorBoundary>
-        <Router onChange={(e) => setCurrentPath(e.url)}>
-          {/* Públicas */}
-          <LandingPage path="/" />
-          <Login path="/login" />
-          <Register path="/register" />
+      <Router onChange={(e) => setCurrentPath(e.url)}>
+        {/* Públicas */}
+        <LandingPage path="/" />
+        <Login path="/login" />
+        <Register path="/register" />
+        <ForceLogout path="/logout" />
 
-          {/* Logout forzado (pública para poder salir desde calquera sitio) */}
-          <ForceLogout path="/logout" />
+        {/* Privadas */}
+        <Dashboard path="/dashboard" />
+        <Notificacions path="/notificacions" />
+        <Perfil path="/perfil" />
+        <Partidos path="/partidos" />
+        <HazTu11 path="/haz-tu-11" />
+        <Clasificacion path="/clasificacion" />
+        <Admin path="/admin" />
 
-          {/* Privadas */}
-          <Dashboard path="/dashboard" />
-          <Notificacions path="/notificacions" />
-          <Perfil path="/perfil" />
-          <Partidos path="/partidos" />
-          <HazTu11 path="/haz-tu-11" />
-          <Clasificacion path="/clasificacion" />
-          <Admin path="/admin" />
+        {/* Subpáginas */}
+        <ProximoPartido path="/proximo-partido" />
+        <VindeirosPartidos path="/vindeiros-partidos" />
+        <PartidosFinalizados path="/partidos-finalizados" />
 
-          {/* Subcards */}
-          <ProximoPartido path="/proximo-partido" />
-          <VindeirosPartidos path="/vindeiros-partidos" />
-          <PartidosFinalizados path="/partidos-finalizados" />
+        {/* Convocatoria oficial (ruta propia) */}
+        <ConvocatoriaProximo path="/convocatoria-oficial" />
 
-          {/* ✅ Convocatoria oficial en ruta propia */}
-          <ConvocatoriaProximo path="/convocatoria-oficial" />
-
-          {/* 404 */}
-          <NotFound default />
-        </Router>
-      </AppErrorBoundary>
+        {/* 404 */}
+        <NotFound default />
+      </Router>
     </>
   );
 }
-
-// Nota: importa ForceLogout despois de definilo enriba se non o tes xa:
-import ForceLogout from "./pages/ForceLogout.jsx";

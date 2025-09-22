@@ -1,4 +1,3 @@
-// src/pages/HazTu11.jsx
 import { h } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
@@ -84,18 +83,18 @@ export default function HazTu11() {
   const [jugadores, setJugadores] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Cabecera espello (Vindeiros → fallback Next Match)
+  // Cabecera espejo desde Vindeiros/next_match (igual que Convocatoria)
   const [header, setHeader] = useState(null);
 
   useEffect(() => {
     (async () => {
-      // Convocatoria publicada → ids
+      // Trae la convocatoria publicada y la junta con los datos del jugador
       const { data: pub } = await supabase
         .from("convocatoria_publica")
         .select("jugador_id");
       const ids = (pub || []).map(r => r.jugador_id);
 
-      // Header (igual que Convocatoria)
+      // Header (mismo criterio que Convocatoria)
       const { data: top } = await supabase
         .from("matches_vindeiros")
         .select("equipo1,equipo2,match_iso")
@@ -114,17 +113,15 @@ export default function HazTu11() {
 
       if (!ids.length) { setJugadores([]); setLoading(false); return; }
 
-      // Datos dos xogadores convocados
       const { data: js } = await supabase
         .from("jugadores")
         .select("id, nombre, dorsal, foto_url")
         .in("id", ids)
         .order("dorsal", { ascending: true });
 
-      // Mantemos a orde da convocatoria
+      // Garantizamos el orden de publicación por dorsal
       const byId = new Map((js||[]).map(j => [j.id, j]));
       const ordered = ids.map(id => byId.get(id)).filter(Boolean);
-
       setJugadores(ordered);
       setLoading(false);
     })().catch(e => { console.error(e); setLoading(false); });
@@ -157,7 +154,7 @@ export default function HazTu11() {
       <h1 style={S.h1}>Fai aquí a túa aliñación</h1>
       <p style={S.sub}>Aquí é onde demostras o Giráldez que levas dentro.</p>
 
-      {/* Cadro de campos (idéntico a Convocatoria) */}
+      {/* Cuadro de campos (idéntico a Convocatoria) */}
       {header && (
         <div style={S.resumen}>
           <p style={S.resumeLine}>{cap(header.equipo1)} vs {cap(header.equipo2)}</p>
