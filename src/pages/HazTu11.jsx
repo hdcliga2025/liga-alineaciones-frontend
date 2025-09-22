@@ -83,18 +83,16 @@ export default function HazTu11() {
   const [jugadores, setJugadores] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Cabecera espejo desde Vindeiros/next_match (igual que Convocatoria)
+  // Cabeceira (coma Convocatoria)
   const [header, setHeader] = useState(null);
 
   useEffect(() => {
     (async () => {
-      // Trae la convocatoria publicada y la junta con los datos del jugador
-      const { data: pub } = await supabase
-        .from("convocatoria_publica")
-        .select("jugador_id");
+      // Convocados publicados
+      const { data: pub } = await supabase.from("convocatoria_publica").select("jugador_id");
       const ids = (pub || []).map(r => r.jugador_id);
 
-      // Header (mismo criterio que Convocatoria)
+      // Cabeceira
       const { data: top } = await supabase
         .from("matches_vindeiros")
         .select("equipo1,equipo2,match_iso")
@@ -113,13 +111,14 @@ export default function HazTu11() {
 
       if (!ids.length) { setJugadores([]); setLoading(false); return; }
 
+      // Traer só os convocados
       const { data: js } = await supabase
         .from("jugadores")
         .select("id, nombre, dorsal, foto_url")
         .in("id", ids)
         .order("dorsal", { ascending: true });
 
-      // Garantizamos el orden de publicación por dorsal
+      // Manter a orde segundo publicación
       const byId = new Map((js||[]).map(j => [j.id, j]));
       const ordered = ids.map(id => byId.get(id)).filter(Boolean);
       setJugadores(ordered);
@@ -154,7 +153,6 @@ export default function HazTu11() {
       <h1 style={S.h1}>Fai aquí a túa aliñación</h1>
       <p style={S.sub}>Aquí é onde demostras o Giráldez que levas dentro.</p>
 
-      {/* Cuadro de campos (idéntico a Convocatoria) */}
       {header && (
         <div style={S.resumen}>
           <p style={S.resumeLine}>{cap(header.equipo1)} vs {cap(header.equipo2)}</p>
@@ -165,7 +163,7 @@ export default function HazTu11() {
       {["POR","DEF","CEN","DEL"].map(k => {
         const arr = grouped[k] || [];
         if (!arr.length) return null;
-        const label = k === "POR" ? "Porteiros" : k === "DEF" ? "Defensas" : k === "CEN" ? "Medios" : k === "DEL" ? "Dianteiros" : "Dianteiros";
+        const label = k === "POR" ? "Porteiros" : k === "DEF" ? "Defensas" : k === "CEN" ? "Medios" : "Dianteiros";
         return (
           <section key={k}>
             <div style={S.posHeader}>{label}</div>
