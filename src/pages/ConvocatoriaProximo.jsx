@@ -1,3 +1,4 @@
+// src/pages/ConvocatoriaProximo.jsx
 import { h } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
@@ -36,7 +37,7 @@ const OVERLAY_NUMS = new Set([29,32,39]);
 const S = {
   wrap: { maxWidth: 1080, margin: "0 auto", padding: 16 },
   h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
-  sub: { margin: "0 0 16px", color: "#475569", fontSize: 16 }, // un poco mayor
+  sub: { margin: "0 0 16px", color: "#475569", fontSize: 16 },
   resumen: {
     margin:"0 0 14px", padding:"12px 14px", borderRadius:12,
     border:"1px solid #dbeafe",
@@ -48,9 +49,8 @@ const S = {
   card: (out)=>({
     position:"relative",
     border: out ? "2px solid rgba(220,38,38,.8)" : "1px solid #dbeafe",
-    borderRadius:16, padding:10,
-    boxShadow:"0 2px 8px rgba(0,0,0,.06)",
-    background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)", // celeste degradado
+    borderRadius:16, padding:10, boxShadow:"0 2px 8px rgba(0,0,0,.06)",
+    background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)",
     cursor:"pointer", userSelect:"none"
   }),
   frame: { width:"100%", height:320, borderRadius:12, overflow:"hidden", background:"#0b1e2a", display:"grid", placeItems:"center", border:"1px solid #e5e7eb", position:"relative" },
@@ -58,24 +58,19 @@ const S = {
   meta: { margin:"2px 0 0", color:"#475569", fontSize:13, textAlign:"center" },
   saveFull: {
     width: "100%", padding: "14px 16px",
-    borderRadius: 10, // más cuadrado
+    borderRadius: 10,
     background:"linear-gradient(180deg,#bae6fd,#7dd3fc)",
     color:"#0c4a6e", fontWeight:800, border:"none",
     cursor:"pointer", boxShadow:"0 10px 22px rgba(2,132,199,.25)"
   },
   saveInline: {
     width: "100%", padding: "14px 16px",
-    borderRadius: 10, // más cuadrado
+    borderRadius: 10,
     background:"linear-gradient(180deg,#bae6fd,#7dd3fc)",
     color:"#0c4a6e", fontWeight:800, border:"none",
     cursor:"pointer", boxShadow:"0 10px 22px rgba(2,132,199,.25)"
   },
-  fixedNote: {
-    marginTop: 10,
-    fontSize: 15,
-    color: "#b91c1c", // rojo
-    fontWeight: 600
-  }
+  fixedNote: { marginTop: 10, fontSize: 15, color: "#b91c1c", fontWeight: 600 }
 };
 
 const Shade = ({ show=false }) => show ? (
@@ -105,22 +100,17 @@ const NumOverlay = ({ dorsal }) => {
   );
 };
 
-/* ===== Página ===== */
 export default function ConvocatoriaProximo() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [players, setPlayers] = useState([]);
-  const [convIds, setConvIds] = useState([]);          // info ya publicada (si la hubiera)
+  const [convIds, setConvIds] = useState([]);
   const [discarded, setDiscarded] = useState(new Set());
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
+  const [header, setHeader] = useState(null);
 
-  // Cabecera desde Vindeiros (prioridad) o next_match (fallback)
-  const [header, setHeader] = useState(null); // {equipo1,equipo2,match_iso}
-
-  // ===== Carga inicial
   useEffect(() => {
     (async () => {
-      // admin?
       const { data: sess } = await supabase.auth.getSession();
       const uid = sess?.session?.user?.id || null;
       let admin = false;
@@ -132,14 +122,12 @@ export default function ConvocatoriaProximo() {
       }
       setIsAdmin(admin);
 
-      // plantilla completa
       const { data: js } = await supabase
         .from("jugadores")
         .select("id, nombre, dorsal, foto_url")
         .order("dorsal", { ascending: true });
       setPlayers(js || []);
 
-      // cabecera: vindeiros #1
       const { data: top } = await supabase
         .from("matches_vindeiros")
         .select("equipo1,equipo2,match_iso")
@@ -156,14 +144,13 @@ export default function ConvocatoriaProximo() {
         else setHeader(null);
       }
 
-      // si hubiera una convocatoria publicada, precargo por comodidad
       const { data: pub } = await supabase
         .from("convocatoria_publica")
         .select("jugador_id");
       const published = new Set((pub||[]).map(r=>r.jugador_id));
       if (admin && js?.length) {
         const allIds = new Set(js.map(p=>p.id));
-        const disc = new Set([...allIds].filter(id => !published.has(id))); // activos por defecto; descarto los no publicados
+        const disc = new Set([...allIds].filter(id => !published.has(id)));
         setDiscarded(disc);
         setConvIds([...published]);
       }
@@ -199,7 +186,6 @@ export default function ConvocatoriaProximo() {
     try {
       const allIds = players.map(p => p.id);
       const convocados = allIds.filter(id => !discarded.has(id));
-      // publicar como singleton
       await supabase.from("convocatoria_publica").delete().neq("jugador_id", "00000000-0000-0000-0000-000000000000");
       if (convocados.length) {
         const rows = convocados.map(jid => ({ jugador_id: jid, updated_at: new Date().toISOString() }));
@@ -207,7 +193,6 @@ export default function ConvocatoriaProximo() {
         if (error) throw error;
       }
       setConvIds(convocados);
-      // Mensaje fijo (sin forzar navegación)
       setToast("CONFIGURACIÓN CONVOCATORIA GARDADA");
     } catch(e) {
       console.error(e);
@@ -223,25 +208,17 @@ export default function ConvocatoriaProximo() {
       <h1 style={S.h1}>Convocatoria oficial</h1>
       <p style={S.sub}>Lista de xogadores que poderían estar na aliñación para o seguinte partido.</p>
 
-      {/* Cabecera resumida (100% ancho) */}
       {header ? (
         <div style={S.resumen}>
           <p style={S.resumeLine}>{cap(header.equipo1)} vs {cap(header.equipo2)}</p>
           <p style={{...S.resumeLine, opacity:.9}}>{sFecha} | {sHora}</p>
-          {/* Botón superior (full-width, cuadrado) */}
           {isAdmin && (
             <div style={{ marginTop: 10 }}>
-              <button
-                style={S.saveInline}
-                onClick={saveAndPublish}
-                disabled={saving}
-                aria-label="Gardar convocatoria"
-              >
+              <button style={S.saveInline} onClick={saveAndPublish} disabled={saving} aria-label="Gardar convocatoria">
                 {saving ? "Gardando…" : "GARDAR CONVOCATORIA"}
               </button>
             </div>
           )}
-          {/* Mensaje fijo en rojo (si ya se guardó) */}
           {toast && toast.toUpperCase().includes("GARDADA") && (
             <div style={S.fixedNote}>{toast}</div>
           )}
@@ -266,12 +243,7 @@ export default function ConvocatoriaProximo() {
                     <div style={S.frame}>
                       {p.foto_url ? (
                         <>
-                          <img
-                            src={p.foto_url}
-                            alt={`Foto de ${nombre}`}
-                            style={{ width:"100%", height:"100%", objectFit:"contain", background:"#0b1e2a" }}
-                            loading="lazy" decoding="async" crossOrigin="anonymous" referrerPolicy="no-referrer"
-                          />
+                          <img src={p.foto_url} alt={`Foto de ${nombre}`} style={{ width:"100%", height:"100%", objectFit:"contain", background:"#0b1e2a" }} loading="lazy" decoding="async" crossOrigin="anonymous" referrerPolicy="no-referrer" />
                           <NumOverlay dorsal={dorsal}/>
                           <Shade show={out}/>
                         </>
@@ -291,29 +263,12 @@ export default function ConvocatoriaProximo() {
 
       {isAdmin && (
         <div style={{ marginTop: 16 }}>
-          <button
-            style={S.saveFull}
-            onClick={saveAndPublish}
-            disabled={saving}
-            aria-label="Gardar convocatoria ao final"
-          >
+          <button style={S.saveFull} onClick={saveAndPublish} disabled={saving} aria-label="Gardar convocatoria ao final">
             {saving ? "Gardando…" : "GARDAR CONVOCATORIA"}
           </button>
-          {/* Mensaje fijo réplica bajo botón inferior si se guardó */}
           {toast && toast.toUpperCase().includes("GARDADA") && (
             <div style={S.fixedNote}>CONFIGURACIÓN CONVOCATORIA GARDADA</div>
           )}
-        </div>
-      )}
-
-      {/* Toast azul solo para avisos/erros non “gardada” */}
-      {toast && !toast.toUpperCase().includes("GARDADA") && (
-        <div role="status" aria-live="polite" style={{
-          position:"fixed", bottom:18, left:"50%", transform:"translateX(-50%)",
-          background:"#0ea5e9", color:"#fff", padding:"10px 16px",
-          borderRadius:12, boxShadow:"0 10px 22px rgba(2,132,199,.35)", fontWeight:700
-        }}>
-          {toast}
         </div>
       )}
     </main>
