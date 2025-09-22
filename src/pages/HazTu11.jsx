@@ -82,22 +82,25 @@ function ImgWithOverlay({ src, alt, dorsal }) {
 export default function HazTu11() {
   const [jugadores, setJugadores] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hasConvocatoria, setHasConvocatoria] = useState(null); // null=descoñecido, true/false
 
-  // Cabeceira
+  // Cabecera (igual que Convocatoria)
   const [header, setHeader] = useState(null);
 
   useEffect(() => {
     (async () => {
-      // Convocados publicados
-      const { data: pub } = await supabase.from("convocatoria_publica").select("jugador_id");
+      // Verifica convocatoria publicada
+      const { data: pub } = await supabase
+        .from("convocatoria_publica")
+        .select("jugador_id");
       const ids = (pub || []).map(r => r.jugador_id);
+      setHasConvocatoria(ids.length > 0);
 
-      // Cabeceira
+      // Header (mismo criterio que Convocatoria)
       const { data: top } = await supabase
         .from("matches_vindeiros")
         .select("equipo1,equipo2,match_iso")
         .order("match_iso", { ascending: true }).limit(1).maybeSingle();
-
       if (top?.match_iso) {
         setHeader({ equipo1: cap(top.equipo1||""), equipo2: cap(top.equipo2||""), match_iso: top.match_iso });
       } else {
@@ -106,18 +109,17 @@ export default function HazTu11() {
           .select("equipo1,equipo2,match_iso")
           .eq("id",1).maybeSingle();
         if (nm?.match_iso) setHeader({ equipo1: cap(nm.equipo1||""), equipo2: cap(nm.equipo2||""), match_iso: nm.match_iso });
-        else setHeader(null);
       }
 
       if (!ids.length) { setJugadores([]); setLoading(false); return; }
 
-      // Traer só os convocados
       const { data: js } = await supabase
         .from("jugadores")
         .select("id, nombre, dorsal, foto_url")
         .in("id", ids)
         .order("dorsal", { ascending: true });
 
+      // Garantizamos o orden por publicación/dorsal
       const byId = new Map((js||[]).map(j => [j.id, j]));
       const ordered = ids.map(id => byId.get(id)).filter(Boolean);
       setJugadores(ordered);
@@ -146,6 +148,16 @@ export default function HazTu11() {
   })();
 
   if (loading) return <main style={S.wrap}>Cargando…</main>;
+
+  // Bloqueo: só se pode continuar se hai convocatoria gardada
+  if (hasConvocatoria === false) {
+    return (
+      <main style={S.wrap}>
+        <h1 style={S.h1}>Fai aquí a túa aliñación</h1>
+        <p style={S.sub}>Agarda a que se publique a convocatoria oficial para poder facer a túa aliñación.</p>
+      </main>
+    );
+  }
 
   return (
     <main style={S.wrap}>
