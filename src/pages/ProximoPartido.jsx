@@ -65,24 +65,24 @@ const METEO_BANNER = (isMobile) => ({
 });
 const METEO_BAR = (isMobile) => ({
   display: "flex",
-  gap: isMobile ? 20 : 28,
+  gap: isMobile ? 18 : 26,
   flexWrap: "wrap",
   alignItems: "center",
   justifyContent: "center",
   maxWidth: 1000,
   margin: "0 auto",
   color: "#0f172a",
-  fontSize: isMobile ? 20 : 22, // móvil -10% ya aplicado
+  fontSize: isMobile ? 18 : 22, // iconos un poco más pequeños en móvil
   fontWeight: 700,
 });
 
-/* Leyenda bajo el banner */
+/* Leyenda bajo el banner (Gallego, sin bold salvo lugar) */
 const METEO_LEGEND_OUT = {
   textAlign: "center",
   margin: "6px 0 10px",
   fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
-  fontSize: 15, // +15% respecto a ~13px
-  fontWeight: 700,
+  fontSize: 15,
+  fontWeight: 400,
   color: "#0369a1",
   letterSpacing: ".2px",
 };
@@ -296,9 +296,9 @@ export default function ProximoPartido() {
           {meteoContent}
         </div>
       </div>
-      {/* Leyenda fuera, justo debajo */}
+      {/* Leyenda fuera, justo debajo (gl) */}
       <div style={METEO_LEGEND_OUT}>
-        PREVISIÓN METEREOLOGICA A LA HORA DE PARTIDO | {lugar}
+        Meteo en <strong>{lugar}</strong> á hora do partido
       </div>
 
       {/* Contido principal */}
@@ -310,7 +310,16 @@ export default function ProximoPartido() {
               alt="Escudo RC Celta"
               decoding="async"
               loading="eager"
-              style={{ position: "absolute", top: 2, right: 10, width: ESCUDO_W, height: "auto", opacity: 0.96, pointerEvents: "none", zIndex: 0 }}
+              style={{
+                position: "absolute",
+                top: -4,            // ⬅️ Subimos un poco para “casi tocar” el cuadro
+                right: 10,
+                width: ESCUDO_W,
+                height: "auto",
+                opacity: 0.96,
+                pointerEvents: "none",
+                zIndex: 0,
+              }}
             />
           )}
 

@@ -10,19 +10,16 @@ const PAGE_HEAD = { margin: "0 0 6px", font: "700 22px/1.2 Montserrat,system-ui,
 const PAGE_SUB_ROW = { display:"grid", gridTemplateColumns:"1fr auto", alignItems:"center", gap:10, marginBottom:12 };
 const PAGE_SUB  = { margin: 0, font: "400 16px/1.3 Montserrat,system-ui,sans-serif", color: "#475569" };
 
-const PLUS_BTN_RED = (isMobile) => ({
+/* Botón “+” rojo — unificado (centrado y trazo grueso) */
+const PLUS_BTN_RED = {
   display:"inline-grid", placeItems:"center",
   width: 36, height: 36, borderRadius: 10,
   background: "linear-gradient(180deg,#f87171,#ef4444)",
   border: "1px solid #ef4444",
   boxShadow: "0 6px 18px rgba(239,68,68,.28)",
   cursor: "pointer"
-});
-const PLUS_SVG_RED = (isMobile) => ({
-  fill:"none", stroke:"#ffffff",
-  strokeWidth: isMobile ? 2.2 : 1.6,
-  strokeLinecap:"round", strokeLinejoin:"round"
-});
+};
+const PLUS_SVG = { fill:"none", stroke:"#ffffff", strokeWidth:2.2, strokeLinecap:"round", strokeLinejoin:"round" };
 
 const CARD_BASE = { position:"relative", borderRadius: 14, padding: 12, boxShadow: "0 6px 18px rgba(0,0,0,.05)", marginBottom: 10 };
 const CARD = { ...CARD_BASE, border: "1px solid #ef4444", background: "linear-gradient(180deg,#fff5f5,#fff0f0)" };
@@ -31,18 +28,19 @@ const ROW = (isMobile) => ({ display: "grid", gridTemplateColumns: isMobile ? "1
 const CARD_CONTENT = { paddingLeft: 48 };
 
 const RED = "#b91c1c";
-/* Texto equipos: +5% tamaño, “vs” en minúsculas */
+/* Texto equipos — móvil -15%, separador '-' en móvil; 'vs' minúsculas en desktop */
 const TEAMS_LINE = (isMobile) => ({
-  font: `600 ${isMobile ? 17 : 18}px/1.12 Montserrat,system-ui,sans-serif`,
+  font: `600 ${isMobile ? 13.6 : 18}px/1.12 Montserrat,system-ui,sans-serif`,
   color: RED, textTransform: "uppercase"
 });
-const LINE = { font: "400 14px/1.12 Montserrat,system-ui,sans-serif", color: RED, marginTop: 2 };
+const LINE = (isMobile) => ({ font: `400 ${isMobile ? 15.4 : 14}px/1.12 Montserrat,system-ui,sans-serif`, color: RED, marginTop: 2 });
+const LINE_LABEL = (isMobile) => ({ fontWeight: isMobile ? 600 : 500, marginRight: 4 });
 
 const BADGE = { position:"absolute", top:8, left:8, font:"700 12px/1 Montserrat,system-ui,sans-serif", background:"#ef4444", color:"#fff", padding:"4px 7px", borderRadius:999 };
 
+/* Iconos: mismo layout que Vindeiros (móvil columna bajo número; desktop a la derecha) */
 const ACTIONS = { display: "flex", gap: 8, alignItems: "center" };
-const ACTIONS_MOBILE_COLUMN = { position:"absolute", left:8, top:36, display:"grid", gap:6 };
-
+const ACTIONS_MOBILE_COLUMN = { position:"absolute", left:8, top:36, display:"grid", gap:5 };
 const ICONBTN = { width: 34, height: 34, display: "grid", placeItems: "center", borderRadius: 10, border: "1px solid #e2e8f0", background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,.06)", cursor: "pointer" };
 const SVGI = { fill: "none", stroke: "#0f172a", strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round" };
 const SVG_RED = { ...SVGI, stroke: "#dc2626" };
@@ -58,8 +56,6 @@ const GRID3 = { display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 10, a
 
 const SAVE_ICON_BTN = { width: 42, height: 42, display:"grid", placeItems:"center", borderRadius: 10, border: "1px solid #ef4444", background: "linear-gradient(180deg,#f87171,#ef4444)", boxShadow: "0 6px 18px rgba(239,68,68,.30)", cursor: "pointer" };
 const SAVE_SVG = { fill:"none", stroke:"#fff", strokeWidth:2, strokeLinecap:"round", strokeLinejoin:"round" };
-
-const TOAST = { margin: "8px 0 12px", padding: "10px 12px", borderRadius: 10, background: "#ecfeff", border: "1px solid #67e8f9", color: "#0e7490", font: "600 13px/1.2 Montserrat,system-ui,sans-serif" };
 
 /* ===== Utils ===== */
 const pad2 = (n) => String(n).padStart(2, "0");
@@ -171,14 +167,14 @@ export default function PartidosFinalizados() {
       <div style={PAGE_SUB_ROW}>
         <p style={PAGE_SUB}>Encontros xa disputados polo Celta.</p>
         {isAdmin && (
-          <button type="button" style={PLUS_BTN_RED(isMobile)} onClick={()=> setCreateOpen(v=>!v)} title="Crear novo partido finalizado" aria-label="Crear novo partido finalizado">
-            <svg width="26" height="26" viewBox="0 0 24 24" style={PLUS_SVG_RED(isMobile)}><path d="M12 5v14M5 12h14" /></svg>
+          <button type="button" style={PLUS_BTN_RED} onClick={()=> setCreateOpen(v=>!v)} title="Crear novo partido finalizado" aria-label="Crear novo partido finalizado">
+            <svg width="26" height="26" viewBox="0 0 24 24" style={PLUS_SVG}><path d="M12 5v14M5 12h14" /></svg>
           </button>
         )}
       </div>
 
-      {toast && <div style={TOAST}>{toast}</div>}
-      {err && <div style={{ ...TOAST, background:"#fee2e2", border:"1px solid #fecaca", color:"#b91c1c" }}>{err}</div>}
+      {toast && <div style={{ margin: "8px 0 12px", padding: "10px 12px", borderRadius: 10, background: "#ecfeff", border: "1px solid #67e8f9", color: "#0e7490", font: "600 13px/1.2 Montserrat,system-ui,sans-serif" }}>{toast}</div>}
+      {err && <div style={{ margin: "8px 0 12px", padding: "10px 12px", borderRadius: 10, background:"#fee2e2", border:"1px solid #fecaca", color:"#b91c1c", font: "600 13px/1.2 Montserrat,system-ui,sans-serif" }}>{err}</div>}
 
       {view.map((r, idx) => {
         const niceDate = dmyWithWeekday(r.match_iso);
@@ -195,7 +191,7 @@ export default function PartidosFinalizados() {
                 <button type="button" style={ICONBTN} title="Ver resultados" onClick={()=> route("/resultados-ultima-alineacion")} aria-label="Ver resultados da última aliñación">
                   <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
                 </button>
-                <button type="button" style={ICONBTN} title="Borrar partido" onClick={()=> onDelete(r.id)} aria-label="Borrar partido">
+                <button type="button" style={{ ...ICONBTN, marginTop: -2 }} title="Borrar partido" onClick={()=> onDelete(r.id)} aria-label="Borrar partido">
                   <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_RED}><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /></svg>
                 </button>
               </div>
@@ -204,12 +200,12 @@ export default function PartidosFinalizados() {
             <div style={ROW(isMobile)}>
               <div style={CARD_CONTENT}>
                 <div style={TEAMS_LINE(isMobile)}>
-                  {(r.equipo1||"—").toUpperCase()} <span style={{ margin:"0 6px" }}>vs</span> {(r.equipo2||"—").toUpperCase()}
+                  {(r.equipo1||"—").toUpperCase()} <span style={{ margin:"0 4px" }}>{isMobile ? "-" : "vs"}</span> {(r.equipo2||"—").toUpperCase()}
                 </div>
-                <div style={LINE}>Competición: <span>{r.competition || "—"}</span></div>
-                <div style={LINE}>Lugar: <span>{r.lugar || "—"}</span></div>
-                <div style={LINE}>Data: <span>{niceDate}</span></div>
-                <div style={LINE}>Hora: <span>{timeStr}</span></div>
+                <div style={LINE(isMobile)}><span style={LINE_LABEL(isMobile)}>Competición:</span> {r.competition || "—"}</div>
+                <div style={LINE(isMobile)}><span style={LINE_LABEL(isMobile)}>Lugar:</span> {r.lugar || "—"}</div>
+                <div style={LINE(isMobile)}><span style={LINE_LABEL(isMobile)}>Data:</span> {niceDate}</div>
+                <div style={LINE(isMobile)}><span style={LINE_LABEL(isMobile)}>Hora:</span> {timeStr}</div>
               </div>
 
               {/* Acciones a la derecha en desktop */}
