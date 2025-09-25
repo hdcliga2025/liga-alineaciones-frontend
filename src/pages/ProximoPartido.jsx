@@ -37,7 +37,8 @@ const TITLE_LINE_BASE = {
   fontSize: 30,
   fontWeight: 700,
 };
-const TITLE_LINE = (isMobile) => ({ ...TITLE_LINE_BASE, fontSize: isMobile ? 22 : 30 });
+/* MÓVIL: -20% del tamaño del campo Equipo1/Equipo2 => bajamos el h2 completo a ~18px */
+const TITLE_LINE = (isMobile) => ({ ...TITLE_LINE_BASE, fontSize: isMobile ? 18 : 30 });
 const TEAM_NAME = { fontWeight: 700, textTransform: "uppercase" };
 const VS_STYLE_BASE = { fontWeight: 600, fontSize: 22, margin: "0 8px" };
 const VS_STYLE = (isMobile) => ({ ...VS_STYLE_BASE, fontSize: isMobile ? 17 : 22 });
@@ -72,11 +73,11 @@ const METEO_BAR = (isMobile) => ({
   maxWidth: 1000,
   margin: "0 auto",
   color: "#0f172a",
-  fontSize: isMobile ? 18 : 22, // iconos un poco más pequeños en móvil
+  fontSize: isMobile ? 18 : 22,
   fontWeight: 700,
 });
 
-/* Leyenda bajo el banner (Gallego, sin bold salvo lugar) */
+/* Leyenda bajo el banner (gl) */
 const METEO_LEGEND_OUT = {
   textAlign: "center",
   margin: "6px 0 10px",
@@ -87,6 +88,7 @@ const METEO_LEGEND_OUT = {
   letterSpacing: ".2px",
 };
 
+/* ===== Utils ===== */
 function toLongGalician(dateObj) {
   try {
     return new Intl.DateTimeFormat("gl-ES", {
@@ -312,7 +314,7 @@ export default function ProximoPartido() {
               loading="eager"
               style={{
                 position: "absolute",
-                top: -4,            // ⬅️ Subimos un poco para “casi tocar” el cuadro
+                top: -4,            // escudo más arriba
                 right: 10,
                 width: ESCUDO_W,
                 height: "auto",

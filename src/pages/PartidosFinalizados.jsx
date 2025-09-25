@@ -21,19 +21,32 @@ const PLUS_BTN_RED = {
 };
 const PLUS_SVG = { fill:"none", stroke:"#ffffff", strokeWidth:2.2, strokeLinecap:"round", strokeLinejoin:"round" };
 
+/* Tarjeta: un poco más roja de fondo (pc y móvil) */
 const CARD_BASE = { position:"relative", borderRadius: 14, padding: 12, boxShadow: "0 6px 18px rgba(0,0,0,.05)", marginBottom: 10 };
-const CARD = { ...CARD_BASE, border: "1px solid #ef4444", background: "linear-gradient(180deg,#fff5f5,#fff0f0)" };
+const CARD = {
+  ...CARD_BASE,
+  border: "1px solid #ef4444",
+  background: "linear-gradient(180deg,#ffe5e5,#ffdede)" // más roja que antes
+};
 
 const ROW = (isMobile) => ({ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr auto", gap: 8, alignItems: "start" });
 const CARD_CONTENT = { paddingLeft: 48 };
 
-const RED = "#b91c1c";
-/* Texto equipos — móvil -15%, separador '-' en móvil; 'vs' minúsculas en desktop */
+/* Rojo del texto un poco más “degradado/suavizado” */
+const TEXT_RED = "#a94442";
+
+/* Texto equipos — desktop 18px, móvil 15.3px (~-15%); separador '-' en móvil; 'vs' minúscula en desktop */
 const TEAMS_LINE = (isMobile) => ({
-  font: `600 ${isMobile ? 13.6 : 18}px/1.12 Montserrat,system-ui,sans-serif`,
-  color: RED, textTransform: "uppercase"
+  font: `600 ${isMobile ? 15.3 : 18}px/1.12 Montserrat,system-ui,sans-serif`,
+  color: TEXT_RED,
+  textTransform: "uppercase"
 });
-const LINE = (isMobile) => ({ font: `400 ${isMobile ? 15.4 : 14}px/1.12 Montserrat,system-ui,sans-serif`, color: RED, marginTop: 2 });
+/* Campos +10% ya aplicado previamente; mantenemos tono red suavizado */
+const LINE = (isMobile) => ({
+  font: `400 ${isMobile ? 15.4 : 14}px/1.12 Montserrat,system-ui,sans-serif`,
+  color: TEXT_RED,
+  marginTop: 2
+});
 const LINE_LABEL = (isMobile) => ({ fontWeight: isMobile ? 600 : 500, marginRight: 4 });
 
 const BADGE = { position:"absolute", top:8, left:8, font:"700 12px/1 Montserrat,system-ui,sans-serif", background:"#ef4444", color:"#fff", padding:"4px 7px", borderRadius:999 };
@@ -43,8 +56,10 @@ const ACTIONS = { display: "flex", gap: 8, alignItems: "center" };
 const ACTIONS_MOBILE_COLUMN = { position:"absolute", left:8, top:36, display:"grid", gap:5 };
 const ICONBTN = { width: 34, height: 34, display: "grid", placeItems: "center", borderRadius: 10, border: "1px solid #e2e8f0", background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,.06)", cursor: "pointer" };
 const SVGI = { fill: "none", stroke: "#0f172a", strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round" };
+/* Papelera roja */
 const SVG_RED = { ...SVGI, stroke: "#dc2626" };
 
+/* Form edición */
 const EDIT_CARD = { border: "1px solid #fecaca", borderRadius: 14, background: "linear-gradient(180deg,#fff7f7,#fffafa)", padding: 12, boxShadow: "0 6px 18px rgba(0,0,0,.05)", marginBottom: 12 };
 
 const INPUT = { width: "100%", borderRadius: 10, border: "1px solid #dbe2f0", background: "#fff", padding: "10px 12px", font: "400 14px/1.1 Montserrat,system-ui,sans-serif", color: "#0f172a", outline: "none" };
@@ -185,17 +200,34 @@ export default function PartidosFinalizados() {
           <article key={r.id} style={CARD}>
             <span style={BADGE}>{number}</span>
 
-            {/* Acciones en columna bajo número (solo móvil) */}
-            {isAdmin && isMobile && (
-              <div style={ACTIONS_MOBILE_COLUMN}>
-                <button type="button" style={ICONBTN} title="Ver resultados" onClick={()=> route("/resultados-ultima-alineacion")} aria-label="Ver resultados da última aliñación">
-                  <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+            {/* Acciones en columna bajo número (móvil): OJO siempre visible; papelera sólo admin */}
+            <div style={isMobile ? ACTIONS_MOBILE_COLUMN : { display: "none" }}>
+              <button
+                type="button"
+                style={ICONBTN}
+                title="Ver resultados"
+                onClick={()=> route("/resultados-ultima-alineacion")}
+                aria-label="Ver resultados da última aliñación"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}>
+                  <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+              {isAdmin && (
+                <button
+                  type="button"
+                  style={{ ...ICONBTN, marginTop: -2 }}
+                  title="Borrar partido"
+                  onClick={()=> onDelete(r.id)}
+                  aria-label="Borrar partido"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_RED}>
+                    <path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" />
+                  </svg>
                 </button>
-                <button type="button" style={{ ...ICONBTN, marginTop: -2 }} title="Borrar partido" onClick={()=> onDelete(r.id)} aria-label="Borrar partido">
-                  <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_RED}><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /></svg>
-                </button>
-              </div>
-            )}
+              )}
+            </div>
 
             <div style={ROW(isMobile)}>
               <div style={CARD_CONTENT}>
@@ -208,15 +240,35 @@ export default function PartidosFinalizados() {
                 <div style={LINE(isMobile)}><span style={LINE_LABEL(isMobile)}>Hora:</span> {timeStr}</div>
               </div>
 
-              {/* Acciones a la derecha en desktop */}
-              {isAdmin && !isMobile && (
+              {/* Acciones a la derecha (desktop): OJO siempre visible; papelera sólo admin */}
+              {!isMobile && (
                 <div style={ACTIONS}>
-                  <button type="button" style={ICONBTN} title="Ver resultados" onClick={()=> route("/resultados-ultima-alineacion")} aria-label="Ver resultados da última aliñación">
-                    <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                  <button
+                    type="button"
+                    style={ICONBTN}
+                    title="Ver resultados"
+                    onClick={()=> route("/resultados-ultima-alineacion")}
+                    aria-label="Ver resultados da última aliñación"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}>
+                      <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
                   </button>
-                  <button type="button" style={ICONBTN} title="Borrar partido" onClick={()=> onDelete(r.id)} aria-label="Borrar partido">
-                    <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_RED}><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /></svg>
-                  </button>
+
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      style={ICONBTN}
+                      title="Borrar partido"
+                      onClick={()=> onDelete(r.id)}
+                      aria-label="Borrar partido"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_RED}>
+                        <path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" />
+                      </svg>
+                    </button>
+                  )}
                 </div>
               )}
             </div>
