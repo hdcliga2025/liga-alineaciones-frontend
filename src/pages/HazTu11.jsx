@@ -36,7 +36,7 @@ const S = {
   posHeader: { margin:"16px 0 10px", padding:"2px 4px 8px", fontWeight:700, color:"#0c4a6e", borderLeft:"4px solid #7dd3fc", borderBottom:"2px solid #e2e8f0" },
   grid4: { display:"grid", gridTemplateColumns:"repeat(4, minmax(0,1fr))", gap:12 },
   card: { display:"grid", gridTemplateRows: `${IMG_H}px auto`,
-    background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)",
+    background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)", // celeste degradado
     border:"1px solid #dbeafe", borderRadius:16, padding:10, boxShadow:"0 2px 8px rgba(0,0,0,.06)",
     alignItems:"center", textAlign:"center"
   },
@@ -82,25 +82,24 @@ function ImgWithOverlay({ src, alt, dorsal }) {
 export default function HazTu11() {
   const [jugadores, setJugadores] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [hasConvocatoria, setHasConvocatoria] = useState(null); // null=descoñecido, true/false
 
-  // Cabecera (igual que Convocatoria)
+  // Cabecera espejo desde Vindeiros/next_match (igual que Convocatoria)
   const [header, setHeader] = useState(null);
 
   useEffect(() => {
     (async () => {
-      // Verifica convocatoria publicada
+      // Trae la convocatoria publicada y la junta con los datos del jugador
       const { data: pub } = await supabase
         .from("convocatoria_publica")
         .select("jugador_id");
       const ids = (pub || []).map(r => r.jugador_id);
-      setHasConvocatoria(ids.length > 0);
 
       // Header (mismo criterio que Convocatoria)
       const { data: top } = await supabase
         .from("matches_vindeiros")
         .select("equipo1,equipo2,match_iso")
         .order("match_iso", { ascending: true }).limit(1).maybeSingle();
+
       if (top?.match_iso) {
         setHeader({ equipo1: cap(top.equipo1||""), equipo2: cap(top.equipo2||""), match_iso: top.match_iso });
       } else {
@@ -109,6 +108,7 @@ export default function HazTu11() {
           .select("equipo1,equipo2,match_iso")
           .eq("id",1).maybeSingle();
         if (nm?.match_iso) setHeader({ equipo1: cap(nm.equipo1||""), equipo2: cap(nm.equipo2||""), match_iso: nm.match_iso });
+        else setHeader(null);
       }
 
       if (!ids.length) { setJugadores([]); setLoading(false); return; }
@@ -119,7 +119,7 @@ export default function HazTu11() {
         .in("id", ids)
         .order("dorsal", { ascending: true });
 
-      // Garantizamos o orden por publicación/dorsal
+      // Garantizamos el orden de publicación por dorsal
       const byId = new Map((js||[]).map(j => [j.id, j]));
       const ordered = ids.map(id => byId.get(id)).filter(Boolean);
       setJugadores(ordered);
@@ -149,21 +149,12 @@ export default function HazTu11() {
 
   if (loading) return <main style={S.wrap}>Cargando…</main>;
 
-  // Bloqueo: só se pode continuar se hai convocatoria gardada
-  if (hasConvocatoria === false) {
-    return (
-      <main style={S.wrap}>
-        <h1 style={S.h1}>Fai aquí a túa aliñación</h1>
-        <p style={S.sub}>Agarda a que se publique a convocatoria oficial para poder facer a túa aliñación.</p>
-      </main>
-    );
-  }
-
   return (
     <main style={S.wrap}>
       <h1 style={S.h1}>Fai aquí a túa aliñación</h1>
       <p style={S.sub}>Aquí é onde demostras o Giráldez que levas dentro.</p>
 
+      {/* Cuadro de campos (idéntico a Convocatoria) */}
       {header && (
         <div style={S.resumen}>
           <p style={S.resumeLine}>{cap(header.equipo1)} vs {cap(header.equipo2)}</p>
