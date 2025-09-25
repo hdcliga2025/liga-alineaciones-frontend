@@ -2,19 +2,19 @@
 import { h, render } from "preact";
 import App from "./App.jsx";
 
-// Montaje simple (sin StrictMode para evitar dobles efectos en hooks)
-// Si quieres habilitarlo, importa { StrictMode } desde 'preact/compat' y envuelve <App />
+// Montaje simple y estable (sin StrictMode para evitar dobles efectos de hooks)
 const mount = document.getElementById("app");
 
 if (mount) {
   render(<App />, mount);
 } else {
-  // Fallback por si el nodo no existe aún
   const el = document.createElement("div");
   el.id = "app";
   document.body.appendChild(el);
   render(<App />, el);
 }
 
-// Opcional: evita restauración de scroll rara en móvil entre rutas
-try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch {}
+// Opcional: evitar saltos raros de scroll al cambiar de ruta en móbil
+try {
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+} catch {}

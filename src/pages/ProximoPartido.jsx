@@ -1,4 +1,3 @@
-// src/pages/ProximoPartido.jsx
 import { h } from "preact";
 import { useEffect, useState, useRef } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
@@ -30,7 +29,7 @@ const TOP_BOX = {
 /* === Escala -10% textos de la TARJETA === */
 const SCALE = 0.9;
 
-/* Título EQUIPO1 vs EQUIPO2 (aplica -10% a móvil y desktop) */
+/* Título EQUIPO1 vs EQUIPO2 (-10% móvil y desktop) */
 const TITLE_LINE_BASE = {
   margin: "0 0 8px 0",
   fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
@@ -50,7 +49,7 @@ const VS_STYLE = (isMobile) => ({
   margin: "0 8px",
 });
 
-/* Líneas secundarias (Competición/Lugar/Data/Hora) */
+/* Líneas secundarias */
 const LINE_GRAY = {
   margin: "6px 0 0",
   fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
@@ -64,13 +63,14 @@ const BLEED_WRAP = { width: "100vw", marginLeft: "50%", transform: "translateX(-
 const METEO_BANNER = (isMobile) => ({
   position: "relative",
   width: "100%",
-  padding: isMobile ? "22px 14px" : "26px 20px",
   background: "linear-gradient(180deg, rgba(224,242,254,0.9), rgba(191,219,254,0.9))",
   border: "none",
   boxShadow: "none",
   outline: "none",
-  paddingTop: isMobile ? 26 : 28,
-  paddingBottom: isMobile ? 26 : 28,
+  paddingTop: isMobile ? 28 : 30,   // simetría arriba/abajo
+  paddingBottom: isMobile ? 28 : 30,
+  paddingLeft: isMobile ? 14 : 20,
+  paddingRight: isMobile ? 14 : 20,
 });
 const METEO_BAR = (isMobile) => ({
   display: "flex",
@@ -91,7 +91,7 @@ const METEO_LEGEND_OUT = {
   margin: "6px 0 10px",
   fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
   fontSize: 15,
-  fontWeight: 400,
+  fontWeight: 400, // sen bold
   color: "#0369a1",
   letterSpacing: ".2px",
 };
@@ -325,7 +325,7 @@ export default function ProximoPartido() {
               loading="eager"
               style={{
                 position: "absolute",
-                top: -4,
+                top: -4,                 // ↑ un chisco para “tocar” coa tarxeta
                 right: 10,
                 width: ESCUDO_W,
                 height: "auto",

@@ -3,13 +3,14 @@ import { h } from "preact";
 import { useState } from "preact/hooks";
 import { Router } from "preact-router";
 
+/* Infra */
 import AuthWatcher from "./components/AuthWatcher.jsx";
 import NavBar from "./components/NavBar.jsx";
 
 /* Públicas */
 import LandingPage from "./pages/LandingPage.jsx";
-import Login from "./components/Login.jsx";       // ← en components (correcto)
-import Register from "./components/Register.jsx"; // ← en components (correcto)
+import Login from "./components/Login.jsx";
+import Register from "./components/Register.jsx";
 
 /* Privadas */
 import Dashboard from "./pages/Dashboard.jsx";
@@ -20,21 +21,21 @@ import HazTu11 from "./pages/HazTu11.jsx";
 import Clasificacion from "./pages/Clasificacion.jsx";
 import Admin from "./pages/Admin.jsx";
 
-/* Subcards / novas páxinas */
+/* Subpáginas */
 import ProximoPartido from "./pages/ProximoPartido.jsx";
 import VindeirosPartidos from "./pages/VindeirosPartidos.jsx";
 import PartidosFinalizados from "./pages/PartidosFinalizados.jsx";
 
-/* Logout forzado */
+/* Convocatoria oficial como páxina propia */
+import ConvocatoriaProximo from "./pages/ConvocatoriaProximo.jsx";
+
+/* Logout forzado (si lo usas) */
 import ForceLogout from "./pages/ForceLogout.jsx";
 
-/* 404 */
 const NotFound = () => (
   <main style={{ padding: "1rem" }}>
     <h2>Páxina non atopada</h2>
-    <p>
-      Volver ao <a href="/login">login</a>
-    </p>
+    <p>Volver ao <a href="/login">login</a></p>
   </main>
 );
 
@@ -54,7 +55,6 @@ export default function App() {
   return (
     <>
       <AuthWatcher />
-
       {!shouldHideNav && <NavBar currentPath={currentPath} />}
 
       <Router onChange={(e) => setCurrentPath(e.url)}>
@@ -73,10 +73,13 @@ export default function App() {
         <Clasificacion path="/clasificacion" />
         <Admin path="/admin" />
 
-        {/* Subcards */}
+        {/* Subpáginas */}
         <ProximoPartido path="/proximo-partido" />
         <VindeirosPartidos path="/vindeiros-partidos" />
         <PartidosFinalizados path="/partidos-finalizados" />
+
+        {/* Convocatoria oficial (ruta propia) */}
+        <ConvocatoriaProximo path="/convocatoria-oficial" />
 
         {/* 404 */}
         <NotFound default />

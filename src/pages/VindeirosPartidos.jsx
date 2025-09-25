@@ -1,4 +1,3 @@
-// src/pages/VindeirosPartidos.jsx
 import { h } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
@@ -9,7 +8,7 @@ const PAGE_HEAD = { margin: "0 0 8px", font: "700 22px/1.2 Montserrat,system-ui,
 const PAGE_SUB_ROW = { display:"grid", gridTemplateColumns:"1fr auto", alignItems:"center", gap:10, marginBottom:12 };
 const PAGE_SUB  = { margin: 0, font: "400 15px/1.25 Montserrat,system-ui,sans-serif", color: "#475569" };
 
-/* Botón “+” verde — unificado (centrado y trazo grueso) */
+/* Botón “+” verde — unificado */
 const PLUS_BTN_GREEN = {
   display:"inline-grid", placeItems:"center",
   width: 36, height: 36, borderRadius: 10,
@@ -38,7 +37,7 @@ const ROW = (isMobile) => ({
 });
 const CARD_CONTENT = { paddingLeft: 48 };
 
-/* Título equipos — móvil 5% mayor que antes; separador '-' en móvil; 'vs' minúsculas en desktop */
+/* Título equipos — móvil 5% mayor; separador '-' en móvil; 'vs' minúsculas en desktop */
 const TEAMS_LINE = (isMobile) => ({
   font: `600 ${isMobile ? 15 : 16.8}px/1.12 Montserrat,system-ui,sans-serif`,
   color: "#0f172a",
@@ -53,7 +52,7 @@ const LINE_LABEL = (isMobile) => ({ fontWeight: isMobile ? 600 : 500, marginRigh
 
 const BADGE = { position:"absolute", top:8, left:8, font:"700 12px/1 Montserrat,system-ui,sans-serif", background:"#22c55e", color:"#fff", padding:"4px 7px", borderRadius:999 };
 
-/* Iconos: móvil en columna bajo el número, gap más junto, papelera un poco más arriba */
+/* Iconos: móvil en columna bajo el número */
 const ACTIONS = { display: "flex", gap: 8, alignItems: "center" };
 const ACTIONS_MOBILE_COLUMN = { position:"absolute", left:8, top:36, display:"grid", gap:5 };
 const ICONBTN = { width: 34, height: 34, display: "grid", placeItems: "center", borderRadius: 10, border: "1px solid #e2e8f0", background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,.06)", cursor: "pointer" };
@@ -66,12 +65,7 @@ const EDIT_CARD = { border: "1px solid #a7f3d0", borderRadius: 14, background: "
 const GRID3 = { display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 10, alignItems:"center" };
 const INPUT = { width: "100%", borderRadius: 10, border: "1px solid #dbe2f0", background: "#fff", padding: "10px 12px", font: "400 14px/1.1 Montserrat,system-ui,sans-serif", color: "#0f172a", outline: "none" };
 const INPUT_UP = { ...INPUT, textTransform:"uppercase" };
-const FIELD_WITH_ICON = { position:"relative", display:"grid" };
-const FIELD_ICON = { position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", pointerEvents:"none", opacity:.55 };
 const SELECT = { ...INPUT, appearance: "none", paddingLeft: 36, paddingRight: 36, cursor: "pointer", textTransform: "none" };
-
-const SAVE_ICON_BTN = { width: 42, height: 42, display:"grid", placeItems:"center", borderRadius: 10, border: "1px solid #22c55e", background: "linear-gradient(180deg,#34d399,#22c55e)", boxShadow: "0 6px 18px rgba(34,197,94,.30)", cursor: "pointer" };
-const SAVE_SVG = { fill:"none", stroke:"#fff", strokeWidth:2, strokeLinecap:"round", strokeLinejoin:"round" };
 
 /* ===== Utils ===== */
 const pad2 = (n) => String(n).padStart(2, "0");
@@ -222,11 +216,11 @@ export default function VindeirosPartidos() {
       {err && <div style={{ margin: "8px 0 12px", padding: "10px 12px", borderRadius: 10, background:"#fee2e2", border:"1px solid #fecaca", color:"#b91c1c", font: "600 13px/1.2 Montserrat,system-ui,sans-serif" }}>{err}</div>}
 
       {isAdmin && createOpen && (
-        <section style={{ border: "1px solid #a7f3d0", borderRadius: 14, background: "linear-gradient(180deg,#ecfdf5,#f0fff7)", padding: 12, boxShadow: "0 6px 18px rgba(0,0,0,.05)", marginBottom: 12 }}>
+        <section style={EDIT_CARD}>
           <div style={{ display:"grid", gridTemplateColumns:"1fr auto 1fr", gap:8, alignItems:"center" }}>
-            <input style={{ ...INPUT, textTransform:"uppercase" }} value={draft.equipo1} placeholder="Local" onInput={(e)=> setDraft(d => ({ ...d, equipo1: e.currentTarget.value }))}/>
+            <input style={INPUT_UP} value={draft.equipo1} placeholder="Local" onInput={(e)=> setDraft(d => ({ ...d, equipo1: e.currentTarget.value }))}/>
             <div style={{ font:"600 14px/1 Montserrat,system-ui,sans-serif", color:"#0f172a" }}>vs</div>
-            <input style={{ ...INPUT, textTransform:"uppercase" }} value={draft.equipo2} placeholder="Visitante" onInput={(e)=> setDraft(d => ({ ...d, equipo2: e.currentTarget.value }))}/>
+            <input style={INPUT_UP} value={draft.equipo2} placeholder="Visitante" onInput={(e)=> setDraft(d => ({ ...d, equipo2: e.currentTarget.value }))}/>
           </div>
 
           <div style={{ display:"grid", gridTemplateColumns:"1fr auto 1fr", gap:8, alignItems:"center", marginTop:10 }}>

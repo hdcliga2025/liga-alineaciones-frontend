@@ -1,4 +1,3 @@
-// src/pages/PartidosFinalizados.jsx
 import { h } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { route } from "preact-router";
@@ -10,7 +9,7 @@ const PAGE_HEAD = { margin: "0 0 6px", font: "700 22px/1.2 Montserrat,system-ui,
 const PAGE_SUB_ROW = { display:"grid", gridTemplateColumns:"1fr auto", alignItems:"center", gap:10, marginBottom:12 };
 const PAGE_SUB  = { margin: 0, font: "400 16px/1.3 Montserrat,system-ui,sans-serif", color: "#475569" };
 
-/* Botón “+” rojo — unificado (centrado y trazo grueso) */
+/* Botón “+” rojo — centrado y trazo grueso (igual que Vindeiros) */
 const PLUS_BTN_RED = {
   display:"inline-grid", placeItems:"center",
   width: 36, height: 36, borderRadius: 10,
@@ -19,58 +18,57 @@ const PLUS_BTN_RED = {
   boxShadow: "0 6px 18px rgba(239,68,68,.28)",
   cursor: "pointer"
 };
-const PLUS_SVG = { fill:"none", stroke:"#ffffff", strokeWidth:2.2, strokeLinecap:"round", strokeLinejoin:"round" };
+const PLUS_SVG_RED = { fill:"none", stroke:"#ffffff", strokeWidth:2.2, strokeLinecap:"round", strokeLinejoin:"round" };
 
-/* Tarjeta: un poco más roja de fondo (pc y móvil) */
+/* Tarjetas — fondo algo más rojo y textos con degradado suave */
 const CARD_BASE = { position:"relative", borderRadius: 14, padding: 12, boxShadow: "0 6px 18px rgba(0,0,0,.05)", marginBottom: 10 };
 const CARD = {
   ...CARD_BASE,
   border: "1px solid #ef4444",
-  background: "linear-gradient(180deg,#ffe5e5,#ffdede)" // más roja que antes
+  background: "linear-gradient(180deg,#ffe8e8,#ffe1e1)" // ↑ un chisco máis vermello
 };
 
-const ROW = (isMobile) => ({ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr auto", gap: 8, alignItems: "start" });
+const ROW = (isMobile) => ({ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr auto", gap:8, alignItems:"start" });
 const CARD_CONTENT = { paddingLeft: 48 };
 
-/* Rojo del texto un poco más “degradado/suavizado” */
-const TEXT_RED = "#a94442";
-
-/* Texto equipos — desktop 18px, móvil 15.3px (~-15%); separador '-' en móvil; 'vs' minúscula en desktop */
+const RED = "#b91c1c";
 const TEAMS_LINE = (isMobile) => ({
-  font: `600 ${isMobile ? 15.3 : 18}px/1.12 Montserrat,system-ui,sans-serif`,
-  color: TEXT_RED,
-  textTransform: "uppercase"
+  // móvil -15% en Equipo1/2 + 5% general ya aplicado en Vindeiros → aquí consolidado
+  font: `600 ${isMobile ? 13.6 : 16}px/1.12 Montserrat,system-ui,sans-serif`,
+  textTransform: "uppercase",
+  background: "linear-gradient(90deg,#b91c1c,#ef4444)",
+  WebkitBackgroundClip: "text",
+  backgroundClip: "text",
+  color: "transparent"
 });
-/* Campos +10% ya aplicado previamente; mantenemos tono red suavizado */
 const LINE = (isMobile) => ({
-  font: `400 ${isMobile ? 15.4 : 14}px/1.12 Montserrat,system-ui,sans-serif`,
-  color: TEXT_RED,
+  font: `400 ${isMobile ? 14.3 : 13}px/1.12 Montserrat,system-ui,sans-serif`,
+  color: RED,
   marginTop: 2
 });
 const LINE_LABEL = (isMobile) => ({ fontWeight: isMobile ? 600 : 500, marginRight: 4 });
 
 const BADGE = { position:"absolute", top:8, left:8, font:"700 12px/1 Montserrat,system-ui,sans-serif", background:"#ef4444", color:"#fff", padding:"4px 7px", borderRadius:999 };
 
-/* Iconos: mismo layout que Vindeiros (móvil columna bajo número; desktop a la derecha) */
-const ACTIONS = { display: "flex", gap: 8, alignItems: "center" };
+const ACTIONS = { display:"flex", gap:8, alignItems:"center" };
 const ACTIONS_MOBILE_COLUMN = { position:"absolute", left:8, top:36, display:"grid", gap:5 };
-const ICONBTN = { width: 34, height: 34, display: "grid", placeItems: "center", borderRadius: 10, border: "1px solid #e2e8f0", background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,.06)", cursor: "pointer" };
-const SVGI = { fill: "none", stroke: "#0f172a", strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round" };
-/* Papelera roja */
-const SVG_RED = { ...SVGI, stroke: "#dc2626" };
 
-/* Form edición */
+const ICONBTN = { width:34, height:34, display:"grid", placeItems:"center", borderRadius:10, border:"1px solid #e2e8f0", background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)", cursor:"pointer" };
+const SVGI = { fill:"none", stroke:"#0f172a", strokeWidth:1.9, strokeLinecap:"round", strokeLinejoin:"round" };
+const SVG_RED = { ...SVGI, stroke:"#dc2626" };
+const SVG_EYE = { ...SVGI }; // ojo (ver resultados)
+
+/* Form creación */
 const EDIT_CARD = { border: "1px solid #fecaca", borderRadius: 14, background: "linear-gradient(180deg,#fff7f7,#fffafa)", padding: 12, boxShadow: "0 6px 18px rgba(0,0,0,.05)", marginBottom: 12 };
-
 const INPUT = { width: "100%", borderRadius: 10, border: "1px solid #dbe2f0", background: "#fff", padding: "10px 12px", font: "400 14px/1.1 Montserrat,system-ui,sans-serif", color: "#0f172a", outline: "none" };
 const INPUT_UP = { ...INPUT, textTransform:"uppercase" };
-const FIELD_WITH_ICON = { position:"relative", display:"grid" };
-const FIELD_ICON = { position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", pointerEvents:"none", opacity:.55 };
 const SELECT = { ...INPUT, appearance: "none", paddingLeft: 36, paddingRight: 36, cursor: "pointer", textTransform: "none" };
 const GRID3 = { display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 10, alignItems:"center" };
 
 const SAVE_ICON_BTN = { width: 42, height: 42, display:"grid", placeItems:"center", borderRadius: 10, border: "1px solid #ef4444", background: "linear-gradient(180deg,#f87171,#ef4444)", boxShadow: "0 6px 18px rgba(239,68,68,.30)", cursor: "pointer" };
 const SAVE_SVG = { fill:"none", stroke:"#fff", strokeWidth:2, strokeLinecap:"round", strokeLinejoin:"round" };
+
+const TOAST = { margin: "8px 0 12px", padding: "10px 12px", borderRadius: 10, background: "#ecfeff", border: "1px solid #67e8f9", color: "#0e7490", font: "600 13px/1.2 Montserrat,system-ui,sans-serif" };
 
 /* ===== Utils ===== */
 const pad2 = (n) => String(n).padStart(2, "0");
@@ -86,11 +84,11 @@ export default function PartidosFinalizados() {
   const [toast, setToast] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
 
   const [draft, setDraft] = useState({ equipo1:"", equipo2:"", competition:"", lugar:"", dateStr:"", timeStr:"" });
   const allDraftFilled = (d)=> !!(d.equipo1.trim() && d.equipo2.trim() && d.competition.trim() && d.lugar.trim() && d.dateStr && d.timeStr);
 
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
   useEffect(() => {
     const onR = () => setIsMobile(window.innerWidth <= 560);
     window.addEventListener("resize", onR);
@@ -183,90 +181,98 @@ export default function PartidosFinalizados() {
         <p style={PAGE_SUB}>Encontros xa disputados polo Celta.</p>
         {isAdmin && (
           <button type="button" style={PLUS_BTN_RED} onClick={()=> setCreateOpen(v=>!v)} title="Crear novo partido finalizado" aria-label="Crear novo partido finalizado">
-            <svg width="26" height="26" viewBox="0 0 24 24" style={PLUS_SVG}><path d="M12 5v14M5 12h14" /></svg>
+            <svg width="26" height="26" viewBox="0 0 24 24" style={PLUS_SVG_RED}><path d="M12 5v14M5 12h14" /></svg>
           </button>
         )}
       </div>
 
-      {toast && <div style={{ margin: "8px 0 12px", padding: "10px 12px", borderRadius: 10, background: "#ecfeff", border: "1px solid #67e8f9", color: "#0e7490", font: "600 13px/1.2 Montserrat,system-ui,sans-serif" }}>{toast}</div>}
-      {err && <div style={{ margin: "8px 0 12px", padding: "10px 12px", borderRadius: 10, background:"#fee2e2", border:"1px solid #fecaca", color:"#b91c1c", font: "600 13px/1.2 Montserrat,system-ui,sans-serif" }}>{err}</div>}
+      {toast && <div style={TOAST}>{toast}</div>}
+      {err && <div style={{ ...TOAST, background:"#fee2e2", border:"1px solid #fecaca", color:"#b91c1c" }}>{err}</div>}
+
+      {isAdmin && createOpen && (
+        <section style={EDIT_CARD}>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr auto 1fr", gap:8, alignItems:"center" }}>
+            <input style={INPUT_UP} value={draft.equipo1} placeholder="Local" onInput={(e)=> setDraft(d => ({ ...d, equipo1: e.currentTarget.value }))}/>
+            <div style={{ font:"600 14px/1 Montserrat,system-ui,sans-serif", color: RED }}>vs</div>
+            <input style={INPUT_UP} value={draft.equipo2} placeholder="Visitante" onInput={(e)=> setDraft(d => ({ ...d, equipo2: e.currentTarget.value }))}/>
+          </div>
+
+          <div style={{ display:"grid", gridTemplateColumns:"1fr auto 1fr", gap:8, alignItems:"center", marginTop:10 }}>
+            <div style={{ position:"relative", display:"grid" }}>
+              <div style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", pointerEvents:"none", opacity:.55 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" style={{ fill:"none", stroke:"#64748b", strokeWidth:1.6, strokeLinecap:"round", strokeLinejoin:"round" }}>
+                  <path d="M8 21h8M12 17v4M6 3h12v4a6 6 0 0 1-12 0V3Z"/><path d="M18 5h2a2 2 0 0 1-2 2M6 5H4a2 2 0 0 0 2 2"/>
+                </svg>
+              </div>
+              <select style={{ ...SELECT, paddingLeft:36 }} value={draft.competition} onChange={(e)=> setDraft(d => ({ ...d, competition: e.currentTarget.value }))}>
+                <option value="">Torneo</option>
+                <option value="LaLiga">LaLiga</option>
+                <option value="Europa League">Europa League</option>
+                <option value="Copa do Rei">Copa do Rei</option>
+              </select>
+            </div>
+            <div />
+            <input style={INPUT} value={draft.lugar} placeholder="Localidade" onInput={(e)=> setDraft(d => ({ ...d, lugar: e.currentTarget.value }))}/>
+          </div>
+
+          <div style={{ ...GRID3, marginTop:10 }}>
+            <input type="date" style={INPUT} value={draft.dateStr} onInput={(e)=> setDraft(d => ({ ...d, dateStr: e.currentTarget.value }))}/>
+            <select value={draft.timeStr} style={SELECT} onChange={(e)=> setDraft(d => ({ ...d, timeStr: e.currentTarget.value }))}>
+              <option value="">Establecer hora do encontro</option>
+              {timeOptions().map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+            <button type="button" style={SAVE_ICON_BTN} title="Gardar" onClick={onCreate} disabled={saving}>
+              <svg width="22" height="22" viewBox="0 0 24 24" style={SAVE_SVG}><path d="M4 4h12l4 4v12H4z"/><path d="M16 4v6H8V4"/><path d="M8 18h8"/></svg>
+            </button>
+          </div>
+        </section>
+      )}
 
       {view.map((r, idx) => {
         const niceDate = dmyWithWeekday(r.match_iso);
         const timeStr = r.match_iso ? new Date(r.match_iso).toLocaleTimeString("gl-ES", { hour: "2-digit", minute:"2-digit", hour12: false }) : "—";
         const number = view.length - idx;
 
+        const isMobileLocal = isMobile;
+
         return (
           <article key={r.id} style={CARD}>
             <span style={BADGE}>{number}</span>
 
-            {/* Acciones en columna bajo número (móvil): OJO siempre visible; papelera sólo admin */}
-            <div style={isMobile ? ACTIONS_MOBILE_COLUMN : { display: "none" }}>
-              <button
-                type="button"
-                style={ICONBTN}
-                title="Ver resultados"
-                onClick={()=> route("/resultados-ultima-alineacion")}
-                aria-label="Ver resultados da última aliñación"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}>
-                  <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-              </button>
-              {isAdmin && (
-                <button
-                  type="button"
-                  style={{ ...ICONBTN, marginTop: -2 }}
-                  title="Borrar partido"
-                  onClick={()=> onDelete(r.id)}
-                  aria-label="Borrar partido"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_RED}>
-                    <path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" />
-                  </svg>
+            {/* Columna de acciones vertical bajo el número (móvil), con OJO + PAPELERA */}
+            {isMobileLocal ? (
+              <div style={ACTIONS_MOBILE_COLUMN}>
+                <button type="button" style={ICONBTN} title="Ver resultados da última aliñación" onClick={()=> route("/resultados-ultima-alineacion")} aria-label="Ver resultados da última aliñación">
+                  <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_EYE}><path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
                 </button>
-              )}
-            </div>
+                {isAdmin && (
+                  <button type="button" style={{ ...ICONBTN, marginTop: -2 }} title="Borrar partido" onClick={()=> onDelete(r.id)} aria-label="Borrar partido">
+                    <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_RED}><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /></svg>
+                  </button>
+                )}
+              </div>
+            ) : null}
 
-            <div style={ROW(isMobile)}>
+            <div style={ROW(isMobileLocal)}>
               <div style={CARD_CONTENT}>
-                <div style={TEAMS_LINE(isMobile)}>
-                  {(r.equipo1||"—").toUpperCase()} <span style={{ margin:"0 4px" }}>{isMobile ? "-" : "vs"}</span> {(r.equipo2||"—").toUpperCase()}
+                <div style={TEAMS_LINE(isMobileLocal)}>
+                  {(r.equipo1||"—").toUpperCase()} <span style={{ margin:"0 4px" }}>{isMobileLocal ? "-" : "vs"}</span> {(r.equipo2||"—").toUpperCase()}
                 </div>
-                <div style={LINE(isMobile)}><span style={LINE_LABEL(isMobile)}>Competición:</span> {r.competition || "—"}</div>
-                <div style={LINE(isMobile)}><span style={LINE_LABEL(isMobile)}>Lugar:</span> {r.lugar || "—"}</div>
-                <div style={LINE(isMobile)}><span style={LINE_LABEL(isMobile)}>Data:</span> {niceDate}</div>
-                <div style={LINE(isMobile)}><span style={LINE_LABEL(isMobile)}>Hora:</span> {timeStr}</div>
+                <div style={LINE(isMobileLocal)}><span style={LINE_LABEL(isMobileLocal)}>Competición:</span> {r.competition || "—"}</div>
+                <div style={LINE(isMobileLocal)}><span style={LINE_LABEL(isMobileLocal)}>Lugar:</span> {r.lugar || "—"}</div>
+                <div style={LINE(isMobileLocal)}><span style={LINE_LABEL(isMobileLocal)}>Data:</span> {niceDate}</div>
+                <div style={LINE(isMobileLocal)}><span style={LINE_LABEL(isMobileLocal)}>Hora:</span> {timeStr}</div>
               </div>
 
-              {/* Acciones a la derecha (desktop): OJO siempre visible; papelera sólo admin */}
-              {!isMobile && (
+              {/* Acciones a la derecha (desktop): OJO para usuarios + PAPELERA para admin */}
+              {!isMobileLocal && (
                 <div style={ACTIONS}>
-                  <button
-                    type="button"
-                    style={ICONBTN}
-                    title="Ver resultados"
-                    onClick={()=> route("/resultados-ultima-alineacion")}
-                    aria-label="Ver resultados da última aliñación"
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}>
-                      <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
+                  <button type="button" style={ICONBTN} title="Ver resultados da última aliñación" onClick={()=> route("/resultados-ultima-alineacion")} aria-label="Ver resultados da última aliñación">
+                    <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_EYE}><path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
                   </button>
-
                   {isAdmin && (
-                    <button
-                      type="button"
-                      style={ICONBTN}
-                      title="Borrar partido"
-                      onClick={()=> onDelete(r.id)}
-                      aria-label="Borrar partido"
-                    >
-                      <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_RED}>
-                        <path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" />
-                      </svg>
+                    <button type="button" style={ICONBTN} title="Borrar partido" onClick={()=> onDelete(r.id)} aria-label="Borrar partido">
+                      <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_RED}><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /></svg>
                     </button>
                   )}
                 </div>
