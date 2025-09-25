@@ -193,13 +193,13 @@ export default function NavBar({ currentPath = "" }) {
 
   const common = { fill:"none", stroke:"#0ea5e9", strokeWidth:1.8, strokeLinecap:"round", strokeLinejoin:"round" };
 
-  const go = (path) => (e) => { e.preventDefault(); route(path); };
-
   const onBack = (e) => {
     e.preventDefault();
     try { if (history.length > 1) history.back(); else route("/dashboard"); }
     catch { route("/dashboard"); }
   };
+
+  const go = (path) => (e) => { e.preventDefault(); route(path); };
 
   const onLogout = async (e) => {
     e.preventDefault();
