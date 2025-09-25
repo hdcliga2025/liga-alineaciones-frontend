@@ -38,7 +38,7 @@ const TITLE_LINE_BASE = {
 };
 const TITLE_LINE = (isMobile) => ({
   ...TITLE_LINE_BASE,
-  fontSize: isMobile ? 22 : 30, // móvil 5% más grande que antes (21px → 22px)
+  fontSize: isMobile ? 22 : 30, // móvil 5% más grande (antes 21px → ahora 22px)
 });
 
 const TEAM_NAME = { fontWeight: 700, textTransform: "uppercase" };
@@ -94,14 +94,14 @@ const METEO_LEGEND_TOP = (isMobile) => ({
 });
 const METEO_SUBLEGEND_AFTER = (isMobile) => ({
   textAlign: "center",
-  marginTop: isMobile ? 0 : 8, // quitada línea de espacio en móvil
+  marginTop: isMobile ? 0 : 8, // quitada línea extra en móvil
   fontSize: isMobile ? 11 : 12,
   fontWeight: 600,
   color: "#475569",
   letterSpacing: ".2px",
 });
 
-/* ==== Utilidades (se mantienen igual) ==== */
+/* ==== Utilidades ==== */
 function toLongGalician(dateObj) {
   try {
     return new Intl.DateTimeFormat("gl-ES", {
@@ -117,4 +117,325 @@ function toLongGalician(dateObj) {
 }
 const capFirst = (s = "") => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
-/* … resto del archivo idéntico, solo cambiamos estilos … */
+const WX_TTL_MS = 24 * 3600 * 1000;
+function wxKey(lugar, matchISO, tz = "Europe/Madrid") {
+  if (!lugar || !matchISO) return null;
+  const target = new Date(matchISO);
+  const fmt = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  const parts = fmt.formatToParts(target).reduce((a, p) => {
+    a[p.type] = p.value;
+    return a;
+  }, {});
+  const localISO = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+  return `wx:${lugar}:${localISO}`;
+}
+function getCachedWx(lugar, matchISO) {
+  const k = wxKey(lugar, matchISO);
+  if (!k) return null;
+  try {
+    const raw = localStorage.getItem(k);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (!obj || !obj.t || !obj.v) return null;
+    if (Date.now() - obj.t > WX_TTL_MS) return null;
+    return obj.v;
+  } catch {
+    return null;
+  }
+}
+function setCachedWx(lugar, matchISO, val) {
+  const k = wxKey(lugar, matchISO);
+  if (!k) return;
+  try {
+    localStorage.setItem(k, JSON.stringify({ t: Date.now(), v: val }));
+  } catch {}
+}
+
+async function fetchMeteoFor(lugar, matchISO) {
+  try {
+    if (!lugar || !matchISO) return null;
+    const geoRes = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
+        lugar
+      )}&count=1&language=gl&format=json`
+    );
+    const geo = await geoRes.json();
+    const loc = geo?.results?.[0];
+    if (!loc) return null;
+    const lat = loc.latitude,
+      lon = loc.longitude;
+
+    const wxRes = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+        `&hourly=temperature_2m,precipitation_probability,wind_speed_10m&timezone=Europe/Madrid&forecast_days=8`
+    );
+    const wx = await wxRes.json();
+    const times = wx?.hourly?.time || [];
+    if (!times.length) return null;
+
+    const target = new Date(matchISO);
+    const fmt = new Intl.DateTimeFormat("sv-SE", {
+      timeZone: "Europe/Madrid",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    const parts = fmt.formatToParts(target).reduce((a, p) => {
+      a[p.type] = p.value;
+      return a;
+    }, {});
+    const localISO = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+
+    let idx = times.indexOf(localISO);
+    if (idx === -1) {
+      let best = 0,
+        bestDiff = Infinity;
+      const targetMs = new Date(localISO + ":00").getTime();
+      for (let i = 0; i < times.length; i++) {
+        const d = Math.abs(new Date(times[i] + ":00").getTime() - targetMs);
+        if (d < bestDiff) {
+          bestDiff = d;
+          best = i;
+        }
+      }
+      idx = best;
+    }
+
+    return {
+      temp_c: wx.hourly.temperature_2m?.[idx] ?? null,
+      wind_kmh: wx.hourly.wind_speed_10m?.[idx] ?? null,
+      precip_prob_pct: wx.hourly.precipitation_probability?.[idx] ?? null,
+      src: "open-meteo",
+    };
+  } catch {
+    return null;
+  }
+}
+
+export default function ProximoPartido() {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth <= 560 : false
+  );
+  useEffect(() => {
+    const onR = () => setIsMobile(window.innerWidth <= 560);
+    window.addEventListener("resize", onR);
+    return () => window.removeEventListener("resize", onR);
+  }, []);
+
+  const [row, setRow] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [meteo, setMeteo] = useState(null);
+
+  function shouldRefreshDaily(existing) {
+    return !existing;
+  }
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { data: nm } = await supabase
+        .from("next_match")
+        .select("equipo1, equipo2, lugar, competition, match_iso, weather_json")
+        .eq("id", 1)
+        .maybeSingle();
+
+      if (!alive) return;
+      setRow(nm || null);
+
+      let wx = getCachedWx(nm?.lugar, nm?.match_iso) || nm?.weather_json || null;
+      if (wx) setMeteo(wx);
+
+      if (nm?.match_iso && nm?.lugar && shouldRefreshDaily(wx)) {
+        const dMs = new Date(nm.match_iso).getTime() - Date.now();
+        const within8days = dMs <= 8 * 24 * 3600 * 1000;
+        if (within8days) {
+          const fresh = await fetchMeteoFor(nm.lugar, nm.match_iso);
+          if (alive && fresh) {
+            setMeteo(fresh);
+            setCachedWx(nm.lugar, nm.match_iso, fresh);
+            try {
+              await supabase
+                .from("next_match")
+                .update({ weather_json: fresh, updated_at: new Date().toISOString() })
+                .eq("id", 1);
+            } catch {}
+          }
+        }
+      }
+
+      setLoading(false);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  if (loading) return <main style={WRAP}>Cargando…</main>;
+
+  if (!row) {
+    return (
+      <>
+        <main style={WRAP}>
+          <section style={PANEL}>
+            <div
+              style={{
+                display: "grid",
+                placeItems: "center",
+                textAlign: "center",
+                padding: "28px 12px",
+                fontFamily: "Montserrat, system-ui, sans-serif",
+                color: "#0f172a",
+              }}
+            >
+              <h2 style={{ margin: 0, fontWeight: 800 }}>
+                Agardando novo Próximo Partido
+              </h2>
+              <p style={{ margin: "10px 0 0", color: "#475569" }}>
+                Os administradores establecerán un novo encontro en breve.
+                Visítanos axiña; é probábel que en poucas horas esta páxina volva
+                estar actualizada. Grazas!
+              </p>
+            </div>
+          </section>
+        </main>
+      </>
+    );
+  }
+
+  const teamA = (row?.equipo1 || "—").toUpperCase();
+  const teamB = (row?.equipo2 || "—").toUpperCase();
+  const lugar = row?.lugar || "—";
+  const competition = row?.competition || "—";
+
+  const dateObj = row?.match_iso ? new Date(row.match_iso) : null;
+  const longDate = dateObj ? toLongGalician(dateObj) : "—";
+  const justTime = dateObj
+    ? new Intl.DateTimeFormat("gl-ES", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: "Europe/Madrid",
+      }).format(dateObj)
+    : "—";
+
+  const ESCUDO_W = isMobile ? 300 : 200;
+  const rightPad = !isMobile ? ESCUDO_W + 24 : 0;
+
+  const meteoContent = (
+    <div style={METEO_BAR(isMobile)}>
+      <span>
+        🌡️{" "}
+        <strong>
+          {meteo?.temp_c != null ? `${Math.round(meteo.temp_c)} °C` : "—"}
+        </strong>
+      </span>
+      <span>
+        💨{" "}
+        <strong>
+          {meteo?.wind_kmh != null ? `${Math.round(meteo.wind_kmh)} km/h` : "—"}
+        </strong>
+      </span>
+      <span>
+        ☔{" "}
+        <strong>
+          {meteo?.precip_prob_pct != null
+            ? `${meteo.precip_prob_pct}%`
+            : "—"}
+        </strong>
+      </span>
+    </div>
+  );
+
+  return (
+    <>
+      <div style={BLEED_WRAP}>
+        <div style={METEO_BANNER(isMobile)}>
+          <div style={METEO_LEGEND_TOP(isMobile)}>METEO | {lugar}</div>
+          {meteoContent}
+          <div style={METEO_SUBLEGEND_AFTER(isMobile)}>PREVISIÓN HORA PARTIDO</div>
+        </div>
+      </div>
+
+      <main style={WRAP}>
+        <section style={PANEL}>
+          {!isMobile && (
+            <img
+              src={ESCUDO_SRC}
+              alt="Escudo RC Celta"
+              decoding="async"
+              loading="eager"
+              style={{
+                position: "absolute",
+                top: 2,
+                right: 10,
+                width: ESCUDO_W,
+                height: "auto",
+                opacity: 0.96,
+                pointerEvents: "none",
+                zIndex: 0,
+              }}
+            />
+          )}
+
+          <div style={{ position: "relative", zIndex: 1, paddingRight: rightPad }}>
+            <div style={TOP_BOX}>
+              <h2 style={TITLE_LINE(isMobile)}>
+                <span style={TEAM_NAME}>{teamA}</span>
+                <span style={VS_STYLE(isMobile)}>vs</span>
+                <span style={TEAM_NAME}>{teamB}</span>
+              </h2>
+
+              <p style={LINE_GRAY}>
+                Competición:{" "}
+                <strong style={{ fontWeight: 700, color: "#0f172a" }}>
+                  {competition}
+                </strong>
+              </p>
+              <p style={LINE_GRAY}>
+                Lugar:{" "}
+                <strong style={{ fontWeight: 700, color: "#0f172a" }}>
+                  {lugar}
+                </strong>
+              </p>
+              <p style={LINE_GRAY}>
+                Data:{" "}
+                <strong style={{ fontWeight: 700, color: "#0f172a" }}>
+                  {capFirst(longDate)}
+                </strong>
+              </p>
+              <p style={LINE_GRAY}>
+                Hora:{" "}
+                <strong style={{ fontWeight: 700, color: "#0f172a" }}>
+                  {justTime}
+                </strong>
+              </p>
+            </div>
+          </div>
+
+          {isMobile && (
+            <div style={{ marginTop: 16, display: "grid", placeItems: "center" }}>
+              <img
+                src={ESCUDO_SRC}
+                alt="Escudo RC Celta"
+                decoding="async"
+                loading="eager"
+                style={{ width: ESCUDO_W, height: "auto", opacity: 0.98 }}
+              />
+            </div>
+          )}
+        </section>
+      </main>
+    </>
+  );
+}
