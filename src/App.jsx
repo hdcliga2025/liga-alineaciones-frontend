@@ -1,9 +1,7 @@
-﻿// src/App.jsx
-import { h } from "preact";
+﻿import { h } from "preact";
 import { useState } from "preact/hooks";
 import { Router } from "preact-router";
 
-/* Infra */
 import AuthWatcher from "./components/AuthWatcher.jsx";
 import NavBar from "./components/NavBar.jsx";
 
@@ -21,17 +19,20 @@ import HazTu11 from "./pages/HazTu11.jsx";
 import Clasificacion from "./pages/Clasificacion.jsx";
 import Admin from "./pages/Admin.jsx";
 
-/* Subpáginas */
+/* Subcards / novas páxinas */
 import ProximoPartido from "./pages/ProximoPartido.jsx";
 import VindeirosPartidos from "./pages/VindeirosPartidos.jsx";
 import PartidosFinalizados from "./pages/PartidosFinalizados.jsx";
 
-/* Convocatoria oficial como páxina propia */
+/* Páginas aliñación */
 import ConvocatoriaProximo from "./pages/ConvocatoriaProximo.jsx";
+import AlineacionOficial from "./pages/AlineacionOficial.jsx";
+import ResultadosUltimaAlineacion from "./pages/ResultadosUltimaAlineacion.jsx";
 
-/* Logout forzado (si lo usas) */
+/* Logout forzado */
 import ForceLogout from "./pages/ForceLogout.jsx";
 
+/* 404 */
 const NotFound = () => (
   <main style={{ padding: "1rem" }}>
     <h2>Páxina non atopada</h2>
@@ -46,7 +47,6 @@ export default function App() {
       : "/"
   );
 
-  // Ocultar NavBar en portada y en cualquier variante de /login, /register, /logout
   const hidePrefixes = ["/login", "/register", "/logout"];
   const shouldHideNav =
     currentPath === "/" ||
@@ -73,13 +73,15 @@ export default function App() {
         <Clasificacion path="/clasificacion" />
         <Admin path="/admin" />
 
-        {/* Subpáginas */}
+        {/* Subcards */}
         <ProximoPartido path="/proximo-partido" />
         <VindeirosPartidos path="/vindeiros-partidos" />
         <PartidosFinalizados path="/partidos-finalizados" />
 
-        {/* Convocatoria oficial (ruta propia) */}
+        {/* Aliñación */}
         <ConvocatoriaProximo path="/convocatoria-oficial" />
+        <AlineacionOficial path="/alineacion-oficial" />
+        <ResultadosUltimaAlineacion path="/resultados-ultima-alineacion" />
 
         {/* 404 */}
         <NotFound default />

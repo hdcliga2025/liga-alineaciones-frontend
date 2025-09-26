@@ -50,14 +50,14 @@
 @media(max-width:559px){.main-card{min-height:100px}}
 .main-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px var(--dash-shadow-strong);border-color:#e2e8f0}
 
-/* Al ABRIR en PC: bajar card raíz y anular su hover para que nunca tape subcards */
+/* Ao abrir en PC: baixar card raíz e anular o seu hover para que nunca tape subcards */
 @media(min-width:960px){
   .open--partidos .main-card,
   .open--alineacions .main-card,
   .open--clasificacions .main-card{
     z-index:-1; transform:none !important;
     box-shadow:0 1px 2px var(--dash-shadow) !important;
-    pointer-events:none; /* evita cualquier hover sobre la raíz abierta */
+    pointer-events:none; /* evita calquera hover sobre a raíz aberta */
   }
 }
 
@@ -80,7 +80,7 @@
 .main-block.open--alineacions .chev{ color: var(--amber-500); }
 .main-block.open--clasificacions .chev{ color: var(--violet-500); }
 
-/* ===== Subgrid/Subcards (siempre por delante) ===== */
+/* ===== Subgrid/Subcards (sempre por diante) ===== */
 .subgrid{
   overflow:hidden;max-height:0;opacity:.0;transform:translateY(-6px);
   transition:max-height .25s ease,opacity .2s ease,transform .25s ease;
@@ -112,3 +112,14 @@
 .sub-texts{display:grid;gap:2px}
 .sub-title{font:700 16px/1.15 'Montserrat',system-ui,sans-serif;margin:0}
 .sub-desc{font:400 13px/1.25 'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}
+
+/* ===== Animación sutil para a subtarxeta “Fai aquí a túa aliñación” ===== */
+@keyframes softPulse3s {
+  0%   { background: #ffffff; }
+  50%  { background: linear-gradient(180deg,#f0f9ff,#e0f2fe); }
+  100% { background: #ffffff; }
+}
+/* Aplicada unicamente á subtarxeta de /haz-tu-11 */
+#sub-alineacions .subcard[href="/haz-tu-11"]{
+  animation: softPulse3s 3s ease-in-out infinite;
+}
