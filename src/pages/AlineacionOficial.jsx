@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
 const cap = (s="") => (s || "").toUpperCase();
+const isUUID = (v="") => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+
 function fmtDT(iso) {
   if (!iso) return { fecha: "-", hora: "-" };
   try {
@@ -34,45 +36,24 @@ const S = {
   wrap: { maxWidth: 1080, margin: "0 auto", padding: 16 },
   h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
   sub: { margin: "0 0 12px", color: "#475569", fontSize: 16 },
-  resumen: {
-    margin:"0 0 10px", padding:"10px 12px", borderRadius:12,
-    border:"1px solid #dbeafe",
-    background:"linear-gradient(180deg,#fee2e2,#fecaca)",
-    color:"#7f1d1d"
-  },
+  resumen: { margin:"0 0 10px", padding:"10px 12px", borderRadius:12, border:"1px solid #dbeafe", background:"linear-gradient(180deg,#fee2e2,#fecaca)", color:"#7f1d1d" },
   resumeLine: { margin: 0, fontSize: 18, fontWeight: 600, letterSpacing: ".35px", lineHeight: 1.45 },
   posHeader: { margin:"14px 0 10px", padding:"2px 4px 8px", fontWeight:700, color:"#7f1d1d", borderLeft:"4px solid #fecaca", borderBottom:"2px solid #fecaca" },
   grid: (isMobile) => ({ display:"grid", gridTemplateColumns: isMobile ? "repeat(3, minmax(0,1fr))" : "repeat(4, minmax(0,1fr))", gap:12 }),
-  card: (picked)=>({
-    position:"relative", border: "1px solid #fecaca", borderRadius:16, padding:10,
+  card: (picked)=>({ position:"relative", border: "1px solid #fecaca", borderRadius:16, padding:10,
     background: picked ? "linear-gradient(180deg,#fee2e2,#fecaca)" : "#fff",
-    boxShadow: picked ? "0 0 0 2px rgba(239,68,68,.25), 0 8px 26px rgba(239,68,68,.18)" : "0 2px 8px rgba(0,0,0,.06)"
-  }),
-  frame: (isMobile)=>({
-    width:"100%", height: isMobile ? 172 : 320, borderRadius:12, overflow:"hidden",
-    background:"#ffffff", display:"grid", placeItems:"center", border:"1px solid #e5e7eb", position:"relative"
-  }),
+    boxShadow: picked ? "0 0 0 2px rgba(239,68,68,.25), 0 8px 26px rgba(239,68,68,.18)" : "0 2px 8px rgba(0,0,0,.06)" }),
+  frame: (isMobile)=>({ width:"100%", height: isMobile ? 172 : 320, borderRadius:12, overflow:"hidden", background:"#ffffff",
+    display:"grid", placeItems:"center", border:"1px solid #e5e7eb", position:"relative" }),
   img: { width:"100%", height:"100%", objectFit:"contain", background:"#ffffff" },
   name: { margin:"8px 0 0", font:"700 15px/1.2 Montserrat, system-ui, sans-serif", color:"#0f172a", textAlign:"center" },
   meta: { margin:"2px 0 0", color:"#475569", fontSize:13, textAlign:"center" },
   rowBtns: { display:"grid", gridTemplateColumns:"85% 15%", gap:8, alignItems:"stretch", marginTop:10 },
-  btnLoad: {
-    width:"100%", padding:"9px 12px", borderRadius:10, background:"linear-gradient(180deg,#e7f6ff,#cfeeff)",
-    color:"#075985", fontWeight:800, border:"3px solid #38bdf8", cursor:"pointer"
-  },
-  btnTrash: {
-    width:"100%", padding:"9px 12px", borderRadius:10, background:"linear-gradient(180deg,#ffd8d8,#ffbcbc)",
-    color:"#7f1d1d", fontWeight:800, border:"3px solid #ef4444", cursor:"pointer", display:"grid", placeItems:"center"
-  },
-  btnBottom: {
-    width:"100%", padding:"9px 12px", borderRadius:10, background:"linear-gradient(180deg,#e7f6ff,#cfeeff)",
-    color:"#075985", fontWeight:800, border:"3px solid #38bdf8", cursor:"pointer", marginTop:14
-  },
-  counter: {
-    position:"absolute", left:"50%", top:"78%", transform:"translate(-50%,-50%)",
-    fontFamily:"Montserrat, system-ui, sans-serif", fontWeight:900, fontSize:30, color:"#0c4a6e",
-    background:"rgba(56,189,248,.55)", padding:"6px 12px", borderRadius:999, letterSpacing:1.1, userSelect:"none", pointerEvents:"none"
-  }
+  btnLoad: { width:"100%", padding:"9px 12px", borderRadius:10, background:"linear-gradient(180deg,#e7f6ff,#cfeeff)", color:"#075985", fontWeight:800, border:"3px solid #38bdf8", cursor:"pointer" },
+  btnTrash: { width:"100%", padding:"9px 12px", borderRadius:10, background:"linear-gradient(180deg,#ffd8d8,#ffbcbc)", color:"#7f1d1d", fontWeight:800, border:"3px solid #ef4444", cursor:"pointer", display:"grid", placeItems:"center" },
+  btnBottom: { width:"100%", padding:"9px 12px", borderRadius:10, background:"linear-gradient(180deg,#e7f6ff,#cfeeff)", color:"#075985", fontWeight:800, border:"3px solid #38bdf8", cursor:"pointer", marginTop:14 },
+  counter: { position:"absolute", left:"50%", top:"78%", transform:"translate(-50%,-50%)", fontFamily:"Montserrat, system-ui, sans-serif",
+    fontWeight:900, fontSize:30, color:"#0c4a6e", background:"rgba(56,189,248,.55)", padding:"6px 12px", borderRadius:999, letterSpacing:1.1, userSelect:"none", pointerEvents:"none" }
 };
 
 export default function AlineacionOficial(){
@@ -95,7 +76,6 @@ export default function AlineacionOficial(){
 
   useEffect(() => {
     (async () => {
-      // Admin?
       try {
         const { data: sess } = await supabase.auth.getSession();
         const uid = sess?.session?.user?.id || null;
@@ -105,7 +85,6 @@ export default function AlineacionOficial(){
         }
       } catch {}
 
-      // match de referencia
       const { data: top } = await supabase
         .from("matches_vindeiros")
         .select("id,equipo1,equipo2,match_iso")
@@ -118,14 +97,12 @@ export default function AlineacionOficial(){
         if (nm?.match_iso) setHeader({ equipo1: cap(nm.equipo1||""), equipo2: cap(nm.equipo2||""), match_iso: nm.match_iso });
       }
 
-      // plantilla completa
       const { data: js } = await supabase
         .from("jugadores")
         .select("id, nombre, dorsal, foto_url")
         .order("dorsal", { ascending: true });
       setPlayers(js || []);
 
-      // precargar once oficial existente
       try {
         const iso =
           top?.match_iso ||
@@ -159,18 +136,14 @@ export default function AlineacionOficial(){
     setLastCounterId(id);
   }
 
-  function showToast(m, ms=2400){
+  function showToast(m, ms=2600){
     setToast(m);
     setTimeout(()=>setToast(""), ms);
   }
 
   async function resolveEncuentroId(iso) {
-    // 1) intentar en vindeiros
     const a = await supabase.from("matches_vindeiros").select("id").eq("match_iso", iso).maybeSingle();
     if (a?.data?.id) return a.data.id;
-    // 2) intentar en finalizados
-    const b = await supabase.from("matches_finalizados").select("id").eq("match_iso", iso).maybeSingle();
-    if (b?.data?.id) return b.data.id;
     return null;
   }
 
@@ -182,27 +155,41 @@ export default function AlineacionOficial(){
     setSaving(true);
     try {
       const iso = header.match_iso;
-
-      // 🔑 NUEVO: necesitamos encuentro_id (NOT NULL na BD)
       const encuentro_id = await resolveEncuentroId(iso);
-      if (!encuentro_id) {
-        showToast("Non atopei o encontro en Vindeiros/Finalizados. Sube ou crea o partido primeiro.");
+      if (!encuentro_id) { showToast("Crea o encontro en Vindeiros antes de gardar."); setSaving(false); return; }
+
+      const ids = [...sel];
+      const invalid = ids.filter(id => !isUUID(id));
+      if (invalid.length) {
+        const byId = new Map(players.map(p => [p.id, p]));
+        const names = invalid.map(id => byId.get(id)?.nombre || String(id));
+        showToast(`IDs non-UUID en xogadores: ${names.join(", ")}`);
         setSaving(false);
         return;
       }
 
-      // borrar previo deste encontro
-      const del = await supabase.from("alineacion_oficial").delete().eq("encuentro_id", encuentro_id);
-      if (del.error) throw del.error;
+      const check = await supabase.from("jugadores").select("id").in("id", ids);
+      const okSet = new Set((check.data||[]).map(r=>r.id));
+      if (okSet.size !== ids.length) {
+        const missing = ids.filter(id => !okSet.has(id));
+        showToast(`Xogadores inexistentes: ${missing.join(", ")}`);
+        setSaving(false);
+        return;
+      }
 
-      // insertar novo
+      await supabase.from("alineacion_oficial").delete().eq("encuentro_id", encuentro_id);
+
       const now = new Date().toISOString();
-      const rows = [...sel].map(jid => ({
+      // 🔧 Hotfix: añadimos jugadores_ids: [] para no violar NOT NULL si quedara en la tabla
+      const rows = ids.map(jid => ({
         jugador_id: jid,
-        match_iso: iso,           // se existe na táboa, perfecto
-        encuentro_id,             // requerido NOT NULL segundo a BD
-        updated_at: now
+        match_iso: iso,
+        encuentro_id,
+        updated_at: now,
+        jugadores_ids: [] // <- '{}'::uuid[] en PG
       }));
+
+      console.log("[AO] insert rows:", rows);
       const ins = await supabase.from("alineacion_oficial").insert(rows);
       if (ins.error) throw ins.error;
 
