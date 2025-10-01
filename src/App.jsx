@@ -1,9 +1,16 @@
-﻿import { h } from "preact";
+﻿// src/App.jsx
+import { h } from "preact";
 import { useState } from "preact/hooks";
 import { Router } from "preact-router";
+import { Suspense } from "preact/compat";
 
 import AuthWatcher from "./components/AuthWatcher.jsx";
 import NavBar from "./components/NavBar.jsx";
+
+// Fallback ultra-lixeiro e utilidades de perf
+import PageLoader from "./components/PageLoader.jsx";
+import Prefetcher from "./components/Prefetcher.jsx";
+import VersionChecker from "./components/VersionChecker.jsx";
 
 /* Públicas */
 import LandingPage from "./pages/LandingPage.jsx";
@@ -55,37 +62,42 @@ export default function App() {
   return (
     <>
       <AuthWatcher />
+      <Prefetcher currentPath={currentPath} />
+      <VersionChecker />
+
       {!shouldHideNav && <NavBar currentPath={currentPath} />}
 
-      <Router onChange={(e) => setCurrentPath(e.url)}>
-        {/* Públicas */}
-        <LandingPage path="/" />
-        <Login path="/login" />
-        <Register path="/register" />
-        <ForceLogout path="/logout" />
+      <Suspense fallback={<PageLoader />}>
+        <Router onChange={(e) => setCurrentPath(e.url)}>
+          {/* Públicas */}
+          <LandingPage path="/" />
+          <Login path="/login" />
+          <Register path="/register" />
+          <ForceLogout path="/logout" />
 
-        {/* Privadas */}
-        <Dashboard path="/dashboard" />
-        <Notificacions path="/notificacions" />
-        <Perfil path="/perfil" />
-        <Partidos path="/partidos" />
-        <HazTu11 path="/haz-tu-11" />
-        <Clasificacion path="/clasificacion" />
-        <Admin path="/admin" />
+          {/* Privadas */}
+          <Dashboard path="/dashboard" />
+          <Notificacions path="/notificacions" />
+          <Perfil path="/perfil" />
+          <Partidos path="/partidos" />
+          <HazTu11 path="/haz-tu-11" />
+          <Clasificacion path="/clasificacion" />
+          <Admin path="/admin" />
 
-        {/* Subcards */}
-        <ProximoPartido path="/proximo-partido" />
-        <VindeirosPartidos path="/vindeiros-partidos" />
-        <PartidosFinalizados path="/partidos-finalizados" />
+          {/* Subcards */}
+          <ProximoPartido path="/proximo-partido" />
+          <VindeirosPartidos path="/vindeiros-partidos" />
+          <PartidosFinalizados path="/partidos-finalizados" />
 
-        {/* Aliñación */}
-        <ConvocatoriaProximo path="/convocatoria-oficial" />
-        <AlineacionOficial path="/alineacion-oficial" />
-        <ResultadosUltimaAlineacion path="/resultados-ultima-alineacion" />
+          {/* Aliñación */}
+          <ConvocatoriaProximo path="/convocatoria-oficial" />
+          <AlineacionOficial path="/alineacion-oficial" />
+          <ResultadosUltimaAlineacion path="/resultados-ultima-alineacion" />
 
-        {/* 404 */}
-        <NotFound default />
-      </Router>
+          {/* 404 */}
+          <NotFound default />
+        </Router>
+      </Suspense>
     </>
   );
 }

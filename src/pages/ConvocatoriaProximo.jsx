@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
 /* ===== Utils ===== */
+// Comentario técnico: normalizamos nombre/posición a partir del nombre de archivo si existe patrón "<dorsal>-<nombre>-<POS>.ext"
 const cap = (s="") => (s || "").toUpperCase();
 function fmtDT(iso) {
   if (!iso) return { fecha: "-", hora: "-" };
@@ -75,7 +76,6 @@ const S = {
   name: { margin:"8px 0 0", font:"700 15px/1.2 Montserrat, system-ui, sans-serif", color:"#0f172a", textAlign:"center" },
   meta: { margin:"2px 0 0", color:"#475569", fontSize:13, textAlign:"center" },
 
-  // Botonera superior 85% + 15% (misma altura)
   btnRow: { display:"grid", gridTemplateColumns:"85% 15%", gap:8, alignItems:"stretch", marginTop:10 },
   btnPrimary: {
     width:"100%", padding:"9px 12px",
@@ -94,7 +94,6 @@ const S = {
     cursor:"pointer",
     display:"grid", placeItems:"center"
   },
-  // Botón inferior (solo guardar)
   btnBottom: {
     width:"100%", padding:"9px 12px",
     borderRadius:10,
@@ -104,7 +103,6 @@ const S = {
     cursor:"pointer", marginTop:14
   },
 
-  // CONVO más grande, menos transparente y más abajo
   convoTag: {
     position:"absolute",
     left:"50%", top:"82%", transform:"translate(-50%,-50%)",
@@ -163,7 +161,7 @@ export default function ConvocatoriaProximo() {
         .order("dorsal", { ascending: true });
       setPlayers(js || []);
 
-      // header
+      // header (match_iso de referencia)
       const { data: top } = await supabase
         .from("matches_vindeiros")
         .select("equipo1,equipo2,match_iso")
@@ -217,9 +215,13 @@ export default function ConvocatoriaProximo() {
     setSaving(true);
     try {
       const convocados = [...selected];
-      await supabase.from("convocatoria_publica").delete().neq("jugador_id", "00000000-0000-0000-0000-000000000000");
+
+      // Comentario técnico: limpiamos tabla completa de manera robusta (no valores mágicos)
+      await supabase.from("convocatoria_publica").delete().not("jugador_id","is", null);
+
       if (convocados.length) {
-        const rows = convocados.map(jid => ({ jugador_id: jid, updated_at: new Date().toISOString() }));
+        const now = new Date().toISOString();
+        const rows = convocados.map(jid => ({ jugador_id: jid, updated_at: now }));
         const { error } = await supabase.from("convocatoria_publica").insert(rows);
         if (error) throw error;
       }

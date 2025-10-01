@@ -108,6 +108,8 @@ export default function AlineacionOficial(){
   const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
   const [sel, setSel] = useState(new Set());
   const [lastCounterId, setLastCounterId] = useState(null);
+  const [toast, setToast] = useState("");
+  const [saving, setSaving] = useState(false);
   const max11 = 11;
 
   useEffect(() => {
@@ -119,6 +121,7 @@ export default function AlineacionOficial(){
 
   useEffect(() => {
     (async () => {
+      // match de referencia
       const { data: top } = await supabase
         .from("matches_vindeiros")
         .select("equipo1,equipo2,match_iso")
@@ -129,11 +132,21 @@ export default function AlineacionOficial(){
         if (nm?.match_iso) setHeader({ equipo1: cap(nm.equipo1||""), equipo2: cap(nm.equipo2||""), match_iso: nm.match_iso });
       }
 
+      // plantilla completa (o club escolle entre eles)
       const { data: js } = await supabase
         .from("jugadores")
         .select("id, nombre, dorsal, foto_url")
         .order("dorsal", { ascending: true });
       setPlayers(js || []);
+
+      // Si ya había once oficial para este match, precargar selección
+      try {
+        const iso = top?.match_iso || (await supabase.from("next_match").select("match_iso").eq("id",1).maybeSingle()).data?.match_iso;
+        if (iso) {
+          const { data: ofi } = await supabase.from("alineacion_oficial").select("jugador_id").eq("match_iso", iso);
+          if (ofi && ofi.length) setSel(new Set(ofi.map(r=>r.jugador_id)));
+        }
+      } catch {}
     })();
   }, []);
 
@@ -159,9 +172,28 @@ export default function AlineacionOficial(){
   }
 
   async function loadOfficial() {
-    if (sel.size !== 11) return;
-    // guardar once oficial → TODO supabase (tabla lineup_oficial)
-    // feedback silencioso (sen confirm duplicada)
+    if (sel.size !== 11) { setToast("Escolle 11 xogadores."); setTimeout(()=>setToast(""), 1500); return; }
+    if (!header?.match_iso) { setToast("Falta o partido de referencia."); setTimeout(()=>setToast(""), 1500); return; }
+
+    setSaving(true);
+    try {
+      const iso = header.match_iso;
+      // Limpiamos once oficial previo para ese match e inserimos o novo
+      await supabase.from("alineacion_oficial").delete().eq("match_iso", iso);
+      const now = new Date().toISOString();
+      const rows = [...sel].map(jid => ({ jugador_id: jid, match_iso: iso, updated_at: now }));
+      const { error } = await supabase.from("alineacion_oficial").insert(rows);
+      if (error) throw error;
+
+      setToast("Aliñación oficial gardada.");
+      setTimeout(()=>setToast(""), 1600);
+    } catch (e) {
+      console.error(e);
+      setToast("Erro gardando a aliñación oficial.");
+      setTimeout(()=>setToast(""), 2000);
+    } finally {
+      setSaving(false);
+    }
   }
   function resetAll(){ setSel(new Set()); setLastCounterId(null); }
 
@@ -179,7 +211,7 @@ export default function AlineacionOficial(){
           <p style={{...S.resumeLine, opacity:.9}}>{sFecha} | {sHora}</p>
 
           <div style={S.rowBtns}>
-            <button style={S.btnLoad} onClick={loadOfficial} disabled={sel.size!==11}>{loadLabel}</button>
+            <button style={S.btnLoad} onClick={loadOfficial} disabled={sel.size!==11 || saving}>{saving ? "Gardando…" : loadLabel}</button>
             <button style={S.btnTrash} onClick={resetAll} title="Restaurar" aria-label="Restaurar">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M3 6h18" stroke="#7f1d1d" strokeWidth="3.2" strokeLinecap="round"/>
@@ -219,7 +251,17 @@ export default function AlineacionOficial(){
         );
       })}
 
-      <button style={S.btnBottom} onClick={loadOfficial} disabled={sel.size!==11}>{loadLabel}</button>
+      <button style={S.btnBottom} onClick={loadOfficial} disabled={sel.size!==11 || saving}>{saving ? "Gardando…" : loadLabel}</button>
+
+      {toast && (
+        <div role="status" aria-live="polite" style={{
+          position:"fixed", bottom:18, left:"50%", transform:"translateX(-50%)",
+          background:"#0ea5e9", color:"#fff", padding:"10px 16px",
+          borderRadius:12, boxShadow:"0 10px 22px rgba(2,132,199,.35)", fontWeight:700
+        }}>
+          {toast}
+        </div>
+      )}
     </main>
   );
 }

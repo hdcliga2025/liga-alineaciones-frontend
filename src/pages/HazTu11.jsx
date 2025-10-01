@@ -3,7 +3,7 @@ import { h } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
-/* Utils */
+/* Utils (comparten patrón con outras páxinas) */
 function safeDecode(s = "") { try { return decodeURIComponent(s); } catch { return s.replace(/%20/g, " "); } }
 function parseFromFilename(url = "") {
   const last = (url.split("?")[0].split("#")[0].split("/").pop() || "").trim();
@@ -36,7 +36,6 @@ const S = {
   },
   resumeLine: { margin: 0, fontSize: 19, fontWeight: 500, letterSpacing: ".35px", lineHeight: 1.5 },
 
-  /* top: 15% 70% 15% — iguales alturas */
   topRow: { display:"grid", gridTemplateColumns:"15% 70% 15%", gap:8, alignItems:"stretch", margin:"8px 0 12px" },
   btnInfo: {
     width:"100%", padding:"9px 12px",
@@ -104,7 +103,6 @@ const S = {
     letterSpacing:1.1, userSelect:"none", pointerEvents:"none"
   },
 
-  // Popup confirmación
   modalBg: { position:"fixed", inset:0, background:"rgba(2,6,23,.45)", display:"grid", placeItems:"center", zIndex:9999 },
   modal: {
     width:"min(92vw,520px)",
@@ -130,6 +128,7 @@ export default function HazTu11() {
   const [sel, setSel] = useState(new Set());
   const [lastCounterId, setLastCounterId] = useState(null);
   const [showOK, setShowOK] = useState(false);
+  const [toast, setToast] = useState("");
   const max11 = 11;
 
   useEffect(() => {
@@ -141,9 +140,11 @@ export default function HazTu11() {
 
   useEffect(() => {
     (async () => {
+      // Obtemos convocatoria publicada
       const { data: pub } = await supabase.from("convocatoria_publica").select("jugador_id");
       const ids = (pub || []).map(r => r.jugador_id);
 
+      // match de referencia
       const { data: top } = await supabase
         .from("matches_vindeiros")
         .select("equipo1,equipo2,match_iso")
@@ -164,6 +165,22 @@ export default function HazTu11() {
       const byId = new Map((js||[]).map(j => [j.id, j]));
       const ordered = ids.map(id => byId.get(id)).filter(Boolean);
       setJugadores(ordered);
+
+      // Si hay alineación previa del usuario para este partido, precargarla
+      try {
+        const { data: sess } = await supabase.auth.getSession();
+        const uid = sess?.session?.user?.id || null;
+        const keyIso = (top?.match_iso || (await supabase.from("next_match").select("match_iso").eq("id",1).maybeSingle())?.data?.match_iso);
+        if (uid && keyIso) {
+          const { data: prev } = await supabase
+            .from("alineaciones_usuarios")
+            .select("jugador_id")
+            .eq("user_id", uid)
+            .eq("match_iso", keyIso);
+          if (prev && prev.length) setSel(new Set(prev.map(r=>r.jugador_id)));
+        }
+      } catch {}
+
       setLoading(false);
     })().catch(e => { console.error(e); setLoading(false); });
   }, []);
@@ -202,9 +219,31 @@ export default function HazTu11() {
   }
 
   async function saveMy11() {
-    if (sel.size !== 11) return;
-    // TODO: guardar en supabase (tabla user_lineups). De momento solo feedback visual:
-    setShowOK(true);
+    if (sel.size !== 11) { setToast("Escolle 11 xogadores."); setTimeout(()=>setToast(""), 1500); return; }
+    if (!header?.match_iso) { setToast("Falta o partido de referencia."); setTimeout(()=>setToast(""), 1500); return; }
+
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const uid = sess?.session?.user?.id || null;
+      if (!uid) { setToast("Precisas iniciar sesión."); setTimeout(()=>setToast(""), 1500); return; }
+
+      const iso = header.match_iso;
+      // Borramos o 11 previo do usuario para este partido e inserimos o novo (unha fila por xogador).
+      await supabase.from("alineaciones_usuarios").delete().eq("user_id", uid).eq("match_iso", iso);
+
+      const now = new Date().toISOString();
+      const rows = [...sel].map(jid => ({ user_id: uid, jugador_id: jid, match_iso: iso, updated_at: now }));
+      const { error } = await supabase.from("alineaciones_usuarios").insert(rows);
+      if (error) throw error;
+
+      setShowOK(true);
+      setToast("Aliñación gardada!");
+      setTimeout(()=>setToast(""), 1600);
+    } catch (e) {
+      console.error(e);
+      setToast("Erro gardando a aliñación.");
+      setTimeout(()=>setToast(""), 2000);
+    }
   }
   function clearMy11(){ setSel(new Set()); setLastCounterId(null); }
 
@@ -282,6 +321,16 @@ export default function HazTu11() {
               Grazas! Podes modificar a túa aliñación ata 2h antes do inicio do partido.
             </p>
           </div>
+        </div>
+      )}
+
+      {toast && (
+        <div role="status" aria-live="polite" style={{
+          position:"fixed", bottom:18, left:"50%", transform:"translateX(-50%)",
+          background:"#0ea5e9", color:"#fff", padding:"10px 16px",
+          borderRadius:12, boxShadow:"0 10px 22px rgba(2,132,199,.35)", fontWeight:700
+        }}>
+          {toast}
         </div>
       )}
     </main>
