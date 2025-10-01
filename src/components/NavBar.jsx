@@ -21,7 +21,8 @@ export default function NavBar({ currentPath = "" }) {
     let ro;
     const measure = () => {
       const h = headerRef.current?.getBoundingClientRect?.().height || 64;
-      setSpacerH(Math.max(56, Math.round(h)));
+      // margen de seguridad para evitar solapes por rounding/layout
+      setSpacerH(Math.max(56, Math.ceil(h) + 4));
     };
     if (hasRO) {
       ro = new ResizeObserver(measure);
@@ -172,9 +173,12 @@ export default function NavBar({ currentPath = "" }) {
       position:"fixed", top:0,left:0,right:0, zIndex:100,
       background:"rgba(255,255,255,0.9)",
       backdropFilter:"saturate(180%) blur(8px)",
-      borderBottom:"1px solid #e5e7eb"
+      borderBottom:"1px solid #e5e7eb",
+      // ← clave: o header non bloquea clics no contido inferior
+      pointerEvents:"none"
     },
-    container: { maxWidth:1080, margin:"0 auto", padding:"8px 12px",
+    container: {
+      maxWidth:1080, margin:"0 auto", padding:"8px 12px",
       display:"grid", gridTemplateColumns:"auto 1fr auto",
       alignItems:"center", gap:isNarrow?6:8
     },
@@ -185,9 +189,13 @@ export default function NavBar({ currentPath = "" }) {
       transform:`scaleX(${sx})`, transformOrigin:"center",
       letterSpacing:isNarrow?"0.35px":"0.6px", whiteSpace:"nowrap" },
     rightGroup: { justifySelf:"end", display:"flex", alignItems:"center", gap:isNarrow?8:10, whiteSpace:"nowrap" },
-    iconBtn: { width:isNarrow?36:38, height:isNarrow?36:38, display:"grid", placeItems:"center",
+    iconBtn: {
+      width:isNarrow?36:38, height:isNarrow?36:38, display:"grid", placeItems:"center",
       borderRadius:12, background:"#fff", border:"1px solid #eef2ff",
-      boxShadow:"0 4px 14px rgba(0,0,0,.06)", textDecoration:"none", outline:"none", cursor:"pointer" },
+      boxShadow:"0 4px 14px rgba(0,0,0,.06)", textDecoration:"none", outline:"none", cursor:"pointer",
+      // ← os botóns SI reciben clic
+      pointerEvents:"auto"
+    },
     spacer: { height: spacerH }
   };
 

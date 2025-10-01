@@ -1,5 +1,6 @@
+// src/pages/VindeirosPartidos.jsx
 import { h } from "preact";
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useState, useCallback } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
 /* ===== Estilos base ===== */
@@ -37,7 +38,7 @@ const ROW = (isMobile) => ({
 });
 const CARD_CONTENT = { paddingLeft: 48 };
 
-/* Título equipos — móvil 5% mayor; separador '-' en móvil; 'vs' minúsculas en desktop */
+/* Título equipos */
 const TEAMS_LINE = (isMobile) => ({
   font: `600 ${isMobile ? 15 : 16.8}px/1.12 Montserrat,system-ui,sans-serif`,
   color: "#0f172a",
@@ -52,9 +53,9 @@ const LINE_LABEL = (isMobile) => ({ fontWeight: isMobile ? 600 : 500, marginRigh
 
 const BADGE = { position:"absolute", top:8, left:8, font:"700 12px/1 Montserrat,system-ui,sans-serif", background:"#22c55e", color:"#fff", padding:"4px 7px", borderRadius:999 };
 
-/* Iconos: móvil en columna bajo el número */
-const ACTIONS = { display: "flex", gap: 8, alignItems: "center" };
-const ACTIONS_MOBILE_COLUMN = { position:"absolute", left:8, top:36, display:"grid", gap:5 };
+/* Iconos (ligero refuerzo de z-index/pointer events) */
+const ACTIONS = { display: "flex", gap: 8, alignItems: "center", position:"relative", zIndex: 2, pointerEvents:"auto" };
+const ACTIONS_MOBILE_COLUMN = { position:"absolute", left:8, top:36, display:"grid", gap:5, zIndex: 3, pointerEvents:"auto" };
 const ICONBTN = { width: 34, height: 34, display: "grid", placeItems: "center", borderRadius: 10, border: "1px solid #e2e8f0", background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,.06)", cursor: "pointer" };
 const SVGI = { fill: "none", stroke: "#0f172a", strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round" };
 const SVG_GREEN = { ...SVGI, stroke: "#16a34a" };
@@ -62,7 +63,6 @@ const SVG_RED = { ...SVGI, stroke: "#dc2626" };
 
 /* Form creación */
 const EDIT_CARD = { border: "1px solid #a7f3d0", borderRadius: 14, background: "linear-gradient(180deg,#ecfdf5,#f0fff7)", padding: 12, boxShadow: "0 6px 18px rgba(0,0,0,.05)", marginBottom: 12 };
-const GRID3 = { display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 10, alignItems:"center" };
 const INPUT = { width: "100%", borderRadius: 10, border: "1px solid #dbe2f0", background: "#fff", padding: "10px 12px", font: "400 14px/1.1 Montserrat,system-ui,sans-serif", color: "#0f172a", outline: "none" };
 const INPUT_UP = { ...INPUT, textTransform:"uppercase" };
 const SELECT = { ...INPUT, appearance: "none", paddingLeft: 36, paddingRight: 36, cursor: "pointer", textTransform: "none" };
@@ -84,6 +84,7 @@ export default function VindeirosPartidos() {
   const [createOpen, setCreateOpen] = useState(false);
   const [nextMatchIso, setNextMatchIso] = useState(null);
   const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
+  const [deletingId, setDeletingId] = useState(null);
 
   const [draft, setDraft] = useState({ equipo1:"", equipo2:"", lugar:"", competition:"", dateStr:"", timeStr:"" });
 
@@ -152,7 +153,15 @@ export default function VindeirosPartidos() {
     if (!r) return;
     if (!window.confirm("Subir este partido a ‘Próximo Partido’?")) return;
     try {
-      const payload = { id:1, equipo1:r.equipo1?.toUpperCase()||null, equipo2:r.equipo2?.toUpperCase()||null, lugar:r.lugar||null, competition:r.competition||null, match_iso:r.match_iso||null, updated_at:new Date().toISOString() };
+      const payload = {
+        id:1,
+        equipo1:r.equipo1?.toUpperCase()||null,
+        equipo2:r.equipo2?.toUpperCase()||null,
+        lugar:r.lugar||null,
+        competition:r.competition||null,
+        match_iso:r.match_iso||null,
+        updated_at:new Date().toISOString()
+      };
       const { error } = await supabase.from("next_match").upsert(payload, { onConflict:"id" });
       if (error) throw error;
       setNextMatchIso(r.match_iso || null);
@@ -165,8 +174,10 @@ export default function VindeirosPartidos() {
 
   async function onDelete(id) {
     if (!isAdmin) return;
+    if (!id) { showToast("ID non válido."); return; }
     if (!window.confirm("Borrar esta tarxeta de Vindeiros?")) return;
     try {
+      setDeletingId(id);
       const { error } = await supabase.from("matches_vindeiros").delete().eq("id", id);
       if (error) throw error;
       setRows(cur=>cur.filter(x=>x.id!==id));
@@ -174,6 +185,8 @@ export default function VindeirosPartidos() {
     } catch (e) {
       console.error(e);
       showToast("Erro eliminando a tarxeta.");
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -184,7 +197,14 @@ export default function VindeirosPartidos() {
     setSaving(true);
     try {
       const iso = toISOFromParts(draft.dateStr, draft.timeStr);
-      const payload = { equipo1: draft.equipo1.trim().toUpperCase(), equipo2: draft.equipo2.trim().toUpperCase(), lugar: draft.lugar.trim(), competition: draft.competition.trim(), match_iso: iso, updated_at: new Date().toISOString() };
+      const payload = {
+        equipo1: draft.equipo1.trim().toUpperCase(),
+        equipo2: draft.equipo2.trim().toUpperCase(),
+        lugar: draft.lugar.trim(),
+        competition: draft.competition.trim(),
+        match_iso: iso,
+        updated_at: new Date().toISOString()
+      };
       const { data, error } = await supabase.from("matches_vindeiros").insert(payload).select("*").single();
       if (error) throw error;
       setRows((cur)=>[...cur, data].sort(sortAscByDate));
@@ -198,6 +218,19 @@ export default function VindeirosPartidos() {
   }
 
   const view = useMemo(() => rows, [rows]);
+
+  const handlePromoteClick = useCallback((e, id) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    onPromote(id);
+  }, [rows, isAdmin, nextMatchIso]);
+
+  const handleDeleteClick = useCallback((e, id) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    if (deletingId && deletingId === id) return;
+    onDelete(id);
+  }, [deletingId, isAdmin]);
 
   return (
     <main style={WRAP}>
@@ -259,18 +292,33 @@ export default function VindeirosPartidos() {
         const timeStr = r.match_iso ? new Date(r.match_iso).toLocaleTimeString("gl-ES", { hour: "2-digit", minute:"2-digit", hour12: false }) : "—";
         const number = idx + 1;
         const isActive = nextMatchIso && r.match_iso && (new Date(r.match_iso).getTime() === new Date(nextMatchIso).getTime());
+        const isDeleting = deletingId === r.id;
 
         return (
-          <article key={r.id} style={isActive ? CARD_ACTIVE : CARD}>
+          <article key={r.id ?? idx} style={isActive ? CARD_ACTIVE : CARD}>
             <span style={BADGE}>{number}</span>
 
-            {/* Columna de acciones vertical bajo el número (solo móvil) */}
+            {/* Columna de accións vertical baixo o número (só móbil) */}
             {isAdmin && isMobile && (
               <div style={ACTIONS_MOBILE_COLUMN}>
-                <button type="button" style={ICONBTN} title="Subir a Próximo Partido" onClick={()=> onPromote(r.id)} aria-label="Subir a Próximo Partido">
+                <button
+                  type="button"
+                  style={ICONBTN}
+                  title="Subir a Próximo Partido"
+                  onClick={(e)=> handlePromoteClick(e, r.id)}
+                  aria-label="Subir a Próximo Partido"
+                  disabled={isDeleting}
+                >
                   <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_GREEN}><path d="M12 19V5" /><path d="M5 12l7-7 7 7" /></svg>
                 </button>
-                <button type="button" style={{ ...ICONBTN, marginTop: -2 }} title="Borrar tarxeta" onClick={()=> onDelete(r.id)} aria-label="Borrar tarxeta">
+                <button
+                  type="button"
+                  style={{ ...ICONBTN, marginTop: -2, opacity: isDeleting ? .6 : 1, cursor: isDeleting ? "not-allowed" : "pointer" }}
+                  title="Borrar tarxeta"
+                  onClick={(e)=> handleDeleteClick(e, r.id)}
+                  aria-label="Borrar tarxeta"
+                  disabled={isDeleting}
+                >
                   <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_RED}><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /></svg>
                 </button>
               </div>
@@ -287,13 +335,27 @@ export default function VindeirosPartidos() {
                 <div style={LINE(isMobile)}><span style={LINE_LABEL(isMobile)}>Hora:</span> {timeStr}</div>
               </div>
 
-              {/* Acciones a la derecha: solo desktop */}
+              {/* Accións á dereita: só desktop */}
               {isAdmin && !isMobile && (
                 <div style={ACTIONS}>
-                  <button type="button" style={ICONBTN} title="Subir a Próximo Partido" onClick={()=> onPromote(r.id)} aria-label="Subir a Próximo Partido">
+                  <button
+                    type="button"
+                    style={ICONBTN}
+                    title="Subir a Próximo Partido"
+                    onClick={(e)=> handlePromoteClick(e, r.id)}
+                    aria-label="Subir a Próximo Partido"
+                    disabled={isDeleting}
+                  >
                     <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_GREEN}><path d="M12 19V5" /><path d="M5 12l7-7 7 7" /></svg>
                   </button>
-                  <button type="button" style={ICONBTN} title="Borrar tarxeta" onClick={()=> onDelete(r.id)} aria-label="Borrar tarxeta">
+                  <button
+                    type="button"
+                    style={{ ...ICONBTN, opacity: isDeleting ? .6 : 1, cursor: isDeleting ? "not-allowed" : "pointer" }}
+                    title="Borrar tarxeta"
+                    onClick={(e)=> handleDeleteClick(e, r.id)}
+                    aria-label="Borrar tarxeta"
+                    disabled={isDeleting}
+                  >
                     <svg width="20" height="20" viewBox="0 0 24 24" style={SVG_RED}><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /></svg>
                   </button>
                 </div>
