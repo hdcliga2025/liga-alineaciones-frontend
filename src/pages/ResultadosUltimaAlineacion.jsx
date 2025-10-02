@@ -4,93 +4,113 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
 /* ===== Utils ===== */
-const cap = (s="") => (s || "").toUpperCase();
-const isUUID = (v="") => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
-function safeDecode(s = "") { try { return decodeURIComponent(s); } catch { return s.replace(/%20/g, " "); } }
+const POS_ORDER = ["POR", "DEF", "CEN", "DEL"];
+const cap = (s = "") => (s || "").toUpperCase();
+const isUUID = (v = "") =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+
+function safeDecode(s = "") {
+  try { return decodeURIComponent(s); } catch { return s.replace(/%20/g, " "); }
+}
 function parseFromFilename(url = "") {
   const last = (url.split("?")[0].split("#")[0].split("/").pop() || "").trim();
   const m = last.match(/^(\d+)-(.+)-(POR|DEF|CEN|DEL)\.(jpg|jpeg|png|webp)$/i);
   if (!m) return { dorsalFile: null, nameFile: null, posFile: null };
-  return { dorsalFile: parseInt(m[1],10), nameFile: safeDecode(m[2].replace(/_/g," ")), posFile: m[3].toUpperCase() };
+  return {
+    dorsalFile: parseInt(m[1], 10),
+    nameFile: safeDecode(m[2].replace(/_/g, " ")),
+    posFile: m[3].toUpperCase(),
+  };
 }
-function finalFromAll(p = {}) {
+function enrichPlayer(p = {}) {
   const { dorsalFile, nameFile, posFile } = parseFromFilename(p.foto_url || "");
   return {
-    dorsal: dorsalFile ?? (p.dorsal ?? null),
-    pos:    (posFile || p.pos || "").toUpperCase(),
-    nombre: (nameFile || p.nombre || "").trim()
+    id: p.id,
+    nombre: (nameFile || p.nombre || "").trim(),
+    dorsal: dorsalFile ?? p.dorsal ?? null,
+    pos: (posFile || p.pos || "").toUpperCase(),
   };
 }
 
 /* ===== Estilos ===== */
 const S = {
-  wrap: { padding:"72px 16px 24px", maxWidth:1080, margin:"0 auto" },
-  h1:   { font:"700 24px/1.15 Montserrat,system-ui", margin:"0 0 4px" },
-  sub:  { font:"400 14px/1.35 Montserrat,system-ui", color:"#475569", margin:"0 0 12px" },
+  wrap: { padding: "72px 16px 24px", maxWidth: 1080, margin: "0 auto" },
+  h1: { font: "700 24px/1.15 Montserrat,system-ui", margin: "0 0 4px" },
+  sub: { font: "400 14px/1.35 Montserrat,system-ui", color: "#475569", margin: "0 0 12px" },
 
   resumen: {
-    margin:"0 0 12px", padding:"10px 12px", borderRadius:12,
-    border:"1px solid #e2e8f0", background:"#f8fafc", color:"#0f172a"
+    margin: "0 0 12px",
+    padding: "10px 12px",
+    borderRadius: 12,
+    border: "1px solid #e2e8f0",
+    background: "#f8fafc",
+    color: "#0f172a",
   },
-  resumeTitle: { margin:0, font:"700 16px/1.2 Montserrat,system-ui" },
-  resumeLine:  { margin:"2px 0 0", font:"500 14px/1.2 Montserrat,system-ui", color:"#334155" },
+  resumeTitle: { margin: 0, font: "700 16px/1.2 Montserrat,system-ui" },
+  resumeLine: { margin: "2px 0 0", font: "500 14px/1.2 Montserrat,system-ui", color: "#334155" },
 
-  posHeader: { margin:"16px 0 8px", padding:"2px 4px 8px", fontWeight:700, color:"#0c4a6e", borderLeft:"4px solid #7dd3fc", borderBottom:"2px solid #e2e8f0" },
-  grid: (isMobile)=>({
-    display:"grid",
-    gridTemplateColumns: isMobile ? "repeat(3,minmax(0,1fr))" : "repeat(4,minmax(0,1fr))",
-    gap:12
-  }),
-
-  card: {
-    borderRadius:14, padding:10, position:"relative",
-    border: "2px solid #22c55e",
-    background: "linear-gradient(180deg,#ecfdf5,#dcfce7)",
-    boxShadow: "0 8px 22px rgba(34,197,94,.18)"
+  userCard: {
+    border: "1px solid #e2e8f0",
+    borderRadius: 14,
+    background: "#fff",
+    boxShadow: "0 2px 8px rgba(0,0,0,.06)",
+    padding: "12px 12px",
+    marginBottom: 12,
   },
-  frame: (isMobile)=>({
-    width:"100%", height: isMobile ? 172 : 320,
-    borderRadius:12, overflow:"hidden", background:"#ffffff",
-    border:"1px solid #e5e7eb", display:"grid", placeItems:"center"
-  }),
-  img: { width:"100%", height:"100%", objectFit:"contain", background:"#ffffff" },
-  name: { margin:"8px 0 0", font:"700 15px/1.2 Montserrat,system-ui", color:"#0f172a", textAlign:"center" },
-  meta: { margin:"2px 0 0", font:"400 13px/1.2 Montserrat,system-ui", color:"#475569", textAlign:"center" },
-
-  badge: {
-    position:"absolute", top:8, right:8, borderRadius:999, padding:"4px 8px",
-    font:"800 12px/1 Montserrat,system-ui",
-    color:"#065f46", background:"#bbf7d0", border:"1px solid #86efac"
+  userHeader: {
+    display: "grid",
+    gridTemplateColumns: "1fr auto",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+  },
+  userName: { margin: 0, font: "700 16px/1.15 Montserrat,system-ui" },
+  userScore: {
+    margin: 0,
+    font: "800 14px/1 Montserrat,system-ui",
+    color: "#065f46",
+    background: "#bbf7d0",
+    border: "1px solid #86efac",
+    padding: "5px 9px",
+    borderRadius: 999,
   },
 
-  empty: { padding:"12px 14px", border:"1px solid #e2e8f0", borderRadius:12, background:"#eef6ff", color:"#0f172a" }
+  posHeader: {
+    margin: "10px 0 6px",
+    padding: "2px 4px 6px",
+    fontWeight: 700,
+    color: "#0c4a6e",
+    borderLeft: "4px solid #7dd3fc",
+    borderBottom: "2px solid #e2e8f0",
+  },
+  list: { margin: 0, paddingLeft: 16 },
+  li: { font: "500 14px/1.35 Montserrat,system-ui", color: "#0f172a" },
+
+  empty: {
+    padding: "12px 14px",
+    border: "1px solid #e2e8f0",
+    borderRadius: 12,
+    background: "#eef6ff",
+    color: "#0f172a",
+  },
 };
 
-export default function ResultadosUltimaAlineacion(){
+export default function ResultadosUltimaAlineacion() {
   const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
-
-  const [header, setHeader] = useState(null);     // {equipo1, equipo2, match_iso}
+  const [header, setHeader] = useState(null); // {equipo1, equipo2, match_iso}
   const [matchIso, setMatchIso] = useState(null);
-  const [acertadosIds, setAcertadosIds] = useState([]);      // array<uuid>
-  const [jugadoresMap, setJugadoresMap] = useState(new Map()); // Map<uuid, jugadorRow>
+
+  // Map<jugador_id, jugador>
+  const [jugadoresMap, setJugadoresMap] = useState(new Map());
+
+  // resultados por usuaria: Array<{ user_id, display, hits: jugador_id[], hitsByPos: {POR:[],...}, total }>
+  const [userResults, setUserResults] = useState([]);
 
   useEffect(() => {
-    let raf=0;
-    const onR=()=>{ cancelAnimationFrame(raf); raf=requestAnimationFrame(()=> setIsMobile(window.innerWidth<=560)); };
-    window.addEventListener("resize", onR);
-    return ()=>{ window.removeEventListener("resize", onR); cancelAnimationFrame(raf); };
-  }, []);
-
-  useEffect(()=>{
     let alive = true;
-    (async ()=>{
+    (async () => {
       try {
-        /* 1) Usuario actual */
-        const { data: s } = await supabase.auth.getSession();
-        const uid = s?.session?.user?.id || null;
-
-        /* 2) match_iso: último con oficial; se non, next_match */
+        /* 1) Determinar o partido (usa o último con oficial; se non, next_match) */
         let mIso = null;
         const last = await supabase
           .from("alineacion_oficial")
@@ -105,11 +125,17 @@ export default function ResultadosUltimaAlineacion(){
           const { data: nm } = await supabase
             .from("next_match")
             .select("equipo1,equipo2,match_iso")
-            .eq("id",1)
+            .eq("id", 1)
             .maybeSingle();
-          if (!nm?.match_iso) { if (alive){ setHeader(null); setLoading(false); } return; }
+          if (!nm?.match_iso) {
+            if (alive) {
+              setHeader(null);
+              setLoading(false);
+            }
+            return;
+          }
           mIso = nm.match_iso;
-          setHeader({ equipo1: cap(nm.equipo1||""), equipo2: cap(nm.equipo2||""), match_iso: mIso });
+          if (alive) setHeader({ equipo1: cap(nm.equipo1 || ""), equipo2: cap(nm.equipo2 || ""), match_iso: mIso });
         }
 
         if (!header) {
@@ -118,94 +144,121 @@ export default function ResultadosUltimaAlineacion(){
             .select("equipo1,equipo2")
             .eq("match_iso", mIso)
             .maybeSingle();
-          if (mv) setHeader({ equipo1: cap(mv.equipo1||""), equipo2: cap(mv.equipo2||""), match_iso: mIso });
+          if (mv && alive) setHeader({ equipo1: cap(mv.equipo1 || ""), equipo2: cap(mv.equipo2 || ""), match_iso: mIso });
         }
+        if (alive) setMatchIso(mIso);
 
-        setMatchIso(mIso);
-        console.log("[Resultados] using match_iso:", mIso);
-
-        /* 3) Oficial → Set por match_iso */
+        /* 2) Set oficial por match_iso */
         const ofiQ = await supabase
           .from("alineacion_oficial")
           .select("jugador_id")
           .eq("match_iso", mIso);
-        const oficialSet = new Set((ofiQ.data||[]).map(r => r.jugador_id).filter(isUUID));
-        console.log("[Resultados] oficialSet size:", oficialSet.size);
+        const oficialSet = new Set((ofiQ.data || []).map((r) => r.jugador_id).filter(isUUID));
 
-        /* 4) Aliñación do usuario por match_iso (SOLO jugador_id) */
-        let myRows = [];
-        if (uid) {
-          const r = await supabase
-            .from("alineaciones_usuarios")
-            .select("jugador_id")
-            .eq("user_id", uid)
-            .eq("match_iso", mIso);
-          if (r.error) console.error("[Resultados] user lineup error:", r.error);
-          myRows = r.data || [];
+        /* 3) Traer todas as aliñacións de usuarias por match_iso (soporta filas duplicadas, dedup despois) */
+        const all = await supabase
+          .from("alineaciones_usuarios")
+          .select("user_id, jugador_id")
+          .eq("match_iso", mIso);
+        const rows = all.data || [];
+
+        /* 4) Perfil/nomes das usuarias implicadas */
+        const userIds = Array.from(new Set(rows.map((r) => r.user_id).filter(isUUID)));
+        let profilesMap = new Map();
+        if (userIds.length) {
+          const { data: profs } = await supabase
+            .from("profiles")
+            .select("id, first_name, nombre, full_name, email")
+            .in("id", userIds);
+          profilesMap = new Map(
+            (profs || []).map((p) => {
+              const label =
+                (p.first_name || "").trim() ||
+                (p.nombre || "").trim() ||
+                (p.full_name || "").trim().split(" ")[0] ||
+                (p.email || "").split("@")[0] ||
+                "usuaria";
+              return [p.id, label];
+            })
+          );
         }
 
-        const mine = (myRows||[])
-          .map(r => r.jugador_id)
-          .filter(isUUID);
+        /* 5) Traer catálogo de xogadores unha vez e indexar */
+        const { data: js } = await supabase
+          .from("jugadores")
+          .select("id, nombre, dorsal, foto_url");
+        const jMap = new Map((js || []).map((j) => [j.id, enrichPlayer(j)]));
+        if (alive) setJugadoresMap(jMap);
 
-        console.log("[Resultados] mine size:", mine.length);
-
-        /* 5) Intersección (acertados) */
-        const hits = mine.filter(id => oficialSet.has(id));
-        setAcertadosIds(hits);
-
-        /* 6) Datos dos xogadores para pintar */
-        if (hits.length) {
-          const { data: js } = await supabase
-            .from("jugadores")
-            .select("id, nombre, dorsal, foto_url");
-          const mp = new Map((js||[]).map(j => [j.id, j]));
-          setJugadoresMap(mp);
-        } else {
-          setJugadoresMap(new Map());
+        /* 6) Construír resultados por usuaria (hits = intersección contra oficialSet) */
+        const byUser = new Map(); // user_id -> Set<jugador_id escollidos>
+        for (const r of rows) {
+          if (!isUUID(r.user_id) || !isUUID(r.jugador_id)) continue;
+          if (!byUser.has(r.user_id)) byUser.set(r.user_id, new Set());
+          byUser.get(r.user_id).add(r.jugador_id);
         }
+
+        const results = [];
+        for (const [uid, pickedSet] of byUser.entries()) {
+          const picked = Array.from(pickedSet);
+          const hits = picked.filter((id) => oficialSet.has(id));
+          const hitsByPos = { POR: [], DEF: [], CEN: [], DEL: [] };
+
+          for (const id of hits) {
+            const pj = jMap.get(id);
+            if (!pj) continue;
+            const pos = pj.pos || "";
+            if (hitsByPos[pos]) hitsByPos[pos].push(pj);
+          }
+
+          // Ordenar por dorsal e nome en cada grupo
+          for (const k of POS_ORDER) {
+            hitsByPos[k].sort((a, b) => {
+              const da = a.dorsal ?? 999, db = b.dorsal ?? 999;
+              if (da !== db) return da - db;
+              return a.nombre.localeCompare(b.nombre, "gl");
+            });
+          }
+
+          results.push({
+            user_id: uid,
+            display: profilesMap.get(uid) || "usuaria",
+            total: hits.length,
+            hitsByPos,
+          });
+        }
+
+        // Ordenar usuarias por total de acertos desc; empate por nome
+        results.sort((a, b) => (b.total - a.total) || a.display.localeCompare(b.display, "gl"));
+
+        if (alive) setUserResults(results);
       } catch (e) {
-        console.error("[ResultadosUltimaAlineacion] init error:", e);
+        console.error("[ResultadosUltimaAlineacion] error:", e);
       } finally {
         if (alive) setLoading(false);
       }
     })();
-    return ()=>{ alive=false; };
-  },[]);
+    return () => { alive = false; };
+  }, []);
 
-  const itemsAcertados = useMemo(() => {
-    return acertadosIds.map(id => {
-      const base = jugadoresMap.get(id) || { id, nombre:"(descoñecido)", dorsal:null, foto_url:"" };
-      const info = finalFromAll(base);
-      return { id, ...base, ...info };
-    });
-  }, [acertadosIds, jugadoresMap]);
-
-  const grupos = useMemo(() => {
-    const g = { POR: [], DEF: [], CEN: [], DEL: [] };
-    for (const it of itemsAcertados) {
-      const pos = it.pos || "";
-      if (g[pos]) g[pos].push(it);
-    }
-    return g;
-  }, [itemsAcertados]);
-
+  // Cabecera bonita
   const { sFecha, sHora } = useMemo(() => {
-    if (!header?.match_iso) return { sFecha:"-", sHora:"-" };
-    try{
+    if (!header?.match_iso) return { sFecha: "-", sHora: "-" };
+    try {
       const d = new Date(header.match_iso);
       return {
-        sFecha: d.toLocaleDateString("gl-ES",{day:"2-digit",month:"2-digit",year:"numeric"}),
-        sHora:  d.toLocaleTimeString("gl-ES",{hour:"2-digit",minute:"2-digit"})
+        sFecha: d.toLocaleDateString("gl-ES", { day: "2-digit", month: "2-digit", year: "numeric" }),
+        sHora: d.toLocaleTimeString("gl-ES", { hour: "2-digit", minute: "2-digit" }),
       };
-    } catch { return { sFecha:"-", sHora:"-" }; }
+    } catch { return { sFecha: "-", sHora: "-" }; }
   }, [header]);
 
   return (
     <main style={S.wrap}>
       <h1 style={S.h1}>Resultados da última aliñación</h1>
       <p style={S.sub}>
-        Presentamos <strong>unicamente</strong> os xogadores acertados da túa aliñación (coinciden coa oficial).
+        Mostramos os acertos individuais de cada persoa participante, agrupados por posición
+        (POR, DEF, CEN, DEL) e ordeados por dorsal e nome.
       </p>
 
       {header && (
@@ -214,57 +267,52 @@ export default function ResultadosUltimaAlineacion(){
             {header ? `${cap(header.equipo1)} vs ${cap(header.equipo2)}` : ""}
           </p>
           <p style={S.resumeLine}>{sFecha} | {sHora}</p>
-          <p style={{...S.resumeLine, marginTop:6}}>
-            <strong>{acertadosIds.length}</strong> acertos
+          <p style={{ ...S.resumeLine, marginTop: 6 }}>
+            Participantes: <strong>{userResults.length}</strong>
           </p>
         </section>
       )}
 
       {loading && <div style={S.empty}>Cargando…</div>}
 
-      {!loading && acertadosIds.length===0 && (
+      {!loading && (!userResults.length || !matchIso) && (
         <div style={S.empty}>
           {matchIso
-            ? "Aínda non hai acertos rexistrados para este encontro."
+            ? "Aínda non hai aliñacións de usuarias rexistradas para este encontro."
             : "Non se puido determinar o encontro a comparar."}
         </div>
       )}
 
-      {!loading && acertadosIds.length>0 && (
-        <>
-          {[
-            ["POR","Porteiros"],
-            ["DEF","Defensas"],
-            ["CEN","Medios"],
-            ["DEL","Dianteiros"],
-          ].map(([k,label])=>{
-            const arr = grupos[k] || [];
-            if (!arr.length) return null;
+      {!loading && userResults.length > 0 && userResults.map((u) => (
+        <article key={u.user_id} style={S.userCard}>
+          <div style={S.userHeader}>
+            <h3 style={S.userName}>{u.display}</h3>
+            <p style={S.userScore}>{u.total} acertos</p>
+          </div>
+
+          {POS_ORDER.map((posKey) => {
+            const items = u.hitsByPos[posKey] || [];
+            if (!items.length) return null;
+            const label =
+              posKey === "POR" ? "Porteiros" :
+              posKey === "DEF" ? "Defensas" :
+              posKey === "CEN" ? "Medios" : "Dianteiros";
             return (
-              <section key={k}>
+              <section key={posKey}>
                 <div style={S.posHeader}>{label}</div>
-                <div style={S.grid(isMobile)}>
-                  {arr.map(p=>{
-                    const { dorsal, nombre, pos } = p;
-                    return (
-                      <article key={p.id} style={S.card}>
-                        <div style={S.frame(isMobile)}>
-                          {p.foto_url
-                            ? <img src={p.foto_url} alt={`Foto de ${nombre}`} style={S.img} loading="lazy" decoding="async"/>
-                            : <div style={{ color:"#cbd5e1" }}>Sen foto</div>}
-                        </div>
-                        <span style={S.badge} aria-label="Acerto">✔ ACERTO</span>
-                        <p style={S.name}>{dorsal != null ? `${String(dorsal).padStart(2,"0")} · ` : ""}{nombre}</p>
-                        <p style={S.meta}>{pos}</p>
-                      </article>
-                    );
-                  })}
-                </div>
+                <ul style={S.list}>
+                  {items.map((p) => (
+                    <li key={p.id} style={S.li}>
+                      {p.dorsal != null ? `${String(p.dorsal).padStart(2, "0")} · ` : ""}
+                      {p.nombre}
+                    </li>
+                  ))}
+                </ul>
               </section>
             );
           })}
-        </>
-      )}
+        </article>
+      ))}
     </main>
   );
 }
