@@ -45,21 +45,23 @@ const fmtDateTime = (iso) => {
 const S = {
   wrap: { padding: "72px 16px 24px", maxWidth: 1080, margin: "0 auto" },
   h1: { font: "700 24px/1.15 Montserrat,system-ui", margin: "0 0 4px" },
-  sub: { font: "400 14px/1.35 Montserrat,system-ui", color: "#475569", margin: "0 0 12px" },
 
-  // Cabeceira do encontro: máis grande + fondo verde degradado
+  // Subtexto máis grande
+  sub: { font: "400 16px/1.4 Montserrat,system-ui", color: "#475569", margin: "0 0 12px" },
+
+  // Cabeceira do encontro: fondo verde degradado + tamaño algo maior
   resumen: {
-    margin: "0 0 14px",
-    padding: "14px 16px",
+    margin: "0 0 16px",
+    padding: "16px 18px",
     borderRadius: 14,
     border: "1px solid #86efac",
     background: "linear-gradient(180deg,#dcfce7,#bbf7d0)",
     color: "#064e3b",
     boxShadow: "0 6px 18px rgba(22,163,74,.18)",
   },
-  resumeTitle: { margin: 0, font: "800 18px/1.25 Montserrat,system-ui", letterSpacing: ".2px" },
-  resumeLine: { margin: "4px 0 0", font: "700 15px/1.25 Montserrat,system-ui", color: "#065f46" },
-  resumeMuted: { margin: "6px 0 0", font: "600 14px/1.2 Montserrat,system-ui", color: "#065f46" },
+  resumeTitle: { margin: 0, font: "800 20px/1.25 Montserrat,system-ui", letterSpacing: ".2px" },
+  resumeLine: { margin: "6px 0 0", font: "700 16px/1.25 Montserrat,system-ui", color: "#065f46" },
+  resumeMuted: { margin: "8px 0 0", font: "700 15px/1.2 Montserrat,system-ui", color: "#065f46" },
 
   tableWrap: {
     width: "100%",
@@ -81,6 +83,8 @@ const S = {
     top: 0,
     whiteSpace: "nowrap",
   },
+  thSep: { borderRight: "1px solid #e2e8f0" }, // separador vertical
+
   td: {
     padding: "10px 12px",
     font: "500 14px/1.35 Montserrat,system-ui",
@@ -89,15 +93,23 @@ const S = {
     verticalAlign: "top",
     whiteSpace: "nowrap",
   },
+  tdSep: { borderRight: "1px solid #e2e8f0" }, // separador vertical ata a última columna
+
+  // Texto dos xogadores co mesmo tamaño que “Data e hora”
   tdPlayers: {
     padding: "10px 12px",
     borderBottom: "1px solid #f1f5f9",
     whiteSpace: "normal",
+    font: "500 14px/1.35 Montserrat,system-ui",
+    color: "#0f172a",
   },
 
   // Estilos de cada xogador na lista
-  hit: { color: "#0ea5e9", fontWeight: 700 },   // celeste + lixeiro bold
-  miss: { color: "#0f172a", fontWeight: 400 },  // un pouco máis fino
+  hit: { color: "#0ea5e9", fontWeight: 700 },  // celeste + bold lixeiro
+  miss: { color: "#0f172a", fontWeight: 400 }, // un pouco máis fino
+
+  // Estilo para a celda dos acertos (bold + celeste)
+  scoreCell: { fontWeight: 800, color: "#0ea5e9" },
 
   empty: {
     padding: "12px 14px",
@@ -262,7 +274,7 @@ export default function ResultadosUltimaAlineacion() {
     <main style={S.wrap}>
       <h1 style={S.h1}>Resultados da última aliñación</h1>
       <p style={S.sub}>
-        Listaxe con todos os resultados presentados en tempo e forma do último partido.
+        Listado con todos os resultados presentados en tempo e forma do último partido.
         Os acertos móstranse en celeste.
       </p>
 
@@ -293,18 +305,18 @@ export default function ResultadosUltimaAlineacion() {
           <table style={S.table}>
             <thead>
               <tr>
-                <th style={S.th}>Data e hora</th>
-                <th style={S.th}>Usuaria</th>
-                <th style={S.th}>Acertos</th>
-                <th style={S.th}>Alineación presentada</th>
+                <th style={{ ...S.th, ...S.thSep }}>Data e hora</th>
+                <th style={{ ...S.th, ...S.thSep }}>Usuaria</th>
+                <th style={{ ...S.th, ...S.thSep }}>Acertos</th>
+                <th style={S.th}>Aliñación presentada</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((r, i) => (
                 <tr key={i}>
-                  <td style={S.td}>{r.timeStr}</td>
-                  <td style={S.td}>{r.user}</td>
-                  <td style={S.td}>{r.total}</td>
+                  <td style={{ ...S.td, ...S.tdSep }}>{r.timeStr}</td>
+                  <td style={{ ...S.td, ...S.tdSep }}>{r.user}</td>
+                  <td style={{ ...S.td, ...S.tdSep, ...S.scoreCell }}>{r.total}</td>
                   <td style={S.tdPlayers}>
                     {r.players.map((p, idx) => (
                       <span
