@@ -46,10 +46,8 @@ const S = {
   wrap: { padding: "72px 16px 24px", maxWidth: 1080, margin: "0 auto" },
   h1: { font: "700 24px/1.15 Montserrat,system-ui", margin: "0 0 4px" },
 
-  // Subtexto máis grande
   sub: { font: "400 16px/1.4 Montserrat,system-ui", color: "#475569", margin: "0 0 12px" },
 
-  // Cabeceira do encontro: fondo verde degradado + tamaño algo maior
   resumen: {
     margin: "0 0 16px",
     padding: "16px 18px",
@@ -83,7 +81,7 @@ const S = {
     top: 0,
     whiteSpace: "nowrap",
   },
-  thSep: { borderRight: "1px solid #e2e8f0" }, // separador vertical
+  thSep: { borderRight: "1px solid #e2e8f0" },
 
   td: {
     padding: "10px 12px",
@@ -93,9 +91,8 @@ const S = {
     verticalAlign: "top",
     whiteSpace: "nowrap",
   },
-  tdSep: { borderRight: "1px solid #e2e8f0" }, // separador vertical ata a última columna
+  tdSep: { borderRight: "1px solid #e2e8f0" },
 
-  // Texto dos xogadores co mesmo tamaño que “Data e hora”
   tdPlayers: {
     padding: "10px 12px",
     borderBottom: "1px solid #f1f5f9",
@@ -104,11 +101,17 @@ const S = {
     color: "#0f172a",
   },
 
-  // Estilos de cada xogador na lista
-  hit: { color: "#0ea5e9", fontWeight: 700 },  // celeste + bold lixeiro
-  miss: { color: "#0f172a", fontWeight: 400 }, // un pouco máis fino
+  // Cada “dorsal · nome” nun bloque inseparable
+  playerChunk: { whiteSpace: "nowrap", display: "inline-block" },
 
-  // Estilo para a celda dos acertos (bold + celeste)
+  // Estilos de acerto/fallo
+  hit: { color: "#0ea5e9", fontWeight: 700 },   // celeste + bold lixeiro
+  miss: { color: "#0f172a", fontWeight: 400 },  // máis fino
+
+  // Separador entre xogadores: sempre negro e sen bold
+  sep: { color: "#0f172a", fontWeight: 400, padding: "0 6px" },
+
+  // Celda de acertos en bold e celeste
   scoreCell: { fontWeight: 800, color: "#0ea5e9" },
 
   empty: {
@@ -125,10 +128,7 @@ export default function ResultadosUltimaAlineacion() {
   const [loading, setLoading] = useState(true);
   const [header, setHeader] = useState(null); // {equipo1, equipo2, match_iso}
   const [matchIso, setMatchIso] = useState(null);
-
-  // Filas da táboa
-  // [{timeISO,timeStr,user,total,players: Array<{id,dorsal,nombre,isHit}>}]
-  const [rows, setRows] = useState([]);
+  const [rows, setRows] = useState([]); // [{timeISO,timeStr,user,total,players:[{id,dorsal,nombre,isHit}]}]
 
   useEffect(() => {
     let alive = true;
@@ -181,7 +181,7 @@ export default function ResultadosUltimaAlineacion() {
         const aRows = all.data || [];
         if (!aRows.length) { if (alive) { setRows([]); setLoading(false); } return; }
 
-        /* 4) Perfís para nome visible */
+        /* 4) Perfís */
         const { data: profs } = await supabase
           .from("profiles")
           .select("id, first_name, nombre, full_name, email");
@@ -203,7 +203,7 @@ export default function ResultadosUltimaAlineacion() {
           .select("id, nombre, dorsal, foto_url");
         const jMap = new Map((js || []).map(j => [j.id, enrichPlayer(j)]));
 
-        /* 6) Por usuaria → set picks e última hora */
+        /* 6) Agrupar por usuaria */
         const byUser = new Map(); // uid -> { picked:Set<uuid>, last:ISOString }
         for (const r of aRows) {
           if (!isUUID(r.user_id) || !isUUID(r.jugador_id)) continue;
@@ -215,7 +215,7 @@ export default function ResultadosUltimaAlineacion() {
           byUser.set(r.user_id, cur);
         }
 
-        /* 7) Construír filas: ordenar por posición→dorsal→nome e marcar acertos */
+        /* 7) Construír filas */
         const out = [];
         for (const [uid, { picked, last }] of byUser.entries()) {
           const players = Array.from(picked)
@@ -234,14 +234,14 @@ export default function ResultadosUltimaAlineacion() {
 
           out.push({
             timeISO: last,
-            timeStr: fmtDateTime(last), // data + hora
+            timeStr: fmtDateTime(last),
             user: profilesMap.get(uid) || "usuaria",
             total,
             players,
           });
         }
 
-        // Orde por data e hora (ascendente)
+        // Orde por data e hora (asc)
         out.sort((a, b) => {
           const ta = a.timeISO ? new Date(a.timeISO).getTime() : 0;
           const tb = b.timeISO ? new Date(b.timeISO).getTime() : 0;
@@ -319,12 +319,15 @@ export default function ResultadosUltimaAlineacion() {
                   <td style={{ ...S.td, ...S.tdSep, ...S.scoreCell }}>{r.total}</td>
                   <td style={S.tdPlayers}>
                     {r.players.map((p, idx) => (
-                      <span
-                        key={p.id || idx}
-                        style={p.isHit ? S.hit : S.miss}
-                      >
-                        {p.dorsal != null ? `${String(p.dorsal).padStart(2, "0")} · ` : ""}{p.nombre}
-                        {idx < r.players.length - 1 ? "   |   " : ""}
+                      <span key={p.id || idx}>
+                        <span
+                          style={{ ...S.playerChunk, ...(p.isHit ? S.hit : S.miss) }}
+                        >
+                          {p.dorsal != null ? `${String(p.dorsal).padStart(2, "0")} · ` : ""}{p.nombre}
+                        </span>
+                        {idx < r.players.length - 1 && (
+                          <span aria-hidden="true" style={S.sep}>|</span>
+                        )}
                       </span>
                     ))}
                   </td>
@@ -337,3 +340,4 @@ export default function ResultadosUltimaAlineacion() {
     </main>
   );
 }
+
