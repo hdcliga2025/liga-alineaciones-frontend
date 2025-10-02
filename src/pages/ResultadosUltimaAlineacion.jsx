@@ -31,11 +31,13 @@ function enrichPlayer(p = {}) {
     pos: (posFile || p.pos || "").toUpperCase(),
   };
 }
-const fmtTime = (iso) => {
+const fmtDateTime = (iso) => {
   if (!iso) return "—";
   try {
     const d = new Date(iso);
-    return d.toLocaleTimeString("gl-ES", { hour: "2-digit", minute: "2-digit" });
+    const f = d.toLocaleDateString("gl-ES", { day: "2-digit", month: "2-digit", year: "numeric" });
+    const t = d.toLocaleTimeString("gl-ES", { hour: "2-digit", minute: "2-digit" });
+    return `${f} ${t}`;
   } catch { return "—"; }
 };
 
@@ -45,16 +47,19 @@ const S = {
   h1: { font: "700 24px/1.15 Montserrat,system-ui", margin: "0 0 4px" },
   sub: { font: "400 14px/1.35 Montserrat,system-ui", color: "#475569", margin: "0 0 12px" },
 
+  // Cabeceira do encontro: máis grande + fondo verde degradado
   resumen: {
-    margin: "0 0 12px",
-    padding: "10px 12px",
-    borderRadius: 12,
-    border: "1px solid #e2e8f0",
-    background: "#f8fafc",
-    color: "#0f172a",
+    margin: "0 0 14px",
+    padding: "14px 16px",
+    borderRadius: 14,
+    border: "1px solid #86efac",
+    background: "linear-gradient(180deg,#dcfce7,#bbf7d0)",
+    color: "#064e3b",
+    boxShadow: "0 6px 18px rgba(22,163,74,.18)",
   },
-  resumeTitle: { margin: 0, font: "700 16px/1.2 Montserrat,system-ui" },
-  resumeLine: { margin: "2px 0 0", font: "500 14px/1.2 Montserrat,system-ui", color: "#334155" },
+  resumeTitle: { margin: 0, font: "800 18px/1.25 Montserrat,system-ui", letterSpacing: ".2px" },
+  resumeLine: { margin: "4px 0 0", font: "700 15px/1.25 Montserrat,system-ui", color: "#065f46" },
+  resumeMuted: { margin: "6px 0 0", font: "600 14px/1.2 Montserrat,system-ui", color: "#065f46" },
 
   tableWrap: {
     width: "100%",
@@ -86,14 +91,13 @@ const S = {
   },
   tdPlayers: {
     padding: "10px 12px",
-    font: "500 14px/1.35 Montserrat,system-ui",
-    color: "#0f172a",
     borderBottom: "1px solid #f1f5f9",
     whiteSpace: "normal",
   },
 
-  // Estilo para acertos (celeste + subliñado)
-  hit: { color: "#0ea5e9", textDecoration: "underline", textDecorationThickness: "2px" },
+  // Estilos de cada xogador na lista
+  hit: { color: "#0ea5e9", fontWeight: 700 },   // celeste + lixeiro bold
+  miss: { color: "#0f172a", fontWeight: 400 },  // un pouco máis fino
 
   empty: {
     padding: "12px 14px",
@@ -118,7 +122,7 @@ export default function ResultadosUltimaAlineacion() {
     let alive = true;
     (async () => {
       try {
-        /* 1) Determinar o partido (último con oficial; senón next_match) */
+        /* 1) Partido de referencia */
         let mIso = null;
         const last = await supabase
           .from("alineacion_oficial")
@@ -150,14 +154,14 @@ export default function ResultadosUltimaAlineacion() {
         }
         if (alive) setMatchIso(mIso);
 
-        /* 2) Oficial → Set por match_iso */
+        /* 2) Oficial (set ids) */
         const ofiQ = await supabase
           .from("alineacion_oficial")
           .select("jugador_id")
           .eq("match_iso", mIso);
         const oficialSet = new Set((ofiQ.data || []).map(r => r.jugador_id).filter(isUUID));
 
-        /* 3) Todas as aliñacións de usuarias por match_iso */
+        /* 3) Aliñacións usuarias */
         const all = await supabase
           .from("alineaciones_usuarios")
           .select("user_id, jugador_id, updated_at")
@@ -165,7 +169,7 @@ export default function ResultadosUltimaAlineacion() {
         const aRows = all.data || [];
         if (!aRows.length) { if (alive) { setRows([]); setLoading(false); } return; }
 
-        /* 4) Nome visible de usuarias */
+        /* 4) Perfís para nome visible */
         const { data: profs } = await supabase
           .from("profiles")
           .select("id, first_name, nombre, full_name, email");
@@ -181,13 +185,13 @@ export default function ResultadosUltimaAlineacion() {
           })
         );
 
-        /* 5) Catálogo de xogadores + enriquecido */
+        /* 5) Catálogo xogadores */
         const { data: js } = await supabase
           .from("jugadores")
           .select("id, nombre, dorsal, foto_url");
         const jMap = new Map((js || []).map(j => [j.id, enrichPlayer(j)]));
 
-        /* 6) Agrupar por usuaria → set de ids, última hora */
+        /* 6) Por usuaria → set picks e última hora */
         const byUser = new Map(); // uid -> { picked:Set<uuid>, last:ISOString }
         for (const r of aRows) {
           if (!isUUID(r.user_id) || !isUUID(r.jugador_id)) continue;
@@ -199,10 +203,9 @@ export default function ResultadosUltimaAlineacion() {
           byUser.set(r.user_id, cur);
         }
 
-        /* 7) Construír filas co 11 presentado completo (acertos en celeste/subliñados) */
+        /* 7) Construír filas: ordenar por posición→dorsal→nome e marcar acertos */
         const out = [];
         for (const [uid, { picked, last }] of byUser.entries()) {
-          // Array de xogadores do usuario
           const players = Array.from(picked)
             .map(id => jMap.get(id))
             .filter(Boolean)
@@ -219,14 +222,14 @@ export default function ResultadosUltimaAlineacion() {
 
           out.push({
             timeISO: last,
-            timeStr: fmtTime(last),
+            timeStr: fmtDateTime(last), // data + hora
             user: profilesMap.get(uid) || "usuaria",
             total,
             players,
           });
         }
 
-        // Ordenar filas por hora ascendente
+        // Orde por data e hora (ascendente)
         out.sort((a, b) => {
           const ta = a.timeISO ? new Date(a.timeISO).getTime() : 0;
           const tb = b.timeISO ? new Date(b.timeISO).getTime() : 0;
@@ -243,7 +246,7 @@ export default function ResultadosUltimaAlineacion() {
     return () => { alive = false; };
   }, []);
 
-  // Cabecera bonita
+  // Datos de cabeceira
   const { sFecha, sHora } = useMemo(() => {
     if (!header?.match_iso) return { sFecha: "-", sHora: "-" };
     try {
@@ -259,9 +262,8 @@ export default function ResultadosUltimaAlineacion() {
     <main style={S.wrap}>
       <h1 style={S.h1}>Resultados da última aliñación</h1>
       <p style={S.sub}>
-        Orde por hora de envío. Colunas: hora, usuaria, número de acertos e lista do once presentado
-        (dorsal · nome). Os acertos móstranse <span style={S.hit}>en celeste e subliñados</span>.
-        A posición úsase só para ordenar (POR→DEF→CEN→DEL).
+        Listaxe con todos os resultados presentados en tempo e forma do último partido.
+        Os acertos móstranse en celeste.
       </p>
 
       {header && (
@@ -270,7 +272,7 @@ export default function ResultadosUltimaAlineacion() {
             {header ? `${cap(header.equipo1)} vs ${cap(header.equipo2)}` : ""}
           </p>
           <p style={S.resumeLine}>{sFecha} | {sHora}</p>
-          <p style={{ ...S.resumeLine, marginTop: 6 }}>
+          <p style={S.resumeMuted}>
             Participantes: <strong>{rows.length}</strong>
           </p>
         </section>
@@ -291,10 +293,10 @@ export default function ResultadosUltimaAlineacion() {
           <table style={S.table}>
             <thead>
               <tr>
-                <th style={S.th}>Hora</th>
+                <th style={S.th}>Data e hora</th>
                 <th style={S.th}>Usuaria</th>
                 <th style={S.th}>Acertos</th>
-                <th style={S.th}>Once presentado (dorsal · nome)</th>
+                <th style={S.th}>Alineación presentada</th>
               </tr>
             </thead>
             <tbody>
@@ -305,7 +307,10 @@ export default function ResultadosUltimaAlineacion() {
                   <td style={S.td}>{r.total}</td>
                   <td style={S.tdPlayers}>
                     {r.players.map((p, idx) => (
-                      <span key={p.id || idx} style={p.isHit ? S.hit : null}>
+                      <span
+                        key={p.id || idx}
+                        style={p.isHit ? S.hit : S.miss}
+                      >
                         {p.dorsal != null ? `${String(p.dorsal).padStart(2, "0")} · ` : ""}{p.nombre}
                         {idx < r.players.length - 1 ? "   |   " : ""}
                       </span>
