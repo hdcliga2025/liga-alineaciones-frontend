@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
 /* ===== Utils ===== */
-/* Comentarios técnicos en castelán */
+// UI en galego, comentarios técnicos en castelán
 const cap = (s="") => (s || "").toUpperCase();
+const isUUID = (v="") => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
 function safeDecode(s = "") { try { return decodeURIComponent(s); } catch { return s.replace(/%20/g, " "); } }
 function parseFromFilename(url = "") {
   const last = (url.split("?")[0].split("#")[0].split("/").pop() || "").trim();
@@ -25,7 +26,6 @@ function finalFromAll(p = {}) {
     nombre: (nameFile || p.nombre || "").trim()
   };
 }
-const isUUID = (v="") => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
 
 /* ===== Estilos ===== */
 const S = {
@@ -78,8 +78,8 @@ export default function ResultadosUltimaAlineacion(){
   const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
 
   const [header, setHeader] = useState(null);     // {equipo1, equipo2, match_iso}
-  const [oficialSet, setOficialSet] = useState(new Set()); // Set<uuid>
-  const [miOnceIds, setMiOnceIds] = useState([]); // array de uuid (os 11 presentados pola usuaria)
+  const [oficialSet, setOficialSet] = useState(new Set()); // Set<uuid> dos 11 oficiais
+  const [miOnceIds, setMiOnceIds] = useState([]); // array<uuid> dos 11 do usuario
   const [jugadoresMap, setJugadoresMap] = useState(new Map()); // Map<uuid, jugadorRow>
 
   useEffect(() => {
@@ -93,18 +93,17 @@ export default function ResultadosUltimaAlineacion(){
     let alive = true;
     (async ()=>{
       try {
-        // 1) Sesión e usuario
+        // 1) Usuario actual
         const { data: s } = await supabase.auth.getSession();
         const uid = s?.session?.user?.id || null;
 
-        // 2) match de referencia (próximo partido). Se non hai, non hai resultados.
+        // 2) Partido de referencia (próximo)
         const { data: nm } = await supabase.from("next_match").select("equipo1,equipo2,match_iso").eq("id",1).maybeSingle();
         if (!nm?.match_iso) { if (alive){ setHeader(null); setLoading(false); } return; }
-
         const hdr = { equipo1: cap(nm.equipo1||""), equipo2: cap(nm.equipo2||""), match_iso: nm.match_iso };
         if (alive) setHeader(hdr);
 
-        // 3) Aliñación oficial → Set de jugador_id
+        // 3) Oficial → Set de 11
         const { data: ofi } = await supabase
           .from("alineacion_oficial")
           .select("jugador_id")
@@ -113,10 +112,9 @@ export default function ResultadosUltimaAlineacion(){
         const ofSet = new Set((ofi||[]).map(r => r.jugador_id).filter(isUUID));
         if (alive) setOficialSet(ofSet);
 
-        // 4) A miña aliñación (da usuaria logada) → soporta dous modelos (por filas ou array)
+        // 4) Aliñación da usuaria (fila-a-fila ou array)
         let mine = [];
         if (uid) {
-          // por filas
           const { data: myRows } = await supabase
             .from("alineaciones_usuarios")
             .select("jugador_id, jugadores_ids, user_id, match_iso")
@@ -138,7 +136,7 @@ export default function ResultadosUltimaAlineacion(){
         }
         if (alive) setMiOnceIds(mine);
 
-        // 5) Traer datos de xogadores para pintar (nome, dorsal, pos, foto)
+        // 5) Traer xogadores para pintar
         const uniqIds = Array.from(new Set([ ...ofSet, ...mine ]));
         if (uniqIds.length) {
           const { data: js } = await supabase
@@ -158,25 +156,31 @@ export default function ResultadosUltimaAlineacion(){
     return ()=>{ alive=false; };
   },[]);
 
-  const grupos = useMemo(() => {
-    // Construír os 11 (ou menos) do usuario con metadatos e se acertou
-    const items = miOnceIds.map(id => {
-      const j = jugadoresMap.get(id) || { id, nombre:"(descoñecido)", dorsal:null, foto_url:"" };
-      const info = finalFromAll(j);
+  // Construimos items do usuario co flag hit (acerto)
+  const itemsUsuario = useMemo(() => {
+    return miOnceIds.map(id => {
+      const base = jugadoresMap.get(id) || { id, nombre:"(descoñecido)", dorsal:null, foto_url:"" };
+      const info = finalFromAll(base);
       const hit = oficialSet.has(id);
-      return { id, ...j, ...info, hit };
+      return { id, ...base, ...info, hit };
     });
+  }, [miOnceIds, jugadoresMap, oficialSet]);
 
-    // Agrupar por orde POR → DEF → CEN → DEL
+  // Agrupamos POR → DEF → CEN → DEL
+  const grupos = useMemo(() => {
     const g = { POR: [], DEF: [], CEN: [], DEL: [] };
-    for (const it of items) {
+    for (const it of itemsUsuario) {
       const pos = it.pos || "";
       if (g[pos]) g[pos].push(it);
     }
     return g;
-  }, [miOnceIds, jugadoresMap, oficialSet]);
+  }, [itemsUsuario]);
 
-  const totalAcertos = useMemo(() => miOnceIds.filter((id)=>oficialSet.has(id)).length, [miOnceIds, oficialSet]);
+  // Conteo de acertos (intersección)
+  const totalAcertos = useMemo(
+    () => miOnceIds.filter((id)=>oficialSet.has(id)).length,
+    [miOnceIds, oficialSet]
+  );
 
   // Header bonito
   const { sFecha, sHora } = useMemo(() => {
