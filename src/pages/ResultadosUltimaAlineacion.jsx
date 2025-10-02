@@ -75,7 +75,7 @@ export default function ResultadosUltimaAlineacion(){
   const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
 
   const [header, setHeader] = useState(null);     // {equipo1, equipo2, match_iso}
-  const [target, setTarget] = useState({ match_iso:null, encuentro_id:null });
+  const [matchIso, setMatchIso] = useState(null);
   const [acertadosIds, setAcertadosIds] = useState([]);      // array<uuid> intersección
   const [jugadoresMap, setJugadoresMap] = useState(new Map()); // Map<uuid, jugadorRow>
 
@@ -94,85 +94,62 @@ export default function ResultadosUltimaAlineacion(){
         const { data: s } = await supabase.auth.getSession();
         const uid = s?.session?.user?.id || null;
 
-        /* 2) Partido objetivo:
-           2.1) Priorizar el último con alineación oficial (más fiable para comparar)
-        */
-        const { data: lastOfi } = await supabase
+        /* 2) Partido objetivo por match_iso:
+              - prioriza o último con oficial
+              - senón, usa next_match(id=1) */
+        let mIso = null;
+        const last = await supabase
           .from("alineacion_oficial")
-          .select("match_iso, encuentro_id, updated_at")
+          .select("match_iso, updated_at")
           .not("match_iso", "is", null)
           .order("updated_at", { ascending: false })
           .limit(1);
 
-        let match_iso = lastOfi?.[0]?.match_iso || null;
-        let encuentro_id = lastOfi?.[0]?.encuentro_id || null;
-
-        /* 2.2) Si no hubiera oficial, caer a next_match y resolver encuentro_id */
-        if (!match_iso) {
+        if (last.data && last.data.length) {
+          mIso = last.data[0].match_iso;
+        } else {
           const { data: nm } = await supabase
             .from("next_match")
             .select("equipo1,equipo2,match_iso")
             .eq("id",1)
             .maybeSingle();
-
           if (!nm?.match_iso) { if (alive){ setHeader(null); setLoading(false); } return; }
+          mIso = nm.match_iso;
+          setHeader({ equipo1: cap(nm.equipo1||""), equipo2: cap(nm.equipo2||""), match_iso: mIso });
+        }
 
-          match_iso = nm.match_iso;
-          // intenta resolver encuentro_id a partir de matches_vindeiros
+        if (!header) {
+          // intenta completar header desde matches_vindeiros
           const { data: mv } = await supabase
             .from("matches_vindeiros")
-            .select("id,equipo1,equipo2")
-            .eq("match_iso", match_iso)
+            .select("equipo1,equipo2")
+            .eq("match_iso", mIso)
             .maybeSingle();
-
-          encuentro_id = mv?.id || null;
-
-          if (alive) setHeader({ equipo1: cap(nm.equipo1||""), equipo2: cap(nm.equipo2||""), match_iso });
-        } else {
-          // con oficial ya tenemos match_iso; intenta obtener equipo1/2 para cabecera
-          const { data: mv2 } = await supabase
-            .from("matches_vindeiros")
-            .select("id,equipo1,equipo2")
-            .eq("match_iso", match_iso)
-            .maybeSingle();
-
-          encuentro_id = encuentro_id || mv2?.id || null;
-          if (alive && mv2) setHeader({ equipo1: cap(mv2.equipo1||""), equipo2: cap(mv2.equipo2||""), match_iso });
-          if (alive && !mv2) setHeader({ equipo1:"CELTA", equipo2:"RIVAL", match_iso }); // fallback visual
+          if (mv) setHeader({ equipo1: cap(mv.equipo1||""), equipo2: cap(mv.equipo2||""), match_iso: mIso });
         }
 
-        if (alive) {
-          setTarget({ match_iso, encuentro_id });
-          console.log("[Resultados] target =>", { match_iso, encuentro_id });
-        }
+        setMatchIso(mIso);
+        console.log("[Resultados] using match_iso:", mIso);
 
-        /* 3) Alineación oficial (Set) para ese partido objetivo */
-        const { data: ofi } = await supabase
+        /* 3) Oficial → Set por match_iso */
+        const ofiQ = await supabase
           .from("alineacion_oficial")
           .select("jugador_id")
-          .eq("match_iso", match_iso);
+          .eq("match_iso", mIso);
 
-        const oficialSet = new Set((ofi||[]).map(r => r.jugador_id).filter(isUUID));
+        const oficialSet = new Set((ofiQ.data||[]).map(r => r.jugador_id).filter(isUUID));
         console.log("[Resultados] oficialSet size:", oficialSet.size);
 
-        /* 4) Alineación del usuario (por encuentro_id si lo tenemos, si no por match_iso) */
-        let myRows;
-        if (uid && encuentro_id) {
-          const r1 = await supabase
+        /* 4) Aliñación do usuario por match_iso (fila-a-fila + array) */
+        let myRows = [];
+        if (uid) {
+          const r = await supabase
             .from("alineaciones_usuarios")
             .select("jugador_id, jugadores_ids")
             .eq("user_id", uid)
-            .eq("encuentro_id", encuentro_id);
-          myRows = r1.data || [];
-        } else if (uid) {
-          const r2 = await supabase
-            .from("alineaciones_usuarios")
-            .select("jugador_id, jugadores_ids")
-            .eq("user_id", uid)
-            .eq("match_iso", match_iso);
-          myRows = r2.data || [];
-        } else {
-          myRows = [];
+            .eq("match_iso", mIso);
+          if (r.error) console.error("[Resultados] user lineup error:", r.error);
+          myRows = r.data || [];
         }
 
         const singleIds = (myRows||[])
@@ -183,26 +160,25 @@ export default function ResultadosUltimaAlineacion(){
           .flatMap(r => Array.isArray(r.jugadores_ids) ? r.jugadores_ids : [])
           .filter(isUUID);
 
-        const mineMerged = [...singleIds, ...arrayIds];
+        const merged = [...singleIds, ...arrayIds];
         const seen = new Set(); const mine = [];
-        for (const id of mineMerged) if (!seen.has(id)) { seen.add(id); mine.push(id); }
-
+        for (const id of merged) if (!seen.has(id)) { seen.add(id); mine.push(id); }
         console.log("[Resultados] mine size:", mine.length);
 
         /* 5) Intersección (acertados) */
         const hits = mine.filter(id => oficialSet.has(id));
-        if (alive) setAcertadosIds(hits);
+        setAcertadosIds(hits);
 
-        /* 6) Traer datos de jogadores para pintar */
+        /* 6) Datos de xogadores (só os necesarios para pintar) */
         const uniq = Array.from(new Set(hits));
         if (uniq.length) {
           const { data: js } = await supabase
             .from("jugadores")
             .select("id, nombre, dorsal, foto_url");
           const mp = new Map((js||[]).map(j => [j.id, j]));
-          if (alive) setJugadoresMap(mp);
+          setJugadoresMap(mp);
         } else {
-          if (alive) setJugadoresMap(new Map());
+          setJugadoresMap(new Map());
         }
       } catch (e) {
         console.error("[ResultadosUltimaAlineacion] init error:", e);
@@ -221,7 +197,6 @@ export default function ResultadosUltimaAlineacion(){
     });
   }, [acertadosIds, jugadoresMap]);
 
-  // Agrupar en orde POR → DEF → CEN → DEL
   const grupos = useMemo(() => {
     const g = { POR: [], DEF: [], CEN: [], DEL: [] };
     for (const it of itemsAcertados) {
@@ -231,7 +206,6 @@ export default function ResultadosUltimaAlineacion(){
     return g;
   }, [itemsAcertados]);
 
-  // Header bonito
   const { sFecha, sHora } = useMemo(() => {
     if (!header?.match_iso) return { sFecha:"-", sHora:"-" };
     try{
@@ -266,7 +240,9 @@ export default function ResultadosUltimaAlineacion(){
 
       {!loading && acertadosIds.length===0 && (
         <div style={S.empty}>
-          Aínda non hai acertos rexistrados para este encontro.
+          {matchIso
+            ? "Aínda non hai acertos rexistrados para este encontro."
+            : "Non se puido determinar o encontro a comparar."}
         </div>
       )}
 
