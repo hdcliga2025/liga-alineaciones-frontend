@@ -11,11 +11,7 @@ function parseFromFilename(url = "") {
   const last = (url.split("?")[0].split("#")[0].split("/").pop() || "").trim();
   const m = last.match(/^(\d+)-(.+)-(POR|DEF|CEN|DEL)\.(jpg|jpeg|png|webp)$/i);
   if (!m) return { dorsalFile: null, nameFile: null, posFile: null };
-  return {
-    dorsalFile: parseInt(m[1],10),
-    nameFile: safeDecode(m[2].replace(/_/g," ")),
-    posFile: m[3].toUpperCase()
-  };
+  return { dorsalFile: parseInt(m[1],10), nameFile: safeDecode(m[2].replace(/_/g," ")), posFile: m[3].toUpperCase() };
 }
 function finalFromAll(p = {}) {
   const { dorsalFile, nameFile, posFile } = parseFromFilename(p.foto_url || "");
@@ -76,7 +72,7 @@ export default function ResultadosUltimaAlineacion(){
 
   const [header, setHeader] = useState(null);     // {equipo1, equipo2, match_iso}
   const [matchIso, setMatchIso] = useState(null);
-  const [acertadosIds, setAcertadosIds] = useState([]);      // array<uuid> intersección
+  const [acertadosIds, setAcertadosIds] = useState([]);      // array<uuid>
   const [jugadoresMap, setJugadoresMap] = useState(new Map()); // Map<uuid, jugadorRow>
 
   useEffect(() => {
@@ -94,9 +90,7 @@ export default function ResultadosUltimaAlineacion(){
         const { data: s } = await supabase.auth.getSession();
         const uid = s?.session?.user?.id || null;
 
-        /* 2) Partido objetivo por match_iso:
-              - prioriza o último con oficial
-              - senón, usa next_match(id=1) */
+        /* 2) match_iso: último con oficial; se non, next_match */
         let mIso = null;
         const last = await supabase
           .from("alineacion_oficial")
@@ -119,7 +113,6 @@ export default function ResultadosUltimaAlineacion(){
         }
 
         if (!header) {
-          // intenta completar header desde matches_vindeiros
           const { data: mv } = await supabase
             .from("matches_vindeiros")
             .select("equipo1,equipo2")
@@ -136,42 +129,33 @@ export default function ResultadosUltimaAlineacion(){
           .from("alineacion_oficial")
           .select("jugador_id")
           .eq("match_iso", mIso);
-
         const oficialSet = new Set((ofiQ.data||[]).map(r => r.jugador_id).filter(isUUID));
         console.log("[Resultados] oficialSet size:", oficialSet.size);
 
-        /* 4) Aliñación do usuario por match_iso (fila-a-fila + array) */
+        /* 4) Aliñación do usuario por match_iso (SOLO jugador_id) */
         let myRows = [];
         if (uid) {
           const r = await supabase
             .from("alineaciones_usuarios")
-            .select("jugador_id, jugadores_ids")
+            .select("jugador_id")
             .eq("user_id", uid)
             .eq("match_iso", mIso);
           if (r.error) console.error("[Resultados] user lineup error:", r.error);
           myRows = r.data || [];
         }
 
-        const singleIds = (myRows||[])
+        const mine = (myRows||[])
           .map(r => r.jugador_id)
           .filter(isUUID);
 
-        const arrayIds = (myRows||[])
-          .flatMap(r => Array.isArray(r.jugadores_ids) ? r.jugadores_ids : [])
-          .filter(isUUID);
-
-        const merged = [...singleIds, ...arrayIds];
-        const seen = new Set(); const mine = [];
-        for (const id of merged) if (!seen.has(id)) { seen.add(id); mine.push(id); }
         console.log("[Resultados] mine size:", mine.length);
 
         /* 5) Intersección (acertados) */
         const hits = mine.filter(id => oficialSet.has(id));
         setAcertadosIds(hits);
 
-        /* 6) Datos de xogadores (só os necesarios para pintar) */
-        const uniq = Array.from(new Set(hits));
-        if (uniq.length) {
+        /* 6) Datos dos xogadores para pintar */
+        if (hits.length) {
           const { data: js } = await supabase
             .from("jugadores")
             .select("id, nombre, dorsal, foto_url");
