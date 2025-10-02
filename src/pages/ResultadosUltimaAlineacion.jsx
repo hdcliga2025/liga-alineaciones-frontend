@@ -41,6 +41,31 @@ const fmtDateTime = (iso) => {
   } catch { return "—"; }
 };
 
+// Nome + primeiro apelido (fallbacks limpos)
+function displayName(profile = {}, emailFallback = "xogador/a") {
+  const first = (profile.first_name || "").trim();
+  const last  = (profile.last_name  || "").trim();
+  const full  = (profile.full_name  || "").trim();
+  const email = (profile.email      || "").trim();
+
+  let firstName = first;
+  let firstSurname = "";
+  if (!firstName && full) {
+    const parts = full.split(/\s+/);
+    firstName = parts[0] || "";
+    firstSurname = parts[1] || "";
+  } else if (last) {
+    firstSurname = last.split(/\s+/)[0] || "";
+  }
+
+  if (firstName) {
+    return (firstName + (firstSurname ? " " + firstSurname : "")).trim();
+  }
+  if (full) return (full.split(/\s+/).slice(0,2).join(" ") || "").trim();
+  if (email) return (email.split("@")[0] || email);
+  return emailFallback;
+}
+
 /* ===== Estilos ===== */
 const S = {
   wrap: { padding: "72px 16px 24px", maxWidth: 1080, margin: "0 auto" },
@@ -72,7 +97,7 @@ const S = {
   table: { width: "100%", borderCollapse: "separate", borderSpacing: 0 },
   th: {
     textAlign: "left",
-    padding: "10px 12px",
+    padding: "8px 10px", // lixeiro menor para filas máis delgadas
     font: "700 13px/1.2 Montserrat,system-ui",
     color: "#0f172a",
     background: "#f8fafc",
@@ -84,7 +109,7 @@ const S = {
   thSep: { borderRight: "1px solid #e2e8f0" },
 
   td: {
-    padding: "10px 12px",
+    padding: "8px 10px", // lixeiro menor
     font: "500 14px/1.35 Montserrat,system-ui",
     color: "#0f172a",
     borderBottom: "1px solid #f1f5f9",
@@ -93,12 +118,13 @@ const S = {
   },
   tdSep: { borderRight: "1px solid #e2e8f0" },
 
+  // Para móbil: manter unha soa liña e permitir scroll horizontal
   tdPlayers: {
-    padding: "10px 12px",
+    padding: "8px 10px",
     borderBottom: "1px solid #f1f5f9",
-    whiteSpace: "normal",
-    font: "500 14px/1.35 Montserrat,system-ui",
-    color: "#0f172a",
+    whiteSpace: "nowrap",
+    overflowX: "auto",
+    maxWidth: "70vw", // en móbil forza scroll horizontal nesta celda
   },
 
   // Cada “dorsal · nome” nun bloque inseparable
@@ -181,21 +207,11 @@ export default function ResultadosUltimaAlineacion() {
         const aRows = all.data || [];
         if (!aRows.length) { if (alive) { setRows([]); setLoading(false); } return; }
 
-        /* 4) Perfís */
+        /* 4) Perfís (incluímos last_name para construir “nome + primeiro apelido”) */
         const { data: profs } = await supabase
           .from("profiles")
-          .select("id, first_name, nombre, full_name, email");
-        const profilesMap = new Map(
-          (profs || []).map(p => {
-            const label =
-              (p.first_name || "").trim() ||
-              (p.nombre || "").trim() ||
-              (p.full_name || "").trim().split(" ")[0] ||
-              (p.email || "").split("@")[0] ||
-              "usuaria";
-            return [p.id, label];
-          })
-        );
+          .select("id, first_name, last_name, nombre, full_name, email");
+        const profilesMap = new Map((profs || []).map(p => [p.id, p]));
 
         /* 5) Catálogo xogadores */
         const { data: js } = await supabase
@@ -232,10 +248,13 @@ export default function ResultadosUltimaAlineacion() {
 
           const total = players.reduce((acc, p) => acc + (p.isHit ? 1 : 0), 0);
 
+          const prof = profilesMap.get(uid) || {};
+          const shownName = displayName(prof, "xogador/a");
+
           out.push({
             timeISO: last,
             timeStr: fmtDateTime(last),
-            user: profilesMap.get(uid) || "usuaria",
+            user: shownName,
             total,
             players,
           });
@@ -306,7 +325,7 @@ export default function ResultadosUltimaAlineacion() {
             <thead>
               <tr>
                 <th style={{ ...S.th, ...S.thSep }}>Data e hora</th>
-                <th style={{ ...S.th, ...S.thSep }}>Usuaria</th>
+                <th style={{ ...S.th, ...S.thSep }}>Xogador</th>
                 <th style={{ ...S.th, ...S.thSep }}>Acertos</th>
                 <th style={S.th}>Aliñación presentada</th>
               </tr>
