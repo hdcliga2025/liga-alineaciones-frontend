@@ -31,8 +31,10 @@ const fmtDateTime = (iso) => {
 };
 
 /* ===== Estilos ===== */
+const ROW_H = 40;
+
 const S = {
-  wrap: { padding:"72px 16px 24px", maxWidth:1080, margin:"0 auto" },
+  wrap: { padding:"72px 16px 24px", maxWidth:1080, margin:"0 auto" }, // paddingTop axústase máis abaixo
   h1: { font:"700 24px/1.15 Montserrat,system-ui", margin:"0 0 4px" },
   sub: { font:"400 16px/1.35 Montserrat,system-ui", color:"#475569", margin:"0 0 12px" },
 
@@ -52,32 +54,66 @@ const S = {
   th: { textAlign:"left", padding:"8px 10px", font:"700 13px/1.2 Montserrat,system-ui", color:"#0f172a", background:"#f8fafc", borderBottom:"1px solid #e2e8f0", position:"sticky", top:0, whiteSpace:"nowrap" },
   thSep: { borderRight:"1px solid #e2e8f0" },
 
-  td: { padding:"8px 10px", font:"500 14px/1.2 Montserrat,system-ui", color:"#0f172a", borderBottom:"1px solid #f1f5f9", verticalAlign:"middle", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" },
+  td: { padding:"10px 10px", font:"500 14px/1.2 Montserrat,system-ui", color:"#0f172a", borderBottom:"1px solid #f1f5f9", verticalAlign:"middle", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" },
   tdSep: { borderRight:"1px solid #e2e8f0" },
 
-  tdPlayers:{ padding:"8px 10px", borderBottom:"1px solid #f1f5f9", whiteSpace:"normal", font:"500 14px/1.3 Montserrat,system-ui", color:"#0f172a" },
+  tdPlayers:{ padding:"10px 10px", borderBottom:"1px solid #f1f5f9", whiteSpace:"normal", font:"500 14px/1.3 Montserrat,system-ui", color:"#0f172a" },
 
-  // Desktop score centrado
+  // Desktop: acertos centrados
   scoreCell:{ fontWeight:800, color:"#0ea5e9", textAlign:"center" },
 
   empty:{ padding:"12px 14px", border:"1px solid #e2e8f0", borderRadius:12, background:"#eef6ff", color:"#0f172a" },
 
-  /* ===== Móbil (fila finísima, unha soa liña) ===== */
-  tdMobileUser:{ padding:"6px 8px", borderBottom:"1px solid #f1f5f9", display:"flex", alignItems:"center", justifyContent:"flex-start", minWidth:0, height:32 },
-  tdMobileUserText:{ font:"500 12px/1.0 Montserrat,system-ui", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:"60vw" },
+  /* ===== Móbil: 3 columnas exactas (60/20/20), unha soa liña por fila ===== */
+  tableMobile: { tableLayout:"fixed" },
+  trM: { height: ROW_H },
 
-  tdMobileScore:{ padding:"6px 4px", borderBottom:"1px solid #f1f5f9", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, fontWeight:800, color:"#0ea5e9", height:32 },
+  // Columna 1 (60%): HDC Peñista
+  tdUserM:{
+    padding:"0 8px", borderBottom:"1px solid #f1f5f9",
+    height: ROW_H, lineHeight:`${ROW_H}px`,
+    whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis"
+  },
+  tdUserTextM:{
+    display:"inline-block", maxWidth:"100%",
+    font:"600 13px/1 Montserrat,system-ui",
+    verticalAlign:"middle", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis"
+  },
 
-  tdMobileAction:{ padding:"6px 4px", borderBottom:"1px solid #f1f5f9", display:"flex", alignItems:"center", justifyContent:"center", height:32 },
-  eyeBtn:{ width:22, height:22, display:"grid", placeItems:"center", borderRadius:8, background:"#fff", border:"1px solid #e2e8f0", boxShadow:"0 1px 6px rgba(0,0,0,.06)", cursor:"pointer" },
-  eyeSvg:{ fill:"none", stroke:"#0f172a", strokeWidth:1.6, strokeLinecap:"round", strokeLinejoin:"round" },
+  // Columna 2 (20%): Acertos → número celeste en bold centrado
+  tdScoreM:{
+    padding:0, borderBottom:"1px solid #f1f5f9",
+    height: ROW_H, lineHeight:`${ROW_H}px`,
+    textAlign:"center", font:"800 15px/1 Montserrat,system-ui", color:"#0ea5e9",
+    whiteSpace:"nowrap"
+  },
+
+  // Columna 3 (20%): Detalle → icono ollo celeste, centrado (inline-block)
+  tdEyeM:{
+    padding:0, borderBottom:"1px solid #f1f5f9",
+    height: ROW_H, lineHeight:`${ROW_H}px`,
+    textAlign:"center", whiteSpace:"nowrap"
+  },
+  eyeBtn:{
+    display:"inline-block", verticalAlign:"middle",
+    width:28, height:28, lineHeight:0,
+    borderRadius:8, background:"#fff", border:"1px solid #e2e8f0",
+    boxShadow:"0 1px 4px rgba(0,0,0,.06)", cursor:"pointer", padding:0
+  },
+  eyeSvg:{
+    display:"block",
+    width:16, height:16, margin:"6px",
+    fill:"none", stroke:"#0ea5e9", strokeWidth:2, strokeLinecap:"round", strokeLinejoin:"round"
+  },
+
+  thMobileSmall: { font:"700 12px/1.1 Montserrat,system-ui" },
 
   playerChunk:{ whiteSpace:"nowrap", display:"inline-block" },
   hit:{ color:"#0ea5e9", fontWeight:700 },
   miss:{ color:"#0f172a", fontWeight:400 },
   sep:{ color:"#0f172a", fontWeight:400, padding:"0 6px" },
 
-  // Modal
+  // Modal (móbil)
   modalBg:{ position:"fixed", inset:0, background:"rgba(2,6,23,.45)", display:"grid", placeItems:"center", zIndex:9999 },
   modal:{ width:"min(92vw,540px)", background:"#fff", border:"1px solid #e2e8f0", borderRadius:14, boxShadow:"0 18px 48px rgba(0,0,0,.28)", padding:"16px 14px", position:"relative" },
   modalClose:{ position:"absolute", right:8, top:8, width:34, height:34, borderRadius:10, border:"1px solid #e2e8f0", background:"#fff", cursor:"pointer", display:"grid", placeItems:"center" },
@@ -96,10 +132,9 @@ export default function ResultadosUltimaAlineacion() {
   const [openIdx, setOpenIdx] = useState(null);
 
   useEffect(() => {
-    let raf = 0;
-    const onR = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => setIsMobile(window.innerWidth <= 560)); };
+    const onR = () => setIsMobile(window.innerWidth <= 560);
     window.addEventListener("resize", onR);
-    return () => { window.removeEventListener("resize", onR); cancelAnimationFrame(raf); };
+    return () => window.removeEventListener("resize", onR);
   }, []);
 
   useEffect(() => {
@@ -150,7 +185,7 @@ export default function ResultadosUltimaAlineacion() {
         const jMap = new Map((jugadoresQ.data || []).map(j => [j.id, enrichPlayer(j)]));
 
         // Agrupar por usuaria
-        const byUser = new Map(); // uid -> { picked:Set<uuid>, last:ISOString }
+        const byUser = new Map();
         for (const r of picks) {
           if (!isUUID(r.user_id) || !isUUID(r.jugador_id)) continue;
           const cur = byUser.get(r.user_id) || { picked:new Set(), last:null };
@@ -181,6 +216,7 @@ export default function ResultadosUltimaAlineacion() {
           out.push({ timeISO:last, timeStr:fmtDateTime(last), user:shownName, total, players });
         }
 
+        // Orden por data e hora ASC
         out.sort((a,b) => {
           const ta = a.timeISO ? new Date(a.timeISO).getTime() : 0;
           const tb = b.timeISO ? new Date(b.timeISO).getTime() : 0;
@@ -194,7 +230,7 @@ export default function ResultadosUltimaAlineacion() {
         if (alive) setLoading(false);
       }
     })();
-    return () => { alive = false; };
+    return () => {};
   }, [header]);
 
   const { sFecha, sHora } = useMemo(() => {
@@ -221,8 +257,11 @@ export default function ResultadosUltimaAlineacion() {
     </span>
   ), []);
 
+  const isMobileNow = isMobile;
+  const wrapStyle = { ...S.wrap, paddingTop: isMobileNow ? 56 : 72 }; // ⬅️ Subimos o título no móbil
+
   return (
-    <main style={S.wrap}>
+    <main style={wrapStyle}>
       <h1 style={S.h1}>Resultados da última aliñación</h1>
       <p style={S.sub}>Listado con todos os resultados presentados en tempo e forma do último partido. Os acertos móstranse en celeste.</p>
 
@@ -238,14 +277,14 @@ export default function ResultadosUltimaAlineacion() {
 
       {!loading && (!rows.length || !matchIso) && (
         <div style={S.empty}>
-          {matchIso ? "Aínda no hai aliñacións rexistradas para este encontro." : "Non se puido determinar o encontro a comparar."}
+          {matchIso ? "Aínda non hai aliñacións rexistradas para este encontro." : "Non se puido determinar o encontro a comparar."}
         </div>
       )}
 
       {!loading && rows.length > 0 && (
         <div style={S.tableWrap}>
-          <table style={{ ...S.table, tableLayout: isMobile ? "fixed" : "auto" }}>
-            {isMobile && (
+          <table style={{ ...S.table, ...(isMobileNow ? S.tableMobile : null) }}>
+            {isMobileNow && (
               <colgroup>
                 <col style={{ width:"60%" }} />
                 <col style={{ width:"20%" }} />
@@ -253,25 +292,25 @@ export default function ResultadosUltimaAlineacion() {
               </colgroup>
             )}
             <thead>
-              {!isMobile ? (
+              {!isMobileNow ? (
                 <tr>
                   <th style={{ ...S.th, ...S.thSep }}>Data e hora</th>
-                  <th style={{ ...S.th, ...S.thSep }}>Xogador</th>
+                  <th style={{ ...S.th, ...S.thSep }}>HDC Peñista</th>
                   <th style={{ ...S.th, ...S.thSep, textAlign:"center" }}>Acertos</th>
                   <th style={S.th}>Aliñación presentada</th>
                 </tr>
               ) : (
                 <tr>
-                  <th style={{ ...S.th, ...S.thSep }}>Xogador</th>
-                  <th style={{ ...S.th, ...S.thSep, textAlign:"center" }}>Acertos</th>
-                  <th style={S.th}>Detalles</th>
+                  <th style={{ ...S.th, ...S.thSep }}>HDC Peñista</th>
+                  <th style={{ ...S.th, ...S.thSep, ...S.thMobileSmall, textAlign:"center" }}>Acertos</th>
+                  <th style={{ ...S.th, ...S.thMobileSmall, textAlign:"center" }}>Detalle</th>
                 </tr>
               )}
             </thead>
             <tbody>
               {rows.map((r, i) => (
-                <tr key={i}>
-                  {!isMobile ? (
+                <tr key={i} style={isMobileNow ? S.trM : null}>
+                  {!isMobileNow ? (
                     <>
                       <td style={{ ...S.td, ...S.tdSep }}>{r.timeStr}</td>
                       <td style={{ ...S.td, ...S.tdSep }}>{r.user}</td>
@@ -280,14 +319,21 @@ export default function ResultadosUltimaAlineacion() {
                     </>
                   ) : (
                     <>
-                      <td style={{ ...S.tdSep, ...S.tdMobileUser }}>
-                        <span style={S.tdMobileUserText} title={r.user}>{r.user}</span>
+                      <td style={{ ...S.tdUserM, ...S.tdSep }}>
+                        <span style={S.tdUserTextM} title={r.user}>{r.user}</span>
                       </td>
-                      <td style={{ ...S.tdSep, ...S.tdMobileScore }}>{r.total}</td>
-                      <td style={S.tdMobileAction}>
-                        <button type="button" style={S.eyeBtn} onClick={() => setOpenIdx(i)} aria-label="Ver detalles" title="Ver detalles">
-                          <svg width="12" height="12" viewBox="0 0 24 24" style={S.eyeSvg} aria-hidden="true">
-                            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/>
+                      <td style={{ ...S.tdScoreM, ...S.tdSep }}>{r.total}</td>
+                      <td style={S.tdEyeM}>
+                        <button
+                          type="button"
+                          style={S.eyeBtn}
+                          onClick={() => setOpenIdx(i)}
+                          aria-label="Ver detalles"
+                          title="Ver detalles"
+                        >
+                          <svg viewBox="0 0 24 24" style={S.eyeSvg} aria-hidden="true">
+                            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/>
+                            <circle cx="12" cy="12" r="3"/>
                           </svg>
                         </button>
                       </td>
@@ -300,14 +346,13 @@ export default function ResultadosUltimaAlineacion() {
         </div>
       )}
 
-      {/* Modal móbil */}
-      {isMobile && openIdx !== null && rows[openIdx] && (
+      {isMobileNow && openIdx !== null && rows[openIdx] && (
         <div style={S.modalBg} role="dialog" aria-modal="true" aria-label="Detalles da aliñación">
           <div style={S.modal}>
             <button style={S.modalClose} onClick={() => setOpenIdx(null)} aria-label="Pechar">✕</button>
             <h3 style={S.modalTitle}>Detalles</h3>
             <p style={S.modalSub}><strong>Data e hora:</strong> {rows[openIdx].timeStr}</p>
-            <p style={S.modalSub}><strong>Xogador:</strong> {rows[openIdx].user}</p>
+            <p style={S.modalSub}><strong>HDC Peñista:</strong> {rows[openIdx].user}</p>
             <p style={S.modalSub}><strong>Acertos:</strong> <span style={{ fontWeight:800, color:"#0ea5e9" }}>{rows[openIdx].total}</span></p>
             <p style={S.modalSub}><strong>Aliñación presentada:</strong></p>
             <p style={S.modalLineup}>{renderLineup(rows[openIdx].players)}</p>

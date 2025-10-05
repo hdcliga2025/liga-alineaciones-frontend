@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
 /* ===== Utils ===== */
-// Comentario técnico: normalizamos nombre/posición a partir del nombre de archivo si existe patrón "<dorsal>-<nombre>-<POS>.ext"
 const cap = (s="") => (s || "").toUpperCase();
 function fmtDT(iso) {
   if (!iso) return { fecha: "-", hora: "-" };
@@ -41,17 +40,19 @@ const S = {
   resumen: {
     margin:"0 0 10px", padding:"10px 12px", borderRadius:12,
     border:"1px solid #dbeafe",
-    background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)", color:"#0f172a"
+    background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)", color:"#0f172a",
+    boxShadow:"0 6px 18px rgba(14,165,233,.16)"
   },
   resumeLine: { margin: 0, fontSize: 18, fontWeight: 500, letterSpacing: ".35px", lineHeight: 1.45 },
   resumeNoteTitle: { margin:"8px 0 0", color:"#475569", fontSize: 15, fontWeight: 700, letterSpacing: .3 },
   resumeNoteTime:  { margin:"2px 0 0", color:"#0b1220", fontSize: 16, fontWeight: 800, letterSpacing: 1, animation: "blinkSave 2s infinite" },
 
   posHeader: { margin:"14px 0 10px", padding:"2px 4px 8px", fontWeight:700, color:"#0c4a6e", borderLeft:"4px solid #7dd3fc", borderBottom:"2px solid #e2e8f0" },
+
   grid: (isMobile) => ({
     display:"grid",
     gridTemplateColumns: isMobile ? "repeat(3,minmax(0,1fr))" : "repeat(4,minmax(0,1fr))",
-    gap:12
+    gap: isMobile ? 8 : 12
   }),
 
   cardWrap: (selected)=>({
@@ -62,59 +63,70 @@ const S = {
     background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)",
     cursor:"pointer", userSelect:"none"
   }),
+
   frame: (isMobile)=>({
     width:"100%",
-    height: isMobile ? 172 : 320,
+    height: isMobile ? 168 : 320,
     borderRadius:12, overflow:"hidden",
     background:"#ffffff",
     display:"grid", placeItems:"center",
     border:"1px solid #e5e7eb",
     position:"relative"
   }),
-  img: { width:"100%", height:"100%", objectFit:"contain", background:"#ffffff" },
+  img: { width:"100%", height:"100%", objectFit:"contain", background:"#ffffff", display:"block" },
 
-  name: { margin:"8px 0 0", font:"700 15px/1.2 Montserrat, system-ui, sans-serif", color:"#0f172a", textAlign:"center" },
+  name: { margin:"8px 0 0", font:"700 15px/1.2 Montserrat, system-ui, sans-serif", color:"#0f172a", textAlign:"center", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" },
   meta: { margin:"2px 0 0", color:"#475569", fontSize:13, textAlign:"center" },
 
+  // Botonera superior 85% + 15% (misma altura) — bordes máis finos, sombra, fondo branco no lixo
   btnRow: { display:"grid", gridTemplateColumns:"85% 15%", gap:8, alignItems:"stretch", marginTop:10 },
+
   btnPrimary: {
-    width:"100%", padding:"9px 12px",
-    borderRadius:10,
+    width:"100%", padding:"10px 12px",
+    borderRadius:12,
     background:"linear-gradient(180deg,#e7f6ff,#cfeeff)",
     color:"#075985", fontWeight:800,
-    border:"3px solid #38bdf8",
-    cursor:"pointer"
-  },
-  btnDanger: {
-    width:"100%", padding:"9px 12px",
-    borderRadius:10,
-    background:"linear-gradient(180deg,#ffd8d8,#ffbcbc)",
-    color:"#7f1d1d", fontWeight:800,
-    border:"3px solid #ef4444",
+    border:"1.5px solid #38bdf8",
     cursor:"pointer",
-    display:"grid", placeItems:"center"
-  },
-  btnBottom: {
-    width:"100%", padding:"9px 12px",
-    borderRadius:10,
-    background:"linear-gradient(180deg,#e7f6ff,#cfeeff)",
-    color:"#075985", fontWeight:800,
-    border:"3px solid #38bdf8",
-    cursor:"pointer", marginTop:14
+    boxShadow:"0 6px 16px rgba(56,189,248,.25)"
   },
 
+  btnDanger: {
+    width:"100%", padding:"10px 12px",
+    borderRadius:12,
+    background:"#ffffff",
+    color:"#7f1d1d", fontWeight:700,
+    border:"1.5px solid #ef4444",
+    cursor:"pointer",
+    display:"grid", placeItems:"center",
+    boxShadow:"0 6px 16px rgba(239,68,68,.18)"
+  },
+
+  // Botón inferior (só gardar)
+  btnBottom: {
+    width:"100%", padding:"10px 12px",
+    borderRadius:12,
+    background:"linear-gradient(180deg,#e7f6ff,#cfeeff)",
+    color:"#075985", fontWeight:800,
+    border:"1.5px solid #38bdf8",
+    cursor:"pointer", marginTop:14,
+    boxShadow:"0 6px 16px rgba(56,189,248,.25)"
+  },
+
+  // Etiqueta CONVO — adaptada a tamaño e situada no 1/4 inferior, sen desbordar
   convoTag: {
     position:"absolute",
-    left:"50%", top:"82%", transform:"translate(-50%,-50%)",
+    left:"50%", bottom:"12%", transform:"translateX(-50%)",
     fontFamily:"Montserrat, system-ui, sans-serif",
-    fontWeight:900, fontSize: 32,
+    fontWeight:900, fontSize: 18,
     color:"#0c4a6e",
     background:"rgba(56,189,248,.58)",
-    padding:"6px 12px",
+    padding:"4px 10px",
     borderRadius:999,
-    letterSpacing:1.2,
+    letterSpacing:1.1,
     textShadow:"0 1px 2px rgba(0,0,0,.12)",
-    userSelect:"none", pointerEvents:"none"
+    userSelect:"none", pointerEvents:"none",
+    maxWidth:"90%", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis"
   }
 };
 
@@ -127,7 +139,7 @@ const blinkStyle = `
 export default function ConvocatoriaProximo() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [players, setPlayers] = useState([]);
-  const [selected, setSelected] = useState(new Set()); // convocados
+  const [selected, setSelected] = useState(new Set());
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
   const [header, setHeader] = useState(null);
@@ -161,7 +173,7 @@ export default function ConvocatoriaProximo() {
         .order("dorsal", { ascending: true });
       setPlayers(js || []);
 
-      // header (match_iso de referencia)
+      // header
       const { data: top } = await supabase
         .from("matches_vindeiros")
         .select("equipo1,equipo2,match_iso")
@@ -215,19 +227,16 @@ export default function ConvocatoriaProximo() {
     setSaving(true);
     try {
       const convocados = [...selected];
-
-      // Comentario técnico: limpiamos tabla completa de manera robusta (no valores mágicos)
-      await supabase.from("convocatoria_publica").delete().not("jugador_id","is", null);
-
+      await supabase.from("convocatoria_publica").delete().neq("jugador_id", "00000000-0000-0000-0000-000000000000");
       if (convocados.length) {
-        const now = new Date().toISOString();
-        const rows = convocados.map(jid => ({ jugador_id: jid, updated_at: now }));
+        const rows = convocados.map(jid => ({ jugador_id: jid, updated_at: new Date().toISOString() }));
         const { error } = await supabase.from("convocatoria_publica").insert(rows);
         if (error) throw error;
       }
       setLastSaved(new Date().toISOString());
-      setToast("Convocatoria gardada");
-      setTimeout(()=>setToast(""), 1500);
+      const total = selected.size;
+      setToast(`✅ Convo gardada · ${total} xogadores marcados`);
+      setTimeout(()=>setToast(""), 2200);
     } catch(e) {
       console.error(e); setToast("Erro ao gardar"); setTimeout(()=>setToast(""), 2500);
     } finally { setSaving(false); }
@@ -262,11 +271,13 @@ export default function ConvocatoriaProximo() {
               {saving ? "Gardando…" : "GARDAR CONVO"}
             </button>
             <button style={S.btnDanger} onClick={resetAll} title="Restaurar" aria-label="Restaurar">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M3 6h18" stroke="#7f1d1d" strokeWidth="3.2" strokeLinecap="round"/>
-                <path d="M8 6V4h8v2" stroke="#7f1d1d" strokeWidth="3.2" strokeLinecap="round"/>
-                <path d="M19 6l-1 14H6L5 6" stroke="#7f1d1d" strokeWidth="3.2" strokeLinecap="round"/>
-                <path d="M10 11v6M14 11v6" stroke="#7f1d1d" strokeWidth="3.2" strokeLinecap="round"/>
+              {/* Icono lixo centrado, sen bold, vermello, fondo branco */}
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"
+                   style={{ display:"block", fill:"none", stroke:"#ef4444", strokeWidth:1.8, strokeLinecap:"round", strokeLinejoin:"round" }}>
+                <path d="M3 6h18"/>
+                <path d="M8 6V4h8v2"/>
+                <path d="M19 6l-1 14H6L5 6"/>
+                <path d="M10 11v6M14 11v6"/>
               </svg>
             </button>
           </div>
@@ -292,11 +303,14 @@ export default function ConvocatoriaProximo() {
                       {p.foto_url ? (
                         <>
                           <img src={p.foto_url} alt={`Foto de ${nombre}`} style={S.img} loading="lazy" decoding="async" />
-                          {sel && <span style={S.convoTag}>CONVO</span>}
+                          {sel && <span style={{ ...S.convoTag, fontSize: isMobile ? 14 : 18, padding: isMobile ? "3px 8px" : "4px 10px" }}>CONVO</span>}
                         </>
                       ) : <div style={{ color:"#cbd5e1" }}>Sen foto</div>}
                     </div>
-                    <p style={S.name}>{dorsal != null ? `${String(dorsal).padStart(2,"0")} · ` : ""}{nombre}</p>
+                    {/* Baixo da foto só texto (sen ocos extras no móbil) */}
+                    <p style={S.name} title={nombre}>
+                      {dorsal != null ? `${String(dorsal).padStart(2,"0")} · ` : ""}{nombre}
+                    </p>
                     <p style={S.meta}>{pos}</p>
                   </article>
                 );
