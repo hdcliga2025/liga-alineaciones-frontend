@@ -58,6 +58,7 @@ const S = {
     borderRadius:12,
     background:"linear-gradient(180deg,#ffe6e6,#ffd1d1)",
     color:"#7f1d1d", fontWeight:800,
+    fontSize:18, /* ↑ un pouco máis grande */
     border:"1.5px solid #ef4444",
     cursor:"pointer",
     boxShadow:"0 6px 16px rgba(239,68,68,.22)"
@@ -194,14 +195,14 @@ export default function AlineacionOficial(){
   }
 
   async function loadOfficial() {
-    // Lóxica real de gardado xa a tiñas montada; aquí só conservamos o hook/handler
+    // Mantemos a lóxica tal cal (este era o handler no arquivo que pasaches).
     if (sel.size !== 11) return;
-    // … (inserción en alineacion_oficial)
+    // … (inserción real a “alineacion_oficial” na implementación que xa tiñas)
   }
   function resetAll(){ setSel(new Set()); setLastCounterId(null); }
 
-  // Etiqueta pedida (sen parénteses)
-  const loadLabel = `SUBIR 11 OFICIAL | ${sel.size}/11`;
+  // NUEVO texto en gallego + contador sin paréntesis
+  const loadLabel = `GRAVAR ONCE INICIAL | ${sel.size}/11`;
 
   return (
     <main style={S.wrap}>
@@ -222,7 +223,9 @@ export default function AlineacionOficial(){
           </p>
 
           <div style={S.btnRow}>
-            <button style={S.btnPrimary} onClick={loadOfficial} disabled={sel.size!==11}>{loadLabel}</button>
+            <button style={S.btnPrimary} onClick={loadOfficial} disabled={sel.size!==11}>
+              {loadLabel}
+            </button>
 
             <button style={S.btnTrash} onClick={resetAll} title="Restaurar" aria-label="Restaurar">
               <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"
@@ -280,7 +283,7 @@ export default function AlineacionOficial(){
             <button style={S.modalClose} onClick={()=>setShowInfo(false)} aria-label="Pechar">✕</button>
             <h3 style={S.modalTitle}>Información</h3>
             <p style={S.modalText}>
-              Selecciona 11 xogadores e preme en <strong>SUBIR 11 OFICIAL</strong> para rexistrar a aliñación do encontro.
+              Selecciona 11 xogadores e preme en <strong>GRAVAR ONCE INICIAL</strong> para rexistrar a aliñación do encontro.
               Poderás restablecer a selección co botón de lixo.
             </p>
           </div>
