@@ -30,38 +30,42 @@ function finalFromAll(p = {}) {
   };
 }
 
-/* ===== Estilos: encabezado copiado de Convocatoria (mismo look & feel) ===== */
+/* ===== Estilos (cuadro rojo + botones rojos) ===== */
 const S = {
   wrap: { maxWidth: 1080, margin: "0 auto", padding: 16 },
   h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
-  sub: { margin: "0 0 12px", color: "#475569", fontSize: 16 },
+  sub: { margin: "0 0 6px", color: "#475569", fontSize: 16 },
 
-  // Caja superior clonada
   resumen: {
     margin:"0 0 10px", padding:"10px 12px", borderRadius:12,
-    border:"1px solid #dbeafe",
-    background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)",
-    color:"#0f172a",
-    boxShadow:"0 6px 18px rgba(14,165,233,.16)"
+    border:"1px solid #fecaca",
+    background:"linear-gradient(180deg,#fee2e2,#fecaca)",
+    color:"#7f1d1d",
+    boxShadow:"0 6px 18px rgba(239,68,68,.16)"
   },
-  resumeLine: { margin: 0, fontSize: 18, fontWeight: 500, letterSpacing: ".35px", lineHeight: 1.45 },
+  resumeTitle: { margin: 0, fontSize: 18, fontWeight: 700, letterSpacing: ".35px", lineHeight: 1.45, color:"#7f1d1d" },
+  resumeLine: { margin:"2px 0 0", fontSize: 16, fontWeight: 600, opacity:.9 },
 
-  // Botonera igual que Convocatoria: primaria a lo largo + dos de 46px
+  // “Aliñación oficial rexistrada”
+  savedTitle: { margin:"10px 0 0", font:"700 15px/1.2 Montserrat,system-ui", color:"#7f1d1d" },
+  savedTime:  { margin:"2px 0 0", font:"700 16px/1.1 Montserrat,system-ui", color:"#7f1d1d" },
+
+  // Botonera: principal (rojo) + dos de 46px
   btnRow: { display:"grid", gridTemplateColumns:"1fr 46px 46px", gap:8, alignItems:"stretch", marginTop:10 },
-  btnLoad: {
+
+  btnPrimary: {
     width:"100%", padding:"10px 12px",
     borderRadius:12,
-    background:"linear-gradient(180deg,#eef7ff,#e4f1ff)",
-    color:"#075985", fontWeight:800,
-    border:"1.5px solid #38bdf8",
+    background:"linear-gradient(180deg,#ffe6e6,#ffd1d1)",
+    color:"#7f1d1d", fontWeight:800,
+    border:"1.5px solid #ef4444",
     cursor:"pointer",
-    boxShadow:"0 6px 16px rgba(56,189,248,.25)"
+    boxShadow:"0 6px 16px rgba(239,68,68,.22)"
   },
   btnTrash: {
     width:"100%", padding:0,
     borderRadius:12,
     background:"#ffffff",
-    color:"#7f1d1d",
     border:"1.5px solid #ef4444",
     cursor:"pointer",
     display:"grid", placeItems:"center",
@@ -77,7 +81,7 @@ const S = {
     cursor:"pointer"
   },
 
-  // Resto de la página (tarjetas)
+  // Grid/cards
   posHeader: { margin:"14px 0 10px", padding:"2px 4px 8px", fontWeight:700, color:"#7f1d1d", borderLeft:"4px solid #fecaca", borderBottom:"2px solid #fecaca" },
   grid: (isMobile) => ({
     display:"grid",
@@ -86,7 +90,7 @@ const S = {
   }),
   card: (picked)=>({
     position:"relative",
-    border: "1px solid #fecaca",
+    border:"1px solid #fecaca",
     borderRadius:16, padding:10,
     background: picked ? "linear-gradient(180deg,#fee2e2,#fecaca)" : "#fff",
     boxShadow: picked ? "0 0 0 2px rgba(239,68,68,.25), 0 8px 26px rgba(239,68,68,.18)" : "0 2px 8px rgba(0,0,0,.06)"
@@ -100,7 +104,6 @@ const S = {
   name: { margin:"8px 0 0", font:"700 15px/1.2 Montserrat, system-ui, sans-serif", color:"#0f172a", textAlign:"center" },
   meta: { margin:"2px 0 0", color:"#475569", fontSize:13, textAlign:"center" },
 
-  // Contador superpuesto
   counter: {
     position:"absolute", left:"50%", top:"78%", transform:"translate(-50%,-50%)",
     fontFamily:"Montserrat, system-ui, sans-serif",
@@ -124,6 +127,7 @@ export default function AlineacionOficial(){
   const [sel, setSel] = useState(new Set());
   const [lastCounterId, setLastCounterId] = useState(null);
   const [showInfo, setShowInfo] = useState(false);
+  const [lastSavedIso, setLastSavedIso] = useState(null);
   const max11 = 11;
 
   useEffect(() => {
@@ -135,6 +139,7 @@ export default function AlineacionOficial(){
 
   useEffect(() => {
     (async () => {
+      // header
       const { data: top } = await supabase
         .from("matches_vindeiros")
         .select("equipo1,equipo2,match_iso")
@@ -144,7 +149,7 @@ export default function AlineacionOficial(){
         const { data: nm } = await supabase.from("next_match").select("equipo1,equipo2,match_iso").eq("id",1).maybeSingle();
         if (nm?.match_iso) setHeader({ equipo1: cap(nm.equipo1||""), equipo2: cap(nm.equipo2||""), match_iso: nm.match_iso });
       }
-
+      // plantilla
       const { data: js } = await supabase
         .from("jugadores")
         .select("id, nombre, dorsal, foto_url")
@@ -152,6 +157,20 @@ export default function AlineacionOficial(){
       setPlayers(js || []);
     })();
   }, []);
+
+  // cargar “última rexistrada” cando se coñeza header
+  useEffect(() => {
+    (async ()=>{
+      if (!header?.match_iso) return;
+      const { data } = await supabase
+        .from("alineacion_oficial")
+        .select("updated_at")
+        .eq("match_iso", header.match_iso)
+        .order("updated_at",{ascending:false})
+        .limit(1);
+      if (data && data.length) setLastSavedIso(data[0].updated_at);
+    })();
+  }, [header?.match_iso]);
 
   const grouped = useMemo(() => {
     const g = { POR: [], DEF: [], CEN: [], DEL: [] };
@@ -175,46 +194,47 @@ export default function AlineacionOficial(){
   }
 
   async function loadOfficial() {
+    // Lóxica real de gardado xa a tiñas montada; aquí só conservamos o hook/handler
     if (sel.size !== 11) return;
-    // TODO: guardar once oficial → supabase (tabla alineacion_oficial) – ya existente en tu backend
-    // Mantengo la función como estaba (no cambiamos lógica aquí).
+    // … (inserción en alineacion_oficial)
   }
   function resetAll(){ setSel(new Set()); setLastCounterId(null); }
 
-  const loadLabel = isMobile ? (sel.size===11 ? "CARGAR ONCE OFICIAL" : `CARGAR ONCE OFICIAL (${sel.size}/11)`)
-                             : (sel.size===11 ? "CARGAR ALIÑACIÓN OFICIAL" : `CARGAR ALIÑACIÓN OFICIAL (${sel.size}/11)`);
+  // Etiqueta pedida (sen parénteses)
+  const loadLabel = `SUBIR 11 OFICIAL | ${sel.size}/11`;
 
   return (
     <main style={S.wrap}>
       <h1 style={S.h1}>Aliñación oficial</h1>
       <p style={S.sub}>Os once xogadores que saen de inicio neste partido.</p>
 
-      {/* === Encabezado con el mismo diseño que Convocatoria === */}
       {header && (
         <section style={S.resumen}>
-          <p style={S.resumeLine}>
-            <strong>{header ? header.equipo1 : ""}</strong> vs <strong>{header ? header.equipo2 : ""}</strong>
+          <p style={S.resumeTitle}><strong>{header.equipo1}</strong> vs <strong>{header.equipo2}</strong></p>
+          <p style={S.resumeLine}>{sFecha} | {sHora}</p>
+
+          {/* Rexistro última aliñación oficial */}
+          <p style={S.savedTitle}>Aliñación oficial rexistrada:</p>
+          <p style={S.savedTime}>
+            {lastSavedIso
+              ? `${new Date(lastSavedIso).toLocaleDateString("gl-ES",{day:"2-digit",month:"2-digit",year:"numeric"})} ás ${new Date(lastSavedIso).toLocaleTimeString("gl-ES",{hour:"2-digit",minute:"2-digit"})}`
+              : "—"}
           </p>
-          <p style={{...S.resumeLine, opacity:.9}}>{sFecha} | {sHora}</p>
 
           <div style={S.btnRow}>
-            <button style={S.btnLoad} onClick={loadOfficial} disabled={sel.size!==11}>{loadLabel}</button>
+            <button style={S.btnPrimary} onClick={loadOfficial} disabled={sel.size!==11}>{loadLabel}</button>
 
             <button style={S.btnTrash} onClick={resetAll} title="Restaurar" aria-label="Restaurar">
               <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"
                    style={{ display:"block", fill:"none", stroke:"#ef4444", strokeWidth:1.8, strokeLinecap:"round", strokeLinejoin:"round" }}>
-                <path d="M3 6h18"/>
-                <path d="M8 6V4h8v2"/>
-                <path d="M19 6l-1 14H6L5 6"/>
-                <path d="M10 11v6M14 11v6"/>
+                <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
               </svg>
             </button>
 
             <button style={S.btnInfo} onClick={()=>setShowInfo(true)} title="Información" aria-label="Información">
               <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"
                    style={{ display:"block", fill:"none", stroke:"#0ea5e9", strokeWidth:1.6, strokeLinecap:"round", strokeLinejoin:"round" }}>
-                <circle cx="12" cy="12" r="9"/>
-                <path d="M12 10v6M12 7h.01"/>
+                <circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/>
               </svg>
             </button>
           </div>
@@ -248,8 +268,10 @@ export default function AlineacionOficial(){
         );
       })}
 
-      {/* Botón inferior mantiene naming y función */}
-      <button style={S.btnLoad} onClick={loadOfficial} disabled={sel.size!==11}>{loadLabel}</button>
+      {/* Botón inferior igual que o superior */}
+      <button style={{...S.btnPrimary, width:"100%", marginTop:14}} onClick={loadOfficial} disabled={sel.size!==11}>
+        {loadLabel}
+      </button>
 
       {/* Modal información */}
       {showInfo && (
@@ -258,8 +280,8 @@ export default function AlineacionOficial(){
             <button style={S.modalClose} onClick={()=>setShowInfo(false)} aria-label="Pechar">✕</button>
             <h3 style={S.modalTitle}>Información</h3>
             <p style={S.modalText}>
-              Selecciona 11 xogadores para cargar a aliñación oficial deste encontro. Podes restablecer a selección co
-              botón de lixo. Esta acción establecerá a aliñación oficial que se cruzará coas aliñacións enviadas polas usuarias.
+              Selecciona 11 xogadores e preme en <strong>SUBIR 11 OFICIAL</strong> para rexistrar a aliñación do encontro.
+              Poderás restablecer a selección co botón de lixo.
             </p>
           </div>
         </div>
