@@ -60,7 +60,7 @@ const S = {
     border: selected ? "2px solid #38bdf8" : "1px solid #dbeafe",
     borderRadius:16, padding:10,
     boxShadow:"0 2px 8px rgba(0,0,0,.06)",
-    background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)",
+    background: selected ? "#e0f2fe" : "linear-gradient(180deg,#f0f9ff,#e0f2fe)",
     cursor:"pointer", userSelect:"none"
   }),
 
@@ -73,18 +73,23 @@ const S = {
     border:"1px solid #e5e7eb",
     position:"relative"
   }),
-  img: { width:"100%", height:"100%", objectFit:"contain", background:"#ffffff", display:"block" },
+  img: { width:"100%", height:"100%", objectFit:"cover", background:"#ffffff", display:"block" },
 
-  name: { margin:"8px 0 0", font:"700 15px/1.2 Montserrat, system-ui, sans-serif", color:"#0f172a", textAlign:"center", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" },
+  name: {
+    margin:"8px 0 0",
+    font:"700 15px/1.2 Montserrat, system-ui, sans-serif",
+    color:"#0f172a", textAlign:"center",
+    display:"-webkit-box", WebkitBoxOrient:"vertical", WebkitLineClamp:2, overflow:"hidden"
+  },
   meta: { margin:"2px 0 0", color:"#475569", fontSize:13, textAlign:"center" },
 
-  // Botonera superior 85% + 15% (misma altura) — bordes máis finos, sombra, fondo branco no lixo
-  btnRow: { display:"grid", gridTemplateColumns:"85% 15%", gap:8, alignItems:"stretch", marginTop:10 },
+  // Botonera: 3 columnas (gardar + lixo + info)
+  btnRow: { display:"grid", gridTemplateColumns:"1fr 46px 46px", gap:8, alignItems:"stretch", marginTop:10 },
 
   btnPrimary: {
     width:"100%", padding:"10px 12px",
     borderRadius:12,
-    background:"linear-gradient(180deg,#e7f6ff,#cfeeff)",
+    background:"linear-gradient(180deg,#eef7ff,#e4f1ff)",
     color:"#075985", fontWeight:800,
     border:"1.5px solid #38bdf8",
     cursor:"pointer",
@@ -92,28 +97,36 @@ const S = {
   },
 
   btnDanger: {
-    width:"100%", padding:"10px 12px",
+    width:"100%", padding:0,
     borderRadius:12,
     background:"#ffffff",
-    color:"#7f1d1d", fontWeight:700,
     border:"1.5px solid #ef4444",
     cursor:"pointer",
     display:"grid", placeItems:"center",
     boxShadow:"0 6px 16px rgba(239,68,68,.18)"
   },
 
-  // Botón inferior (só gardar)
+  btnInfo: {
+    width:"100%", padding:0,
+    borderRadius:12,
+    background:"#ffffff",
+    border:"1.5px solid #38bdf8",
+    display:"grid", placeItems:"center",
+    boxShadow:"0 6px 16px rgba(56,189,248,.18)",
+    cursor:"pointer"
+  },
+
   btnBottom: {
     width:"100%", padding:"10px 12px",
     borderRadius:12,
-    background:"linear-gradient(180deg,#e7f6ff,#cfeeff)",
+    background:"linear-gradient(180deg,#eef7ff,#e4f1ff)",
     color:"#075985", fontWeight:800,
     border:"1.5px solid #38bdf8",
     cursor:"pointer", marginTop:14,
     boxShadow:"0 6px 16px rgba(56,189,248,.25)"
   },
 
-  // Etiqueta CONVO — adaptada a tamaño e situada no 1/4 inferior, sen desbordar
+  // CONVO
   convoTag: {
     position:"absolute",
     left:"50%", bottom:"12%", transform:"translateX(-50%)",
@@ -127,7 +140,24 @@ const S = {
     textShadow:"0 1px 2px rgba(0,0,0,.12)",
     userSelect:"none", pointerEvents:"none",
     maxWidth:"90%", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis"
-  }
+  },
+
+  // Toast
+  toast: {
+    position:"fixed", bottom:18, left:"50%", transform:"translateX(-50%)",
+    background:"#e6f4ff", color:"#0369a1",
+    padding:"8px 12px",
+    borderRadius:12, boxShadow:"0 10px 22px rgba(2,132,199,.20)",
+    font:"600 13px/1.2 Montserrat,system-ui",
+    border:"1px solid #bae6fd"
+  },
+
+  // Modal info
+  modalBg:{ position:"fixed", inset:0, background:"rgba(2,6,23,.45)", display:"grid", placeItems:"center", zIndex:9999 },
+  modal:{ width:"min(92vw,560px)", background:"#fff", border:"1px solid #e2e8f0", borderRadius:14, boxShadow:"0 18px 48px rgba(0,0,0,.28)", padding:"16px 14px", position:"relative" },
+  modalClose:{ position:"absolute", right:8, top:8, width:34, height:34, borderRadius:10, border:"1px solid #e2e8f0", background:"#fff", cursor:"pointer", display:"grid", placeItems:"center" },
+  modalTitle:{ margin:"0 0 8px", font:"800 18px/1.2 Montserrat,system-ui", color:"#0f172a" },
+  modalText:{ margin:0, font:"500 14px/1.35 Montserrat,system-ui", color:"#0f172a" }
 };
 
 const blinkStyle = `
@@ -145,6 +175,7 @@ export default function ConvocatoriaProximo() {
   const [header, setHeader] = useState(null);
   const [lastSaved, setLastSaved] = useState(null);
   const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
+  const [showInfo, setShowInfo] = useState(false);
 
   useEffect(() => {
     let raf=0;
@@ -155,7 +186,6 @@ export default function ConvocatoriaProximo() {
 
   useEffect(() => {
     (async () => {
-      // admin
       const { data: sess } = await supabase.auth.getSession();
       const uid = sess?.session?.user?.id || null;
       let admin = false;
@@ -166,14 +196,12 @@ export default function ConvocatoriaProximo() {
       }
       setIsAdmin(admin);
 
-      // plantilla
       const { data: js } = await supabase
         .from("jugadores")
         .select("id, nombre, dorsal, foto_url")
         .order("dorsal", { ascending: true });
       setPlayers(js || []);
 
-      // header
       const { data: top } = await supabase
         .from("matches_vindeiros")
         .select("equipo1,equipo2,match_iso")
@@ -186,7 +214,6 @@ export default function ConvocatoriaProximo() {
         if (nm?.match_iso) setHeader({ equipo1: cap(nm.equipo1||""), equipo2: cap(nm.equipo2||""), match_iso: nm.match_iso });
       }
 
-      // precarga convocatoria
       const { data: pub } = await supabase
         .from("convocatoria_publica")
         .select("jugador_id, updated_at");
@@ -235,7 +262,7 @@ export default function ConvocatoriaProximo() {
       }
       setLastSaved(new Date().toISOString());
       const total = selected.size;
-      setToast(`✅ Convo gardada · ${total} xogadores marcados`);
+      setToast(`Convo gardada · ${total} xogadores marcados`);
       setTimeout(()=>setToast(""), 2200);
     } catch(e) {
       console.error(e); setToast("Erro ao gardar"); setTimeout(()=>setToast(""), 2500);
@@ -270,14 +297,23 @@ export default function ConvocatoriaProximo() {
             <button style={S.btnPrimary} onClick={saveAndPublish} disabled={saving} aria-label="Gardar convocatoria">
               {saving ? "Gardando…" : "GARDAR CONVO"}
             </button>
+
             <button style={S.btnDanger} onClick={resetAll} title="Restaurar" aria-label="Restaurar">
-              {/* Icono lixo centrado, sen bold, vermello, fondo branco */}
               <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"
                    style={{ display:"block", fill:"none", stroke:"#ef4444", strokeWidth:1.8, strokeLinecap:"round", strokeLinejoin:"round" }}>
                 <path d="M3 6h18"/>
                 <path d="M8 6V4h8v2"/>
                 <path d="M19 6l-1 14H6L5 6"/>
                 <path d="M10 11v6M14 11v6"/>
+              </svg>
+            </button>
+
+            {/* Info: icono sin “bold” y abre modal */}
+            <button style={S.btnInfo} onClick={()=>setShowInfo(true)} title="Información" aria-label="Información">
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"
+                   style={{ display:"block", fill:"none", stroke:"#0ea5e9", strokeWidth:1.7, strokeLinecap:"round", strokeLinejoin:"round" }}>
+                <circle cx="12" cy="12" r="9"/>
+                <path d="M12 10v6M12 7h.01"/>
               </svg>
             </button>
           </div>
@@ -303,11 +339,20 @@ export default function ConvocatoriaProximo() {
                       {p.foto_url ? (
                         <>
                           <img src={p.foto_url} alt={`Foto de ${nombre}`} style={S.img} loading="lazy" decoding="async" />
-                          {sel && <span style={{ ...S.convoTag, fontSize: isMobile ? 14 : 18, padding: isMobile ? "3px 8px" : "4px 10px" }}>CONVO</span>}
+                          {sel && (
+                            <span
+                              style={{
+                                ...S.convoTag,
+                                fontSize: isMobile ? 12 : 18,           // ← máis pequena no móbil
+                                padding: isMobile ? "2px 7px" : "4px 10px"
+                              }}
+                            >
+                              CONVO
+                            </span>
+                          )}
                         </>
                       ) : <div style={{ color:"#cbd5e1" }}>Sen foto</div>}
                     </div>
-                    {/* Baixo da foto só texto (sen ocos extras no móbil) */}
                     <p style={S.name} title={nombre}>
                       {dorsal != null ? `${String(dorsal).padStart(2,"0")} · ` : ""}{nombre}
                     </p>
@@ -325,12 +370,22 @@ export default function ConvocatoriaProximo() {
       </button>
 
       {toast && (
-        <div role="status" aria-live="polite" style={{
-          position:"fixed", bottom:18, left:"50%", transform:"translateX(-50%)",
-          background:"#0ea5e9", color:"#fff", padding:"10px 16px",
-          borderRadius:12, boxShadow:"0 10px 22px rgba(2,132,199,.35)", fontWeight:700
-        }}>
+        <div role="status" aria-live="polite" style={S.toast}>
           {toast}
+        </div>
+      )}
+
+      {/* Modal de información */}
+      {showInfo && (
+        <div style={S.modalBg} role="dialog" aria-modal="true" aria-label="Información">
+          <div style={S.modal}>
+            <button style={S.modalClose} onClick={()=>setShowInfo(false)} aria-label="Pechar">✕</button>
+            <h3 style={S.modalTitle}>Información</h3>
+            <p style={S.modalText}>
+              Para facilitar a túa aliñación para o próximo partido, xa seleccionamos a convocatoria de xogadores
+              que poderás escoller no teu once inicial. Se ves esta lista de xogadores publicada, xa podes xogar.
+            </p>
+          </div>
         </div>
       )}
     </main>
