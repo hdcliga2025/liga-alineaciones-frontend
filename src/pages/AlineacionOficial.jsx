@@ -1,6 +1,6 @@
 // src/pages/AlineacionOficial.jsx
 import { h } from "preact";
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
 const cap = (s="") => (s || "").toUpperCase();
@@ -37,7 +37,6 @@ const S = {
   h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
   sub: { margin: "0 0 12px", color: "#475569", fontSize: 16 },
 
-  // Cabeceira vermella con sombra e borde suave
   resumen: {
     margin:"0 0 12px", padding:"12px 14px", borderRadius:12,
     border:"1px solid #fecaca",
@@ -78,34 +77,31 @@ const S = {
   name: { margin:"8px 0 0", font:"700 15px/1.2 Montserrat, system-ui, sans-serif", color:"#0f172a", textAlign:"center" },
   meta: { margin:"2px 0 0", color:"#475569", fontSize:13, textAlign:"center" },
 
-  // Botoneira superior 85% + 15% (papeleira)
   rowBtns: { display:"grid", gridTemplateColumns:"85% 15%", gap:8, alignItems:"stretch", marginTop:10 },
 
-  // Botón vermello degradado, contorno simple, sen sombra, texto un pouco maior
+  // << Cambios pedidos: contorno fino (1px)
   btnLoad: {
     width:"100%", padding:"10px 14px", borderRadius:10,
     background:"linear-gradient(180deg,#fca5a5,#ef4444)",
-    border:"2px solid #ef4444", color:"#fff", fontWeight:800,
+    border:"1px solid #ef4444", color:"#fff", fontWeight:800,
     fontSize:16, letterSpacing:.4, cursor:"pointer"
   },
 
-  // Papeleira: fondo branco, contorno simple, sen bold
+  // Contorno 1px, fondo branco, icono sen bold
   btnTrash: {
     width:"100%", padding:"10px 12px", borderRadius:10,
     background:"#fff", color:"#7f1d1d",
-    border:"2px solid #ef4444", cursor:"pointer",
+    border:"1px solid #ef4444", cursor:"pointer",
     display:"grid", placeItems:"center"
   },
 
-  // Botón inferior igual que o superior pero 100% ancho
   btnBottom: {
     width:"100%", padding:"10px 14px", borderRadius:10,
     background:"linear-gradient(180deg,#fca5a5,#ef4444)",
-    border:"2px solid #ef4444", color:"#fff", fontWeight:800,
+    border:"1px solid #ef4444", color:"#fff", fontWeight:800,
     fontSize:16, letterSpacing:.4, cursor:"pointer", marginTop:14
   },
 
-  // Contador fixo no seleccionado
   counter: {
     position:"absolute", left:"50%", top:"78%", transform:"translate(-50%,-50%)",
     fontFamily:"Montserrat, system-ui, sans-serif",
@@ -114,9 +110,22 @@ const S = {
     letterSpacing:1.1, userSelect:"none", pointerEvents:"none"
   },
 
-  // Liñas de “aliñación subida”
-  upLabel: { margin:"8px 0 0", font:"600 15px/1.35 Montserrat,system-ui,sans-serif", color:"#7f1d1d" },
-  upValue: { margin:"2px 0 0", font:"600 15px/1.35 Montserrat,system-ui,sans-serif", color:"#7f1d1d", opacity:.9 }
+  upLabel: { margin:"8px 0 0", font:"600 15px/1.35 Montserrat,system-ui,sans-serif", color:"#0f172a" },
+  upValue: (blinkOn)=>({
+    margin:"2px 0 0",
+    font:"700 15px/1.35 Montserrat,system-ui,sans-serif",
+    color: blinkOn ? "#38bdf8" : "#0f172a",
+    transition:"color .25s ease"
+  }),
+
+  okBadge: {
+    position:"absolute", top:8, right:8,
+    background:"rgba(56,189,248,.95)", color:"#fff",
+    borderRadius:999, padding:"3px 7px",
+    font:"700 12px/1 Montserrat,system-ui,sans-serif",
+    boxShadow:"0 2px 8px rgba(56,189,248,.35)",
+    userSelect:"none", pointerEvents:"none"
+  }
 };
 
 export default function AlineacionOficial(){
@@ -128,9 +137,18 @@ export default function AlineacionOficial(){
   const [toast, setToast] = useState("");
   const [saving, setSaving] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [lastSavedAt, setLastSavedAt] = useState(null); // ← última subida/gravación
+  const [lastSavedAt, setLastSavedAt] = useState(null);
+  const [blinkOn, setBlinkOn] = useState(true); // ← parpadeo fe/hora subida
+  const audioCtxRef = useRef(null);
   const max11 = 11;
 
+  // Parpadeo cada 2s
+  useEffect(() => {
+    const id = setInterval(()=> setBlinkOn(v => !v), 2000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Resize móbil
   useEffect(() => {
     let raf=0;
     const onR=()=>{ cancelAnimationFrame(raf); raf=requestAnimationFrame(()=> setIsMobile(window.innerWidth<=560)); };
@@ -176,7 +194,6 @@ export default function AlineacionOficial(){
 
   async function preloadOfficial(iso){
     try {
-      // Preselección anterior (se existe)
       const { data: ofi } = await supabase
         .from("alineacion_oficial")
         .select("jugador_id,updated_at")
@@ -184,7 +201,6 @@ export default function AlineacionOficial(){
 
       if (ofi && ofi.length) {
         setSel(new Set(ofi.map(r=>r.jugador_id)));
-        // últimos updated_at
         const last = ofi.reduce((acc, r)=> (!acc || (r.updated_at > acc) ? r.updated_at : acc), null);
         if (last) setLastSavedAt(last);
       } else {
@@ -206,6 +222,24 @@ export default function AlineacionOficial(){
   const { fecha: sFecha, hora: sHora } = fmtDT(header?.match_iso);
   const savedFmt = fmtDT(lastSavedAt);
 
+  // Sonido bip curto ao seleccionar
+  function playBeep(){
+    try{
+      const ctx = audioCtxRef.current || new (window.AudioContext || window.webkitAudioContext)();
+      audioCtxRef.current = ctx;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.setValueAtTime(880, ctx.currentTime);
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
+      o.connect(g); g.connect(ctx.destination);
+      o.start();
+      o.stop(ctx.currentTime + 0.14);
+    }catch{}
+  }
+
   function togglePick(id) {
     setSel(prev => {
       const n = new Set(prev);
@@ -214,6 +248,7 @@ export default function AlineacionOficial(){
       return n;
     });
     setLastCounterId(id);
+    playBeep(); // ← bip en cada click de selección/deselección
   }
 
   function showToast(m, ms=2600){
@@ -265,13 +300,13 @@ export default function AlineacionOficial(){
         match_iso: iso,
         encuentro_id,
         updated_at: now,
-        jugadores_ids: [] // por compatibilidade se a columna existe como uuid[]
+        jugadores_ids: []
       }));
 
       const ins = await supabase.from("alineacion_oficial").insert(rows);
       if (ins.error) throw ins.error;
 
-      setLastSavedAt(now); // ← marca de tempo visible
+      setLastSavedAt(now); // para amosar na cabeceira + parpadeo
       showToast("Aliñación oficial gardada.");
     } catch (e) {
       const msg = [e?.code, e?.message, e?.details, e?.hint].filter(Boolean).join(" | ");
@@ -300,9 +335,9 @@ export default function AlineacionOficial(){
           </p>
           <p style={{...S.resumeLine, opacity:.9}}>{sFecha} | {sHora}</p>
 
-          {/* Liñas de última subida/gravación */}
+          {/* Liñas de última subida/gravación (con parpadeo cada 2s) */}
           <p style={S.upLabel}>Aliñación oficial subida:</p>
-          <p style={S.upValue}>{lastSavedAt ? `${savedFmt.fecha} ás ${savedFmt.hora}` : "-"}</p>
+          <p style={S.upValue(blinkOn)}>{lastSavedAt ? `${fmtDT(lastSavedAt).fecha} ás ${fmtDT(lastSavedAt).hora}` : "-"}</p>
 
           {/* Botoneira superior */}
           <div style={S.rowBtns}>
@@ -311,10 +346,10 @@ export default function AlineacionOficial(){
             </button>
             <button style={S.btnTrash} onClick={resetAll} title="Restablecer" aria-label="Restablecer">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M3 6h18" stroke="#7f1d1d" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M8 6V4h8v2" stroke="#7f1d1d" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M19 6l-1 14H6L5 6" stroke="#7f1d1d" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M10 11v6M14 11v6" stroke="#7f1d1d" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M3 6h18" stroke="#7f1d1d" strokeWidth="1.6" strokeLinecap="round"/>
+                <path d="M8 6V4h8v2" stroke="#7f1d1d" strokeWidth="1.6" strokeLinecap="round"/>
+                <path d="M19 6l-1 14H6L5 6" stroke="#7f1d1d" strokeWidth="1.6" strokeLinecap="round"/>
+                <path d="M10 11v6M14 11v6" stroke="#7f1d1d" strokeWidth="1.6" strokeLinecap="round"/>
               </svg>
             </button>
           </div>
@@ -336,7 +371,10 @@ export default function AlineacionOficial(){
                   <article key={p.id} style={S.card(picked)} onClick={()=>togglePick(p.id)}>
                     <div style={S.frame(isMobile)}>
                       <img src={p.foto_url} alt={`Foto de ${nombre}`} style={S.img} loading="lazy" decoding="async" />
+                      {/* contador sobre a foto do último click */}
                       {lastCounterId === p.id && <span style={S.counter}>{`${sel.size}/11`}</span>}
+                      {/* OK celeste no canto superior dereito cando está seleccionado */}
+                      {picked && <span style={S.okBadge}>OK</span>}
                     </div>
                     <p style={S.name}>{dorsal != null ? `${String(dorsal).padStart(2,"0")} · ` : ""}{nombre}</p>
                     <p style={S.meta}>{pos}</p>
@@ -358,7 +396,7 @@ export default function AlineacionOficial(){
           position:"fixed", bottom:18, left:"50%", transform:"translateX(-50%)",
           background:"#0ea5e9", color:"#fff", padding:"10px 16px",
           borderRadius:12, boxShadow:"0 10px 22px rgba(2,132,199,.35)", fontWeight:700,
-          maxWidth:"92vw", textAlign:"center"
+          maxWidth:"92vw", textAlign:"center", zIndex:9999
         }}>
           {toast}
         </div>
