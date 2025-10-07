@@ -10,6 +10,7 @@ const isUUID = (v = "") =>
   );
 const pad2 = (n) => String(n).padStart(2, "0");
 
+/* ---------------------------- UTILIDADES FECHA ---------------------------- */
 function fmtDT(iso) {
   if (!iso) return { fecha: "-", hora: "-" };
   try {
@@ -26,6 +27,8 @@ function fmtDT(iso) {
     return { fecha: "-", hora: "-" };
   }
 }
+
+/* ----------------------- PARSEO NOMBRE/DORSAL DESDE FOTO ------------------ */
 function safeDecode(s = "") {
   try {
     return decodeURIComponent(s);
@@ -54,10 +57,7 @@ function finalFromAll(p = {}) {
   };
 }
 
-/**
- * Hook: ajusta el font-size para encajar un bloque de texto en 2 líneas máx. sin desbordar.
- * (Solo lo usaremos en móvil; en desktop mantenemos el estilo previo.)
- */
+/* ------------------- AJUSTE DE TEXTO (SOLO MÓVIL, 2 LÍNEAS) --------------- */
 function useFitText2Lines(ref, opts) {
   const {
     min = 11,
@@ -68,7 +68,6 @@ function useFitText2Lines(ref, opts) {
     deps = [],
   } = opts || {};
   const [fontSize, setFontSize] = useState(initial);
-  const [didEllipsis, setDidEllipsis] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -81,36 +80,31 @@ function useFitText2Lines(ref, opts) {
     el.style.lineHeight = String(lineHeight);
     el.style.wordBreak = "break-word";
 
-    let low = min;
-    let high = max;
+    let low = min, high = max;
     let best = Math.max(min, Math.min(high, initial));
-    setDidEllipsis(false);
 
     const fits = (sizePx) => {
       el.style.fontSize = sizePx + "px";
       const oneLine = sizePx * lineHeight;
-      const maxHeight = oneLine * maxLines + 0.5;
-      return el.scrollHeight <= maxHeight && el.clientHeight <= maxHeight;
+      const maxH = oneLine * maxLines + 0.5;
+      return el.scrollHeight <= maxH && el.clientHeight <= maxH;
     };
 
-    if (fits(best)) low = best;
-    else high = best;
-
+    if (fits(best)) low = best; else high = best;
     while (high - low > 0.25) {
       const mid = (low + high) / 2;
-      if (fits(mid)) low = mid;
-      else high = mid;
+      if (fits(mid)) low = mid; else high = mid;
     }
     best = Math.floor(low * 10) / 10;
     el.style.fontSize = best + "px";
     setFontSize(best);
 
+    // Si ni en mínimo cabe, aplicamos elipsis como último recurso
     if (!fits(min)) {
       el.style.display = "-webkit-box";
       el.style.webkitBoxOrient = "vertical";
       el.style.webkitLineClamp = String(maxLines);
       el.style.textOverflow = "ellipsis";
-      setDidEllipsis(true);
     }
 
     let raf = 0;
@@ -128,9 +122,10 @@ function useFitText2Lines(ref, opts) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
-  return { fontSize, didEllipsis };
+  return { fontSize };
 }
 
+/* --------------------------------- ESTILOS -------------------------------- */
 const S = {
   wrap: { maxWidth: 1080, margin: "0 auto", padding: 16 },
   h1: {
@@ -142,6 +137,7 @@ const S = {
   },
   sub: { margin: "0 0 12px", color: "#475569", fontSize: 16 },
 
+  // Cuadro de texto (resumen rojo) con MÁS profundidad (sombra externa + leve inset)
   resumen: {
     margin: "0 0 12px",
     padding: "12px 14px",
@@ -149,7 +145,8 @@ const S = {
     border: "1px solid #fecaca",
     background: "linear-gradient(180deg,#fee2e2,#fecaca)",
     color: "#7f1d1d",
-    boxShadow: "0 10px 26px rgba(239,68,68,.18)",
+    boxShadow:
+      "inset 0 1px 0 rgba(255,255,255,.75), 0 12px 28px rgba(239,68,68,.22), 0 2px 0 rgba(239,68,68,.18)",
   },
   resumeLine: {
     margin: 0,
@@ -188,9 +185,7 @@ const S = {
     border: "1px solid #fecaca",
     borderRadius: 16,
     padding: 10,
-    background: picked
-      ? "linear-gradient(180deg,#fee2e2,#fecaca)"
-      : "#fff",
+    background: picked ? "linear-gradient(180deg,#fee2e2,#fecaca)" : "#fff",
     boxShadow: picked
       ? "0 0 0 2px rgba(239,68,68,.25), 0 8px 26px rgba(239,68,68,.18)"
       : "0 2px 8px rgba(0,0,0,.06)",
@@ -214,7 +209,7 @@ const S = {
     background: "#ffffff",
   }),
 
-  // Estilo original (desktop) con clamp 2 líneas + elipsis
+  /* Desktop: estilo previo con clamp + elipsis */
   nameDesktop: {
     margin: "8px 0 0",
     font: "700 15px/1.2 Montserrat, system-ui, sans-serif",
@@ -226,7 +221,7 @@ const S = {
     overflow: "hidden",
     wordBreak: "break-word",
   },
-  // Base para móvil (el tamaño final lo pone el hook)
+  /* Móvil: el tamaño lo decide el hook */
   nameMobileBase: {
     margin: "8px 0 0",
     fontWeight: 700,
@@ -246,38 +241,45 @@ const S = {
     marginTop: 10,
   },
 
-  // Degradado más claro (tirando a blanco) en ambos: móvil y desktop
+  /* Botones principales: MÁS ROJO + PROFUNDIDAD */
   btnLoad: (isMobile) => ({
     width: "100%",
-    padding: isMobile ? "8px 10px" : "10px 14px",
-    borderRadius: 10,
-    // más blanco arriba, rojo suave abajo
-    background: "linear-gradient(180deg,#fff7f7,#fee2e2)",
+    padding: isMobile ? "9px 12px" : "12px 16px",
+    borderRadius: 12,
+    background: "linear-gradient(180deg,#ffe9e9,#fca5a5)",
     border: "1px solid #ef4444",
     color: "#7f1d1d",
     fontWeight: 800,
     fontSize: isMobile ? 14 : 16,
     letterSpacing: 0.4,
     cursor: "pointer",
+    boxShadow:
+      "inset 0 1px 0 rgba(255,255,255,.8), 0 4px 10px rgba(239,68,68,.22), 0 1px 0 rgba(239,68,68,.25)",
+    transition: "transform .06s ease, box-shadow .2s ease",
+    willChange: "transform",
   }),
 
   btnTrash: {
     width: "100%",
     padding: "10px 12px",
-    borderRadius: 10,
-    background: "#fff",
+    borderRadius: 12,
+    background: "linear-gradient(180deg,#ffffff,#fee2e2)",
     color: "#7f1d1d",
     border: "1px solid #ef4444",
     cursor: "pointer",
     display: "grid",
     placeItems: "center",
+    boxShadow:
+      "inset 0 1px 0 rgba(255,255,255,.9), 0 3px 8px rgba(239,68,68,.18), 0 1px 0 rgba(239,68,68,.18)",
+    transition: "transform .06s ease, box-shadow .2s ease",
+    willChange: "transform",
   },
 
   btnBottom: (isMobile) => ({
     width: "100%",
-    padding: isMobile ? "8px 10px" : "10px 14px",
-    borderRadius: 10,
-    background: "linear-gradient(180deg,#fff7f7,#fee2e2)",
+    padding: isMobile ? "9px 12px" : "12px 16px",
+    borderRadius: 12,
+    background: "linear-gradient(180deg,#ffe9e9,#fca5a5)",
     border: "1px solid #ef4444",
     color: "#7f1d1d",
     fontWeight: 800,
@@ -285,6 +287,10 @@ const S = {
     letterSpacing: 0.4,
     cursor: "pointer",
     marginTop: 14,
+    boxShadow:
+      "inset 0 1px 0 rgba(255,255,255,.8), 0 4px 10px rgba(239,68,68,.22), 0 1px 0 rgba(239,68,68,.25)",
+    transition: "transform .06s ease, box-shadow .2s ease",
+    willChange: "transform",
   }),
 
   counter: {
@@ -309,14 +315,14 @@ const S = {
     font: "600 15px/1.35 Montserrat,system-ui,sans-serif",
     color: "#0f172a",
   },
+  // Color alterna ROJO ↔ NEGRO cada 3s
   upValue: (blinkOn) => ({
     margin: "2px 0 0",
     font: "700 15px/1.35 Montserrat,system-ui,sans-serif",
-    color: blinkOn ? "#38bdf8" : "#0f172a",
+    color: blinkOn ? "#7f1d1d" : "#0f172a",
     transition: "color .25s ease",
   }),
 
-  // Tamaño normal del OK (desktop). Para móvil, lo reducimos y pegamos a la esquina.
   okBadgeDesktop: {
     position: "absolute",
     top: 8,
@@ -330,27 +336,29 @@ const S = {
     userSelect: "none",
     pointerEvents: "none",
   },
+  /* SOLO MÓVIL: más pequeño y pegado */
   okBadgeMobile: {
     position: "absolute",
-    top: 4,
-    right: 4,
-    background: "rgba(56,189,248,.95)",
+    top: 3,
+    right: 3,
+    background: "rgba(56,189,248,.98)",
     color: "#fff",
     borderRadius: 999,
     padding: "2px 6px",
-    font: "700 11px/1 Montserrat,system-ui,sans-serif",
+    font: "700 10.5px/1 Montserrat,system-ui,sans-serif",
     boxShadow: "0 1px 4px rgba(56,189,248,.35)",
     userSelect: "none",
     pointerEvents: "none",
   },
 };
 
+/* ------------------------- NOMBRE 2 LÍNEAS EN MÓVIL ------------------------ */
 function NameMobileTwoLines({ text }) {
   const ref = useRef(null);
   const { fontSize } = useFitText2Lines(ref, {
     min: 11,
-    max: 14,       // techo móvil
-    initial: 13.5, // punto de partida móvil
+    max: 14,
+    initial: 13.5,
     lineHeight: 1.2,
     maxLines: 2,
     deps: [text],
@@ -369,6 +377,7 @@ function NameMobileTwoLines({ text }) {
   );
 }
 
+/* --------------------------------- VISTA ---------------------------------- */
 export default function AlineacionOficial() {
   const [header, setHeader] = useState(null);
   const [players, setPlayers] = useState([]);
@@ -381,15 +390,17 @@ export default function AlineacionOficial() {
   const [saving, setSaving] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState(null);
-  const [blinkOn, setBlinkOn] = useState(true);
+  const [blinkOn, setBlinkOn] = useState(true); // parpadeo 3s ROJO↔NEGRO
   const audioCtxRef = useRef(null);
   const max11 = 11;
 
+  // Parpadeo cada 3s (antes 2s)
   useEffect(() => {
-    const id = setInterval(() => setBlinkOn((v) => !v), 2000);
+    const id = setInterval(() => setBlinkOn((v) => !v), 3000);
     return () => clearInterval(id);
   }, []);
 
+  // Resize → móvil/desktop
   useEffect(() => {
     let raf = 0;
     const onR = () => {
@@ -403,6 +414,7 @@ export default function AlineacionOficial() {
     };
   }, []);
 
+  // Carga inicial
   useEffect(() => {
     (async () => {
       try {
@@ -487,8 +499,6 @@ export default function AlineacionOficial() {
     }
     return g;
   }, [players]);
-
-  const { fecha: sFecha, hora: sHora } = fmtDT(header?.match_iso);
 
   function playBeep() {
     try {
@@ -637,9 +647,10 @@ export default function AlineacionOficial() {
             <strong>{cap(header.equipo2)}</strong>
           </p>
           <p style={{ ...S.resumeLine, opacity: 0.9 }}>
-            {sFecha} | {fmtDT(header?.match_iso).hora}
+            {fmtDT(header?.match_iso).fecha} | {fmtDT(header?.match_iso).hora}
           </p>
 
+          {/* Parpadeo cada 3s con cambio de color ROJO ↔ NEGRO */}
           <p style={S.upLabel}>Aliñación oficial subida:</p>
           <p style={S.upValue(blinkOn)}>
             {lastSavedAt
@@ -652,6 +663,9 @@ export default function AlineacionOficial() {
               style={S.btnLoad(isMobile)}
               onClick={loadOfficial}
               disabled={sel.size !== 11 || saving}
+              onMouseDown={(e) => (e.currentTarget.style.transform = "translateY(1px)")}
+              onMouseUp={(e) => (e.currentTarget.style.transform = "translateY(0)")}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
             >
               {saving ? "Gardando…" : loadLabel}
             </button>
@@ -660,6 +674,9 @@ export default function AlineacionOficial() {
               onClick={resetAll}
               title="Restablecer"
               aria-label="Restablecer"
+              onMouseDown={(e) => (e.currentTarget.style.transform = "translateY(1px)")}
+              onMouseUp={(e) => (e.currentTarget.style.transform = "translateY(0)")}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
             >
               <svg
                 width="22"
@@ -764,6 +781,9 @@ export default function AlineacionOficial() {
         style={S.btnBottom(isMobile)}
         onClick={loadOfficial}
         disabled={sel.size !== 11 || saving}
+        onMouseDown={(e) => (e.currentTarget.style.transform = "translateY(1px)")}
+        onMouseUp={(e) => (e.currentTarget.style.transform = "translateY(0)")}
+        onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
       >
         {saving ? "Gardando…" : loadLabel}
       </button>
@@ -794,3 +814,4 @@ export default function AlineacionOficial() {
     </main>
   );
 }
+

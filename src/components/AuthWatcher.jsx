@@ -1,7 +1,34 @@
-﻿import { h } from "preact";
+﻿// src/components/AuthWatcher.jsx
+import { h } from "preact";
 import { useEffect, useRef } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient";
 import { route } from "preact-router";
+
+/**
+ * Detección global de nueva versión:
+ * - Consulta /index.html con cache: "no-store" para leer ETag/Last-Modified.
+ * - Si cambian respecto al valor guardado en localStorage, recarga la app.
+ */
+async function ensureFreshApp() {
+  try {
+    const res = await fetch("/index.html", { cache: "no-store" });
+    const etag = res.headers.get("etag");
+    const lm = res.headers.get("last-modified");
+    const sig = etag || lm || String(Date.now());
+    const KEY = "__app_index_sig";
+
+    const prev = localStorage.getItem(KEY);
+    if (prev && prev !== sig) {
+      // Build nueva: recarga limpia (sin cerrar sesión manualmente)
+      location.replace(location.href);
+      return false;
+    }
+    localStorage.setItem(KEY, sig);
+    return true;
+  } catch {
+    return true; // si no podemos comprobar, seguimos
+  }
+}
 
 export default function AuthWatcher() {
   const mounted = useRef(false);
@@ -58,12 +85,22 @@ export default function AuthWatcher() {
     };
 
     const handleInitial = async () => {
-      const { data } = await supabase.auth.getSession();
-      const sess = data?.session || null;
-      const p = location.pathname;
+      // 0) Comprobar versión nueva: si hay, recarga y no seguimos.
+      const fresh = await ensureFreshApp();
+      if (!fresh) return;
 
-      // perfiles públicos
+      // 1) Sesión viva (intenta refrescar si no hay)
+      let { data } = await supabase.auth.getSession();
+      let sess = data?.session || null;
+      if (!sess) {
+        try { await supabase.auth.refreshSession(); } catch {}
+        const again = await supabase.auth.getSession();
+        sess = again?.data?.session || null;
+      }
+
+      const p = location.pathname;
       const isPublic = p === "/" || p.startsWith("/login") || p.startsWith("/register");
+
       if (sess) {
         await upsertOwnProfile();
         if (isPublic) safeRouteTo("/dashboard");
@@ -74,6 +111,7 @@ export default function AuthWatcher() {
 
     handleInitial();
 
+    // Auth listener
     const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!active) return;
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
@@ -88,9 +126,11 @@ export default function AuthWatcher() {
       }
     });
 
+    // Al volver a la pestaña: comprobar nueva build + mantener sesión viva
     const onVis = async () => {
       if (document.hidden) return;
-      // tocar sesión para forzar token vivo
+      const fresh = await ensureFreshApp();
+      if (!fresh) return; // si hay nueva versión, se recarga
       try { await supabase.auth.getSession(); } catch {}
     };
     document.addEventListener("visibilitychange", onVis);
@@ -104,4 +144,3 @@ export default function AuthWatcher() {
 
   return null;
 }
-
