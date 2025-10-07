@@ -20,7 +20,6 @@ function finalFromAll(p = {}) {
   };
 }
 const cap = (s="") => (s || "").toUpperCase();
-
 const IMG_H = 320;
 
 /* === Autofit 2 liñas (móbil) como en Alineación Oficial === */
@@ -31,24 +30,20 @@ function useFitText2Lines(
   const [fontSize, setFontSize] = useState(initial);
   useEffect(() => {
     const el = ref.current; if (!el) return;
-
     el.style.whiteSpace = "normal";
     el.style.overflow = "hidden";
     el.style.display = "block";
     el.style.textOverflow = "clip";
     el.style.lineHeight = String(lineHeight);
     el.style.wordBreak = "break-word";
-
     let low = min, high = max;
     let best = Math.max(min, Math.min(max, initial));
-
     const fits = (px) => {
       el.style.fontSize = px + "px";
       const one = px * lineHeight;
       const maxH = one * maxLines + 0.5;
       return el.scrollHeight <= maxH && el.clientHeight <= maxH;
     };
-
     if (fits(best)) low = best; else high = best;
     while (high - low > 0.25) {
       const mid = (low + high) / 2;
@@ -57,78 +52,83 @@ function useFitText2Lines(
     best = Math.floor(low * 10) / 10;
     el.style.fontSize = best + "px";
     setFontSize(best);
-
     if (!fits(min)) {
       el.style.display = "-webkit-box";
       el.style.webkitBoxOrient = "vertical";
       el.style.webkitLineClamp = String(maxLines);
       el.style.textOverflow = "ellipsis";
     }
-
     let raf = 0;
     const onR = () => { cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>setFontSize((s)=>s)); };
     window.addEventListener("resize", onR);
     document.addEventListener("visibilitychange", onR);
-    return () => {
-      window.removeEventListener("resize", onR);
-      document.removeEventListener("visibilitychange", onR);
-      cancelAnimationFrame(raf);
-    };
+    return () => { window.removeEventListener("resize", onR); document.removeEventListener("visibilitychange", onR); cancelAnimationFrame(raf); };
   }, deps);
   return { fontSize };
 }
 
+/* ===== Estilos ===== */
 const S = {
   wrap: { maxWidth: 1080, margin: "0 auto", padding: 16 },
   h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
   sub: { margin: "0 0 12px", color: "#475569", fontSize: 16, fontWeight: 400 },
 
-  // Cuadro de texto SIN línea de contorno
+  // 8) Cuadro de texto con VERDE degradado (sin borde)
   resumen: {
     margin:"0 0 12px", padding:"12px 14px", borderRadius:12,
     border:"none",
-    background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)",
-    color:"#0f172a",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 8px 20px rgba(14,165,233,.18), 0 1px 0 rgba(14,165,233,.14)"
+    background:"linear-gradient(180deg,#ecfdf5,#d1fae5)", // verde suave → máis verde
+    color:"#064e3b",
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 8px 20px rgba(16,185,129,.16), 0 1px 0 rgba(16,185,129,.12)"
   },
-  resumeLine: { margin: 0, fontSize: 19, fontWeight: 600, letterSpacing: ".35px", lineHeight: 1.5 },
-  resumeNoteTitle: { margin:"8px 0 0", color:"#475569", fontSize:15, fontWeight:700, letterSpacing:.3 },
-  resumeNoteTime: { margin:"2px 0 0", color:"#0b1220", fontSize:16, fontWeight:800, letterSpacing:.4 },
+  resumeLine: { margin: 0, fontSize: 19, fontWeight: 700, letterSpacing: ".35px", lineHeight: 1.5 },
+  resumeNoteTitle: { margin:"8px 0 0", color:"#065f46", fontSize:15, fontWeight:700, letterSpacing:.3 },
 
-  // Botonera: móvil 20/60/20; desktop con iconos grandes
+  // 3) Parpadeo celeste ↔ negro
+  resumeNoteTime: {
+    margin:"2px 0 0", fontSize:16, fontWeight:800, letterSpacing:.4,
+    animation: "blinkCelNeg 2.2s infinite"
+  },
+
+  // 1,2,5,6,7) Botonera alineada (no desborda). Grid 20/60/20; info azul degradado; confirmar verde degradado; trash borde simple.
   topRow: (m)=>({
     display:"grid",
-    gridTemplateColumns: m ? "20% 60% 20%" : "20% 60% 20%",
-    gap:8, alignItems:"stretch", margin:"8px 0 12px"
+    gridTemplateColumns: "20% 60% 20%",
+    gap:8,
+    alignItems:"stretch",
+    margin:"8px 0 12px"
   }),
 
-  // Todos los botones con contorno simple (1px)
   btnInfo:{
     width:"100%", padding:"10px 12px", borderRadius:12,
-    background:"#fff", color:"#0b4f8a", fontWeight:800, textAlign:"center",
+    background:"linear-gradient(180deg,#e0f2fe,#bfdbfe)", // azul degradado
+    color:"#0b4f8a", fontWeight:800, textAlign:"center",
     border:"1px solid #38bdf8", cursor:"pointer",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 3px 8px rgba(2,132,199,.18)",
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 4px 12px rgba(2,132,199,.2)",
     display:"grid", placeItems:"center"
   },
   btnConfirm:{
     width:"100%", padding:"10px 12px", borderRadius:12,
-    background:"linear-gradient(180deg,#e7f6ff,#cfeeff)", color:"#075985", fontWeight:800,
-    border:"1px solid #38bdf8", cursor:"pointer",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 4px 12px rgba(56,189,248,.22)"
+    background:"linear-gradient(180deg,#bbf7d0,#86efac)", // verde degradado
+    color:"#065f46", fontWeight:900,
+    border:"1px solid #22c55e", cursor:"pointer",
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 6px 14px rgba(34,197,94,.22)"
   },
   btnTrash:{
     width:"100%", padding:"10px 12px", borderRadius:12,
-    background:"linear-gradient(180deg,#ffffff,#fee2e2)", color:"#7f1d1d", fontWeight:800,
+    background:"linear-gradient(180deg,#ffffff,#fee2e2)",
+    color:"#7f1d1d", fontWeight:800,
     border:"1px solid #ef4444", cursor:"pointer",
     display:"grid", placeItems:"center",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 3px 10px rgba(239,68,68,.20)"
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 3px 10px rgba(239,68,68,.18)"
   },
 
   btnBottom:{
     width:"100%", padding:"10px 12px", borderRadius:12,
-    background:"linear-gradient(180deg,#e7f6ff,#cfeeff)", color:"#075985", fontWeight:800,
-    border:"1px solid #38bdf8", cursor:"pointer", marginTop:14,
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 4px 12px rgba(56,189,248,.22)"
+    background:"linear-gradient(180deg,#bbf7d0,#86efac)", // igual a confirmar
+    color:"#065f46", fontWeight:900,
+    border:"1px solid #22c55e", cursor:"pointer", marginTop:14,
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 6px 14px rgba(34,197,94,.22)"
   },
 
   posHeader: { margin:"16px 0 10px", padding:"2px 4px 8px", fontWeight:700, color:"#0c4a6e", borderLeft:"4px solid #7dd3fc", borderBottom:"2px solid #e2e8f0" },
@@ -138,16 +138,16 @@ const S = {
     gap:12
   }),
 
-  // Tarjeta: seleccionada = celeste plano SIN degradado
+  // 4) Tarjeta seleccionada: borde verde grueso
   card: (picked)=>({
     position:"relative",
     borderRadius:16, padding:10,
-    background: picked ? "#e0f2fe" : "linear-gradient(180deg,#f0f9ff,#e0f2fe)",
-    border: picked ? "1px solid #38bdf8" : "1px solid #dbeafe",
-    boxShadow: picked ? "0 0 0 2px rgba(56,189,248,.25), 0 8px 20px rgba(56,189,248,.18)" : "0 2px 8px rgba(0,0,0,.06)"
+    background: picked ? "#ecfdf5" : "linear-gradient(180deg,#f0f9ff,#e0f2fe)",
+    border: picked ? "2px solid #22c55e" : "1px solid #dbeafe",
+    boxShadow: picked ? "0 0 0 3px rgba(34,197,94,.18), 0 8px 22px rgba(34,197,94,.12)" : "0 2px 8px rgba(0,0,0,.06)"
   }),
 
-  // Frame como en Alineación Oficial: 172 móvil / 320 desktop; cover móvil / contain desktop
+  // Frame como en Alineación Oficial
   frame: (isMobile)=>({
     width:"100%", height: isMobile ? 172 : IMG_H,
     borderRadius:12, overflow:"hidden",
@@ -156,7 +156,7 @@ const S = {
   }),
   img: (isMobile) => ({ width:"100%", height:"100%", objectFit: isMobile ? "cover" : "contain", background:"#ffffff", display:"block" }),
 
-  // Nombre: desktop igual; móvil con autofit 2 líneas
+  // Nombre
   nameDesktop: {
     margin:"8px 0 0",
     font:"700 15px/1.2 Montserrat, system-ui, sans-serif",
@@ -188,26 +188,16 @@ const S = {
     letterSpacing:1.1, userSelect:"none", pointerEvents:"none"
   },
 
-  // 3) Etiqueta XOGA, centrada na parte baixa, semitransparente e sen desbordar
-  xogaTag: (m)=>({
-    position:"absolute",
-    left:"50%", bottom: m ? "10%" : "12%",
-    transform:"translateX(-50%)",
-    background:"rgba(56,189,248,.75)",
-    color:"#ffffff",
-    font: m ? "800 11px/1 Montserrat,system-ui,sans-serif" : "800 14px/1 Montserrat,system-ui,sans-serif",
-    padding: m ? "3px 8px" : "4px 10px",
-    borderRadius:999,
-    maxWidth:"90%",
-    whiteSpace:"nowrap",
-    overflow:"hidden",
-    textOverflow:"ellipsis",
-    boxShadow:"0 2px 8px rgba(56,189,248,.28)",
-    userSelect:"none",
-    pointerEvents:"none",
-    letterSpacing:.6
+  // 2) Pulgar bonito arriba-izquierda (móvil un poco mayor), pegado á esquina
+  okThumb: (m)=>({
+    position:"absolute", top: m ? 4 : 6, left: m ? 4 : 6,
+    background:"rgba(34,197,94,.92)", color:"#fff",
+    borderRadius:999, padding: m ? "3px 5px" : "4px 6px",
+    boxShadow:"0 2px 8px rgba(34,197,94,.28)",
+    display:"grid", placeItems:"center", userSelect:"none", pointerEvents:"none"
   }),
 
+  // Modal
   modalBg: { position:"fixed", inset:0, background:"rgba(2,6,23,.45)", display:"grid", placeItems:"center", zIndex:9999 },
   modal: {
     width:"min(92vw,520px)",
@@ -219,6 +209,10 @@ const S = {
     border:"1px solid #e2e8f0", background:"#fff", cursor:"pointer", display:"grid", placeItems:"center"
   }
 };
+
+const extraStyles = `
+@keyframes blinkCelNeg{0%{color:#0ea5e9}50%{color:#000}100%{color:#0ea5e9}}
+`;
 
 function Img({ src, alt, isMobile }) {
   return (
@@ -252,12 +246,9 @@ function NameMobileTwoLines({ text }) {
   );
 }
 
-/* ====== Audio (WebAudio) ======
-   - playYeah(): arpegio ascendente (selección)
-   - playTrumpets(): brass 2s (guardar) */
+/* ====== Audio (WebAudio) ====== */
 function useAudio() {
   const ctxRef = useRef(null);
-
   const getCtx = () => {
     if (ctxRef.current) return ctxRef.current;
     const Ctx = window.AudioContext || window.webkitAudioContext;
@@ -266,7 +257,6 @@ function useAudio() {
     ctxRef.current = ctx;
     return ctx;
   };
-
   function envGain(ctx, t0, a=0.01, d=0.15, s=0.6, r=0.25, peak=0.9) {
     const g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, t0);
@@ -275,12 +265,10 @@ function useAudio() {
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + a + d + r);
     return g;
   }
-
   function playYeah() {
     const ctx = getCtx(); if (!ctx) return;
     const now = ctx.currentTime;
-
-    const freqs = [440, 554.37, 659.25]; // A4, C#5, E5
+    const freqs = [440, 554.37, 659.25];
     freqs.forEach((f, i) => {
       const o = ctx.createOscillator();
       o.type = "triangle";
@@ -291,40 +279,17 @@ function useAudio() {
       o.stop(now + i*0.35);
     });
   }
-
   function playTrumpets() {
     const ctx = getCtx(); if (!ctx) return;
-    const now = ctx.currentTime;
-    const dur = 2.0;
-
+    const now = ctx.currentTime; const dur = 2.0;
     const makeBrass = (f, detuneCents) => {
-      const o = ctx.createOscillator();
-      o.type = "sawtooth";
-      o.frequency.value = f;
-      o.detune.value = detuneCents || 0;
-
-      const filt = ctx.createBiquadFilter();
-      filt.type = "lowpass";
-      filt.frequency.setValueAtTime(800, now);
-      filt.frequency.linearRampToValueAtTime(2200, now + 0.4);
-
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0.0001, now);
-      g.gain.exponentialRampToValueAtTime(0.9, now + 0.05);
-      g.gain.linearRampToValueAtTime(0.6, now + 0.6);
-      g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-
-      o.connect(filt).connect(g).connect(ctx.destination);
-      o.start(now);
-      o.stop(now + dur + 0.05);
+      const o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.value = f; o.detune.value = detuneCents || 0;
+      const filt = ctx.createBiquadFilter(); filt.type = "lowpass"; filt.frequency.setValueAtTime(800, now); filt.frequency.linearRampToValueAtTime(2200, now + 0.4);
+      const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.9, now + 0.05); g.gain.linearRampToValueAtTime(0.6, now + 0.6); g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+      o.connect(filt).connect(g).connect(ctx.destination); o.start(now); o.stop(now + dur + 0.05);
     };
-
-    // Acorde mayor “triunfal”: C5-E5-G5
-    makeBrass(523.25, 0);
-    makeBrass(659.25, +3);
-    makeBrass(783.99, -4);
+    makeBrass(523.25, 0); makeBrass(659.25, +3); makeBrass(783.99, -4);
   }
-
   return { playYeah, playTrumpets };
 }
 
@@ -338,7 +303,7 @@ export default function HazTu11() {
   const [lastCounterId, setLastCounterId] = useState(null);
   const [showOK, setShowOK] = useState(false);
   const [toast, setToast] = useState("");
-  const [lastSavedAt, setLastSavedAt] = useState(null); // rexistro última aliñación
+  const [lastSavedAt, setLastSavedAt] = useState(null);
   const max11 = 11;
 
   const { playYeah, playTrumpets } = useAudio();
@@ -352,11 +317,9 @@ export default function HazTu11() {
 
   useEffect(() => {
     (async () => {
-      // Obtemos convocatoria publicada
       const { data: pub } = await supabase.from("convocatoria_publica").select("jugador_id");
       const ids = (pub || []).map(r => r.jugador_id);
 
-      // match de referencia
       const { data: top } = await supabase
         .from("matches_vindeiros")
         .select("equipo1,equipo2,match_iso")
@@ -378,7 +341,6 @@ export default function HazTu11() {
       const ordered = ids.map(id => byId.get(id)).filter(Boolean);
       setJugadores(ordered);
 
-      // Alineación previa do usuario (para timestamp e picks)
       try {
         const { data: sess } = await supabase.auth.getSession();
         const uid = sess?.session?.user?.id || null;
@@ -433,7 +395,6 @@ export default function HazTu11() {
       } else {
         if (n.size >= max11) return prev;
         n.add(id);
-        // sonido yeahhh SOLO al seleccionar
         try { playYeah(); } catch {}
       }
       return n;
@@ -451,7 +412,6 @@ export default function HazTu11() {
       if (!uid) { setToast("Precisas iniciar sesión."); setTimeout(()=>setToast(""), 1500); return; }
 
       const iso = header.match_iso;
-      // Borrar e inserir novo 11
       await supabase.from("alineaciones_usuarios").delete().eq("user_id", uid).eq("match_iso", iso);
 
       const now = new Date().toISOString();
@@ -459,7 +419,7 @@ export default function HazTu11() {
       const { error } = await supabase.from("alineaciones_usuarios").insert(rows);
       if (error) throw error;
 
-      setLastSavedAt(now); // rexistro da última aliñación
+      setLastSavedAt(now);
       setShowOK(true);
       setToast("Aliñación gardada!");
       try { playTrumpets(); } catch {}
@@ -474,7 +434,10 @@ export default function HazTu11() {
 
   if (loading) return <main style={S.wrap}>Cargando…</main>;
 
-  const confirmLabel = isMobile ? (sel.size===11 ? "CONFIRMAR" : `CONFIRMAR (${sel.size}/11)`) : (sel.size===11 ? "CONFIRMAR ALIÑACIÓN" : `CONFIRMAR ALIÑACIÓN (${sel.size}/11)`);
+  const confirmLabel = isMobile
+    ? `CONFIRMAR | ${sel.size}/11`
+    : `CONFIRMAR ALIÑACIÓN | ${sel.size}/11`;
+
   const fmtLast = (iso) => {
     if (!iso) return null;
     try {
@@ -489,6 +452,8 @@ export default function HazTu11() {
 
   return (
     <main style={S.wrap}>
+      <style>{extraStyles}</style>
+
       <h1 style={S.h1}>Fai aquí a túa aliñación</h1>
       <p style={S.sub}>Aquí é onde demostras o Giráldez que levas dentro.</p>
 
@@ -501,14 +466,19 @@ export default function HazTu11() {
         </div>
       )}
 
-      {/* Botonera 20/60/20 (móbil) e mesma en desktop con iconos máis grandes */}
+      {/* Botonera 20/60/20, dentro de los márgenes del cuadro */}
       <div style={S.topRow(isMobile)}>
         <button style={S.btnInfo} title="Información" aria-label="Información">
-          <svg width={isMobile ? 22 : 26} height={isMobile ? 22 : 26} viewBox="0 0 24 24" aria-hidden="true"
-               style={{display:"block",fill:"none",stroke:"#0b4f8a",strokeWidth:1.8}}>
-            <circle cx="12" cy="12" r="9" />
-            <path d="M12 10v6" />
-            <path d="M12 7.25h.01" />
+          {/* Icono “i” más bonito */}
+          <svg width={isMobile ? 24 : 28} height={isMobile ? 24 : 28} viewBox="0 0 24 24" aria-hidden="true" style={{display:"block"}}>
+            <defs>
+              <linearGradient id="infoGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#3b82f6"/><stop offset="100%" stopColor="#0ea5e9"/>
+              </linearGradient>
+            </defs>
+            <circle cx="12" cy="12" r="9" fill="url(#infoGrad)" stroke="#1e3a8a" strokeWidth="1"/>
+            <path d="M12 10v6" stroke="#ffffff" strokeWidth="2" strokeLinecap="round"/>
+            <path d="M12 7.2h.01" stroke="#ffffff" strokeWidth="2" strokeLinecap="round"/>
           </svg>
         </button>
 
@@ -517,6 +487,7 @@ export default function HazTu11() {
         </button>
 
         <button style={S.btnTrash} onClick={clearMy11} title="Borrar" aria-label="Borrar">
+          {/* Papelera sin bold, icono un pelín mayor en móvil/desktop */}
           <svg width={isMobile ? 22 : 26} height={isMobile ? 22 : 26} viewBox="0 0 24 24" fill="none" aria-hidden="true"
                style={{display:"block",stroke:"#7f1d1d",strokeWidth:1.6,strokeLinecap:"round",strokeLinejoin:"round"}}>
             <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
@@ -540,8 +511,16 @@ export default function HazTu11() {
                   <article key={p.id} style={S.card(picked)} onClick={()=>togglePick(p.id)}>
                     <div style={S.frame(isMobile)}>
                       <Img src={p.foto_url} alt={`Foto de ${nombre}`} isMobile={isMobile} />
-                      {/* 3) Etiqueta XOGA */}
-                      {picked && <span style={S.xogaTag(isMobile)}>XOGA</span>}
+                      {/* Pulgar bonito arriba-izquierda cuando está seleccionado */}
+                      {picked && (
+                        <span style={S.okThumb(isMobile)} aria-hidden="true">
+                          <svg width={isMobile ? 14 : 16} height={isMobile ? 14 : 16} viewBox="0 0 24 24" fill="none"
+                               style={{display:"block",stroke:"#ffffff",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round"}}>
+                            <path d="M7 11h4l2-6a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v8.5a3.5 3.5 0 0 1-3.5 3.5H10a3 3 0 0 1-3-3v-3z"/>
+                            <path d="M7 11v6H4a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2h3z"/>
+                          </svg>
+                        </span>
+                      )}
                       {/* contador */}
                       {lastCounterId === p.id && <span style={S.counter}>{`${sel.size}/11`}</span>}
                     </div>
@@ -590,4 +569,3 @@ export default function HazTu11() {
     </main>
   );
 }
-
