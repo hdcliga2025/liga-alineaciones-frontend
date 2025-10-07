@@ -3,7 +3,7 @@ import { h } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
-/* Utils (comparten patrón con outras páxinas) */
+/* Utils */
 function safeDecode(s = "") { try { return decodeURIComponent(s); } catch { return s.replace(/%20/g, " "); } }
 function parseFromFilename(url = "") {
   const last = (url.split("?")[0].split("#")[0].split("/").pop() || "").trim();
@@ -95,10 +95,10 @@ const S = {
   resumeNoteTitle: { margin:"8px 0 0", color:"#475569", fontSize:15, fontWeight:700, letterSpacing:.3 },
   resumeNoteTime: { margin:"2px 0 0", color:"#0b1220", fontSize:16, fontWeight:800, letterSpacing:.4 },
 
-  // Botonera: en móvil bajo el cuadro y dentro de sus márgenes
+  // Botonera: móvil 20/60/20; desktop con iconos grandes
   topRow: (m)=>({
     display:"grid",
-    gridTemplateColumns: m ? "1fr 1fr 1fr" : "15% 70% 15%",
+    gridTemplateColumns: m ? "20% 60% 20%" : "20% 60% 20%",
     gap:8, alignItems:"stretch", margin:"8px 0 12px"
   }),
 
@@ -108,7 +108,7 @@ const S = {
     background:"#fff", color:"#0b4f8a", fontWeight:800, textAlign:"center",
     border:"1px solid #38bdf8", cursor:"pointer",
     boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 3px 8px rgba(2,132,199,.18)",
-    display:"grid", placeItems:"center", gap:6
+    display:"grid", placeItems:"center"
   },
   btnConfirm:{
     width:"100%", padding:"10px 12px", borderRadius:12,
@@ -156,7 +156,7 @@ const S = {
   }),
   img: (isMobile) => ({ width:"100%", height:"100%", objectFit: isMobile ? "cover" : "contain", background:"#ffffff", display:"block" }),
 
-  // Nombre: desktop igual; móvil con autofit 2 líneas (como Alineación Oficial)
+  // Nombre: desktop igual; móvil con autofit 2 líneas
   nameDesktop: {
     margin:"8px 0 0",
     font:"700 15px/1.2 Montserrat, system-ui, sans-serif",
@@ -188,23 +188,25 @@ const S = {
     letterSpacing:1.1, userSelect:"none", pointerEvents:"none"
   },
 
-  // Badge "pulgar hacia arriba" (OK selección) — móvil más pequeño y pegado a esquina
-  okThumbDesktop: {
-    position:"absolute", top:8, right:8,
-    background:"rgba(56,189,248,.95)", color:"#fff",
-    borderRadius:999, padding:"3px 6px",
-    font:"700 12px/1 Montserrat,system-ui,sans-serif",
-    boxShadow:"0 2px 8px rgba(56,189,248,.35)",
-    display:"grid", placeItems:"center", userSelect:"none", pointerEvents:"none"
-  },
-  okThumbMobile: {
-    position:"absolute", top:3, right:3,
-    background:"rgba(56,189,248,.98)", color:"#fff",
-    borderRadius:999, padding:"2px 5px",
-    font:"700 10.5px/1 Montserrat,system-ui,sans-serif",
-    boxShadow:"0 1px 4px rgba(56,189,248,.35)",
-    display:"grid", placeItems:"center", userSelect:"none", pointerEvents:"none"
-  },
+  // 3) Etiqueta XOGA, centrada na parte baixa, semitransparente e sen desbordar
+  xogaTag: (m)=>({
+    position:"absolute",
+    left:"50%", bottom: m ? "10%" : "12%",
+    transform:"translateX(-50%)",
+    background:"rgba(56,189,248,.75)",
+    color:"#ffffff",
+    font: m ? "800 11px/1 Montserrat,system-ui,sans-serif" : "800 14px/1 Montserrat,system-ui,sans-serif",
+    padding: m ? "3px 8px" : "4px 10px",
+    borderRadius:999,
+    maxWidth:"90%",
+    whiteSpace:"nowrap",
+    overflow:"hidden",
+    textOverflow:"ellipsis",
+    boxShadow:"0 2px 8px rgba(56,189,248,.28)",
+    userSelect:"none",
+    pointerEvents:"none",
+    letterSpacing:.6
+  }),
 
   modalBg: { position:"fixed", inset:0, background:"rgba(2,6,23,.45)", display:"grid", placeItems:"center", zIndex:9999 },
   modal: {
@@ -250,6 +252,82 @@ function NameMobileTwoLines({ text }) {
   );
 }
 
+/* ====== Audio (WebAudio) ======
+   - playYeah(): arpegio ascendente (selección)
+   - playTrumpets(): brass 2s (guardar) */
+function useAudio() {
+  const ctxRef = useRef(null);
+
+  const getCtx = () => {
+    if (ctxRef.current) return ctxRef.current;
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return null;
+    const ctx = new Ctx();
+    ctxRef.current = ctx;
+    return ctx;
+  };
+
+  function envGain(ctx, t0, a=0.01, d=0.15, s=0.6, r=0.25, peak=0.9) {
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(peak, t0 + a);
+    g.gain.linearRampToValueAtTime(peak*s, t0 + a + d);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + a + d + r);
+    return g;
+  }
+
+  function playYeah() {
+    const ctx = getCtx(); if (!ctx) return;
+    const now = ctx.currentTime;
+
+    const freqs = [440, 554.37, 659.25]; // A4, C#5, E5
+    freqs.forEach((f, i) => {
+      const o = ctx.createOscillator();
+      o.type = "triangle";
+      o.frequency.setValueAtTime(f, now + i*0.06);
+      const g = envGain(ctx, now + i*0.06, 0.005, 0.12, 0.5, 0.18, 0.7);
+      o.connect(g).connect(ctx.destination);
+      o.start(now + i*0.06);
+      o.stop(now + i*0.35);
+    });
+  }
+
+  function playTrumpets() {
+    const ctx = getCtx(); if (!ctx) return;
+    const now = ctx.currentTime;
+    const dur = 2.0;
+
+    const makeBrass = (f, detuneCents) => {
+      const o = ctx.createOscillator();
+      o.type = "sawtooth";
+      o.frequency.value = f;
+      o.detune.value = detuneCents || 0;
+
+      const filt = ctx.createBiquadFilter();
+      filt.type = "lowpass";
+      filt.frequency.setValueAtTime(800, now);
+      filt.frequency.linearRampToValueAtTime(2200, now + 0.4);
+
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(0.9, now + 0.05);
+      g.gain.linearRampToValueAtTime(0.6, now + 0.6);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+      o.connect(filt).connect(g).connect(ctx.destination);
+      o.start(now);
+      o.stop(now + dur + 0.05);
+    };
+
+    // Acorde mayor “triunfal”: C5-E5-G5
+    makeBrass(523.25, 0);
+    makeBrass(659.25, +3);
+    makeBrass(783.99, -4);
+  }
+
+  return { playYeah, playTrumpets };
+}
+
 export default function HazTu11() {
   const [jugadores, setJugadores] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -260,8 +338,10 @@ export default function HazTu11() {
   const [lastCounterId, setLastCounterId] = useState(null);
   const [showOK, setShowOK] = useState(false);
   const [toast, setToast] = useState("");
-  const [lastSavedAt, setLastSavedAt] = useState(null); // registro última aliñación
+  const [lastSavedAt, setLastSavedAt] = useState(null); // rexistro última aliñación
   const max11 = 11;
+
+  const { playYeah, playTrumpets } = useAudio();
 
   useEffect(() => {
     let raf=0;
@@ -311,7 +391,6 @@ export default function HazTu11() {
             .eq("match_iso", keyIso);
           if (prev && prev.length) {
             setSel(new Set(prev.map(r=>r.jugador_id)));
-            // última actualización do conxunto
             const last = prev.reduce((a,r)=> {
               const t = r.updated_at ? new Date(r.updated_at).getTime() : 0;
               return t>a?t:a;
@@ -347,11 +426,15 @@ export default function HazTu11() {
 
   function togglePick(id) {
     setSel(prev => {
+      const wasSelected = prev.has(id);
       const n = new Set(prev);
-      if (n.has(id)) n.delete(id);
-      else {
+      if (wasSelected) {
+        n.delete(id);
+      } else {
         if (n.size >= max11) return prev;
         n.add(id);
+        // sonido yeahhh SOLO al seleccionar
+        try { playYeah(); } catch {}
       }
       return n;
     });
@@ -379,6 +462,7 @@ export default function HazTu11() {
       setLastSavedAt(now); // rexistro da última aliñación
       setShowOK(true);
       setToast("Aliñación gardada!");
+      try { playTrumpets(); } catch {}
       setTimeout(()=>setToast(""), 1600);
     } catch (e) {
       console.error(e);
@@ -412,26 +496,19 @@ export default function HazTu11() {
         <div style={S.resumen}>
           <p style={S.resumeLine}><strong>{cap(header.equipo1)}</strong> vs <strong>{cap(header.equipo2)}</strong></p>
           <p style={{...S.resumeLine, opacity:.9}}>{sFecha} | {sHora}</p>
-
-          {/* 3) Rexistro última aliñación */}
           <p style={S.resumeNoteTitle}>Rexistro da túa última aliñación:</p>
           <p style={S.resumeNoteTime}>{last ? `${last.f} ás ${last.h}` : "-"}</p>
         </div>
       )}
 
-      {/* 7 & móvil: botonera baixo o cadro e respectando marxes */}
+      {/* Botonera 20/60/20 (móbil) e mesma en desktop con iconos máis grandes */}
       <div style={S.topRow(isMobile)}>
-        <button
-          style={S.btnInfo}
-          title="Información"
-          aria-label="Información"
-        >
-          {/* 5) Botón Info blanco + icono 'i' azul */}
-          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"
-               style={{display:"block",fill:"none",stroke:"#0b4f8a",strokeWidth:1.6}}>
+        <button style={S.btnInfo} title="Información" aria-label="Información">
+          <svg width={isMobile ? 22 : 26} height={isMobile ? 22 : 26} viewBox="0 0 24 24" aria-hidden="true"
+               style={{display:"block",fill:"none",stroke:"#0b4f8a",strokeWidth:1.8}}>
             <circle cx="12" cy="12" r="9" />
             <path d="M12 10v6" />
-            <path d="M12 7.5h.01" />
+            <path d="M12 7.25h.01" />
           </svg>
         </button>
 
@@ -440,8 +517,7 @@ export default function HazTu11() {
         </button>
 
         <button style={S.btnTrash} onClick={clearMy11} title="Borrar" aria-label="Borrar">
-          {/* 7) Icono papelera SIN bold */}
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"
+          <svg width={isMobile ? 22 : 26} height={isMobile ? 22 : 26} viewBox="0 0 24 24" fill="none" aria-hidden="true"
                style={{display:"block",stroke:"#7f1d1d",strokeWidth:1.6,strokeLinecap:"round",strokeLinejoin:"round"}}>
             <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
           </svg>
@@ -462,25 +538,13 @@ export default function HazTu11() {
                 const nameLine = (dorsal != null ? `${String(dorsal).padStart(2,"0")} · ` : "") + nombre;
                 return (
                   <article key={p.id} style={S.card(picked)} onClick={()=>togglePick(p.id)}>
-
-                    {/* 1) Pulgar arriba en esquina superior dereita cando está seleccionado */}
                     <div style={S.frame(isMobile)}>
                       <Img src={p.foto_url} alt={`Foto de ${nombre}`} isMobile={isMobile} />
-                      {picked && (
-                        <span style={isMobile ? S.okThumbMobile : S.okThumbDesktop} aria-hidden="true">
-                          {/* pulgar (SVG) */}
-                          <svg width={isMobile ? 12 : 14} height={isMobile ? 12 : 14} viewBox="0 0 24 24" fill="none"
-                               style={{display:"block",stroke:"#ffffff",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round"}}>
-                            <path d="M14 10V5a3 3 0 0 0-3-3l-2 7" />
-                            <path d="M5 12h13.28a2 2 0 0 1 1.96 2.39l-1 5A2 2 0 0 1 17.28 21H9a4 4 0 0 1-4-4v-5z" />
-                          </svg>
-                        </span>
-                      )}
-                      {/* contador como antes */}
+                      {/* 3) Etiqueta XOGA */}
+                      {picked && <span style={S.xogaTag(isMobile)}>XOGA</span>}
+                      {/* contador */}
                       {lastCounterId === p.id && <span style={S.counter}>{`${sel.size}/11`}</span>}
                     </div>
-
-                    {/* 2) Sen espazos innecesarios: mesmos marxes que Alineación Oficial */}
                     {isMobile ? (
                       <NameMobileTwoLines text={nameLine} />
                     ) : (
@@ -526,3 +590,4 @@ export default function HazTu11() {
     </main>
   );
 }
+
