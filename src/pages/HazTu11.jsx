@@ -69,17 +69,17 @@ function useFitText2Lines(
 
 /* ===== Estilos ===== */
 const S = {
-  wrap: { maxWidth: 1080, margin: "0 auto", padding: 16 },
+  wrap: { maxWidth: 1080, margin: "0 auto", padding: 16, boxSizing:"border-box" },
   h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
   sub: { margin: "0 0 12px", color: "#475569", fontSize: 16, fontWeight: 400 },
 
-  // 8) Cuadro de texto con VERDE degradado (sin borde)
+  // 8) Cuadro de texto con VERDE degradado (sin borde) + SOMBRA
   resumen: {
     margin:"0 0 12px", padding:"12px 14px", borderRadius:12,
     border:"none",
     background:"linear-gradient(180deg,#ecfdf5,#d1fae5)", // verde suave → máis verde
     color:"#064e3b",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 8px 20px rgba(16,185,129,.16), 0 1px 0 rgba(16,185,129,.12)"
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 10px 26px rgba(16,185,129,.20), 0 1px 0 rgba(16,185,129,.12)"
   },
   resumeLine: { margin: 0, fontSize: 19, fontWeight: 700, letterSpacing: ".35px", lineHeight: 1.5 },
   resumeNoteTitle: { margin:"8px 0 0", color:"#065f46", fontSize:15, fontWeight:700, letterSpacing:.3 },
@@ -90,29 +90,38 @@ const S = {
     animation: "blinkCelNeg 2.2s infinite"
   },
 
-  // 1,2,5,6,7) Botonera alineada (no desborda). Grid 20/60/20; info azul degradado; confirmar verde degradado; trash borde simple.
-  topRow: (m)=>({
+  // 1,3,6,7,8) Botonera alineada EXACTA con el cuadro (no desborda)
+  controlsWrap: {
+    maxWidth:"100%",
+    margin:"0 auto",
+    padding:0,
+    boxSizing:"border-box"
+  },
+  topRow: {
     display:"grid",
-    gridTemplateColumns: "20% 60% 20%",
+    gridTemplateColumns: "18% 64% 18%", // reducimos info/papelera para asegurar ajuste en móvil
     gap:8,
     alignItems:"stretch",
-    margin:"8px 0 12px"
-  }),
+    margin:"8px 0 12px",
+    boxSizing:"border-box"
+  },
 
+  // Todos los botones con SOMBRA
   btnInfo:{
     width:"100%", padding:"10px 12px", borderRadius:12,
-    background:"linear-gradient(180deg,#e0f2fe,#bfdbfe)", // azul degradado
+    background:"linear-gradient(180deg,#e0f2fe,#93c5fd,#60a5fa)", // más DEGRADe
     color:"#0b4f8a", fontWeight:800, textAlign:"center",
     border:"1px solid #38bdf8", cursor:"pointer",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 4px 12px rgba(2,132,199,.2)",
-    display:"grid", placeItems:"center"
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 6px 16px rgba(2,132,199,.26)",
+    display:"grid", placeItems:"center", minWidth:0
   },
   btnConfirm:{
     width:"100%", padding:"10px 12px", borderRadius:12,
-    background:"linear-gradient(180deg,#bbf7d0,#86efac)", // verde degradado
+    background:"linear-gradient(180deg,#d1fae5,#a7f3d0,#86efac)", // verde con MÁS degradado
     color:"#065f46", fontWeight:900,
     border:"1px solid #22c55e", cursor:"pointer",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 6px 14px rgba(34,197,94,.22)"
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 8px 18px rgba(34,197,94,.24)",
+    minWidth:0
   },
   btnTrash:{
     width:"100%", padding:"10px 12px", borderRadius:12,
@@ -120,15 +129,16 @@ const S = {
     color:"#7f1d1d", fontWeight:800,
     border:"1px solid #ef4444", cursor:"pointer",
     display:"grid", placeItems:"center",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 3px 10px rgba(239,68,68,.18)"
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 6px 16px rgba(239,68,68,.22)",
+    minWidth:0
   },
 
   btnBottom:{
     width:"100%", padding:"10px 12px", borderRadius:12,
-    background:"linear-gradient(180deg,#bbf7d0,#86efac)", // igual a confirmar
+    background:"linear-gradient(180deg,#d1fae5,#a7f3d0,#86efac)", // igual a confirmar
     color:"#065f46", fontWeight:900,
     border:"1px solid #22c55e", cursor:"pointer", marginTop:14,
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 6px 14px rgba(34,197,94,.22)"
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 8px 18px rgba(34,197,94,.24)"
   },
 
   posHeader: { margin:"16px 0 10px", padding:"2px 4px 8px", fontWeight:700, color:"#0c4a6e", borderLeft:"4px solid #7dd3fc", borderBottom:"2px solid #e2e8f0" },
@@ -138,13 +148,13 @@ const S = {
     gap:12
   }),
 
-  // 4) Tarjeta seleccionada: borde verde grueso
+  // 4) Tarjeta seleccionada: fondo VERDE degradado + borde verde grueso + sombra
   card: (picked)=>({
     position:"relative",
     borderRadius:16, padding:10,
-    background: picked ? "#ecfdf5" : "linear-gradient(180deg,#f0f9ff,#e0f2fe)",
-    border: picked ? "2px solid #22c55e" : "1px solid #dbeafe",
-    boxShadow: picked ? "0 0 0 3px rgba(34,197,94,.18), 0 8px 22px rgba(34,197,94,.12)" : "0 2px 8px rgba(0,0,0,.06)"
+    background: picked ? "linear-gradient(180deg,#ecfdf5,#d1fae5)" : "linear-gradient(180deg,#f0f9ff,#e0f2fe)",
+    border: picked ? "2.5px solid #22c55e" : "1px solid #dbeafe",
+    boxShadow: picked ? "0 0 0 3px rgba(34,197,94,.18), 0 10px 24px rgba(34,197,94,.14)" : "0 2px 8px rgba(0,0,0,.06)"
   }),
 
   // Frame como en Alineación Oficial
@@ -188,11 +198,11 @@ const S = {
     letterSpacing:1.1, userSelect:"none", pointerEvents:"none"
   },
 
-  // 2) Pulgar bonito arriba-izquierda (móvil un poco mayor), pegado á esquina
-  okThumb: (m)=>({
+  // 5) “Visto” (✔) arriba-izquierda, un poco más grande en móvil
+  okCheck: (m)=>({
     position:"absolute", top: m ? 4 : 6, left: m ? 4 : 6,
-    background:"rgba(34,197,94,.92)", color:"#fff",
-    borderRadius:999, padding: m ? "3px 5px" : "4px 6px",
+    background:"rgba(34,197,94,.94)", color:"#fff",
+    borderRadius:999, padding: m ? "3px 6px" : "4px 7px",
     boxShadow:"0 2px 8px rgba(34,197,94,.28)",
     display:"grid", placeItems:"center", userSelect:"none", pointerEvents:"none"
   }),
@@ -246,7 +256,9 @@ function NameMobileTwoLines({ text }) {
   );
 }
 
-/* ====== Audio (WebAudio) ====== */
+/* ====== Audio ======
+   - playBip(): beep cortito (selección)
+   - playHalaCelta(): voz “Hala Celta!” (~1.3–2s) con SpeechSynthesis; fallback a acordes breves */
 function useAudio() {
   const ctxRef = useRef(null);
   const getCtx = () => {
@@ -257,40 +269,50 @@ function useAudio() {
     ctxRef.current = ctx;
     return ctx;
   };
-  function envGain(ctx, t0, a=0.01, d=0.15, s=0.6, r=0.25, peak=0.9) {
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(peak, t0 + a);
-    g.gain.linearRampToValueAtTime(peak*s, t0 + a + d);
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + a + d + r);
-    return g;
-  }
-  function playYeah() {
+
+  function playBip() {
     const ctx = getCtx(); if (!ctx) return;
     const now = ctx.currentTime;
-    const freqs = [440, 554.37, 659.25];
-    freqs.forEach((f, i) => {
-      const o = ctx.createOscillator();
-      o.type = "triangle";
-      o.frequency.setValueAtTime(f, now + i*0.06);
-      const g = envGain(ctx, now + i*0.06, 0.005, 0.12, 0.5, 0.18, 0.7);
-      o.connect(g).connect(ctx.destination);
-      o.start(now + i*0.06);
-      o.stop(now + i*0.35);
-    });
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "sine";
+    o.frequency.setValueAtTime(1046.5, now); // C6
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(0.35, now + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.10); // ~100ms
+    o.connect(g).connect(ctx.destination);
+    o.start(now);
+    o.stop(now + 0.12);
   }
-  function playTrumpets() {
+
+  function playHalaCelta() {
+    // Preferimos voz del navegador para claridad
+    try {
+      const phrase = "¡Hala Celta!";
+      if ("speechSynthesis" in window) {
+        const u = new SpeechSynthesisUtterance(phrase);
+        u.lang = "es-ES";
+        u.rate = 0.95;
+        u.pitch = 1.0;
+        u.volume = 1.0;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(u);
+        return;
+      }
+    } catch {}
+    // Fallback: acorde mayor breve
     const ctx = getCtx(); if (!ctx) return;
-    const now = ctx.currentTime; const dur = 2.0;
-    const makeBrass = (f, detuneCents) => {
-      const o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.value = f; o.detune.value = detuneCents || 0;
-      const filt = ctx.createBiquadFilter(); filt.type = "lowpass"; filt.frequency.setValueAtTime(800, now); filt.frequency.linearRampToValueAtTime(2200, now + 0.4);
-      const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.9, now + 0.05); g.gain.linearRampToValueAtTime(0.6, now + 0.6); g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-      o.connect(filt).connect(g).connect(ctx.destination); o.start(now); o.stop(now + dur + 0.05);
+    const now = ctx.currentTime;
+    const dur = 1.2;
+    const mk = (f, det=0)=> {
+      const o = ctx.createOscillator(); o.type="sawtooth"; o.frequency.value=f; o.detune.value=det;
+      const g = ctx.createGain(); g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(0.8, now+0.05); g.gain.exponentialRampToValueAtTime(0.0001, now+dur);
+      o.connect(g).connect(ctx.destination); o.start(now); o.stop(now+dur+0.05);
     };
-    makeBrass(523.25, 0); makeBrass(659.25, +3); makeBrass(783.99, -4);
+    mk(523.25,0); mk(659.25,+2); mk(783.99,-3);
   }
-  return { playYeah, playTrumpets };
+
+  return { playBip, playHalaCelta };
 }
 
 export default function HazTu11() {
@@ -306,7 +328,7 @@ export default function HazTu11() {
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const max11 = 11;
 
-  const { playYeah, playTrumpets } = useAudio();
+  const { playBip, playHalaCelta } = useAudio();
 
   useEffect(() => {
     let raf=0;
@@ -395,7 +417,7 @@ export default function HazTu11() {
       } else {
         if (n.size >= max11) return prev;
         n.add(id);
-        try { playYeah(); } catch {}
+        try { playBip(); } catch {}
       }
       return n;
     });
@@ -422,7 +444,7 @@ export default function HazTu11() {
       setLastSavedAt(now);
       setShowOK(true);
       setToast("Aliñación gardada!");
-      try { playTrumpets(); } catch {}
+      try { playHalaCelta(); } catch {}
       setTimeout(()=>setToast(""), 1600);
     } catch (e) {
       console.error(e);
@@ -466,33 +488,34 @@ export default function HazTu11() {
         </div>
       )}
 
-      {/* Botonera 20/60/20, dentro de los márgenes del cuadro */}
-      <div style={S.topRow(isMobile)}>
-        <button style={S.btnInfo} title="Información" aria-label="Información">
-          {/* Icono “i” más bonito */}
-          <svg width={isMobile ? 24 : 28} height={isMobile ? 24 : 28} viewBox="0 0 24 24" aria-hidden="true" style={{display:"block"}}>
-            <defs>
-              <linearGradient id="infoGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#3b82f6"/><stop offset="100%" stopColor="#0ea5e9"/>
-              </linearGradient>
-            </defs>
-            <circle cx="12" cy="12" r="9" fill="url(#infoGrad)" stroke="#1e3a8a" strokeWidth="1"/>
-            <path d="M12 10v6" stroke="#ffffff" strokeWidth="2" strokeLinecap="round"/>
-            <path d="M12 7.2h.01" stroke="#ffffff" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        </button>
+      {/* Botonera EXACTA al ancho del cuadro */}
+      <div style={S.controlsWrap}>
+        <div style={S.topRow}>
+          <button style={S.btnInfo} title="Información" aria-label="Información">
+            {/* “i” con degradado y mayor sombra ya lo aporta el botón */}
+            <svg width={24} height={24} viewBox="0 0 24 24" aria-hidden="true" style={{display:"block"}}>
+              <defs>
+                <linearGradient id="infoGrad2" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#60a5fa"/><stop offset="100%" stopColor="#0ea5e9"/>
+                </linearGradient>
+              </defs>
+              <circle cx="12" cy="12" r="9" fill="url(#infoGrad2)" stroke="#1e3a8a" strokeWidth="1"/>
+              <path d="M12 10v6" stroke="#ffffff" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M12 7.2h.01" stroke="#ffffff" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </button>
 
-        <button style={S.btnConfirm} onClick={saveMy11} disabled={sel.size!==11}>
-          {confirmLabel}
-        </button>
+          <button style={S.btnConfirm} onClick={saveMy11} disabled={sel.size!==11}>
+            {confirmLabel}
+          </button>
 
-        <button style={S.btnTrash} onClick={clearMy11} title="Borrar" aria-label="Borrar">
-          {/* Papelera sin bold, icono un pelín mayor en móvil/desktop */}
-          <svg width={isMobile ? 22 : 26} height={isMobile ? 22 : 26} viewBox="0 0 24 24" fill="none" aria-hidden="true"
-               style={{display:"block",stroke:"#7f1d1d",strokeWidth:1.6,strokeLinecap:"round",strokeLinejoin:"round"}}>
-            <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
-          </svg>
-        </button>
+          <button style={S.btnTrash} onClick={clearMy11} title="Borrar" aria-label="Borrar">
+            <svg width={24} height={24} viewBox="0 0 24 24" fill="none" aria-hidden="true"
+                 style={{display:"block",stroke:"#7f1d1d",strokeWidth:1.6,strokeLinecap:"round",strokeLinejoin:"round"}}>
+              <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       {["POR","DEF","CEN","DEL"].map(k => {
@@ -511,13 +534,12 @@ export default function HazTu11() {
                   <article key={p.id} style={S.card(picked)} onClick={()=>togglePick(p.id)}>
                     <div style={S.frame(isMobile)}>
                       <Img src={p.foto_url} alt={`Foto de ${nombre}`} isMobile={isMobile} />
-                      {/* Pulgar bonito arriba-izquierda cuando está seleccionado */}
+                      {/* 5) Check “visto” */}
                       {picked && (
-                        <span style={S.okThumb(isMobile)} aria-hidden="true">
-                          <svg width={isMobile ? 14 : 16} height={isMobile ? 14 : 16} viewBox="0 0 24 24" fill="none"
-                               style={{display:"block",stroke:"#ffffff",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round"}}>
-                            <path d="M7 11h4l2-6a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v8.5a3.5 3.5 0 0 1-3.5 3.5H10a3 3 0 0 1-3-3v-3z"/>
-                            <path d="M7 11v6H4a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2h3z"/>
+                        <span style={S.okCheck(isMobile)} aria-hidden="true">
+                          <svg width={isMobile ? 16 : 18} height={isMobile ? 16 : 18} viewBox="0 0 24 24" fill="none"
+                               style={{display:"block",stroke:"#ffffff",strokeWidth:2.4,strokeLinecap:"round",strokeLinejoin:"round"}}>
+                            <path d="M20 6L9 17l-5-5" />
                           </svg>
                         </span>
                       )}
