@@ -66,10 +66,14 @@ function useFitText2Lines(
     }
 
     let raf = 0;
-    const onR = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => setFontSize((s) => s)); };
+    const onR = () => { cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>setFontSize((s)=>s)); };
     window.addEventListener("resize", onR);
     document.addEventListener("visibilitychange", onR);
-    return () => { window.removeEventListener("resize", onR); document.removeEventListener("visibilitychange", onR); cancelAnimationFrame(raf); };
+    return () => {
+      window.removeEventListener("resize", onR);
+      document.removeEventListener("visibilitychange", onR);
+      cancelAnimationFrame(raf);
+    };
   }, deps);
   return { fontSize };
 }
@@ -79,51 +83,52 @@ const S = {
   h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
   sub: { margin: "0 0 12px", color: "#475569", fontSize: 16, fontWeight: 400 },
 
+  // Cuadro de texto SIN línea de contorno
   resumen: {
     margin:"0 0 12px", padding:"12px 14px", borderRadius:12,
-    border:"2px solid #38bdf8",
+    border:"none",
     background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)",
-    color:"#0f172a"
+    color:"#0f172a",
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 8px 20px rgba(14,165,233,.18), 0 1px 0 rgba(14,165,233,.14)"
   },
-  resumeLine: { margin: 0, fontSize: 19, fontWeight: 500, letterSpacing: ".35px", lineHeight: 1.5 },
+  resumeLine: { margin: 0, fontSize: 19, fontWeight: 600, letterSpacing: ".35px", lineHeight: 1.5 },
+  resumeNoteTitle: { margin:"8px 0 0", color:"#475569", fontSize:15, fontWeight:700, letterSpacing:.3 },
+  resumeNoteTime: { margin:"2px 0 0", color:"#0b1220", fontSize:16, fontWeight:800, letterSpacing:.4 },
 
-  topRow: { display:"grid", gridTemplateColumns:"15% 70% 15%", gap:8, alignItems:"stretch", margin:"8px 0 12px" },
-  btnInfo: {
-    width:"100%", padding:"9px 12px",
-    borderRadius:10,
-    background:"linear-gradient(180deg,#dbeafe,#bfdbfe)",
-    color:"#0b4f8a", fontWeight:800, textAlign:"center",
-    border:"3px solid #38bdf8",
-    cursor:"pointer", display:"grid", placeItems:"center",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 6px 16px rgba(56,189,248,.25)"
+  // Botonera: en móvil bajo el cuadro y dentro de sus márgenes
+  topRow: (m)=>({
+    display:"grid",
+    gridTemplateColumns: m ? "1fr 1fr 1fr" : "15% 70% 15%",
+    gap:8, alignItems:"stretch", margin:"8px 0 12px"
+  }),
+
+  // Todos los botones con contorno simple (1px)
+  btnInfo:{
+    width:"100%", padding:"10px 12px", borderRadius:12,
+    background:"#fff", color:"#0b4f8a", fontWeight:800, textAlign:"center",
+    border:"1px solid #38bdf8", cursor:"pointer",
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 3px 8px rgba(2,132,199,.18)",
+    display:"grid", placeItems:"center", gap:6
   },
-  btnConfirm: {
-    width:"100%", padding:"9px 12px",
-    borderRadius:10,
-    background:"linear-gradient(180deg,#e7f6ff,#cfeeff)",
-    color:"#075985", fontWeight:800,
-    border:"3px solid #38bdf8",
-    cursor:"pointer",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 6px 16px rgba(56,189,248,.25)"
+  btnConfirm:{
+    width:"100%", padding:"10px 12px", borderRadius:12,
+    background:"linear-gradient(180deg,#e7f6ff,#cfeeff)", color:"#075985", fontWeight:800,
+    border:"1px solid #38bdf8", cursor:"pointer",
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 4px 12px rgba(56,189,248,.22)"
   },
-  btnTrash: {
-    width:"100%", padding:"9px 12px",
-    borderRadius:10,
-    background:"linear-gradient(180deg,#ffd8d8,#ffbcbc)",
-    color:"#7f1d1d", fontWeight:800,
-    border:"3px solid #ef4444",
-    cursor:"pointer", display:"grid", placeItems:"center",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 6px 16px rgba(239,68,68,.22)"
+  btnTrash:{
+    width:"100%", padding:"10px 12px", borderRadius:12,
+    background:"linear-gradient(180deg,#ffffff,#fee2e2)", color:"#7f1d1d", fontWeight:800,
+    border:"1px solid #ef4444", cursor:"pointer",
+    display:"grid", placeItems:"center",
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 3px 10px rgba(239,68,68,.20)"
   },
 
-  btnBottom: {
-    width:"100%", padding:"9px 12px",
-    borderRadius:10,
-    background:"linear-gradient(180deg,#e7f6ff,#cfeeff)",
-    color:"#075985", fontWeight:800,
-    border:"3px solid #38bdf8",
-    cursor:"pointer", marginTop:14,
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 6px 16px rgba(56,189,248,.25)"
+  btnBottom:{
+    width:"100%", padding:"10px 12px", borderRadius:12,
+    background:"linear-gradient(180deg,#e7f6ff,#cfeeff)", color:"#075985", fontWeight:800,
+    border:"1px solid #38bdf8", cursor:"pointer", marginTop:14,
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 4px 12px rgba(56,189,248,.22)"
   },
 
   posHeader: { margin:"16px 0 10px", padding:"2px 4px 8px", fontWeight:700, color:"#0c4a6e", borderLeft:"4px solid #7dd3fc", borderBottom:"2px solid #e2e8f0" },
@@ -133,24 +138,25 @@ const S = {
     gap:12
   }),
 
+  // Tarjeta: seleccionada = celeste plano SIN degradado
   card: (picked)=>({
-    display:"grid", gridTemplateRows: `${IMG_H}px auto`,
-    background: picked ? "#e6f4ff" : "linear-gradient(180deg,#f0f9ff,#e0f2fe)",
-    border: picked ? "2px solid #38bdf8" : "1px solid #dbeafe",
+    position:"relative",
     borderRadius:16, padding:10,
-    boxShadow: picked ? "0 0 0 2px rgba(56,189,248,.35), 0 8px 26px rgba(56,189,248,.25)" : "0 2px 8px rgba(0,0,0,.06)",
-    alignItems:"center", textAlign:"center", position:"relative"
+    background: picked ? "#e0f2fe" : "linear-gradient(180deg,#f0f9ff,#e0f2fe)",
+    border: picked ? "1px solid #38bdf8" : "1px solid #dbeafe",
+    boxShadow: picked ? "0 0 0 2px rgba(56,189,248,.25), 0 8px 20px rgba(56,189,248,.18)" : "0 2px 8px rgba(0,0,0,.06)"
   }),
 
-  // === Marco e imaxe: igual que en Alineación Oficial (172 móbil / 320 desktop; cover en móbil, contain en desktop)
+  // Frame como en Alineación Oficial: 172 móvil / 320 desktop; cover móvil / contain desktop
   frame: (isMobile)=>({
-    position:"relative", width:"100%", height: isMobile ? 172 : IMG_H,
-    borderRadius:12, display:"grid", placeItems:"center",
-    background:"#ffffff", border:"1px solid #e5e7eb", overflow:"hidden"
+    width:"100%", height: isMobile ? 172 : IMG_H,
+    borderRadius:12, overflow:"hidden",
+    background:"#ffffff", display:"grid", placeItems:"center",
+    border:"1px solid #e5e7eb", position:"relative"
   }),
-  img: (isMobile) => ({ width:"100%", height:"100%", objectFit: isMobile ? "cover" : "contain", background:"#ffffff" }),
+  img: (isMobile) => ({ width:"100%", height:"100%", objectFit: isMobile ? "cover" : "contain", background:"#ffffff", display:"block" }),
 
-  // === Texto nome: desktop como estaba; móbil con autofit 2 liñas
+  // Nombre: desktop igual; móvil con autofit 2 líneas (como Alineación Oficial)
   nameDesktop: {
     margin:"8px 0 0",
     font:"700 15px/1.2 Montserrat, system-ui, sans-serif",
@@ -171,14 +177,33 @@ const S = {
     textAlign:"center"
   },
 
-  meta: { margin:"2px 0 0", color:"#475569", fontSize:13 },
+  meta: { margin:"2px 0 0", color:"#475569", fontSize:13, textAlign:"center" },
 
+  // Contador
   counter: {
     position:"absolute", left:"50%", top:"78%", transform:"translate(-50%,-50%)",
     fontFamily:"Montserrat, system-ui, sans-serif",
     fontWeight:900, fontSize:30, color:"#0c4a6e",
     background:"rgba(56,189,248,.55)", padding:"6px 12px", borderRadius:999,
     letterSpacing:1.1, userSelect:"none", pointerEvents:"none"
+  },
+
+  // Badge "pulgar hacia arriba" (OK selección) — móvil más pequeño y pegado a esquina
+  okThumbDesktop: {
+    position:"absolute", top:8, right:8,
+    background:"rgba(56,189,248,.95)", color:"#fff",
+    borderRadius:999, padding:"3px 6px",
+    font:"700 12px/1 Montserrat,system-ui,sans-serif",
+    boxShadow:"0 2px 8px rgba(56,189,248,.35)",
+    display:"grid", placeItems:"center", userSelect:"none", pointerEvents:"none"
+  },
+  okThumbMobile: {
+    position:"absolute", top:3, right:3,
+    background:"rgba(56,189,248,.98)", color:"#fff",
+    borderRadius:999, padding:"2px 5px",
+    font:"700 10.5px/1 Montserrat,system-ui,sans-serif",
+    boxShadow:"0 1px 4px rgba(56,189,248,.35)",
+    display:"grid", placeItems:"center", userSelect:"none", pointerEvents:"none"
   },
 
   modalBg: { position:"fixed", inset:0, background:"rgba(2,6,23,.45)", display:"grid", placeItems:"center", zIndex:9999 },
@@ -207,7 +232,7 @@ function Img({ src, alt, isMobile }) {
   );
 }
 
-/* Compo de nome móbil con autofit a 2 liñas */
+/* Componente de nome móbil con autofit a 2 liñas */
 function NameMobileTwoLines({ text }) {
   const ref = useRef(null);
   const { fontSize } = useFitText2Lines(ref, { deps: [text] });
@@ -235,6 +260,7 @@ export default function HazTu11() {
   const [lastCounterId, setLastCounterId] = useState(null);
   const [showOK, setShowOK] = useState(false);
   const [toast, setToast] = useState("");
+  const [lastSavedAt, setLastSavedAt] = useState(null); // registro última aliñación
   const max11 = 11;
 
   useEffect(() => {
@@ -272,7 +298,7 @@ export default function HazTu11() {
       const ordered = ids.map(id => byId.get(id)).filter(Boolean);
       setJugadores(ordered);
 
-      // Si hay alineación previa del usuario para este partido, precargarla
+      // Alineación previa do usuario (para timestamp e picks)
       try {
         const { data: sess } = await supabase.auth.getSession();
         const uid = sess?.session?.user?.id || null;
@@ -280,10 +306,18 @@ export default function HazTu11() {
         if (uid && keyIso) {
           const { data: prev } = await supabase
             .from("alineaciones_usuarios")
-            .select("jugador_id")
+            .select("jugador_id,updated_at")
             .eq("user_id", uid)
             .eq("match_iso", keyIso);
-          if (prev && prev.length) setSel(new Set(prev.map(r=>r.jugador_id)));
+          if (prev && prev.length) {
+            setSel(new Set(prev.map(r=>r.jugador_id)));
+            // última actualización do conxunto
+            const last = prev.reduce((a,r)=> {
+              const t = r.updated_at ? new Date(r.updated_at).getTime() : 0;
+              return t>a?t:a;
+            }, 0);
+            if (last) setLastSavedAt(new Date(last).toISOString());
+          }
         }
       } catch {}
 
@@ -334,7 +368,7 @@ export default function HazTu11() {
       if (!uid) { setToast("Precisas iniciar sesión."); setTimeout(()=>setToast(""), 1500); return; }
 
       const iso = header.match_iso;
-      // Borramos o 11 previo do usuario para este partido e inserimos o novo (unha fila por xogador).
+      // Borrar e inserir novo 11
       await supabase.from("alineaciones_usuarios").delete().eq("user_id", uid).eq("match_iso", iso);
 
       const now = new Date().toISOString();
@@ -342,6 +376,7 @@ export default function HazTu11() {
       const { error } = await supabase.from("alineaciones_usuarios").insert(rows);
       if (error) throw error;
 
+      setLastSavedAt(now); // rexistro da última aliñación
       setShowOK(true);
       setToast("Aliñación gardada!");
       setTimeout(()=>setToast(""), 1600);
@@ -356,6 +391,17 @@ export default function HazTu11() {
   if (loading) return <main style={S.wrap}>Cargando…</main>;
 
   const confirmLabel = isMobile ? (sel.size===11 ? "CONFIRMAR" : `CONFIRMAR (${sel.size}/11)`) : (sel.size===11 ? "CONFIRMAR ALIÑACIÓN" : `CONFIRMAR ALIÑACIÓN (${sel.size}/11)`);
+  const fmtLast = (iso) => {
+    if (!iso) return null;
+    try {
+      const d = new Date(iso);
+      return {
+        f: d.toLocaleDateString("gl-ES",{day:"2-digit",month:"2-digit",year:"numeric"}),
+        h: d.toLocaleTimeString("gl-ES",{hour:"2-digit",minute:"2-digit"})
+      };
+    } catch { return null; }
+  };
+  const last = fmtLast(lastSavedAt);
 
   return (
     <main style={S.wrap}>
@@ -366,18 +412,38 @@ export default function HazTu11() {
         <div style={S.resumen}>
           <p style={S.resumeLine}><strong>{cap(header.equipo1)}</strong> vs <strong>{cap(header.equipo2)}</strong></p>
           <p style={{...S.resumeLine, opacity:.9}}>{sFecha} | {sHora}</p>
+
+          {/* 3) Rexistro última aliñación */}
+          <p style={S.resumeNoteTitle}>Rexistro da túa última aliñación:</p>
+          <p style={S.resumeNoteTime}>{last ? `${last.f} ás ${last.h}` : "-"}</p>
         </div>
       )}
 
-      <div style={S.topRow}>
-        <button style={S.btnInfo} title="Información" aria-label="Información"><strong>INFO</strong></button>
-        <button style={S.btnConfirm} onClick={saveMy11} disabled={sel.size!==11}>{confirmLabel}</button>
+      {/* 7 & móvil: botonera baixo o cadro e respectando marxes */}
+      <div style={S.topRow(isMobile)}>
+        <button
+          style={S.btnInfo}
+          title="Información"
+          aria-label="Información"
+        >
+          {/* 5) Botón Info blanco + icono 'i' azul */}
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"
+               style={{display:"block",fill:"none",stroke:"#0b4f8a",strokeWidth:1.6}}>
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 10v6" />
+            <path d="M12 7.5h.01" />
+          </svg>
+        </button>
+
+        <button style={S.btnConfirm} onClick={saveMy11} disabled={sel.size!==11}>
+          {confirmLabel}
+        </button>
+
         <button style={S.btnTrash} onClick={clearMy11} title="Borrar" aria-label="Borrar">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M3 6h18" stroke="#7f1d1d" strokeWidth="3.2" strokeLinecap="round"/>
-            <path d="M8 6V4h8v2" stroke="#7f1d1d" strokeWidth="3.2" strokeLinecap="round"/>
-            <path d="M19 6l-1 14H6L5 6" stroke="#7f1d1d" strokeWidth="3.2" strokeLinecap="round"/>
-            <path d="M10 11v6M14 11v6" stroke="#7f1d1d" strokeWidth="3.2" strokeLinecap="round"/>
+          {/* 7) Icono papelera SIN bold */}
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"
+               style={{display:"block",stroke:"#7f1d1d",strokeWidth:1.6,strokeLinecap:"round",strokeLinejoin:"round"}}>
+            <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
           </svg>
         </button>
       </div>
@@ -396,10 +462,25 @@ export default function HazTu11() {
                 const nameLine = (dorsal != null ? `${String(dorsal).padStart(2,"0")} · ` : "") + nombre;
                 return (
                   <article key={p.id} style={S.card(picked)} onClick={()=>togglePick(p.id)}>
+
+                    {/* 1) Pulgar arriba en esquina superior dereita cando está seleccionado */}
                     <div style={S.frame(isMobile)}>
                       <Img src={p.foto_url} alt={`Foto de ${nombre}`} isMobile={isMobile} />
+                      {picked && (
+                        <span style={isMobile ? S.okThumbMobile : S.okThumbDesktop} aria-hidden="true">
+                          {/* pulgar (SVG) */}
+                          <svg width={isMobile ? 12 : 14} height={isMobile ? 12 : 14} viewBox="0 0 24 24" fill="none"
+                               style={{display:"block",stroke:"#ffffff",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round"}}>
+                            <path d="M14 10V5a3 3 0 0 0-3-3l-2 7" />
+                            <path d="M5 12h13.28a2 2 0 0 1 1.96 2.39l-1 5A2 2 0 0 1 17.28 21H9a4 4 0 0 1-4-4v-5z" />
+                          </svg>
+                        </span>
+                      )}
+                      {/* contador como antes */}
                       {lastCounterId === p.id && <span style={S.counter}>{`${sel.size}/11`}</span>}
                     </div>
+
+                    {/* 2) Sen espazos innecesarios: mesmos marxes que Alineación Oficial */}
                     {isMobile ? (
                       <NameMobileTwoLines text={nameLine} />
                     ) : (
