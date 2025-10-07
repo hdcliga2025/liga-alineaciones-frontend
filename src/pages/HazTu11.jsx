@@ -77,7 +77,7 @@ const S = {
   resumen: {
     margin:"0 0 12px", padding:"12px 14px", borderRadius:12,
     border:"none",
-    background:"linear-gradient(180deg,#ecfdf5,#d1fae5)",
+    background:"linear-gradient(180deg,#f1fdf6,#dcfce7)", // un pelín más claro al inicio
     color:"#064e3b",
     boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 10px 26px rgba(16,185,129,.20), 0 1px 0 rgba(16,185,129,.12)"
   },
@@ -85,49 +85,60 @@ const S = {
   resumeNoteTitle: { margin:"8px 0 0", color:"#065f46", fontSize:15, fontWeight:700, letterSpacing:.3 },
   resumeNoteTime: { margin:"2px 0 0", fontSize:16, fontWeight:800, letterSpacing:.4, animation: "blinkCelNeg 2.2s infinite" },
 
-  // Botonera DENTRO del cuadro (no desborda nunca)
+  // Botonera DENTRO del cuadro (no desborda nunca) + margen lateral propio
   rowBtns: {
     display:"grid",
-    gridTemplateColumns:"18% 64% 18%", // INFO / CONFIRMAR / PAPELERA
+    gridTemplateColumns:"17% 66% 17%", // INFO / CONFIRMAR / PAPELERA
     gap:8,
     alignItems:"stretch",
-    marginTop:10
+    marginTop:10,
+    padding:"0 4px" // deja aire lateral para que la papelera no toque el borde
   },
 
   // Todos los botones con SOMBRA
+  // 1) INFO: azul degradado "casi blanco"
   btnInfo:{
     width:"100%", padding:"10px 12px", borderRadius:12,
-    background:"linear-gradient(180deg,#e7f0ff,#cfe0ff,#a7c6ff,#7fb0ff,#60a5fa,#3b82f6)", // azul MUY degradado
+    background:"linear-gradient(180deg,#fbfdff,#f1f7ff,#e7f0ff,#d9e8ff,#cfe0ff)", // muy claro > claro
     color:"#0b4f8a", fontWeight:800, textAlign:"center",
     border:"1px solid #38bdf8", cursor:"pointer",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 8px 18px rgba(2,132,199,.28)",
-    display:"grid", placeItems:"center", minWidth:0
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.96), 0 8px 18px rgba(2,132,199,.22)",
+    display:"grid", placeItems:"center", minWidth:0,
+    userSelect:"none", touchAction:"manipulation"
   },
+  // 3) CONFIRMAR: verde más degradado + mejoras de “click”
   btnConfirm:{
-    width:"100%", padding:"10px 12px", borderRadius:12,
-    background:"linear-gradient(180deg,#e7fbe9,#d1fae5,#b8f5cf,#a7f3d0,#86efac)", // verde con MÁS degradado
+    width:"100%", padding:"12px 14px", borderRadius:12,
+    background:"linear-gradient(180deg,#f0fdf4,#dcfce7,#c8f6d8,#bbf7d0,#a7f3d0,#86efac)",
     color:"#065f46", fontWeight:900,
     border:"1px solid #22c55e", cursor:"pointer",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 8px 18px rgba(34,197,94,.24)",
-    minWidth:0
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.96), 0 10px 20px rgba(34,197,94,.22)",
+    minWidth:0,
+    userSelect:"none", touchAction:"manipulation",
+    transition:"transform .06s ease, box-shadow .15s ease",
   },
+  btnConfirmActive:{ transform:"translateY(1px)", boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 6px 14px rgba(34,197,94,.22)" },
+
+  // 2 & 4) PAPELERA: rojo casi blanco + menos “pegado” (mismos paddings que info)
   btnTrash:{
     width:"100%", padding:"10px 12px", borderRadius:12,
-    background:"linear-gradient(180deg,#ffffff,#fee2e2)",
+    background:"linear-gradient(180deg,#ffffff,#fff6f6,#ffecec,#ffe5e5)", // casi blanco
     color:"#7f1d1d", fontWeight:800,
     border:"1px solid #ef4444", cursor:"pointer",
     display:"grid", placeItems:"center",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 8px 18px rgba(239,68,68,.24)",
-    minWidth:0
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.96), 0 8px 18px rgba(239,68,68,.20)",
+    minWidth:0,
+    userSelect:"none", touchAction:"manipulation"
   },
 
   // Botón inferior (mismo ancho del contenedor principal)
   btnBottom:{
-    width:"100%", padding:"10px 12px", borderRadius:12,
-    background:"linear-gradient(180deg,#e7fbe9,#d1fae5,#b8f5cf,#a7f3d0,#86efac)",
+    width:"100%", padding:"12px 14px", borderRadius:12,
+    background:"linear-gradient(180deg,#f0fdf4,#dcfce7,#c8f6d8,#bbf7d0,#a7f3d0,#86efac)",
     color:"#065f46", fontWeight:900,
     border:"1px solid #22c55e", cursor:"pointer", marginTop:14,
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 8px 18px rgba(34,197,94,.24)"
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.96), 0 10px 20px rgba(34,197,94,.22)",
+    userSelect:"none", touchAction:"manipulation"
   },
 
   posHeader: { margin:"16px 0 10px", padding:"2px 4px 8px", fontWeight:700, color:"#0c4a6e", borderLeft:"4px solid #7dd3fc", borderBottom:"2px solid #e2e8f0" },
@@ -141,7 +152,7 @@ const S = {
   card: (picked)=>({
     position:"relative",
     borderRadius:16, padding:10,
-    background: picked ? "linear-gradient(180deg,#ecfdf5,#d1fae5)" : "linear-gradient(180deg,#f0f9ff,#e0f2fe)",
+    background: picked ? "linear-gradient(180deg,#f1fdf6,#dcfce7)" : "linear-gradient(180deg,#f7fbff,#eef7ff)",
     border: picked ? "2.5px solid #22c55e" : "1px solid #dbeafe",
     boxShadow: picked ? "0 0 0 3px rgba(34,197,94,.18), 0 10px 24px rgba(34,197,94,.14)" : "0 2px 8px rgba(0,0,0,.06)"
   }),
@@ -184,7 +195,7 @@ const S = {
     letterSpacing:1.1, userSelect:"none", pointerEvents:"none"
   },
 
-  // “Visto” (✔) arriba-derecha — un poco más grande en desktop
+  // Check (✔) arriba-derecha — un poco más grande en desktop
   okCheck: (m)=>({
     position:"absolute", top: m ? 4 : 6, right: m ? 4 : 6,
     background:"rgba(34,197,94,.94)", color:"#fff",
@@ -243,7 +254,7 @@ function NameMobileTwoLines({ text }) {
 
 /* ====== Audio ======
    - playBip(): beep cortito (selección)
-   - playHalaCelta(): “¡Hala Celta!” (SpeechSynthesis) con fallback */
+   - playImos(): “¡IMOSSS!!!” (SpeechSynthesis) con fallback */
 function useAudio() {
   const ctxRef = useRef(null);
   const getCtx = () => {
@@ -270,31 +281,36 @@ function useAudio() {
     o.stop(now + 0.12);
   }
 
-  function playHalaCelta() {
+  function playImos() {
     try {
-      const phrase = "¡Hala Celta!";
+      const phrase = "¡IMOSSS!!!";
       if ("speechSynthesis" in window) {
         const u = new SpeechSynthesisUtterance(phrase);
-        u.lang = "es-ES";
+        // Intento gl; si no, es-ES
+        const voices = window.speechSynthesis.getVoices();
+        const gl = voices.find(v=>/gl|gal/i.test(v.lang||""));
+        u.voice = gl || undefined;
+        u.lang = gl ? gl.lang : "es-ES";
         u.rate = 0.95;
-        u.pitch = 1.0;
+        u.pitch = 1.05;
         u.volume = 1.0;
         window.speechSynthesis.cancel();
         window.speechSynthesis.speak(u);
         return;
       }
     } catch {}
+    // Fallback: acorde mayor breve “enérxico”
     const ctx = getCtx(); if (!ctx) return;
-    const now = ctx.currentTime, dur = 1.2;
+    const now = ctx.currentTime, dur = 1.0;
     const mk = (f, det=0)=> {
-      const o = ctx.createOscillator(); o.type="sawtooth"; o.frequency.value=f; o.detune.value=det;
-      const g = ctx.createGain(); g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(0.8, now+0.05); g.gain.exponentialRampToValueAtTime(0.0001, now+dur);
+      const o = ctx.createOscillator(); o.type="square"; o.frequency.value=f; o.detune.value=det;
+      const g = ctx.createGain(); g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(0.9, now+0.04); g.gain.exponentialRampToValueAtTime(0.0001, now+dur);
       o.connect(g).connect(ctx.destination); o.start(now); o.stop(now+dur+0.05);
     };
-    mk(523.25,0); mk(659.25,+2); mk(783.99,-3);
+    mk(523.25,0); mk(659.25,+4); mk(783.99,-4);
   }
 
-  return { playBip, playHalaCelta };
+  return { playBip, playImos };
 }
 
 export default function HazTu11() {
@@ -310,7 +326,7 @@ export default function HazTu11() {
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const max11 = 11;
 
-  const { playBip, playHalaCelta } = useAudio();
+  const { playBip, playImos } = useAudio();
 
   useEffect(() => {
     let raf=0;
@@ -406,7 +422,8 @@ export default function HazTu11() {
     setLastCounterId(id);
   }
 
-  async function saveMy11() {
+  async function saveMy11(e) {
+    e?.preventDefault?.();
     if (sel.size !== 11) { setToast("Escolle 11 xogadores."); setTimeout(()=>setToast(""), 1500); return; }
     if (!header?.match_iso) { setToast("Falta o partido de referencia."); setTimeout(()=>setToast(""), 1500); return; }
 
@@ -426,7 +443,7 @@ export default function HazTu11() {
       setLastSavedAt(now);
       setShowOK(true);
       setToast("Aliñación gardada!");
-      try { playHalaCelta(); } catch {}
+      try { playImos(); } catch {}
       setTimeout(()=>setToast(""), 1600);
     } catch (e) {
       console.error(e);
@@ -468,13 +485,13 @@ export default function HazTu11() {
           <p style={S.resumeNoteTitle}>Rexistro da túa última aliñación:</p>
           <p style={S.resumeNoteTime}>{last ? `${last.f} ás ${last.h}` : "-"}</p>
 
-          {/* Botonera dentro del cuadro, anchos exactos */}
+          {/* Botonera dentro del cuadro, anchos exactos y sin desbordes */}
           <div style={S.rowBtns}>
-            <button style={S.btnInfo} title="Información" aria-label="Información">
+            <button type="button" style={S.btnInfo} title="Información" aria-label="Información">
               <svg width={24} height={24} viewBox="0 0 24 24" aria-hidden="true" style={{display:"block"}}>
                 <defs>
                   <linearGradient id="infoGrad2" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#a7c6ff"/><stop offset="50%" stopColor="#60a5fa"/><stop offset="100%" stopColor="#3b82f6"/>
+                    <stop offset="0%" stopColor="#f1f7ff"/><stop offset="50%" stopColor="#e7f0ff"/><stop offset="100%" stopColor="#cfe0ff"/>
                   </linearGradient>
                 </defs>
                 <circle cx="12" cy="12" r="9" fill="url(#infoGrad2)" stroke="#1e3a8a" strokeWidth="1"/>
@@ -483,11 +500,17 @@ export default function HazTu11() {
               </svg>
             </button>
 
-            <button style={S.btnConfirm} onClick={saveMy11} disabled={sel.size!==11}>
+            <button
+              type="button"
+              style={S.btnConfirm}
+              onClick={(e)=>{ e.currentTarget.blur(); e.currentTarget.style.transform='translateY(1px)'; setTimeout(()=>{ e.currentTarget.style.transform=''; }, 90); return saveMy11(e); }}
+              disabled={sel.size!==11}
+              aria-disabled={sel.size!==11}
+            >
               {confirmLabel}
             </button>
 
-            <button style={S.btnTrash} onClick={clearMy11} title="Borrar" aria-label="Borrar">
+            <button type="button" style={S.btnTrash} onClick={clearMy11} title="Borrar" aria-label="Borrar">
               <svg width={24} height={24} viewBox="0 0 24 24" fill="none" aria-hidden="true"
                    style={{display:"block",stroke:"#7f1d1d",strokeWidth:1.6,strokeLinecap:"round",strokeLinejoin:"round"}}>
                 <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
@@ -539,7 +562,9 @@ export default function HazTu11() {
         );
       })}
 
-      <button style={S.btnBottom} onClick={saveMy11} disabled={sel.size!==11}>{confirmLabel}</button>
+      <button type="button" style={S.btnBottom} onClick={saveMy11} disabled={sel.size!==11} aria-disabled={sel.size!==11}>
+        {confirmLabel}
+      </button>
 
       {/* Popup éxito */}
       {showOK && (
