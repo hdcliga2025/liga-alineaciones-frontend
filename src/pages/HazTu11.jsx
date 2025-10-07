@@ -73,11 +73,11 @@ const S = {
   h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
   sub: { margin: "0 0 12px", color: "#475569", fontSize: 16, fontWeight: 400 },
 
-  // Cuadro de texto con VERDE degradado (sin borde) + SOMBRA
+  // 2) Cuadro de texto: verde un poco más OSCURO + sombra
   resumen: {
     margin:"0 0 12px", padding:"12px 14px", borderRadius:12,
     border:"none",
-    background:"linear-gradient(180deg,#f1fdf6,#dcfce7)", // un pelín más claro al inicio
+    background:"linear-gradient(180deg,#e6f7ef,#cdeee0)", // más oscuro que antes
     color:"#064e3b",
     boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 10px 26px rgba(16,185,129,.20), 0 1px 0 rgba(16,185,129,.12)"
   },
@@ -85,31 +85,30 @@ const S = {
   resumeNoteTitle: { margin:"8px 0 0", color:"#065f46", fontSize:15, fontWeight:700, letterSpacing:.3 },
   resumeNoteTime: { margin:"2px 0 0", fontSize:16, fontWeight:800, letterSpacing:.4, animation: "blinkCelNeg 2.2s infinite" },
 
-  // Botonera DENTRO del cuadro (no desborda nunca) + margen lateral propio
+  // Botonera DENTRO del cuadro (no desborda nunca) + más aire lateral
   rowBtns: {
     display:"grid",
     gridTemplateColumns:"17% 66% 17%", // INFO / CONFIRMAR / PAPELERA
     gap:8,
     alignItems:"stretch",
     marginTop:10,
-    padding:"0 4px" // deja aire lateral para que la papelera no toque el borde
+    padding:"0 8px" // más margen para separar la papelera del borde
   },
 
-  // Todos los botones con SOMBRA
-  // 1) INFO: azul degradado "casi blanco"
+  // 1) INFO: azul degradado casi blanco + icono más grande
   btnInfo:{
     width:"100%", padding:"10px 12px", borderRadius:12,
-    background:"linear-gradient(180deg,#fbfdff,#f1f7ff,#e7f0ff,#d9e8ff,#cfe0ff)", // muy claro > claro
+    background:"linear-gradient(180deg,#fbfdff,#f3f8ff,#e9f1ff,#dfeaff)", // muy claro
     color:"#0b4f8a", fontWeight:800, textAlign:"center",
     border:"1px solid #38bdf8", cursor:"pointer",
     boxShadow:"inset 0 1px 0 rgba(255,255,255,.96), 0 8px 18px rgba(2,132,199,.22)",
     display:"grid", placeItems:"center", minWidth:0,
     userSelect:"none", touchAction:"manipulation"
   },
-  // 3) CONFIRMAR: verde más degradado + mejoras de “click”
+  // 3) CONFIRMAR: verde más degradado + respuesta táctil
   btnConfirm:{
     width:"100%", padding:"12px 14px", borderRadius:12,
-    background:"linear-gradient(180deg,#f0fdf4,#dcfce7,#c8f6d8,#bbf7d0,#a7f3d0,#86efac)",
+    background:"linear-gradient(180deg,#eefdf4,#dcfce7,#c8f6d8,#b7f3ce,#a7f3d0,#86efac)", // más degradado
     color:"#065f46", fontWeight:900,
     border:"1px solid #22c55e", cursor:"pointer",
     boxShadow:"inset 0 1px 0 rgba(255,255,255,.96), 0 10px 20px rgba(34,197,94,.22)",
@@ -119,10 +118,10 @@ const S = {
   },
   btnConfirmActive:{ transform:"translateY(1px)", boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 6px 14px rgba(34,197,94,.22)" },
 
-  // 2 & 4) PAPELERA: rojo casi blanco + menos “pegado” (mismos paddings que info)
+  // 2 & 4) PAPELERA: rojo casi blanco + más separación lateral
   btnTrash:{
     width:"100%", padding:"10px 12px", borderRadius:12,
-    background:"linear-gradient(180deg,#ffffff,#fff6f6,#ffecec,#ffe5e5)", // casi blanco
+    background:"linear-gradient(180deg,#ffffff,#fff7f7,#ffecec,#ffe4e4)", // casi blanco
     color:"#7f1d1d", fontWeight:800,
     border:"1px solid #ef4444", cursor:"pointer",
     display:"grid", placeItems:"center",
@@ -134,7 +133,7 @@ const S = {
   // Botón inferior (mismo ancho del contenedor principal)
   btnBottom:{
     width:"100%", padding:"12px 14px", borderRadius:12,
-    background:"linear-gradient(180deg,#f0fdf4,#dcfce7,#c8f6d8,#bbf7d0,#a7f3d0,#86efac)",
+    background:"linear-gradient(180deg,#eefdf4,#dcfce7,#c8f6d8,#b7f3ce,#a7f3d0,#86efac)",
     color:"#065f46", fontWeight:900,
     border:"1px solid #22c55e", cursor:"pointer", marginTop:14,
     boxShadow:"inset 0 1px 0 rgba(255,255,255,.96), 0 10px 20px rgba(34,197,94,.22)",
@@ -148,7 +147,7 @@ const S = {
     gap:12
   }),
 
-  // Tarjeta seleccionada: fondo VERDE degradado + borde verde grueso + sombra
+  // Tarjeta seleccionada: fondo VERDE degradado + borde verde grueso
   card: (picked)=>({
     position:"relative",
     borderRadius:16, padding:10,
@@ -195,7 +194,7 @@ const S = {
     letterSpacing:1.1, userSelect:"none", pointerEvents:"none"
   },
 
-  // Check (✔) arriba-derecha — un poco más grande en desktop
+  // Check (✔) arriba-dereita
   okCheck: (m)=>({
     position:"absolute", top: m ? 4 : 6, right: m ? 4 : 6,
     background:"rgba(34,197,94,.94)", color:"#fff",
@@ -254,7 +253,7 @@ function NameMobileTwoLines({ text }) {
 
 /* ====== Audio ======
    - playBip(): beep cortito (selección)
-   - playImos(): “¡IMOSSS!!!” (SpeechSynthesis) con fallback */
+   - playBell(): campana breve al confirmar */
 function useAudio() {
   const ctxRef = useRef(null);
   const getCtx = () => {
@@ -281,36 +280,33 @@ function useAudio() {
     o.stop(now + 0.12);
   }
 
-  function playImos() {
-    try {
-      const phrase = "¡IMOSSS!!!";
-      if ("speechSynthesis" in window) {
-        const u = new SpeechSynthesisUtterance(phrase);
-        // Intento gl; si no, es-ES
-        const voices = window.speechSynthesis.getVoices();
-        const gl = voices.find(v=>/gl|gal/i.test(v.lang||""));
-        u.voice = gl || undefined;
-        u.lang = gl ? gl.lang : "es-ES";
-        u.rate = 0.95;
-        u.pitch = 1.05;
-        u.volume = 1.0;
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(u);
-        return;
-      }
-    } catch {}
-    // Fallback: acorde mayor breve “enérxico”
+  // campana: varias parciales + decaimiento
+  function playBell() {
     const ctx = getCtx(); if (!ctx) return;
-    const now = ctx.currentTime, dur = 1.0;
-    const mk = (f, det=0)=> {
-      const o = ctx.createOscillator(); o.type="square"; o.frequency.value=f; o.detune.value=det;
-      const g = ctx.createGain(); g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(0.9, now+0.04); g.gain.exponentialRampToValueAtTime(0.0001, now+dur);
-      o.connect(g).connect(ctx.destination); o.start(now); o.stop(now+dur+0.05);
-    };
-    mk(523.25,0); mk(659.25,+4); mk(783.99,-4);
+    const now = ctx.currentTime;
+    const dur = 0.9;
+
+    const partials = [
+      { f: 784.0, gain: 1.0 },   // G5
+      { f: 1176.0, gain: 0.5 },  // + quinta
+      { f: 1568.0, gain: 0.35 }, // + octava
+      { f: 2349.0, gain: 0.22 }, // brillo
+    ];
+    partials.forEach(p => {
+      const o = ctx.createOscillator();
+      o.type = "sine";
+      o.frequency.setValueAtTime(p.f, now);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(0.9 * p.gain, now + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+      o.connect(g).connect(ctx.destination);
+      o.start(now);
+      o.stop(now + dur + 0.05);
+    });
   }
 
-  return { playBip, playImos };
+  return { playBip, playBell };
 }
 
 export default function HazTu11() {
@@ -326,7 +322,7 @@ export default function HazTu11() {
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const max11 = 11;
 
-  const { playBip, playImos } = useAudio();
+  const { playBip, playBell } = useAudio();
 
   useEffect(() => {
     let raf=0;
@@ -424,13 +420,28 @@ export default function HazTu11() {
 
   async function saveMy11(e) {
     e?.preventDefault?.();
-    if (sel.size !== 11) { setToast("Escolle 11 xogadores."); setTimeout(()=>setToast(""), 1500); return; }
-    if (!header?.match_iso) { setToast("Falta o partido de referencia."); setTimeout(()=>setToast(""), 1500); return; }
+    if (sel.size !== 11) {
+      setToast("Tes que seleccionar 11 xogadores para poder confirmar a túa aliñación");
+      setTimeout(()=>setToast(""), 3000);
+      return;
+    }
+    if (!header?.match_iso) {
+      setToast("Falta o partido de referencia.");
+      setTimeout(()=>setToast(""), 2000);
+      return;
+    }
 
     try {
+      // campana al pulsar confirmar
+      try { playBell(); } catch {}
+
       const { data: sess } = await supabase.auth.getSession();
       const uid = sess?.session?.user?.id || null;
-      if (!uid) { setToast("Precisas iniciar sesión."); setTimeout(()=>setToast(""), 1500); return; }
+      if (!uid) {
+        setToast("Precisas iniciar sesión.");
+        setTimeout(()=>setToast(""), 2000);
+        return;
+      }
 
       const iso = header.match_iso;
       await supabase.from("alineaciones_usuarios").delete().eq("user_id", uid).eq("match_iso", iso);
@@ -443,7 +454,6 @@ export default function HazTu11() {
       setLastSavedAt(now);
       setShowOK(true);
       setToast("Aliñación gardada!");
-      try { playImos(); } catch {}
       setTimeout(()=>setToast(""), 1600);
     } catch (e) {
       console.error(e);
@@ -488,15 +498,16 @@ export default function HazTu11() {
           {/* Botonera dentro del cuadro, anchos exactos y sin desbordes */}
           <div style={S.rowBtns}>
             <button type="button" style={S.btnInfo} title="Información" aria-label="Información">
-              <svg width={24} height={24} viewBox="0 0 24 24" aria-hidden="true" style={{display:"block"}}>
+              {/* Icono distinto, más grande, azul */}
+              <svg width={26} height={26} viewBox="0 0 24 24" aria-hidden="true" style={{display:"block"}}>
                 <defs>
-                  <linearGradient id="infoGrad2" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#f1f7ff"/><stop offset="50%" stopColor="#e7f0ff"/><stop offset="100%" stopColor="#cfe0ff"/>
-                  </linearGradient>
+                  <radialGradient id="infoGlow" cx="50%" cy="35%" r="65%">
+                    <stop offset="0%" stopColor="#ffffff"/><stop offset="70%" stopColor="#cfe0ff"/><stop offset="100%" stopColor="#a9c8ff"/>
+                  </radialGradient>
                 </defs>
-                <circle cx="12" cy="12" r="9" fill="url(#infoGrad2)" stroke="#1e3a8a" strokeWidth="1"/>
-                <path d="M12 10v6" stroke="#ffffff" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M12 7.2h.01" stroke="#ffffff" strokeWidth="2" strokeLinecap="round"/>
+                <circle cx="12" cy="12" r="9.5" fill="url(#infoGlow)" stroke="#2563eb" strokeWidth="1"/>
+                <path d="M12 10v6" stroke="#1e40af" strokeWidth="2" strokeLinecap="round"/>
+                <circle cx="12" cy="7.3" r="1.1" fill="#1e40af"/>
               </svg>
             </button>
 
@@ -536,7 +547,7 @@ export default function HazTu11() {
                   <article key={p.id} style={S.card(picked)} onClick={()=>togglePick(p.id)}>
                     <div style={S.frame(isMobile)}>
                       <Img src={p.foto_url} alt={`Foto de ${nombre}`} isMobile={isMobile} />
-                      {/* Check “visto” arriba-derecha */}
+                      {/* Check “visto” arriba-dereita */}
                       {picked && (
                         <span style={S.okCheck(isMobile)} aria-hidden="true">
                           <svg width={isMobile ? 16 : 20} height={isMobile ? 16 : 20} viewBox="0 0 24 24" fill="none"
@@ -587,7 +598,8 @@ export default function HazTu11() {
         <div role="status" aria-live="polite" style={{
           position:"fixed", bottom:18, left:"50%", transform:"translateX(-50%)",
           background:"#0ea5e9", color:"#fff", padding:"10px 16px",
-          borderRadius:12, boxShadow:"0 10px 22px rgba(2,132,199,.35)", fontWeight:700
+          borderRadius:12, boxShadow:"0 10px 22px rgba(2,132,199,.35)", fontWeight:700,
+          maxWidth:"92vw", textAlign:"center", zIndex:9999
         }}>
           {toast}
         </div>
