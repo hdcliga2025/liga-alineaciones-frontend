@@ -5,28 +5,47 @@ import { supabase } from "../lib/supabaseClient";
 import { route } from "preact-router";
 
 /**
- * Detección global de nueva versión:
- * - Consulta /index.html con cache: "no-store" para leer ETag/Last-Modified.
- * - Si cambian respecto al valor guardado en localStorage, recarga la app.
+ * Detección global de nueva versión (segura):
+ * - Lee /index.html con cache: "no-store".
+ * - Usa solo ETag o Last-Modified como firma. Si no hay NINGUNO, no recarga.
+ * - Throttle: no comprobar más de una vez cada 30s por pestaña.
+ * - Anti-loop: si ya recargamos por nueva build en esta pestaña, no repetir.
  */
-async function ensureFreshApp() {
+async function ensureFreshAppSafe() {
   try {
+    const RELOAD_FLAG = "__reloaded_for_build";
+    const LAST_CHECK = "__last_build_check_ms";
+    const SIG_KEY = "__app_index_sig";
+
+    // Throttle 30s
+    const now = Date.now();
+    const last = Number(sessionStorage.getItem(LAST_CHECK) || "0");
+    if (now - last < 30000) return true;
+    sessionStorage.setItem(LAST_CHECK, String(now));
+
+    // Si ya forzamos una recarga en esta pestaña, no insistir
+    if (sessionStorage.getItem(RELOAD_FLAG) === "1") return true;
+
     const res = await fetch("/index.html", { cache: "no-store" });
     const etag = res.headers.get("etag");
     const lm = res.headers.get("last-modified");
-    const sig = etag || lm || String(Date.now());
-    const KEY = "__app_index_sig";
 
-    const prev = localStorage.getItem(KEY);
+    // Si el server no provee firma estable, NO recargamos
+    const sig = etag || lm || null;
+    if (!sig) return true;
+
+    const prev = localStorage.getItem(SIG_KEY);
     if (prev && prev !== sig) {
-      // Build nueva: recarga limpia (sin cerrar sesión manualmente)
+      // Nueva build detectada -> recarga limpia sin cerrar sesión
+      sessionStorage.setItem(RELOAD_FLAG, "1");
       location.replace(location.href);
       return false;
     }
-    localStorage.setItem(KEY, sig);
+    localStorage.setItem(SIG_KEY, sig);
     return true;
   } catch {
-    return true; // si no podemos comprobar, seguimos
+    // Si hay error de red/headers, no forzamos recarga
+    return true;
   }
 }
 
@@ -85,11 +104,11 @@ export default function AuthWatcher() {
     };
 
     const handleInitial = async () => {
-      // 0) Comprobar versión nueva: si hay, recarga y no seguimos.
-      const fresh = await ensureFreshApp();
+      // Comprobación de build segura (no-loop, throttle, sin fallback variable)
+      const fresh = await ensureFreshAppSafe();
       if (!fresh) return;
 
-      // 1) Sesión viva (intenta refrescar si no hay)
+      // Mantener sesión viva (con intento de refresh)
       let { data } = await supabase.auth.getSession();
       let sess = data?.session || null;
       if (!sess) {
@@ -111,7 +130,7 @@ export default function AuthWatcher() {
 
     handleInitial();
 
-    // Auth listener
+    // Listener de auth
     const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!active) return;
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
@@ -126,11 +145,11 @@ export default function AuthWatcher() {
       }
     });
 
-    // Al volver a la pestaña: comprobar nueva build + mantener sesión viva
+    // Al volver a la pestaña: comprobar build (seguro) y tocar sesión
     const onVis = async () => {
       if (document.hidden) return;
-      const fresh = await ensureFreshApp();
-      if (!fresh) return; // si hay nueva versión, se recarga
+      const fresh = await ensureFreshAppSafe();
+      if (!fresh) return;
       try { await supabase.auth.getSession(); } catch {}
     };
     document.addEventListener("visibilitychange", onVis);
