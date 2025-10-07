@@ -73,51 +73,39 @@ const S = {
   h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
   sub: { margin: "0 0 12px", color: "#475569", fontSize: 16, fontWeight: 400 },
 
-  // 8) Cuadro de texto con VERDE degradado (sin borde) + SOMBRA
+  // Cuadro de texto con VERDE degradado (sin borde) + SOMBRA
   resumen: {
     margin:"0 0 12px", padding:"12px 14px", borderRadius:12,
     border:"none",
-    background:"linear-gradient(180deg,#ecfdf5,#d1fae5)", // verde suave → máis verde
+    background:"linear-gradient(180deg,#ecfdf5,#d1fae5)",
     color:"#064e3b",
     boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 10px 26px rgba(16,185,129,.20), 0 1px 0 rgba(16,185,129,.12)"
   },
   resumeLine: { margin: 0, fontSize: 19, fontWeight: 700, letterSpacing: ".35px", lineHeight: 1.5 },
   resumeNoteTitle: { margin:"8px 0 0", color:"#065f46", fontSize:15, fontWeight:700, letterSpacing:.3 },
+  resumeNoteTime: { margin:"2px 0 0", fontSize:16, fontWeight:800, letterSpacing:.4, animation: "blinkCelNeg 2.2s infinite" },
 
-  // 3) Parpadeo celeste ↔ negro
-  resumeNoteTime: {
-    margin:"2px 0 0", fontSize:16, fontWeight:800, letterSpacing:.4,
-    animation: "blinkCelNeg 2.2s infinite"
-  },
-
-  // 1,3,6,7,8) Botonera alineada EXACTA con el cuadro (no desborda)
-  controlsWrap: {
-    maxWidth:"100%",
-    margin:"0 auto",
-    padding:0,
-    boxSizing:"border-box"
-  },
-  topRow: {
+  // Botonera DENTRO del cuadro (no desborda nunca)
+  rowBtns: {
     display:"grid",
-    gridTemplateColumns: "18% 64% 18%", // reducimos info/papelera para asegurar ajuste en móvil
+    gridTemplateColumns:"18% 64% 18%", // INFO / CONFIRMAR / PAPELERA
     gap:8,
     alignItems:"stretch",
-    margin:"8px 0 12px",
-    boxSizing:"border-box"
+    marginTop:10
   },
 
   // Todos los botones con SOMBRA
   btnInfo:{
     width:"100%", padding:"10px 12px", borderRadius:12,
-    background:"linear-gradient(180deg,#e0f2fe,#93c5fd,#60a5fa)", // más DEGRADe
+    background:"linear-gradient(180deg,#e7f0ff,#cfe0ff,#a7c6ff,#7fb0ff,#60a5fa,#3b82f6)", // azul MUY degradado
     color:"#0b4f8a", fontWeight:800, textAlign:"center",
     border:"1px solid #38bdf8", cursor:"pointer",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 6px 16px rgba(2,132,199,.26)",
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 8px 18px rgba(2,132,199,.28)",
     display:"grid", placeItems:"center", minWidth:0
   },
   btnConfirm:{
     width:"100%", padding:"10px 12px", borderRadius:12,
-    background:"linear-gradient(180deg,#d1fae5,#a7f3d0,#86efac)", // verde con MÁS degradado
+    background:"linear-gradient(180deg,#e7fbe9,#d1fae5,#b8f5cf,#a7f3d0,#86efac)", // verde con MÁS degradado
     color:"#065f46", fontWeight:900,
     border:"1px solid #22c55e", cursor:"pointer",
     boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 8px 18px rgba(34,197,94,.24)",
@@ -129,13 +117,14 @@ const S = {
     color:"#7f1d1d", fontWeight:800,
     border:"1px solid #ef4444", cursor:"pointer",
     display:"grid", placeItems:"center",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 6px 16px rgba(239,68,68,.22)",
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 8px 18px rgba(239,68,68,.24)",
     minWidth:0
   },
 
+  // Botón inferior (mismo ancho del contenedor principal)
   btnBottom:{
     width:"100%", padding:"10px 12px", borderRadius:12,
-    background:"linear-gradient(180deg,#d1fae5,#a7f3d0,#86efac)", // igual a confirmar
+    background:"linear-gradient(180deg,#e7fbe9,#d1fae5,#b8f5cf,#a7f3d0,#86efac)",
     color:"#065f46", fontWeight:900,
     border:"1px solid #22c55e", cursor:"pointer", marginTop:14,
     boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 8px 18px rgba(34,197,94,.24)"
@@ -148,7 +137,7 @@ const S = {
     gap:12
   }),
 
-  // 4) Tarjeta seleccionada: fondo VERDE degradado + borde verde grueso + sombra
+  // Tarjeta seleccionada: fondo VERDE degradado + borde verde grueso + sombra
   card: (picked)=>({
     position:"relative",
     borderRadius:16, padding:10,
@@ -157,7 +146,6 @@ const S = {
     boxShadow: picked ? "0 0 0 3px rgba(34,197,94,.18), 0 10px 24px rgba(34,197,94,.14)" : "0 2px 8px rgba(0,0,0,.06)"
   }),
 
-  // Frame como en Alineación Oficial
   frame: (isMobile)=>({
     width:"100%", height: isMobile ? 172 : IMG_H,
     borderRadius:12, overflow:"hidden",
@@ -166,7 +154,6 @@ const S = {
   }),
   img: (isMobile) => ({ width:"100%", height:"100%", objectFit: isMobile ? "cover" : "contain", background:"#ffffff", display:"block" }),
 
-  // Nombre
   nameDesktop: {
     margin:"8px 0 0",
     font:"700 15px/1.2 Montserrat, system-ui, sans-serif",
@@ -189,7 +176,6 @@ const S = {
 
   meta: { margin:"2px 0 0", color:"#475569", fontSize:13, textAlign:"center" },
 
-  // Contador
   counter: {
     position:"absolute", left:"50%", top:"78%", transform:"translate(-50%,-50%)",
     fontFamily:"Montserrat, system-ui, sans-serif",
@@ -198,16 +184,15 @@ const S = {
     letterSpacing:1.1, userSelect:"none", pointerEvents:"none"
   },
 
-  // 5) “Visto” (✔) arriba-izquierda, un poco más grande en móvil
+  // “Visto” (✔) arriba-derecha — un poco más grande en desktop
   okCheck: (m)=>({
-    position:"absolute", top: m ? 4 : 6, left: m ? 4 : 6,
+    position:"absolute", top: m ? 4 : 6, right: m ? 4 : 6,
     background:"rgba(34,197,94,.94)", color:"#fff",
     borderRadius:999, padding: m ? "3px 6px" : "4px 7px",
     boxShadow:"0 2px 8px rgba(34,197,94,.28)",
     display:"grid", placeItems:"center", userSelect:"none", pointerEvents:"none"
   }),
 
-  // Modal
   modalBg: { position:"fixed", inset:0, background:"rgba(2,6,23,.45)", display:"grid", placeItems:"center", zIndex:9999 },
   modal: {
     width:"min(92vw,520px)",
@@ -258,7 +243,7 @@ function NameMobileTwoLines({ text }) {
 
 /* ====== Audio ======
    - playBip(): beep cortito (selección)
-   - playHalaCelta(): voz “Hala Celta!” (~1.3–2s) con SpeechSynthesis; fallback a acordes breves */
+   - playHalaCelta(): “¡Hala Celta!” (SpeechSynthesis) con fallback */
 function useAudio() {
   const ctxRef = useRef(null);
   const getCtx = () => {
@@ -286,7 +271,6 @@ function useAudio() {
   }
 
   function playHalaCelta() {
-    // Preferimos voz del navegador para claridad
     try {
       const phrase = "¡Hala Celta!";
       if ("speechSynthesis" in window) {
@@ -300,10 +284,8 @@ function useAudio() {
         return;
       }
     } catch {}
-    // Fallback: acorde mayor breve
     const ctx = getCtx(); if (!ctx) return;
-    const now = ctx.currentTime;
-    const dur = 1.2;
+    const now = ctx.currentTime, dur = 1.2;
     const mk = (f, det=0)=> {
       const o = ctx.createOscillator(); o.type="sawtooth"; o.frequency.value=f; o.detune.value=det;
       const g = ctx.createGain(); g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(0.8, now+0.05); g.gain.exponentialRampToValueAtTime(0.0001, now+dur);
@@ -485,38 +467,35 @@ export default function HazTu11() {
           <p style={{...S.resumeLine, opacity:.9}}>{sFecha} | {sHora}</p>
           <p style={S.resumeNoteTitle}>Rexistro da túa última aliñación:</p>
           <p style={S.resumeNoteTime}>{last ? `${last.f} ás ${last.h}` : "-"}</p>
+
+          {/* Botonera dentro del cuadro, anchos exactos */}
+          <div style={S.rowBtns}>
+            <button style={S.btnInfo} title="Información" aria-label="Información">
+              <svg width={24} height={24} viewBox="0 0 24 24" aria-hidden="true" style={{display:"block"}}>
+                <defs>
+                  <linearGradient id="infoGrad2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#a7c6ff"/><stop offset="50%" stopColor="#60a5fa"/><stop offset="100%" stopColor="#3b82f6"/>
+                  </linearGradient>
+                </defs>
+                <circle cx="12" cy="12" r="9" fill="url(#infoGrad2)" stroke="#1e3a8a" strokeWidth="1"/>
+                <path d="M12 10v6" stroke="#ffffff" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M12 7.2h.01" stroke="#ffffff" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+
+            <button style={S.btnConfirm} onClick={saveMy11} disabled={sel.size!==11}>
+              {confirmLabel}
+            </button>
+
+            <button style={S.btnTrash} onClick={clearMy11} title="Borrar" aria-label="Borrar">
+              <svg width={24} height={24} viewBox="0 0 24 24" fill="none" aria-hidden="true"
+                   style={{display:"block",stroke:"#7f1d1d",strokeWidth:1.6,strokeLinecap:"round",strokeLinejoin:"round"}}>
+                <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
+              </svg>
+            </button>
+          </div>
         </div>
       )}
-
-      {/* Botonera EXACTA al ancho del cuadro */}
-      <div style={S.controlsWrap}>
-        <div style={S.topRow}>
-          <button style={S.btnInfo} title="Información" aria-label="Información">
-            {/* “i” con degradado y mayor sombra ya lo aporta el botón */}
-            <svg width={24} height={24} viewBox="0 0 24 24" aria-hidden="true" style={{display:"block"}}>
-              <defs>
-                <linearGradient id="infoGrad2" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#60a5fa"/><stop offset="100%" stopColor="#0ea5e9"/>
-                </linearGradient>
-              </defs>
-              <circle cx="12" cy="12" r="9" fill="url(#infoGrad2)" stroke="#1e3a8a" strokeWidth="1"/>
-              <path d="M12 10v6" stroke="#ffffff" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M12 7.2h.01" stroke="#ffffff" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </button>
-
-          <button style={S.btnConfirm} onClick={saveMy11} disabled={sel.size!==11}>
-            {confirmLabel}
-          </button>
-
-          <button style={S.btnTrash} onClick={clearMy11} title="Borrar" aria-label="Borrar">
-            <svg width={24} height={24} viewBox="0 0 24 24" fill="none" aria-hidden="true"
-                 style={{display:"block",stroke:"#7f1d1d",strokeWidth:1.6,strokeLinecap:"round",strokeLinejoin:"round"}}>
-              <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
-            </svg>
-          </button>
-        </div>
-      </div>
 
       {["POR","DEF","CEN","DEL"].map(k => {
         const arr = grouped[k] || [];
@@ -534,11 +513,11 @@ export default function HazTu11() {
                   <article key={p.id} style={S.card(picked)} onClick={()=>togglePick(p.id)}>
                     <div style={S.frame(isMobile)}>
                       <Img src={p.foto_url} alt={`Foto de ${nombre}`} isMobile={isMobile} />
-                      {/* 5) Check “visto” */}
+                      {/* Check “visto” arriba-derecha */}
                       {picked && (
                         <span style={S.okCheck(isMobile)} aria-hidden="true">
-                          <svg width={isMobile ? 16 : 18} height={isMobile ? 16 : 18} viewBox="0 0 24 24" fill="none"
-                               style={{display:"block",stroke:"#ffffff",strokeWidth:2.4,strokeLinecap:"round",strokeLinejoin:"round"}}>
+                          <svg width={isMobile ? 16 : 20} height={isMobile ? 16 : 20} viewBox="0 0 24 24" fill="none"
+                               style={{display:"block",stroke:"#ffffff",strokeWidth:2.6,strokeLinecap:"round",strokeLinejoin:"round"}}>
                             <path d="M20 6L9 17l-5-5" />
                           </svg>
                         </span>
