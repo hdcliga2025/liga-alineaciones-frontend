@@ -54,6 +54,83 @@ function finalFromAll(p = {}) {
   };
 }
 
+/**
+ * Hook: ajusta el font-size para encajar un bloque de texto en 2 líneas máx. sin desbordar.
+ * (Solo lo usaremos en móvil; en desktop mantenemos el estilo previo.)
+ */
+function useFitText2Lines(ref, opts) {
+  const {
+    min = 11,
+    max = 15,
+    lineHeight = 1.2,
+    maxLines = 2,
+    initial = 14,
+    deps = [],
+  } = opts || {};
+  const [fontSize, setFontSize] = useState(initial);
+  const [didEllipsis, setDidEllipsis] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    el.style.whiteSpace = "normal";
+    el.style.overflow = "hidden";
+    el.style.display = "block";
+    el.style.textOverflow = "clip";
+    el.style.lineHeight = String(lineHeight);
+    el.style.wordBreak = "break-word";
+
+    let low = min;
+    let high = max;
+    let best = Math.max(min, Math.min(high, initial));
+    setDidEllipsis(false);
+
+    const fits = (sizePx) => {
+      el.style.fontSize = sizePx + "px";
+      const oneLine = sizePx * lineHeight;
+      const maxHeight = oneLine * maxLines + 0.5;
+      return el.scrollHeight <= maxHeight && el.clientHeight <= maxHeight;
+    };
+
+    if (fits(best)) low = best;
+    else high = best;
+
+    while (high - low > 0.25) {
+      const mid = (low + high) / 2;
+      if (fits(mid)) low = mid;
+      else high = mid;
+    }
+    best = Math.floor(low * 10) / 10;
+    el.style.fontSize = best + "px";
+    setFontSize(best);
+
+    if (!fits(min)) {
+      el.style.display = "-webkit-box";
+      el.style.webkitBoxOrient = "vertical";
+      el.style.webkitLineClamp = String(maxLines);
+      el.style.textOverflow = "ellipsis";
+      setDidEllipsis(true);
+    }
+
+    let raf = 0;
+    const onR = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => setFontSize((s) => s));
+    };
+    window.addEventListener("resize", onR);
+    document.addEventListener("visibilitychange", onR);
+    return () => {
+      window.removeEventListener("resize", onR);
+      document.removeEventListener("visibilitychange", onR);
+      cancelAnimationFrame(raf);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+
+  return { fontSize, didEllipsis };
+}
+
 const S = {
   wrap: { maxWidth: 1080, margin: "0 auto", padding: 16 },
   h1: {
@@ -65,7 +142,6 @@ const S = {
   },
   sub: { margin: "0 0 12px", color: "#475569", fontSize: 16 },
 
-  // “cadro de texto” en vermello degradado (referencia para os botóns)
   resumen: {
     margin: "0 0 12px",
     padding: "12px 14px",
@@ -120,7 +196,6 @@ const S = {
       : "0 2px 8px rgba(0,0,0,.06)",
   }),
 
-  // Marco de foto: copiamos comportamento “móbil coma Convocatoria” → sen bandas
   frame: (isMobile) => ({
     width: "100%",
     height: isMobile ? 172 : 320,
@@ -132,7 +207,6 @@ const S = {
     border: "1px solid #e5e7eb",
     position: "relative",
   }),
-  // En móbil: cover (sen marxes/bandas). En desktop: contain.
   img: (isMobile) => ({
     width: "100%",
     height: "100%",
@@ -140,8 +214,8 @@ const S = {
     background: "#ffffff",
   }),
 
-  // Nome + dorsal: clamp a 2 liñas (que se lea completo)
-  name: {
+  // Estilo original (desktop) con clamp 2 líneas + elipsis
+  nameDesktop: {
     margin: "8px 0 0",
     font: "700 15px/1.2 Montserrat, system-ui, sans-serif",
     color: "#0f172a",
@@ -152,9 +226,18 @@ const S = {
     overflow: "hidden",
     wordBreak: "break-word",
   },
+  // Base para móvil (el tamaño final lo pone el hook)
+  nameMobileBase: {
+    margin: "8px 0 0",
+    fontWeight: 700,
+    fontFamily: "Montserrat, system-ui, sans-serif",
+    lineHeight: 1.2,
+    color: "#0f172a",
+    textAlign: "center",
+  },
+
   meta: { margin: "2px 0 0", color: "#475569", fontSize: 13, textAlign: "center" },
 
-  // Fila botóns superior: 85% gravar / 15% papeleira
   rowBtns: {
     display: "grid",
     gridTemplateColumns: "85% 15%",
@@ -163,16 +246,17 @@ const S = {
     marginTop: 10,
   },
 
-  // Botóns co MESMO degradado ca o cadro (vermello) e contorno fino (1px)
+  // Degradado más claro (tirando a blanco) en ambos: móvil y desktop
   btnLoad: (isMobile) => ({
     width: "100%",
     padding: isMobile ? "8px 10px" : "10px 14px",
     borderRadius: 10,
-    background: "linear-gradient(180deg,#fee2e2,#fecaca)", // ← igual ca S.resumen
+    // más blanco arriba, rojo suave abajo
+    background: "linear-gradient(180deg,#fff7f7,#fee2e2)",
     border: "1px solid #ef4444",
     color: "#7f1d1d",
     fontWeight: 800,
-    fontSize: isMobile ? 14 : 16, // ← reducir tamaño en móbil
+    fontSize: isMobile ? 14 : 16,
     letterSpacing: 0.4,
     cursor: "pointer",
   }),
@@ -186,14 +270,14 @@ const S = {
     border: "1px solid #ef4444",
     cursor: "pointer",
     display: "grid",
-    placeItems: "center", // ← icono centrado
+    placeItems: "center",
   },
 
   btnBottom: (isMobile) => ({
     width: "100%",
     padding: isMobile ? "8px 10px" : "10px 14px",
     borderRadius: 10,
-    background: "linear-gradient(180deg,#fee2e2,#fecaca)", // ← igual ca S.resumen
+    background: "linear-gradient(180deg,#fff7f7,#fee2e2)",
     border: "1px solid #ef4444",
     color: "#7f1d1d",
     fontWeight: 800,
@@ -232,7 +316,8 @@ const S = {
     transition: "color .25s ease",
   }),
 
-  okBadge: {
+  // Tamaño normal del OK (desktop). Para móvil, lo reducimos y pegamos a la esquina.
+  okBadgeDesktop: {
     position: "absolute",
     top: 8,
     right: 8,
@@ -245,7 +330,44 @@ const S = {
     userSelect: "none",
     pointerEvents: "none",
   },
+  okBadgeMobile: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    background: "rgba(56,189,248,.95)",
+    color: "#fff",
+    borderRadius: 999,
+    padding: "2px 6px",
+    font: "700 11px/1 Montserrat,system-ui,sans-serif",
+    boxShadow: "0 1px 4px rgba(56,189,248,.35)",
+    userSelect: "none",
+    pointerEvents: "none",
+  },
 };
+
+function NameMobileTwoLines({ text }) {
+  const ref = useRef(null);
+  const { fontSize } = useFitText2Lines(ref, {
+    min: 11,
+    max: 14,       // techo móvil
+    initial: 13.5, // punto de partida móvil
+    lineHeight: 1.2,
+    maxLines: 2,
+    deps: [text],
+  });
+  return (
+    <p
+      ref={ref}
+      style={{
+        ...S.nameMobileBase,
+        fontSize: fontSize,
+        maxHeight: fontSize ? `${fontSize * 1.2 * 2 + 0.5}px` : undefined,
+      }}
+    >
+      {text}
+    </p>
+  );
+}
 
 export default function AlineacionOficial() {
   const [header, setHeader] = useState(null);
@@ -259,17 +381,15 @@ export default function AlineacionOficial() {
   const [saving, setSaving] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState(null);
-  const [blinkOn, setBlinkOn] = useState(true); // parpadeo fe/hora subida
+  const [blinkOn, setBlinkOn] = useState(true);
   const audioCtxRef = useRef(null);
   const max11 = 11;
 
-  // Parpadeo cada 2s
   useEffect(() => {
     const id = setInterval(() => setBlinkOn((v) => !v), 2000);
     return () => clearInterval(id);
   }, []);
 
-  // Resize móbil
   useEffect(() => {
     let raf = 0;
     const onR = () => {
@@ -298,7 +418,6 @@ export default function AlineacionOficial() {
         }
       } catch {}
 
-      // Header
       const { data: top } = await supabase
         .from("matches_vindeiros")
         .select("id,equipo1,equipo2,match_iso")
@@ -370,9 +489,7 @@ export default function AlineacionOficial() {
   }, [players]);
 
   const { fecha: sFecha, hora: sHora } = fmtDT(header?.match_iso);
-  const savedFmt = fmtDT(lastSavedAt);
 
-  // Sonido bip curto ao seleccionar
   function playBeep() {
     try {
       const ctx =
@@ -486,7 +603,7 @@ export default function AlineacionOficial() {
       const ins = await supabase.from("alineacion_oficial").insert(rows);
       if (ins.error) throw ins.error;
 
-      setLastSavedAt(now); // actualizar “subida” (parpadeo)
+      setLastSavedAt(now);
       showToast("Aliñación oficial gardada.");
     } catch (e) {
       const msg = [e?.code, e?.message, e?.details, e?.hint]
@@ -515,16 +632,14 @@ export default function AlineacionOficial() {
 
       {header && (
         <div style={S.resumen}>
-          {/* Equipos en bold */}
           <p style={S.resumeTeams}>
             <strong>{cap(header.equipo1)}</strong> vs{" "}
             <strong>{cap(header.equipo2)}</strong>
           </p>
           <p style={{ ...S.resumeLine, opacity: 0.9 }}>
-            {sFecha} | {sHora}
+            {sFecha} | {fmtDT(header?.match_iso).hora}
           </p>
 
-          {/* Liñas de última subida/gravación (con parpadeo cada 2s) */}
           <p style={S.upLabel}>Aliñación oficial subida:</p>
           <p style={S.upValue(blinkOn)}>
             {lastSavedAt
@@ -532,7 +647,6 @@ export default function AlineacionOficial() {
               : "-"}
           </p>
 
-          {/* Botoneira superior */}
           <div style={S.rowBtns}>
             <button
               style={S.btnLoad(isMobile)}
@@ -618,14 +732,25 @@ export default function AlineacionOficial() {
                         loading="lazy"
                         decoding="async"
                       />
-                      {/* contador sobre a foto do último click */}
                       {lastCounterId === p.id && (
                         <span style={S.counter}>{`${sel.size}/11`}</span>
                       )}
-                      {/* OK celeste no canto superior dereito cando está seleccionado */}
-                      {picked && <span style={S.okBadge}>OK</span>}
+                      {picked && (
+                        <span
+                          style={isMobile ? S.okBadgeMobile : S.okBadgeDesktop}
+                        >
+                          OK
+                        </span>
+                      )}
                     </div>
-                    <p style={S.name}>{nameLine}</p>
+
+                    {/* SOLO MÓVIL: autoajuste 2 líneas; DESKTOP: estilo previo */}
+                    {isMobile ? (
+                      <NameMobileTwoLines text={nameLine} />
+                    ) : (
+                      <p style={S.nameDesktop}>{nameLine}</p>
+                    )}
+
                     <p style={S.meta}>{pos}</p>
                   </article>
                 );
@@ -635,7 +760,6 @@ export default function AlineacionOficial() {
         );
       })}
 
-      {/* Botón inferior 100% */}
       <button
         style={S.btnBottom(isMobile)}
         onClick={loadOfficial}
