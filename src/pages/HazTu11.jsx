@@ -1,6 +1,6 @@
 // src/pages/HazTu11.jsx
 import { h } from "preact";
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
 /* Utils (comparten patrón con outras páxinas) */
@@ -23,6 +23,57 @@ const cap = (s="") => (s || "").toUpperCase();
 
 const IMG_H = 320;
 
+/* === Autofit 2 liñas (móbil) como en Alineación Oficial === */
+function useFitText2Lines(
+  ref,
+  { min = 11, max = 14, lineHeight = 1.2, maxLines = 2, initial = 13.5, deps = [] } = {}
+) {
+  const [fontSize, setFontSize] = useState(initial);
+  useEffect(() => {
+    const el = ref.current; if (!el) return;
+
+    el.style.whiteSpace = "normal";
+    el.style.overflow = "hidden";
+    el.style.display = "block";
+    el.style.textOverflow = "clip";
+    el.style.lineHeight = String(lineHeight);
+    el.style.wordBreak = "break-word";
+
+    let low = min, high = max;
+    let best = Math.max(min, Math.min(max, initial));
+
+    const fits = (px) => {
+      el.style.fontSize = px + "px";
+      const one = px * lineHeight;
+      const maxH = one * maxLines + 0.5;
+      return el.scrollHeight <= maxH && el.clientHeight <= maxH;
+    };
+
+    if (fits(best)) low = best; else high = best;
+    while (high - low > 0.25) {
+      const mid = (low + high) / 2;
+      if (fits(mid)) low = mid; else high = mid;
+    }
+    best = Math.floor(low * 10) / 10;
+    el.style.fontSize = best + "px";
+    setFontSize(best);
+
+    if (!fits(min)) {
+      el.style.display = "-webkit-box";
+      el.style.webkitBoxOrient = "vertical";
+      el.style.webkitLineClamp = String(maxLines);
+      el.style.textOverflow = "ellipsis";
+    }
+
+    let raf = 0;
+    const onR = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => setFontSize((s) => s)); };
+    window.addEventListener("resize", onR);
+    document.addEventListener("visibilitychange", onR);
+    return () => { window.removeEventListener("resize", onR); document.removeEventListener("visibilitychange", onR); cancelAnimationFrame(raf); };
+  }, deps);
+  return { fontSize };
+}
+
 const S = {
   wrap: { maxWidth: 1080, margin: "0 auto", padding: 16 },
   h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
@@ -43,7 +94,8 @@ const S = {
     background:"linear-gradient(180deg,#dbeafe,#bfdbfe)",
     color:"#0b4f8a", fontWeight:800, textAlign:"center",
     border:"3px solid #38bdf8",
-    cursor:"pointer", display:"grid", placeItems:"center"
+    cursor:"pointer", display:"grid", placeItems:"center",
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 6px 16px rgba(56,189,248,.25)"
   },
   btnConfirm: {
     width:"100%", padding:"9px 12px",
@@ -51,7 +103,8 @@ const S = {
     background:"linear-gradient(180deg,#e7f6ff,#cfeeff)",
     color:"#075985", fontWeight:800,
     border:"3px solid #38bdf8",
-    cursor:"pointer"
+    cursor:"pointer",
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 6px 16px rgba(56,189,248,.25)"
   },
   btnTrash: {
     width:"100%", padding:"9px 12px",
@@ -59,7 +112,8 @@ const S = {
     background:"linear-gradient(180deg,#ffd8d8,#ffbcbc)",
     color:"#7f1d1d", fontWeight:800,
     border:"3px solid #ef4444",
-    cursor:"pointer", display:"grid", placeItems:"center"
+    cursor:"pointer", display:"grid", placeItems:"center",
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 6px 16px rgba(239,68,68,.22)"
   },
 
   btnBottom: {
@@ -68,7 +122,8 @@ const S = {
     background:"linear-gradient(180deg,#e7f6ff,#cfeeff)",
     color:"#075985", fontWeight:800,
     border:"3px solid #38bdf8",
-    cursor:"pointer", marginTop:14
+    cursor:"pointer", marginTop:14,
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 6px 16px rgba(56,189,248,.25)"
   },
 
   posHeader: { margin:"16px 0 10px", padding:"2px 4px 8px", fontWeight:700, color:"#0c4a6e", borderLeft:"4px solid #7dd3fc", borderBottom:"2px solid #e2e8f0" },
@@ -86,13 +141,36 @@ const S = {
     boxShadow: picked ? "0 0 0 2px rgba(56,189,248,.35), 0 8px 26px rgba(56,189,248,.25)" : "0 2px 8px rgba(0,0,0,.06)",
     alignItems:"center", textAlign:"center", position:"relative"
   }),
+
+  // === Marco e imaxe: igual que en Alineación Oficial (172 móbil / 320 desktop; cover en móbil, contain en desktop)
   frame: (isMobile)=>({
     position:"relative", width:"100%", height: isMobile ? 172 : IMG_H,
     borderRadius:12, display:"grid", placeItems:"center",
     background:"#ffffff", border:"1px solid #e5e7eb", overflow:"hidden"
   }),
-  img: { width:"100%", height:"100%", objectFit:"contain", background:"#ffffff" },
-  name: { margin:"8px 0 0", font:"700 15px/1.2 Montserrat, system-ui, sans-serif", color:"#0f172a" },
+  img: (isMobile) => ({ width:"100%", height:"100%", objectFit: isMobile ? "cover" : "contain", background:"#ffffff" }),
+
+  // === Texto nome: desktop como estaba; móbil con autofit 2 liñas
+  nameDesktop: {
+    margin:"8px 0 0",
+    font:"700 15px/1.2 Montserrat, system-ui, sans-serif",
+    color:"#0f172a",
+    textAlign:"center",
+    display:"-webkit-box",
+    WebkitLineClamp:"2",
+    WebkitBoxOrient:"vertical",
+    overflow:"hidden",
+    wordBreak:"break-word"
+  },
+  nameMobileBase: {
+    margin:"8px 0 0",
+    fontWeight:700,
+    fontFamily:"Montserrat, system-ui, sans-serif",
+    lineHeight:1.2,
+    color:"#0f172a",
+    textAlign:"center"
+  },
+
   meta: { margin:"2px 0 0", color:"#475569", fontSize:13 },
 
   counter: {
@@ -115,8 +193,36 @@ const S = {
   }
 };
 
-function Img({ src, alt }) {
-  return <img src={src} alt={alt} loading="lazy" decoding="async" style={S.img} crossOrigin="anonymous" referrerPolicy="no-referrer" />;
+function Img({ src, alt, isMobile }) {
+  return (
+    <img
+      src={src}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      style={S.img(isMobile)}
+      crossOrigin="anonymous"
+      referrerPolicy="no-referrer"
+    />
+  );
+}
+
+/* Compo de nome móbil con autofit a 2 liñas */
+function NameMobileTwoLines({ text }) {
+  const ref = useRef(null);
+  const { fontSize } = useFitText2Lines(ref, { deps: [text] });
+  return (
+    <p
+      ref={ref}
+      style={{
+        ...S.nameMobileBase,
+        fontSize,
+        maxHeight: fontSize ? `${fontSize * 1.2 * 2 + 0.5}px` : undefined,
+      }}
+    >
+      {text}
+    </p>
+  );
 }
 
 export default function HazTu11() {
@@ -258,7 +364,7 @@ export default function HazTu11() {
 
       {header && (
         <div style={S.resumen}>
-          <p style={S.resumeLine}>{cap(header.equipo1)} vs {cap(header.equipo2)}</p>
+          <p style={S.resumeLine}><strong>{cap(header.equipo1)}</strong> vs <strong>{cap(header.equipo2)}</strong></p>
           <p style={{...S.resumeLine, opacity:.9}}>{sFecha} | {sHora}</p>
         </div>
       )}
@@ -287,16 +393,19 @@ export default function HazTu11() {
               {arr.map(p => {
                 const { dorsal, nombre, pos } = finalFromAll(p);
                 const picked = sel.has(p.id);
+                const nameLine = (dorsal != null ? `${String(dorsal).padStart(2,"0")} · ` : "") + nombre;
                 return (
                   <article key={p.id} style={S.card(picked)} onClick={()=>togglePick(p.id)}>
                     <div style={S.frame(isMobile)}>
-                      <Img src={p.foto_url} alt={`Foto de ${nombre}`}/>
+                      <Img src={p.foto_url} alt={`Foto de ${nombre}`} isMobile={isMobile} />
                       {lastCounterId === p.id && <span style={S.counter}>{`${sel.size}/11`}</span>}
                     </div>
-                    <div>
-                      <p style={S.name}>{dorsal != null ? `${String(dorsal).padStart(2,"0")} · ` : ""}{nombre}</p>
-                      <p style={S.meta}>{pos}</p>
-                    </div>
+                    {isMobile ? (
+                      <NameMobileTwoLines text={nameLine} />
+                    ) : (
+                      <p style={S.nameDesktop}>{nameLine}</p>
+                    )}
+                    <p style={S.meta}>{pos}</p>
                   </article>
                 );
               })}
