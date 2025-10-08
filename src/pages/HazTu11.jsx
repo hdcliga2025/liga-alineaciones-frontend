@@ -68,16 +68,16 @@ function useFitText2Lines(
 }
 
 /* ===== Estilos ===== */
+const RESUMEN_BG = "linear-gradient(180deg,#e6f7ef,#cdeee0)"; // usado en cuadro y botones
 const S = {
   wrap: { maxWidth: 1080, margin: "0 auto", padding: 16, boxSizing:"border-box" },
   h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
   sub: { margin: "0 0 12px", color: "#475569", fontSize: 16, fontWeight: 400 },
 
-  // Cuadro de texto (un pouco máis escuro)
   resumen: {
     margin:"0 0 12px", padding:"12px 14px", borderRadius:12,
     border:"none",
-    background:"linear-gradient(180deg,#e6f7ef,#cdeee0)",
+    background: RESUMEN_BG,
     color:"#064e3b",
     boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 10px 26px rgba(16,185,129,.20), 0 1px 0 rgba(16,185,129,.12)"
   },
@@ -85,30 +85,30 @@ const S = {
   resumeNoteTitle: { margin:"8px 0 0", color:"#065f46", fontSize:15, fontWeight:700, letterSpacing:.3 },
   resumeNoteTime: { margin:"2px 0 0", fontSize:16, fontWeight:800, letterSpacing:.4, animation: "blinkCelNeg 2.2s infinite" },
 
-  // Botonera dentro do cadro
+  // Botonera dentro del cuadro
   rowBtns: {
     display:"grid",
-    gridTemplateColumns:"17% 66% 17%",
+    gridTemplateColumns:"17% 66% 17%", // IZQ borrar, CENTRO info, DER confirmar
     gap:8,
     alignItems:"stretch",
     marginTop:10,
     padding:"0 8px"
   },
 
-  // INFO: azul degradado case branco (icono novo)
+  // INFO — fondo igual que el cuadro (mismo degradado)
   btnInfo:{
     width:"100%", padding:"10px 12px", borderRadius:12,
-    background:"linear-gradient(180deg,#fbfdff,#f3f8ff,#e9f1ff,#dfeaff)",
+    background: RESUMEN_BG,
     color:"#0b4f8a", fontWeight:800, textAlign:"center",
     border:"1px solid #38bdf8", cursor:"pointer",
     boxShadow:"inset 0 1px 0 rgba(255,255,255,.96), 0 8px 18px rgba(2,132,199,.22)",
     display:"grid", placeItems:"center", minWidth:0,
     userSelect:"none", touchAction:"manipulation"
   },
-  // CONFIRMAR
+  // CONFIRMAR — fondo igual que el cuadro (mismo degradado)
   btnConfirm:{
     width:"100%", padding:"12px 14px", borderRadius:12,
-    background:"linear-gradient(180deg,#eefdf4,#dcfce7,#c8f6d8,#b7f3ce,#a7f3d0,#86efac)",
+    background: RESUMEN_BG,
     color:"#065f46", fontWeight:900,
     border:"1px solid #22c55e", cursor:"pointer",
     boxShadow:"inset 0 1px 0 rgba(255,255,255,.96), 0 10px 20px rgba(34,197,94,.22)",
@@ -117,7 +117,7 @@ const S = {
   },
   btnConfirmActive:{ transform:"translateY(1px)", boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 6px 14px rgba(34,197,94,.22)" },
 
-  // Papeleira: vermello case branco
+  // Papeleira: rojo casi blanco (se mantiene)
   btnTrash:{
     width:"100%", padding:"10px 12px", borderRadius:12,
     background:"linear-gradient(180deg,#ffffff,#fff7f7,#ffecec,#ffe4e4)",
@@ -130,7 +130,7 @@ const S = {
 
   btnBottom:{
     width:"100%", padding:"12px 14px", borderRadius:12,
-    background:"linear-gradient(180deg,#eefdf4,#dcfce7,#c8f6d8,#b7f3ce,#a7f3d0,#86efac)",
+    background: RESUMEN_BG,
     color:"#065f46", fontWeight:900,
     border:"1px solid #22c55e", cursor:"pointer", marginTop:14,
     boxShadow:"inset 0 1px 0 rgba(255,255,255,.96), 0 10px 20px rgba(34,197,94,.22)",
@@ -140,7 +140,6 @@ const S = {
   posHeader: { margin:"16px 0 10px", padding:"2px 4px 8px", fontWeight:700, color:"#0c4a6e", borderLeft:"4px solid #7dd3fc", borderBottom:"2px solid #e2e8f0" },
   grid: (isMobile)=>({ display:"grid", gridTemplateColumns: isMobile ? "repeat(3, minmax(0,1fr))" : "repeat(4, minmax(0,1fr))", gap:12 }),
 
-  // Tarxetas seleccionadas
   card: (picked)=>({
     position:"relative",
     borderRadius:16, padding:10,
@@ -164,8 +163,34 @@ const S = {
   modalBg: { position:"fixed", inset:0, background:"rgba(2,6,23,.45)", display:"grid", placeItems:"center", zIndex:9999 },
   modal: { width:"min(92vw,620px)", background:"#ffffff", border:"1px solid #e2e8f0", borderRadius:14, boxShadow:"0 18px 48px rgba(0,0,0,.28)", padding:"16px 14px", position:"relative" },
   modalClose: { position:"absolute", right:8, top:8, width:32, height:32, borderRadius:8, border:"1px solid #e2e8f0", background:"#fff", cursor:"pointer", display:"grid", placeItems:"center" },
-  infoTitle: { margin:"0 0 8px", font:"800 18px/1.2 Montserrat,system-ui,sans-serif", color:"#0b4f8a" },
-  infoBody: { margin:0, color:"#0f172a", lineHeight:1.5, fontSize:14 }
+  infoTitleBase: { margin:"0 0 8px", fontWeight:800, color:"#0b4f8a" },
+  infoBodyBase: { margin:0, color:"#0f172a", lineHeight:1.5 },
+
+  // Confirm dialog (papelera)
+  confirmBox: {
+    width:"min(92vw,520px)",
+    background:"#ffffff",
+    border:"1px solid #e2e8f0",
+    borderRadius:14,
+    boxShadow:"0 18px 48px rgba(0,0,0,.28)",
+    padding:"16px 14px",
+    position:"relative"
+  },
+  confirmTitle: { margin:"0 0 6px", font:"800 18px/1.2 Montserrat,system-ui,sans-serif", color:"#7f1d1d" },
+  confirmText: { margin:"0 0 12px", color:"#0f172a" },
+  confirmRow: { display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 },
+  btnCancel: {
+    width:"100%", padding:"10px 12px", borderRadius:12,
+    background:"#fff", color:"#0f172a", fontWeight:800,
+    border:"1px solid #cbd5e1", cursor:"pointer",
+    boxShadow:"0 6px 16px rgba(15,23,42,.08)"
+  },
+  btnAccept: {
+    width:"100%", padding:"10px 12px", borderRadius:12,
+    background: RESUMEN_BG, color:"#065f46", fontWeight:900,
+    border:"1px solid #22c55e", cursor:"pointer",
+    boxShadow:"inset 0 1px 0 rgba(255,255,255,.96), 0 10px 20px rgba(34,197,94,.22)"
+  }
 };
 
 const extraStyles = `
@@ -214,27 +239,32 @@ function useAudio() {
     o.stop(now + 0.12);
   }
 
-  // campá breve ao confirmar
-  function playBell() {
+  // Confirmación: dos cortos + uno largo
+  function playConfirmTrio() {
     const ctx = getCtx(); if (!ctx) return;
-    const now = ctx.currentTime;
-    const dur = 0.9;
-    const partials = [
-      { f: 784.0, gain: 1.0 },
-      { f: 1176.0, gain: 0.5 },
-      { f: 1568.0, gain: 0.35 },
-      { f: 2349.0, gain: 0.22 },
+    const start = ctx.currentTime;
+    const seq = [
+      { f: 880, d: 0.12, gap: 0.07 }, // corto 1
+      { f: 988, d: 0.12, gap: 0.12 }, // corto 2
+      { f: 784, d: 0.45, gap: 0.00 }, // largo
     ];
-    partials.forEach(p => {
-      const o = ctx.createOscillator(); o.type = "sine"; o.frequency.setValueAtTime(p.f, now);
-      const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, now);
-      g.gain.exponentialRampToValueAtTime(0.9 * p.gain, now + 0.03);
-      g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-      o.connect(g).connect(ctx.destination); o.start(now); o.stop(now + dur + 0.05);
-    });
+    let t = start;
+    for (const s of seq) {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.setValueAtTime(s.f, t);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.5, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + s.d);
+      o.connect(g).connect(ctx.destination);
+      o.start(t);
+      o.stop(t + s.d + 0.02);
+      t += s.d + s.gap;
+    }
   }
 
-  return { playBip, playBell };
+  return { playBip, playConfirmTrio };
 }
 
 export default function HazTu11() {
@@ -246,12 +276,13 @@ export default function HazTu11() {
   const [sel, setSel] = useState(new Set());
   const [lastCounterId, setLastCounterId] = useState(null);
   const [showOK, setShowOK] = useState(false);
-  const [showInfo, setShowInfo] = useState(false); // <<<<<< NEW
+  const [showInfo, setShowInfo] = useState(false);
+  const [showConfirmClear, setShowConfirmClear] = useState(false);
   const [toast, setToast] = useState("");
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const max11 = 11;
 
-  const { playBip, playBell } = useAudio();
+  const { playBip, playConfirmTrio } = useAudio();
 
   useEffect(() => {
     let raf=0;
@@ -361,7 +392,7 @@ export default function HazTu11() {
     }
 
     try {
-      try { playBell(); } catch {}
+      try { playConfirmTrio(); } catch {}
       const { data: sess } = await supabase.auth.getSession();
       const uid = sess?.session?.user?.id || null;
       if (!uid) {
@@ -408,6 +439,16 @@ export default function HazTu11() {
   };
   const last = fmtLast(lastSavedAt);
 
+  // tamaños de modal INFO en móvil (más pequeño)
+  const infoTitleStyle = {
+    ...S.infoTitleBase,
+    font: `${isMobile ? "800 16px/1.2" : "800 18px/1.2"} Montserrat,system-ui,sans-serif`
+  };
+  const infoBodyStyle = {
+    ...S.infoBodyBase,
+    fontSize: isMobile ? 13 : 14
+  };
+
   return (
     <main style={S.wrap}>
       <style>{extraStyles}</style>
@@ -422,10 +463,17 @@ export default function HazTu11() {
           <p style={S.resumeNoteTitle}>Rexistro da túa última aliñación:</p>
           <p style={S.resumeNoteTime}>{last ? `${last.f} ás ${last.h}` : "-"}</p>
 
-          {/* Botonera */}
+          {/* Botonera (BORRAR | INFO | CONFIRMAR) */}
           <div style={S.rowBtns}>
+            <button type="button" style={S.btnTrash} onClick={()=>setShowConfirmClear(true)} title="Borrar" aria-label="Borrar">
+              <svg width={24} height={24} viewBox="0 0 24 24" fill="none" aria-hidden="true"
+                   style={{display:"block",stroke:"#7f1d1d",strokeWidth:1.6,strokeLinecap:"round",strokeLinejoin:"round"}}>
+                <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
+              </svg>
+            </button>
+
             <button type="button" style={S.btnInfo} title="Información" aria-label="Información" onClick={()=>setShowInfo(true)}>
-              {/* Icono distinto, azul e algo máis grande */}
+              {/* Icono info azul */}
               <svg width={26} height={26} viewBox="0 0 24 24" aria-hidden="true" style={{display:"block"}}>
                 <defs>
                   <radialGradient id="infoGlow" cx="50%" cy="35%" r="65%">
@@ -438,15 +486,14 @@ export default function HazTu11() {
               </svg>
             </button>
 
-            <button type="button" style={S.btnConfirm} onClick={(e)=>{ e.currentTarget.blur(); e.currentTarget.style.transform='translateY(1px)'; setTimeout(()=>{ e.currentTarget.style.transform=''; }, 90); return saveMy11(e); }} disabled={sel.size!==11} aria-disabled={sel.size!==11}>
+            <button
+              type="button"
+              style={S.btnConfirm}
+              onClick={(e)=>{ e.currentTarget.blur(); e.currentTarget.style.transform='translateY(1px)'; setTimeout(()=>{ e.currentTarget.style.transform=''; }, 90); return saveMy11(e); }}
+              disabled={sel.size!==11}
+              aria-disabled={sel.size!==11}
+            >
               {confirmLabel}
-            </button>
-
-            <button type="button" style={S.btnTrash} onClick={clearMy11} title="Borrar" aria-label="Borrar">
-              <svg width={24} height={24} viewBox="0 0 24 24" fill="none" aria-hidden="true"
-                   style={{display:"block",stroke:"#7f1d1d",strokeWidth:1.6,strokeLinecap:"round",strokeLinejoin:"round"}}>
-                <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
-              </svg>
             </button>
           </div>
         </div>
@@ -498,9 +545,9 @@ export default function HazTu11() {
             <button style={S.modalClose} onClick={()=>setShowInfo(false)} aria-label="Pechar">
               ✕
             </button>
-            <h3 style={S.infoTitle}>FUNCIONAMENTO & NORMAS DO XOGO</h3>
+            <h3 style={infoTitleStyle}>FUNCIONAMENTO & NORMAS DO XOGO</h3>
             <div style={{maxHeight:"60vh", overflow:"auto"}}>
-              <ol style={S.infoBody}>
+              <ol style={{...infoBodyStyle, paddingLeft:18}}>
                 <li style={{marginBottom:8}}>A App tenta automatizar case todo, evitando erros que invaliden a túa aliñación.</li>
                 <li style={{marginBottom:8}}>Como ves, hai un reloxo de conta atrás. Indica o tempo restante permitido para facer a túa aliñación (ata 2 horas antes do inicio do partido).</li>
                 <li style={{marginBottom:8}}>A aliñación só poderá facerse cando a Convocatoria sexa subida á App, polo que todas as persoas xogadoras que vexas no apartado «Fai aquí a túa aliñación» son perfectamente seleccionables para saír no once inicial.</li>
@@ -509,6 +556,21 @@ export default function HazTu11() {
                 <li style={{marginBottom:8}}>No momento en que se suba a Aliñación inicial oficial presentada polo Club, cruzarase con todas as predicións feitas e amosaranse os resultados de cada partido en «Resultados da última aliñación».</li>
                 <li>Recomendámosche navegar un pouco pola App para situarte. Se tes algún problema, podes escribir a <strong>HDCLiga@gmail.com</strong>.</li>
               </ol>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmación de borrado */}
+      {showConfirmClear && (
+        <div style={S.modalBg} role="dialog" aria-modal="true" aria-label="Confirmar borrado">
+          <div style={S.confirmBox}>
+            <button style={S.modalClose} onClick={()=>setShowConfirmClear(false)} aria-label="Pechar">✕</button>
+            <h3 style={S.confirmTitle}>Borrar aliñación</h3>
+            <p style={S.confirmText}>¿Seguro que queres borrar a túa aliñación actual? Poderás volver elixila de novo.</p>
+            <div style={S.confirmRow}>
+              <button style={S.btnCancel} onClick={()=>setShowConfirmClear(false)}>Cancelar</button>
+              <button style={S.btnAccept} onClick={()=>{ setShowConfirmClear(false); setSel(new Set()); setLastCounterId(null); setToast("Aliñación borrada"); setTimeout(()=>setToast(""),1600); }}>Borrar</button>
             </div>
           </div>
         </div>
