@@ -19,7 +19,7 @@ import {
   Bars,
 } from "../components/icons.jsx";
 
-/* Se o perfil aínda non ten first_name, obtén un nome “decente” do email */
+/* Nome estimado dende email */
 function nameFromEmail(email = "") {
   const raw = (email.split("@")[0] || "").replace(/[._-]+/g, " ").trim();
   if (!raw) return "";
@@ -83,13 +83,11 @@ export default function Dashboard() {
 
   return (
     <div class="dash-wrap">
+      {/* Animación só para o icono e o bordo do icono */}
       <style>
         {`
-        @keyframes onlyIconBlink {
-          0% { opacity: 1 }
-          50% { opacity: .22 }
-          100% { opacity: 1 }
-        }
+@keyframes blinkIcon { 0%{opacity:1} 50%{opacity:.25} 100%{opacity:1} }
+@keyframes blinkRing { 0%{border-color:rgba(245,158,11,.90)} 50%{border-color:rgba(245,158,11,.35)} 100%{border-color:rgba(245,158,11,.90)} }
         `}
       </style>
 
@@ -139,7 +137,6 @@ export default function Dashboard() {
             </div>
           </a>
 
-          {/* Subgrid Calendario */}
           <div
             id="sub-partidos"
             class={`subgrid ${open === "partidos" ? "open" : ""}`}
@@ -251,19 +248,15 @@ export default function Dashboard() {
               </div>
             </a>
 
-            {/* Fai aquí a túa aliñación — SÓ ICONO PARPADEA + DOBRE BORDE */}
-            <a
-              href="/haz-tu-11"
-              class="subcard"
-              style="border-width:2px; border-style:solid; border-color: rgba(245,158,11,.55);"
-            >
+            {/* HAZ-TU-11: parpadea icono e o anel (contorno) */}
+            <a href="/haz-tu-11" class="subcard">
               <div
                 class="sub-ico"
-                style="border:2px solid rgba(245,158,11,.55);"
+                style="border:2px solid rgba(245,158,11,.9); animation: blinkRing 1.6s infinite;"
               >
-                <span style="display:inline-block; animation: onlyIconBlink 1.4s infinite;">
+                <div style={{ animation:"blinkIcon 1.6s infinite" }}>
                   <Pitch color="#f59e0b" size={36} />
-                </span>
+                </div>
               </div>
               <div class="sub-texts">
                 <p class="sub-title" style="color:#f59e0b">
@@ -289,8 +282,6 @@ export default function Dashboard() {
                 </p>
               </div>
             </a>
-
-            {/* Eliminada a subtarxeta “Regulamento do xogo” */}
           </div>
         </div>
 
