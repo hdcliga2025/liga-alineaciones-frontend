@@ -24,60 +24,65 @@ const pad2 = (n)=>String(n).padStart(2,"0");
 
 /* Estilos */
 const S = {
-  wrap: { maxWidth:1080, margin:"0 auto", padding:16 },
+  wrap: { maxWidth:1080, margin:"0 auto", padding:16, boxSizing:"border-box" },
   h1: { fontFamily:"Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize:24, margin:"6px 0 2px", color:"#0f172a" },
   sub: { margin:"0 0 12px", color:"#475569", fontSize:16, fontWeight:400 },
 
-  // Cadro de texto (verde degradado con sombra)
+  // Cadro de texto (verde degradado con sombra + máis escuro lixeiro)
   resumen: {
     margin:"0 0 12px", padding:"12px 14px", borderRadius:12,
-    background:"linear-gradient(180deg,#eafaf2,#d8f3e4)",
-    color:"#0f172a", boxShadow:"0 10px 26px rgba(16,185,129,.18)"
+    background:"linear-gradient(180deg,#e4f7ec,#cdeedd)",
+    color:"#0f172a", boxShadow:"0 10px 26px rgba(16,185,129,.18)", boxSizing:"border-box"
   },
   resumeLine: { margin:0, fontSize:18, fontWeight:600, letterSpacing:".35px", lineHeight:1.45 },
   resumeNoteTitle: { margin:"10px 0 0", color:"#065f46", fontSize:14, fontWeight:700, letterSpacing:.2 },
-  // Parpadeo suave entre celeste e negro
   resumeNoteTime: { margin:"2px 0 0", fontWeight:800, animation:"blinkReg 2s infinite" },
 
-  // Botoneira dentro do cadro — ORDE: Confirmar | Info | Papeleira
+  // Botoneira dentro do cadro — 70% | 15% | 15% + separación do bordo
   topRow: (m)=>({
     display:"grid",
-    gridTemplateColumns: m ? "60% 20% 20%" : "60% 20% 20%",
-    gap:8, alignItems:"stretch", margin:"12px 0 2px"
+    gridTemplateColumns: "70% 15% 15%",
+    gap:8, alignItems:"stretch",
+    margin:"12px 0 2px",
+    paddingBottom:4
   }),
+
   // Base visual para todos os botóns (profundidade + “pulsable”)
   pressable: (pad)=>({
     width:"100%", padding: pad,
     borderRadius:10, cursor:"pointer",
-    boxShadow:"0 8px 18px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.7)",
+    boxShadow:"0 12px 22px rgba(0,0,0,.14), inset 0 1px 0 rgba(255,255,255,.7)",
     transition:"transform .06s ease, box-shadow .2s ease",
+    display:"grid", placeItems:"center"
   }),
-  pressableActive: { transform:"translateY(1px)", boxShadow:"0 3px 10px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.7)" },
+  pressableActive: { transform:"translateY(1px)", boxShadow:"0 6px 12px rgba(0,0,0,.14), inset 0 1px 0 rgba(255,255,255,.7)" },
 
-  // Botón CONFIRMAR (esquerda)
+  // CONFIRMAR (70%) — verde máis degradado; desktop lixeiramente máis grande
   btnConfirm:(m)=>({
-    ...S.pressable(m ? "10px 12px" : "12px 16px"),
-    background:"linear-gradient(180deg,#e9fdf2,#c9f7df)",
-    border:"1px solid #10b981", color:"#065f46", fontWeight:900, letterSpacing:.3,
-  }),
-  // Botón INFO (centro) — azul moi degradado
-  btnInfo:(m)=>({
-    ...S.pressable(m ? "10px 8px" : "12px 12px"),
-    background:"linear-gradient(180deg,#f5fbff,#e6f2ff)",
-    border:"1px solid #93c5fd", color:"#1e40af", fontWeight:800, textAlign:"center",
-  }),
-  // Botón PAPELEIRA (dereita) — un chisco máis pequeno en móbil e con marxe “ó respiro”
-  btnTrash:(m)=>({
-    ...S.pressable(m ? "9px 8px" : "12px 12px"),
-    background:"linear-gradient(180deg,#fff5f5,#ffe9e9)",
-    border:"1px solid #ef4444", color:"#7f1d1d", fontWeight:800,
+    ...S.pressable(m ? "12px 12px" : "14px 18px"),
+    background:"linear-gradient(180deg,#e9fdf2,#bff4d9)",
+    border:"1px solid #10b981", color:"#065f46",
+    fontWeight:900, letterSpacing:.3, fontSize: m ? 14 : 16
   }),
 
-  // Encabezados de bloque
+  // INFO (15%) — azul igual ó icono, degradado, redondeado coma os demais
+  btnInfo:(m)=>({
+    ...S.pressable(m ? "12px 10px" : "14px 12px"),
+    background:"linear-gradient(180deg,#f6fbff,#ddebff)",
+    border:"1px solid #3b82f6", color:"#1e40af", fontWeight:800, textAlign:"center"
+  }),
+
+  // PAPELEIRA (15%) — respira do bordo; máis pequena en móbil
+  btnTrash:(m)=>({
+    ...S.pressable(m ? "11px 9px" : "14px 12px"),
+    background:"linear-gradient(180deg,#fff7f7,#ffe7e7)",
+    border:"1px solid #ef4444", color:"#7f1d1d", fontWeight:800
+  }),
+
   posHeader:{ margin:"16px 0 10px", padding:"2px 4px 8px", fontWeight:700, color:"#0c4a6e", borderLeft:"4px solid #7dd3fc", borderBottom:"2px solid #e2e8f0" },
 
-  // Grades e tarxetas
   grid:(m)=>({ display:"grid", gridTemplateColumns: m ? "repeat(3, minmax(0,1fr))" : "repeat(4, minmax(0,1fr))", gap:12 }),
+
   card:(picked)=>({
     position:"relative",
     border: picked ? "2px solid #16a34a" : "1px solid #d1fae5",
@@ -100,7 +105,6 @@ const S = {
   },
   meta:{ margin:"2px 0 0", color:"#475569", fontSize:13, textAlign:"center" },
 
-  // Contador click
   counter:{
     position:"absolute", left:"50%", top:"78%", transform:"translate(-50%,-50%)",
     fontFamily:"Montserrat, system-ui, sans-serif", fontWeight:900, fontSize:30, color:"#0c4a6e",
@@ -108,21 +112,19 @@ const S = {
     userSelect:"none", pointerEvents:"none"
   },
 
-  // Marca “visto” (check) canto superior dereito
   markBadge:(m)=>({
     position:"absolute", top:m?6:8, right:m?6:8,
     background:"rgba(16,185,129,.95)", color:"#fff",
     borderRadius:999, padding: m?"2px 6px":"3px 8px",
-    font: m ? "800 11px/1 Montserrat,system-ui" : "800 13px/1 Montserrat,system-ui",
+    font: m ? "800 13px/1 Montserrat,system-ui" : "800 14px/1 Montserrat,system-ui",
     boxShadow:"0 2px 8px rgba(16,185,129,.35)", userSelect:"none", pointerEvents:"none"
   }),
 
-  // Modal xenérico
   modalBg:{ position:"fixed", inset:0, background:"rgba(2,6,23,.45)", display:"grid", placeItems:"center", zIndex:9999 },
-  modal:{ width:"min(92vw,640px)", background:"#ffffff", border:"1px solid #e2e8f0", borderRadius:14, boxShadow:"0 18px 48px rgba(0,0,0,.28)", padding:"16px 14px", position:"relative" },
+  modal:{ width:"min(92vw,640px)", maxHeight:"86vh", background:"#ffffff", border:"1px solid #e2e8f0", borderRadius:14, boxShadow:"0 18px 48px rgba(0,0,0,.28)", padding:"16px 14px", position:"relative", overflow:"hidden" },
+  modalScroll:{ overflowY:"auto", maxHeight:"calc(86vh - 48px)", paddingRight:6 },
   modalClose:{ position:"absolute", right:8, top:8, width:32, height:32, borderRadius:8, border:"1px solid #e2e8f0", background:"#fff", cursor:"pointer", display:"grid", placeItems:"center" },
 
-  // Toast
   toast:{ position:"fixed", bottom:18, left:"50%", transform:"translateX(-50%)", background:"#0ea5e9", color:"#fff", padding:"10px 16px", borderRadius:12, boxShadow:"0 10px 22px rgba(2,132,199,.35)", fontWeight:700, zIndex:9999 }
 };
 
@@ -163,8 +165,7 @@ export default function HazTu11() {
   async function bellConfirm(){
     try{
       const ctx=ensureCtx();
-      // dous pitidos curtos + un longo
-      const seq=[
+      const seq=[ // dous curtos + un longo
         {f:880, d:0.12, t:0},
         {f:990, d:0.12, t:0.18},
         {f:740, d:0.35, t:0.42}
@@ -334,7 +335,7 @@ export default function HazTu11() {
             {reg ? `${reg.fecha} ás ${reg.hora}` : "-"}
           </p>
 
-          {/* Botoneira — Confirmar | Info | Papeleira */}
+          {/* Botoneira — 70% | 15% | 15% */}
           <div style={S.topRow(isMobile)}>
             <button
               style={S.btnConfirm(isMobile)}
@@ -353,9 +354,10 @@ export default function HazTu11() {
               title="Información" aria-label="Información"
               onClick={()=>setShowInfo(true)}
             >
-              <svg width={isMobile?22:24} height={isMobile?22:24} viewBox="0 0 24 24" aria-hidden="true"
+              {/* Icono info sin bold, un pouco máis grande */}
+              <svg width={isMobile?24:28} height={isMobile?24:28} viewBox="0 0 24 24" aria-hidden="true"
                    style={{display:"block",stroke:"#1e40af",fill:"none",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round"}}>
-                <circle cx="12" cy="12" r="9"/><path d="M12 8.5h.01"/><path d="M11 12h2v4h-2z"/>
+                <circle cx="12" cy="12" r="9"/><path d="M12 8h.01"/><path d="M11 11h2v5h-2z"/>
               </svg>
             </button>
 
@@ -366,7 +368,7 @@ export default function HazTu11() {
               onClick={clearMy11Ask}
               title="Borrar" aria-label="Borrar"
             >
-              <svg width={isMobile?18:22} height={isMobile?18:22} viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{display:"block"}}>
+              <svg width={isMobile?20:22} height={isMobile?20:22} viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{display:"block"}}>
                 <path d="M3 6h18" stroke="#7f1d1d" strokeWidth="1.8" strokeLinecap="round"/>
                 <path d="M8 6V4h8v2" stroke="#7f1d1d" strokeWidth="1.8" strokeLinecap="round"/>
                 <path d="M19 6l-1 14H6L5 6" stroke="#7f1d1d" strokeWidth="1.8" strokeLinecap="round"/>
@@ -405,38 +407,40 @@ export default function HazTu11() {
         );
       })}
 
-      {/* Modal INFO (móbil: título máis pequeno en 1 liña; texto lixeiramente maior) */}
+      {/* Modal INFO (scroll vertical se non cabe) */}
       {showInfo && (
         <div style={S.modalBg} role="dialog" aria-modal="true" aria-label="Información de uso">
           <div style={S.modal}>
             <button style={S.modalClose} onClick={()=>setShowInfo(false)} aria-label="Pechar">✕</button>
-            <br /><br />
-            <h3
-              style={{
-                margin:"0 0 8px",
-                font: isMobile ? "800 15px/1 Montserrat,system-ui,sans-serif" : "800 18px/1.2 Montserrat,system-ui,sans-serif",
-                color:"#0f172a",
-                whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis"
-              }}
-            >
-              FUNCIONAMENTO E NORMAS DO XOGO
-            </h3>
-            <div
-              style={{
-                color:"#0f172a",
-                font: isMobile ? "500 15px/1.5 Montserrat,system-ui,sans-serif" : "500 14px/1.45 Montserrat,system-ui,sans-serif"
-              }}
-            >
-              <ol style={{ paddingLeft:18, margin:"6px 0 0" }}>
-                <li>A App automatiza case todo, evitando erros que invaliden a túa aliñación.</li>
-                <li>Como ves, hai un reloxo de conta atrás; indica o tempo que che queda para facer a túa aliñación (ata 2 horas antes do inicio do partido).</li>
-                <li>A aliñación só se poderá facer cando a convocatoria sexa subida á App, polo que todos os xogadores que vexas no apartado <strong>#Fai aquí a túa aliñación#</strong> son seleccionables para saír no once inicial.</li>
-                <li>Terás que elixir 11 xogadores; non te preocupes por contar: se non son 11, non poderás confirmar a túa aliñación.</li>
-                <li>Poderás facer cantos cambios queiras ata 2 horas antes do inicio. Para iso, borra a aliñación (icona papeleira) e fai outra. Verás un informe co rexistro de data e hora da túa última aliñación gardada.</li>
-                <li>Cando se publique a Aliñación inicial oficial do Club, cruzaranse todas as predicións e amosaranse os resultados en <strong>#Resultados da última aliñación#</strong>.</li>
-                <li><strong>Premio:</strong> Camiseta oficial do Celta desta tempada ou da próxima. Irás á tenda e ti decides talla e cor.</li>
-                <li>Recomendamos navegar un pouco pola App para situarte. Se tes algún problema, escribe a <strong>HDCLiga@gmail.com</strong>.</li>
-              </ol>
+            <div style={S.modalScroll}>
+              <br /><br />
+              <h3
+                style={{
+                  margin:"0 0 8px",
+                  font: isMobile ? "800 14px/1 Montserrat,system-ui,sans-serif" : "800 18px/1.2 Montserrat,system-ui,sans-serif",
+                  color:"#0f172a",
+                  whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis"
+                }}
+              >
+                FUNCIONAMENTO E NORMAS DO XOGO
+              </h3>
+              <div
+                style={{
+                  color:"#0f172a",
+                  font: isMobile ? "500 15.5px/1.55 Montserrat,system-ui,sans-serif" : "500 14px/1.45 Montserrat,system-ui,sans-serif"
+                }}
+              >
+                <ol style={{ paddingLeft:18, margin:"6px 0 0" }}>
+                  <li>A App automatiza case todo, evitando erros que invaliden a túa aliñación.</li>
+                  <li>Hai un reloxo de conta atrás; indica o tempo que che queda (ata 2 horas antes do inicio).</li>
+                  <li>A aliñación só se fai cando a convocatoria está subida. O que vexas en <strong>#Fai aquí a túa aliñación#</strong> é seleccionable.</li>
+                  <li>Elixe 11 xogadores; se non chegan, non poderás confirmar.</li>
+                  <li>Podes cambiar ata 2 horas antes. Borra (papeleira) e refai. Verás o rexistro da última aliñación gardada.</li>
+                  <li>Cando se publique a Aliñación oficial do Club, cruzaranse coas túas e verás os resultados en <strong>#Resultados da última aliñación#</strong>.</li>
+                  <li><strong>Premio:</strong> Camiseta oficial do Celta (esta ou a próxima tempada). Ti escolles talla e cor na tenda.</li>
+                  <li>Se tes dúbidas, escribe a <strong>HDCLiga@gmail.com</strong>.</li>
+                </ol>
+              </div>
             </div>
           </div>
         </div>

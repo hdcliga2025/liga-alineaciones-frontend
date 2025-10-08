@@ -83,6 +83,16 @@ export default function Dashboard() {
 
   return (
     <div class="dash-wrap">
+      <style>
+        {`
+        @keyframes onlyIconBlink {
+          0% { opacity: 1 }
+          50% { opacity: .22 }
+          100% { opacity: 1 }
+        }
+        `}
+      </style>
+
       {/* Hero */}
       <section class="dash-hero two-cols">
         <img
@@ -241,12 +251,19 @@ export default function Dashboard() {
               </div>
             </a>
 
-            <a href="/haz-tu-11" class="subcard pulse-amber">
+            {/* Fai aquí a túa aliñación — SÓ ICONO PARPADEA + DOBRE BORDE */}
+            <a
+              href="/haz-tu-11"
+              class="subcard"
+              style="border-width:2px; border-style:solid; border-color: rgba(245,158,11,.55);"
+            >
               <div
                 class="sub-ico"
-                style="border:1px solid rgba(245,158,11,.55);"
+                style="border:2px solid rgba(245,158,11,.55);"
               >
-                <Pitch color="#f59e0b" size={36} />
+                <span style="display:inline-block; animation: onlyIconBlink 1.4s infinite;">
+                  <Pitch color="#f59e0b" size={36} />
+                </span>
               </div>
               <div class="sub-texts">
                 <p class="sub-title" style="color:#f59e0b">

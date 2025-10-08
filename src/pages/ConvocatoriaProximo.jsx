@@ -67,7 +67,7 @@ const S = {
   }),
   img:(sel)=>({
     width:"100%", height:"100%", objectFit:"contain", background:"#fff", display:"block",
-    filter: sel ? "none" : "grayscale(0.2) blur(0.6px) opacity(0.9)"
+    filter: sel ? "none" : "grayscale(0.35) blur(1.2px) opacity(0.85)"
   }),
 
   name:(m)=>({
