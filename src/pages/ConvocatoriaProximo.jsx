@@ -26,7 +26,7 @@ function finalFromAll(p={}){
   const { dorsalFile,nameFile,posFile } = parseFromFilename(p.foto_url||"");
   return {
     dorsal: dorsalFile ?? (p.dorsal ?? null),
-    pos: (posFile || ""),
+    pos: posFile || "",
     nombre: (nameFile || p.nombre || "").trim()
   };
 }
@@ -41,10 +41,9 @@ const S = {
     margin:"0 0 10px", padding:"10px 12px", borderRadius:12,
     border:"1px solid #dbeafe",
     background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)", color:"#0f172a",
-    // más profundidad (inset + drop)
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 10px 22px rgba(14,165,233,.20), 0 1px 0 rgba(14,165,233,.18)"
+    boxShadow:"0 6px 18px rgba(14,165,233,.16)"
   },
-  resumeLine: { margin:0, fontSize:18, fontWeight:600, letterSpacing:".35px", lineHeight:1.45 },
+  resumeLine: { margin:0, fontSize:18, fontWeight:500, letterSpacing:".35px", lineHeight:1.45 },
   resumeNoteTitle: { margin:"8px 0 0", color:"#475569", fontSize:15, fontWeight:700, letterSpacing:.3 },
   resumeNoteTime: { margin:"2px 0 0", color:"#0b1220", fontSize:16, fontWeight:800, letterSpacing:1, animation:"blinkSave 2s infinite" },
 
@@ -56,24 +55,20 @@ const S = {
     position:"relative",
     border: sel ? "2px solid #38bdf8" : "1px solid #dbeafe",
     borderRadius:16, padding:10,
+    boxShadow:"0 2px 8px rgba(0,0,0,.06)",
     background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)",
-    cursor:"pointer", userSelect:"none",
-    boxShadow: sel
-      ? "0 0 0 2px rgba(56,189,248,.25), 0 8px 22px rgba(56,189,248,.20)"
-      : "0 2px 8px rgba(0,0,0,.06)"
+    cursor:"pointer", userSelect:"none"
   }),
 
-  // Marco de foto: igual que en Aliñación Oficial (172 móvil / 320 desktop)
   frame:(m)=>({
-    width:"100%", height: m?172:320, borderRadius:12, overflow:"hidden",
+    width:"100%", height: m?168:320, borderRadius:12, overflow:"hidden",
     background:"#fff", display:"grid", placeItems:"center", border:"1px solid #e5e7eb", position:"relative"
   }),
-  // object-fit: cover en móvil / contain en desktop (igual que Alineación Oficial)
-  img:(m)=>({ width:"100%", height:"100%", objectFit: m ? "cover" : "contain", background:"#fff", display:"block" }),
+  img:{ width:"100%", height:"100%", objectFit:"contain", background:"#fff", display:"block" },
 
   name:(m)=>({
     margin:"8px 0 0",
-    font: m ? "700 12.5px/1.15 Montserrat,system-ui,sans-serif" : "700 15px/1.2 Montserrat,system-ui,sans-serif",
+    font: m ? "700 12px/1.1 Montserrat,system-ui,sans-serif" : "700 15px/1.2 Montserrat,system-ui,sans-serif",
     color:"#0f172a", textAlign:"center",
     ...(m
       ? { whiteSpace:"normal", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }
@@ -82,29 +77,22 @@ const S = {
   meta:{ margin:"2px 0 0", color:"#475569", fontSize:13, textAlign:"center" },
 
   btnRow:{ display:"grid", gridTemplateColumns:"85% 15%", gap:8, alignItems:"stretch", marginTop:10 },
-
-  // Botón primario con más profundidad (inset + drop) y feedback al pulsar
   btnPrimary:{
-    width:"100%", padding:"11px 12px", borderRadius:12,
+    width:"100%", padding:"10px 12px", borderRadius:12,
     background:"linear-gradient(180deg,#e7f6ff,#cfeeff)", color:"#075985", fontWeight:800,
-    border:"1.5px solid #38bdf8", cursor:"pointer",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 6px 16px rgba(56,189,248,.25), 0 1px 0 rgba(56,189,248,.22)",
-    transition:"transform .06s ease, box-shadow .2s ease", willChange:"transform"
+    border:"1.5px solid #38bdf8", cursor:"pointer", boxShadow:"0 6px 16px rgba(56,189,248,.25)"
   },
-  // Botón “peligro” (papelera) con profundidad
   btnDanger:{
-    width:"100%", padding:"11px 12px", borderRadius:12,
-    background:"linear-gradient(180deg,#ffffff,#fee2e2)", color:"#7f1d1d", fontWeight:800,
+    width:"100%", padding:"10px 12px", borderRadius:12,
+    background:"#fff", color:"#7f1d1d", fontWeight:700,
     border:"1.5px solid #ef4444", cursor:"pointer", display:"grid", placeItems:"center",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.95), 0 6px 16px rgba(239,68,68,.18), 0 1px 0 rgba(239,68,68,.20)",
-    transition:"transform .06s ease, box-shadow .2s ease", willChange:"transform"
+    boxShadow:"0 6px 16px rgba(239,68,68,.18)"
   },
   btnBottom:{
-    width:"100%", padding:"11px 12px", borderRadius:12,
+    width:"100%", padding:"10px 12px", borderRadius:12,
     background:"linear-gradient(180deg,#e7f6ff,#cfeeff)", color:"#075985", fontWeight:800,
     border:"1.5px solid #38bdf8", cursor:"pointer", marginTop:14,
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 6px 16px rgba(56,189,248,.25), 0 1px 0 rgba(56,189,248,.22)",
-    transition:"transform .06s ease, box-shadow .2s ease", willChange:"transform"
+    boxShadow:"0 6px 16px rgba(56,189,248,.25)"
   },
 
   // etiqueta CONVO adaptativa
@@ -217,10 +205,7 @@ export default function ConvocatoriaProximo(){
 
       {header ? (
         <div style={S.resumen}>
-          {/* Equipo1 / Equipo2 en NEGRITA */}
-          <p style={S.resumeLine}>
-            <strong>{cap(header.equipo1)}</strong> vs <strong>{cap(header.equipo2)}</strong>
-          </p>
+          <p style={S.resumeLine}><strong>{cap(header.equipo1)}</strong> vs <strong>{cap(header.equipo2)}</strong></p>
           <p style={{...S.resumeLine, opacity:.9}}>{sFecha} | {sHora}</p>
 
           {lastSaved && (
@@ -233,32 +218,20 @@ export default function ConvocatoriaProximo(){
             </>
           )}
 
-          <div style={S.btnRow}>
-            <button
-              style={S.btnPrimary}
-              onClick={saveAndPublish}
-              disabled={saving}
-              onMouseDown={(e)=> e.currentTarget.style.transform = "translateY(1px)"}
-              onMouseUp={(e)=> e.currentTarget.style.transform = "translateY(0)"}
-              onMouseLeave={(e)=> e.currentTarget.style.transform = "translateY(0)"}
-            >
-              {saving ? "Gardando…" : "GARDAR CONVO"}
-            </button>
-            <button
-              style={S.btnDanger}
-              onClick={resetAll}
-              aria-label="Restaurar"
-              title="Restaurar"
-              onMouseDown={(e)=> e.currentTarget.style.transform = "translateY(1px)"}
-              onMouseUp={(e)=> e.currentTarget.style.transform = "translateY(0)"}
-              onMouseLeave={(e)=> e.currentTarget.style.transform = "translateY(0)"}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"
-                   style={{display:"block",fill:"none",stroke:"#ef4444",strokeWidth:1.8,strokeLinecap:"round",strokeLinejoin:"round"}}>
-                <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
-              </svg>
-            </button>
-          </div>
+          {/* Botonera SOLO ADMIN */}
+          {isAdmin && (
+            <div style={S.btnRow}>
+              <button style={S.btnPrimary} onClick={saveAndPublish} disabled={saving}>
+                {saving ? "Gardando…" : "GARDAR CONVO"}
+              </button>
+              <button style={S.btnDanger} onClick={resetAll} aria-label="Restaurar" title="Restaurar">
+                <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"
+                     style={{display:"block",fill:"none",stroke:"#ef4444",strokeWidth:1.8,strokeLinecap:"round",strokeLinejoin:"round"}}>
+                  <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <p style={{margin:0}}>Engade o seguinte encontro en Vindeiros para amosar a cabeceira.</p>
@@ -280,7 +253,7 @@ export default function ConvocatoriaProximo(){
                     <div style={S.frame(isMobile)}>
                       {p.foto_url ? (
                         <>
-                          <img src={p.foto_url} alt={`Foto de ${nombre}`} style={S.img(isMobile)} loading="lazy" decoding="async" />
+                          <img src={p.foto_url} alt={`Foto de ${nombre}`} style={S.img} loading="lazy" decoding="async" />
                           {sel && <span style={S.convoTag(isMobile)}>CONVO</span>}
                         </>
                       ) : <div style={{color:"#cbd5e1"}}>Sen foto</div>}
@@ -297,16 +270,12 @@ export default function ConvocatoriaProximo(){
         );
       })}
 
-      <button
-        style={S.btnBottom}
-        onClick={saveAndPublish}
-        disabled={saving}
-        onMouseDown={(e)=> e.currentTarget.style.transform = "translateY(1px)"}
-        onMouseUp={(e)=> e.currentTarget.style.transform = "translateY(0)"}
-        onMouseLeave={(e)=> e.currentTarget.style.transform = "translateY(0)"}
-      >
-        {saving ? "Gardando…" : "GARDAR CONVO"}
-      </button>
+      {/* Botón inferior SOLO ADMIN */}
+      {isAdmin && (
+        <button style={S.btnBottom} onClick={saveAndPublish} disabled={saving}>
+          {saving ? "Gardando…" : "GARDAR CONVO"}
+        </button>
+      )}
 
       {toast && (
         <div role="status" aria-live="polite" style={{

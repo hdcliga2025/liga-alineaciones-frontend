@@ -5,7 +5,9 @@ import { supabase } from "../lib/supabaseClient.js";
 
 const cap = (s = "") => (s || "").toUpperCase();
 const isUUID = (v = "") =>
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    v
+  );
 const pad2 = (n) => String(n).padStart(2, "0");
 
 function fmtDT(iso) {
@@ -13,7 +15,11 @@ function fmtDT(iso) {
   try {
     const d = new Date(iso);
     return {
-      fecha: d.toLocaleDateString("gl-ES", { day: "2-digit", month: "2-digit", year: "numeric" }),
+      fecha: d.toLocaleDateString("gl-ES", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }),
       hora: d.toLocaleTimeString("gl-ES", { hour: "2-digit", minute: "2-digit" }),
     };
   } catch {
@@ -21,11 +27,17 @@ function fmtDT(iso) {
   }
 }
 function safeDecode(s = "") {
-  try { return decodeURIComponent(s); } catch { return s.replace(/%20/g, " "); }
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return s.replace(/%20/g, " ");
+  }
 }
 function parseFromFilename(url = "") {
   const last = (url.split("?")[0].split("#")[0].split("/").pop() || "").trim();
-  const m = last.match(/^(\d+)-(.+)-(POR|DEF|CEN|DEL)\.(jpg|jpeg|png|webp)$/i);
+  const m = last.match(
+    /^(\d+)-(.+)-(POR|DEF|CEN|DEL)\.(jpg|jpeg|png|webp)$/i
+  );
   if (!m) return { dorsalFile: null, nameFile: null, posFile: null };
   return {
     dorsalFile: parseInt(m[1], 10),
@@ -42,68 +54,6 @@ function finalFromAll(p = {}) {
   };
 }
 
-/* Ajuste de texto en móvil (2 líneas) */
-function useFitText2Lines(
-  ref,
-  { min = 11, max = 14, lineHeight = 1.2, maxLines = 2, initial = 13.5, deps = [] } = {}
-) {
-  const [fontSize, setFontSize] = useState(initial);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    el.style.whiteSpace = "normal";
-    el.style.overflow = "hidden";
-    el.style.display = "block";
-    el.style.textOverflow = "clip";
-    el.style.lineHeight = String(lineHeight);
-    el.style.wordBreak = "break-word";
-
-    let low = min, high = max;
-    let best = Math.max(min, Math.min(max, initial));
-
-    const fits = (px) => {
-      el.style.fontSize = px + "px";
-      const one = px * lineHeight;
-      const maxH = one * maxLines + 0.5;
-      return el.scrollHeight <= maxH && el.clientHeight <= maxH;
-    };
-
-    if (fits(best)) low = best;
-    else high = best;
-
-    while (high - low > 0.25) {
-      const mid = (low + high) / 2;
-      if (fits(mid)) low = mid;
-      else high = mid;
-    }
-    best = Math.floor(low * 10) / 10;
-    el.style.fontSize = best + "px";
-    setFontSize(best);
-
-    if (!fits(min)) {
-      el.style.display = "-webkit-box";
-      el.style.webkitBoxOrient = "vertical";
-      el.style.webkitLineClamp = String(maxLines);
-      el.style.textOverflow = "ellipsis";
-    }
-
-    let raf = 0;
-    const onR = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => setFontSize((s) => s));
-    };
-    window.addEventListener("resize", onR);
-    document.addEventListener("visibilitychange", onR);
-    return () => {
-      window.removeEventListener("resize", onR);
-      document.removeEventListener("visibilitychange", onR);
-      cancelAnimationFrame(raf);
-    };
-  }, deps);
-  return { fontSize };
-}
-
 const S = {
   wrap: { maxWidth: 1080, margin: "0 auto", padding: 16 },
   h1: {
@@ -115,6 +65,7 @@ const S = {
   },
   sub: { margin: "0 0 12px", color: "#475569", fontSize: 16 },
 
+  // “cadro de texto” en vermello degradado (referencia para os botóns)
   resumen: {
     margin: "0 0 12px",
     padding: "12px 14px",
@@ -122,8 +73,7 @@ const S = {
     border: "1px solid #fecaca",
     background: "linear-gradient(180deg,#fee2e2,#fecaca)",
     color: "#7f1d1d",
-    boxShadow:
-      "inset 0 1px 0 rgba(255,255,255,.75), 0 12px 28px rgba(239,68,68,.22), 0 2px 0 rgba(239,68,68,.18)",
+    boxShadow: "0 10px 26px rgba(239,68,68,.18)",
   },
   resumeLine: {
     margin: 0,
@@ -162,12 +112,15 @@ const S = {
     border: "1px solid #fecaca",
     borderRadius: 16,
     padding: 10,
-    background: picked ? "linear-gradient(180deg,#fee2e2,#fecaca)" : "#fff",
+    background: picked
+      ? "linear-gradient(180deg,#fee2e2,#fecaca)"
+      : "#fff",
     boxShadow: picked
       ? "0 0 0 2px rgba(239,68,68,.25), 0 8px 26px rgba(239,68,68,.18)"
       : "0 2px 8px rgba(0,0,0,.06)",
   }),
 
+  // Marco de foto: copiamos comportamento “móbil coma Convocatoria” → sen bandas
   frame: (isMobile) => ({
     width: "100%",
     height: isMobile ? 172 : 320,
@@ -179,6 +132,7 @@ const S = {
     border: "1px solid #e5e7eb",
     position: "relative",
   }),
+  // En móbil: cover (sen marxes/bandas). En desktop: contain.
   img: (isMobile) => ({
     width: "100%",
     height: "100%",
@@ -186,7 +140,8 @@ const S = {
     background: "#ffffff",
   }),
 
-  nameDesktop: {
+  // Nome + dorsal: clamp a 2 liñas (que se lea completo)
+  name: {
     margin: "8px 0 0",
     font: "700 15px/1.2 Montserrat, system-ui, sans-serif",
     color: "#0f172a",
@@ -197,17 +152,9 @@ const S = {
     overflow: "hidden",
     wordBreak: "break-word",
   },
-  nameMobileBase: {
-    margin: "8px 0 0",
-    fontWeight: 700,
-    fontFamily: "Montserrat, system-ui, sans-serif",
-    lineHeight: 1.2,
-    color: "#0f172a",
-    textAlign: "center",
-  },
-
   meta: { margin: "2px 0 0", color: "#475569", fontSize: 13, textAlign: "center" },
 
+  // Fila botóns superior: 85% gravar / 15% papeleira
   rowBtns: {
     display: "grid",
     gridTemplateColumns: "85% 15%",
@@ -216,45 +163,37 @@ const S = {
     marginTop: 10,
   },
 
+  // Botóns co MESMO degradado ca o cadro (vermello) e contorno fino (1px)
   btnLoad: (isMobile) => ({
     width: "100%",
-    padding: isMobile ? "9px 12px" : "12px 16px",
-    borderRadius: 12,
-    background: "linear-gradient(180deg,#ffe9e9,#fca5a5)",
+    padding: isMobile ? "8px 10px" : "10px 14px",
+    borderRadius: 10,
+    background: "linear-gradient(180deg,#fee2e2,#fecaca)", // ← igual ca S.resumen
     border: "1px solid #ef4444",
     color: "#7f1d1d",
     fontWeight: 800,
-    fontSize: isMobile ? 14 : 16,
+    fontSize: isMobile ? 14 : 16, // ← reducir tamaño en móbil
     letterSpacing: 0.4,
     cursor: "pointer",
-    boxShadow:
-      "inset 0 1px 0 rgba(255,255,255,.8), 0 4px 10px rgba(239,68,68,.22), 0 1px 0 rgba(239,68,68,.25)",
-    transition: "transform .06s ease, box-shadow .2s ease",
-    willChange: "transform",
   }),
 
-  // ATENCIÓN: este bloque es un OBJETO (no arrow). Debe cerrar con "},"
   btnTrash: {
     width: "100%",
     padding: "10px 12px",
-    borderRadius: 12,
-    background: "linear-gradient(180deg,#ffffff,#fee2e2)",
+    borderRadius: 10,
+    background: "#fff",
     color: "#7f1d1d",
     border: "1px solid #ef4444",
     cursor: "pointer",
     display: "grid",
-    placeItems: "center",
-    boxShadow:
-      "inset 0 1px 0 rgba(255,255,255,.9), 0 3px 8px rgba(239,68,68,.18), 0 1px 0 rgba(239,68,68,.18)",
-    transition: "transform .06s ease, box-shadow .2s ease",
-    willChange: "transform",
-  }, // ← ← ← esta coma es la que faltaba
+    placeItems: "center", // ← icono centrado
+  },
 
   btnBottom: (isMobile) => ({
     width: "100%",
-    padding: isMobile ? "9px 12px" : "12px 16px",
-    borderRadius: 12,
-    background: "linear-gradient(180deg,#ffe9e9,#fca5a5)",
+    padding: isMobile ? "8px 10px" : "10px 14px",
+    borderRadius: 10,
+    background: "linear-gradient(180deg,#fee2e2,#fecaca)", // ← igual ca S.resumen
     border: "1px solid #ef4444",
     color: "#7f1d1d",
     fontWeight: 800,
@@ -262,10 +201,6 @@ const S = {
     letterSpacing: 0.4,
     cursor: "pointer",
     marginTop: 14,
-    boxShadow:
-      "inset 0 1px 0 rgba(255,255,255,.8), 0 4px 10px rgba(239,68,68,.22), 0 1px 0 rgba(239,68,68,.25)",
-    transition: "transform .06s ease, box-shadow .2s ease",
-    willChange: "transform",
   }),
 
   counter: {
@@ -285,20 +220,7 @@ const S = {
     pointerEvents: "none",
   },
 
-  upLabel: {
-    margin: "8px 0 0",
-    font: "600 15px/1.35 Montserrat,system-ui,sans-serif",
-    color: "#0f172a",
-  },
-  // Parpadeo 1s: rojo ↔ negro
-  upValue: (blinkOn) => ({
-    margin: "2px 0 0",
-    font: "700 15px/1.35 Montserrat,system-ui,sans-serif",
-    color: blinkOn ? "#7f1d1d" : "#0f172a",
-    transition: "color .25s ease",
-  }),
-
-  okBadgeDesktop: {
+  okBadge: {
     position: "absolute",
     top: 8,
     right: 8,
@@ -311,37 +233,7 @@ const S = {
     userSelect: "none",
     pointerEvents: "none",
   },
-  okBadgeMobile: {
-    position: "absolute",
-    top: 3,
-    right: 3,
-    background: "rgba(56,189,248,.98)",
-    color: "#fff",
-    borderRadius: 999,
-    padding: "2px 6px",
-    font: "700 10.5px/1 Montserrat,system-ui,sans-serif",
-    boxShadow: "0 1px 4px rgba(56,189,248,.35)",
-    userSelect: "none",
-    pointerEvents: "none",
-  },
 };
-
-function NameMobileTwoLines({ text }) {
-  const ref = useRef(null);
-  const { fontSize } = useFitText2Lines(ref, { deps: [text] });
-  return (
-    <p
-      ref={ref}
-      style={{
-        ...S.nameMobileBase,
-        fontSize,
-        maxHeight: fontSize ? `${fontSize * 1.2 * 2 + 0.5}px` : undefined,
-      }}
-    >
-      {text}
-    </p>
-  );
-}
 
 export default function AlineacionOficial() {
   const [header, setHeader] = useState(null);
@@ -355,17 +247,17 @@ export default function AlineacionOficial() {
   const [saving, setSaving] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState(null);
-  const [blinkOn, setBlinkOn] = useState(true); // 1s
+  const [blinkOn, setBlinkOn] = useState(true); // parpadeo fe/hora subida
   const audioCtxRef = useRef(null);
   const max11 = 11;
 
-  // Parpadeo cada 1s
+  // Parpadeo cada 1s (ajuste pedido)
   useEffect(() => {
     const id = setInterval(() => setBlinkOn((v) => !v), 1000);
     return () => clearInterval(id);
   }, []);
 
-  // Resize → móvil/desktop
+  // Resize móbil
   useEffect(() => {
     let raf = 0;
     const onR = () => {
@@ -379,7 +271,6 @@ export default function AlineacionOficial() {
     };
   }, []);
 
-  // Carga inicial
   useEffect(() => {
     (async () => {
       try {
@@ -395,6 +286,7 @@ export default function AlineacionOficial() {
         }
       } catch {}
 
+      // Header
       const { data: top } = await supabase
         .from("matches_vindeiros")
         .select("id,equipo1,equipo2,match_iso")
@@ -465,6 +357,10 @@ export default function AlineacionOficial() {
     return g;
   }, [players]);
 
+  const { fecha: sFecha, hora: sHora } = fmtDT(header?.match_iso);
+  const savedFmt = fmtDT(lastSavedAt);
+
+  // Sonido bip curto ao seleccionar
   function playBeep() {
     try {
       const ctx =
@@ -578,7 +474,7 @@ export default function AlineacionOficial() {
       const ins = await supabase.from("alineacion_oficial").insert(rows);
       if (ins.error) throw ins.error;
 
-      setLastSavedAt(now);
+      setLastSavedAt(now); // actualizar “subida” (parpadeo)
       showToast("Aliñación oficial gardada.");
     } catch (e) {
       const msg = [e?.code, e?.message, e?.details, e?.hint]
@@ -596,7 +492,7 @@ export default function AlineacionOficial() {
     setLastCounterId(null);
   }
 
-  const baseText = "GRAVAR ALIÑACIÓN OFICIAL";
+  const baseText = "GUARDAR ONCE OFICIAL";
   const loadLabel =
     sel.size === 11 ? `${baseText}` : `${baseText} | ${sel.size}/11`;
 
@@ -605,90 +501,76 @@ export default function AlineacionOficial() {
       <h1 style={S.h1}>Aliñación oficial</h1>
       <p style={S.sub}>Os once xogadores que saen de inicio neste partido.</p>
 
-      {/* Resumen con sombra y parpadeo 1s */}
       {header && (
         <div style={S.resumen}>
+          {/* Equipos en bold */}
           <p style={S.resumeTeams}>
             <strong>{cap(header.equipo1)}</strong> vs{" "}
             <strong>{cap(header.equipo2)}</strong>
           </p>
           <p style={{ ...S.resumeLine, opacity: 0.9 }}>
-            {fmtDT(header?.match_iso).fecha} | {fmtDT(header?.match_iso).hora}
+            {sFecha} | {sHora}
           </p>
 
+          {/* Liñas de última subida/gravación (con parpadeo) */}
           <p style={S.upLabel}>Aliñación oficial subida:</p>
-          <p style={S.upValue(blinkOn)}>
+          <p style={S.upValue ? S.upValue(blinkOn) : {}}>
             {lastSavedAt
               ? `${fmtDT(lastSavedAt).fecha} ás ${fmtDT(lastSavedAt).hora}`
               : "-"}
           </p>
 
-          <div style={S.rowBtns}>
-            <button
-              style={S.btnLoad(isMobile)}
-              onClick={loadOfficial}
-              disabled={sel.size !== 11 || saving}
-              onMouseDown={(e) =>
-                (e.currentTarget.style.transform = "translateY(1px)")
-              }
-              onMouseUp={(e) =>
-                (e.currentTarget.style.transform = "translateY(0)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.transform = "translateY(0)")
-              }
-            >
-              {saving ? "Gardando…" : loadLabel}
-            </button>
-            <button
-              style={S.btnTrash}
-              onClick={resetAll}
-              title="Restablecer"
-              aria-label="Restablecer"
-              onMouseDown={(e) =>
-                (e.currentTarget.style.transform = "translateY(1px)")
-              }
-              onMouseUp={(e) =>
-                (e.currentTarget.style.transform = "translateY(0)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.transform = "translateY(0)")
-              }
-            >
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                aria-hidden="true"
+          {/* Botoneira superior — SOLO ADMIN */}
+          {isAdmin && (
+            <div style={S.rowBtns}>
+              <button
+                style={S.btnLoad(isMobile)}
+                onClick={loadOfficial}
+                disabled={sel.size !== 11 || saving}
               >
-                <path
-                  d="M3 6h18"
-                  stroke="#7f1d1d"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M8 6V4h8v2"
-                  stroke="#7f1d1d"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M19 6l-1 14H6L5 6"
-                  stroke="#7f1d1d"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M10 11v6M14 11v6"
-                  stroke="#7f1d1d"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
-          </div>
+                {saving ? "Gardando…" : loadLabel}
+              </button>
+              <button
+                style={S.btnTrash}
+                onClick={resetAll}
+                title="Restablecer"
+                aria-label="Restablecer"
+              >
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M3 6h18"
+                    stroke="#7f1d1d"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M8 6V4h8v2"
+                    stroke="#7f1d1d"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M19 6l-1 14H6L5 6"
+                    stroke="#7f1d1d"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M10 11v6M14 11v6"
+                    stroke="#7f1d1d"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -726,24 +608,14 @@ export default function AlineacionOficial() {
                         loading="lazy"
                         decoding="async"
                       />
+                      {/* contador sobre a foto do último click */}
                       {lastCounterId === p.id && (
                         <span style={S.counter}>{`${sel.size}/11`}</span>
                       )}
-                      {picked && (
-                        <span
-                          style={isMobile ? S.okBadgeMobile : S.okBadgeDesktop}
-                        >
-                          OK
-                        </span>
-                      )}
+                      {/* OK celeste no canto superior dereito cando está seleccionado */}
+                      {picked && <span style={S.okBadge}>OK</span>}
                     </div>
-
-                    {isMobile ? (
-                      <NameMobileTwoLines text={nameLine} />
-                    ) : (
-                      <p style={S.nameDesktop}>{nameLine}</p>
-                    )}
-
+                    <p style={S.name}>{nameLine}</p>
                     <p style={S.meta}>{pos}</p>
                   </article>
                 );
@@ -753,20 +625,16 @@ export default function AlineacionOficial() {
         );
       })}
 
-      <button
-        style={S.btnBottom(isMobile)}
-        onClick={loadOfficial}
-        disabled={sel.size !== 11 || saving}
-        onMouseDown={(e) =>
-          (e.currentTarget.style.transform = "translateY(1px)")
-        }
-        onMouseUp={(e) => (e.currentTarget.style.transform = "translateY(0)")}
-        onMouseLeave={(e) =>
-          (e.currentTarget.style.transform = "translateY(0)")
-        }
-      >
-        {saving ? "Gardando…" : loadLabel}
-      </button>
+      {/* Botón inferior 100% — SOLO ADMIN */}
+      {isAdmin && (
+        <button
+          style={S.btnBottom(isMobile)}
+          onClick={loadOfficial}
+          disabled={sel.size !== 11 || saving}
+        >
+          {saving ? "Gardando…" : loadLabel}
+        </button>
+      )}
 
       {toast && (
         <div
@@ -794,4 +662,3 @@ export default function AlineacionOficial() {
     </main>
   );
 }
-
