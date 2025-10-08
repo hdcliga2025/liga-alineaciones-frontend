@@ -53,18 +53,22 @@ const S = {
 
   cardWrap:(sel)=>({
     position:"relative",
-    border: sel ? "2px solid #38bdf8" : "1px solid #dbeafe",
+    border: sel ? "2px solid #38bdf8" : "1px solid #e5e7eb",
     borderRadius:16, padding:10,
     boxShadow:"0 2px 8px rgba(0,0,0,.06)",
-    background:"linear-gradient(180deg,#f0f9ff,#e0f2fe)",
+    background: sel ? "linear-gradient(180deg,#f0f9ff,#e0f2fe)" : "#f8fafc",
     cursor:"pointer", userSelect:"none"
   }),
 
-  frame:(m)=>({
+  frame:(m, sel)=>({
     width:"100%", height: m?168:320, borderRadius:12, overflow:"hidden",
-    background:"#fff", display:"grid", placeItems:"center", border:"1px solid #e5e7eb", position:"relative"
+    background: sel ? "#ffffff" : "#f1f5f9",
+    display:"grid", placeItems:"center", border:"1px solid #e5e7eb", position:"relative"
   }),
-  img:{ width:"100%", height:"100%", objectFit:"contain", background:"#fff", display:"block" },
+  img:(sel)=>({
+    width:"100%", height:"100%", objectFit:"contain", background:"#fff", display:"block",
+    filter: sel ? "none" : "grayscale(0.2) blur(0.6px) opacity(0.9)"
+  }),
 
   name:(m)=>({
     margin:"8px 0 0",
@@ -95,7 +99,6 @@ const S = {
     boxShadow:"0 6px 16px rgba(56,189,248,.25)"
   },
 
-  // etiqueta CONVO adaptativa
   convoTag:(m)=>({
     position:"absolute", left:"50%", bottom:"12%", transform:"translateX(-50%)",
     fontFamily:"Montserrat,system-ui", fontWeight:900, fontSize: m?11:18,
@@ -250,10 +253,10 @@ export default function ConvocatoriaProximo(){
                 const { dorsal, nombre, pos } = p;
                 return (
                   <article key={p.id} style={S.cardWrap(sel)} onClick={()=>toggle(p.id)} title={sel?"Convocado":"Clic para convocar"}>
-                    <div style={S.frame(isMobile)}>
+                    <div style={S.frame(isMobile, sel)}>
                       {p.foto_url ? (
                         <>
-                          <img src={p.foto_url} alt={`Foto de ${nombre}`} style={S.img} loading="lazy" decoding="async" />
+                          <img src={p.foto_url} alt={`Foto de ${nombre}`} style={S.img(sel)} loading="lazy" decoding="async" />
                           {sel && <span style={S.convoTag(isMobile)}>CONVO</span>}
                         </>
                       ) : <div style={{color:"#cbd5e1"}}>Sen foto</div>}

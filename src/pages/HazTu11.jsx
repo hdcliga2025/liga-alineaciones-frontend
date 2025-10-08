@@ -1,9 +1,9 @@
 // src/pages/HazTu11.jsx
 import { h } from "preact";
-import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { useEffect, useMemo, useState, useRef } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
-/* Utils */
+/* Utils compartidos */
 function safeDecode(s = "") { try { return decodeURIComponent(s); } catch { return s.replace(/%20/g, " "); } }
 function parseFromFilename(url = "") {
   const last = (url.split("?")[0].split("#")[0].split("/").pop() || "").trim();
@@ -20,251 +20,119 @@ function finalFromAll(p = {}) {
   };
 }
 const cap = (s="") => (s || "").toUpperCase();
-const IMG_H = 320;
+const pad2 = (n)=>String(n).padStart(2,"0");
 
-/* === Autofit 2 liñas (móbil) === */
-function useFitText2Lines(
-  ref,
-  { min = 11, max = 14, lineHeight = 1.2, maxLines = 2, initial = 13.5, deps = [] } = {}
-) {
-  const [fontSize, setFontSize] = useState(initial);
-  useEffect(() => {
-    const el = ref.current; if (!el) return;
-    el.style.whiteSpace = "normal";
-    el.style.overflow = "hidden";
-    el.style.display = "block";
-    el.style.textOverflow = "clip";
-    el.style.lineHeight = String(lineHeight);
-    el.style.wordBreak = "break-word";
-    let low = min, high = max;
-    let best = Math.max(min, Math.min(max, initial));
-    const fits = (px) => {
-      el.style.fontSize = px + "px";
-      const one = px * lineHeight;
-      const maxH = one * maxLines + 0.5;
-      return el.scrollHeight <= maxH && el.clientHeight <= maxH;
-    };
-    if (fits(best)) low = best; else high = best;
-    while (high - low > 0.25) {
-      const mid = (low + high) / 2;
-      if (fits(mid)) low = mid; else high = mid;
-    }
-    best = Math.floor(low * 10) / 10;
-    el.style.fontSize = best + "px";
-    setFontSize(best);
-    if (!fits(min)) {
-      el.style.display = "-webkit-box";
-      el.style.webkitBoxOrient = "vertical";
-      el.style.webkitLineClamp = String(maxLines);
-      el.style.textOverflow = "ellipsis";
-    }
-    let raf = 0;
-    const onR = () => { cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>setFontSize((s)=>s)); };
-    window.addEventListener("resize", onR);
-    document.addEventListener("visibilitychange", onR);
-    return () => { window.removeEventListener("resize", onR); document.removeEventListener("visibilitychange", onR); cancelAnimationFrame(raf); };
-  }, deps);
-  return { fontSize };
-}
-
-/* ===== Estilos ===== */
-const RESUMEN_BG = "linear-gradient(180deg,#e6f7ef,#cdeee0)"; // usado en cuadro y botones
+/* Estilos */
 const S = {
-  wrap: { maxWidth: 1080, margin: "0 auto", padding: 16, boxSizing:"border-box" },
-  h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
-  sub: { margin: "0 0 12px", color: "#475569", fontSize: 16, fontWeight: 400 },
+  wrap: { maxWidth:1080, margin:"0 auto", padding:16 },
+  h1: { fontFamily:"Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize:24, margin:"6px 0 2px", color:"#0f172a" },
+  sub: { margin:"0 0 12px", color:"#475569", fontSize:16, fontWeight:400 },
 
+  // Cadro de texto (verde degradado con sombra)
   resumen: {
     margin:"0 0 12px", padding:"12px 14px", borderRadius:12,
-    border:"none",
-    background: RESUMEN_BG,
-    color:"#064e3b",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 10px 26px rgba(16,185,129,.20), 0 1px 0 rgba(16,185,129,.12)"
+    background:"linear-gradient(180deg,#eafaf2,#d8f3e4)",
+    color:"#0f172a", boxShadow:"0 10px 26px rgba(16,185,129,.18)"
   },
-  resumeLine: { margin: 0, fontSize: 19, fontWeight: 700, letterSpacing: ".35px", lineHeight: 1.5 },
-  resumeNoteTitle: { margin:"8px 0 0", color:"#065f46", fontSize:15, fontWeight:700, letterSpacing:.3 },
-  resumeNoteTime: { margin:"2px 0 0", fontSize:16, fontWeight:800, letterSpacing:.4, animation: "blinkCelNeg 2.2s infinite" },
+  resumeLine: { margin:0, fontSize:18, fontWeight:600, letterSpacing:".35px", lineHeight:1.45 },
+  resumeNoteTitle: { margin:"10px 0 0", color:"#065f46", fontSize:14, fontWeight:700, letterSpacing:.2 },
+  // Parpadeo suave entre celeste e negro
+  resumeNoteTime: { margin:"2px 0 0", fontWeight:800, animation:"blinkReg 2s infinite" },
 
-  // Botonera dentro del cuadro
-  rowBtns: {
+  // Botoneira dentro do cadro — ORDE: Confirmar | Info | Papeleira
+  topRow: (m)=>({
     display:"grid",
-    gridTemplateColumns:"17% 66% 17%", // IZQ borrar, CENTRO info, DER confirmar
-    gap:8,
-    alignItems:"stretch",
-    marginTop:10,
-    padding:"0 8px"
-  },
+    gridTemplateColumns: m ? "60% 20% 20%" : "60% 20% 20%",
+    gap:8, alignItems:"stretch", margin:"12px 0 2px"
+  }),
+  // Base visual para todos os botóns (profundidade + “pulsable”)
+  pressable: (pad)=>({
+    width:"100%", padding: pad,
+    borderRadius:10, cursor:"pointer",
+    boxShadow:"0 8px 18px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.7)",
+    transition:"transform .06s ease, box-shadow .2s ease",
+  }),
+  pressableActive: { transform:"translateY(1px)", boxShadow:"0 3px 10px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.7)" },
 
-  // INFO — fondo igual que el cuadro (mismo degradado)
-  btnInfo:{
-    width:"100%", padding:"10px 12px", borderRadius:12,
-    background: RESUMEN_BG,
-    color:"#0b4f8a", fontWeight:800, textAlign:"center",
-    border:"1px solid #38bdf8", cursor:"pointer",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.96), 0 8px 18px rgba(2,132,199,.22)",
-    display:"grid", placeItems:"center", minWidth:0,
-    userSelect:"none", touchAction:"manipulation"
-  },
-  // CONFIRMAR — fondo igual que el cuadro (mismo degradado)
-  btnConfirm:{
-    width:"100%", padding:"12px 14px", borderRadius:12,
-    background: RESUMEN_BG,
-    color:"#065f46", fontWeight:900,
-    border:"1px solid #22c55e", cursor:"pointer",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.96), 0 10px 20px rgba(34,197,94,.22)",
-    minWidth:0, userSelect:"none", touchAction:"manipulation",
-    transition:"transform .06s ease, box-shadow .15s ease",
-  },
-  btnConfirmActive:{ transform:"translateY(1px)", boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 6px 14px rgba(34,197,94,.22)" },
-
-  // Papeleira: rojo casi blanco (se mantiene)
-  btnTrash:{
-    width:"100%", padding:"10px 12px", borderRadius:12,
-    background:"linear-gradient(180deg,#ffffff,#fff7f7,#ffecec,#ffe4e4)",
-    color:"#7f1d1d", fontWeight:800,
-    border:"1px solid #ef4444", cursor:"pointer",
-    display:"grid", placeItems:"center",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.96), 0 8px 18px rgba(239,68,68,.20)",
-    minWidth:0, userSelect:"none", touchAction:"manipulation"
-  },
-
-  btnBottom:{
-    width:"100%", padding:"12px 14px", borderRadius:12,
-    background: RESUMEN_BG,
-    color:"#065f46", fontWeight:900,
-    border:"1px solid #22c55e", cursor:"pointer", marginTop:14,
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.96), 0 10px 20px rgba(34,197,94,.22)",
-    userSelect:"none", touchAction:"manipulation"
-  },
-
-  posHeader: { margin:"16px 0 10px", padding:"2px 4px 8px", fontWeight:700, color:"#0c4a6e", borderLeft:"4px solid #7dd3fc", borderBottom:"2px solid #e2e8f0" },
-  grid: (isMobile)=>({ display:"grid", gridTemplateColumns: isMobile ? "repeat(3, minmax(0,1fr))" : "repeat(4, minmax(0,1fr))", gap:12 }),
-
-  card: (picked)=>({
-    position:"relative",
-    borderRadius:16, padding:10,
-    background: picked ? "linear-gradient(180deg,#f1fdf6,#dcfce7)" : "linear-gradient(180deg,#f7fbff,#eef7ff)",
-    border: picked ? "2.5px solid #22c55e" : "1px solid #dbeafe",
-    boxShadow: picked ? "0 0 0 3px rgba(34,197,94,.18), 0 10px 24px rgba(34,197,94,.14)" : "0 2px 8px rgba(0,0,0,.06)"
+  // Botón CONFIRMAR (esquerda)
+  btnConfirm:(m)=>({
+    ...S.pressable(m ? "10px 12px" : "12px 16px"),
+    background:"linear-gradient(180deg,#e9fdf2,#c9f7df)",
+    border:"1px solid #10b981", color:"#065f46", fontWeight:900, letterSpacing:.3,
+  }),
+  // Botón INFO (centro) — azul moi degradado
+  btnInfo:(m)=>({
+    ...S.pressable(m ? "10px 8px" : "12px 12px"),
+    background:"linear-gradient(180deg,#f5fbff,#e6f2ff)",
+    border:"1px solid #93c5fd", color:"#1e40af", fontWeight:800, textAlign:"center",
+  }),
+  // Botón PAPELEIRA (dereita) — un chisco máis pequeno en móbil e con marxe “ó respiro”
+  btnTrash:(m)=>({
+    ...S.pressable(m ? "9px 8px" : "12px 12px"),
+    background:"linear-gradient(180deg,#fff5f5,#ffe9e9)",
+    border:"1px solid #ef4444", color:"#7f1d1d", fontWeight:800,
   }),
 
-  frame: (isMobile)=>({ width:"100%", height: isMobile ? 172 : IMG_H, borderRadius:12, overflow:"hidden", background:"#ffffff", display:"grid", placeItems:"center", border:"1px solid #e5e7eb", position:"relative" }),
-  img: (isMobile) => ({ width:"100%", height:"100%", objectFit: isMobile ? "cover" : "contain", background:"#ffffff", display:"block" }),
+  // Encabezados de bloque
+  posHeader:{ margin:"16px 0 10px", padding:"2px 4px 8px", fontWeight:700, color:"#0c4a6e", borderLeft:"4px solid #7dd3fc", borderBottom:"2px solid #e2e8f0" },
 
-  nameDesktop: { margin:"8px 0 0", font:"700 15px/1.2 Montserrat, system-ui, sans-serif", color:"#0f172a", textAlign:"center", display:"-webkit-box", WebkitLineClamp:"2", WebkitBoxOrient:"vertical", overflow:"hidden", wordBreak:"break-word" },
-  nameMobileBase: { margin:"8px 0 0", fontWeight:700, fontFamily:"Montserrat, system-ui, sans-serif", lineHeight:1.2, color:"#0f172a", textAlign:"center" },
-
-  meta: { margin:"2px 0 0", color:"#475569", fontSize:13, textAlign:"center" },
-
-  counter: { position:"absolute", left:"50%", top:"78%", transform:"translate(-50%,-50%)", fontFamily:"Montserrat, system-ui, sans-serif", fontWeight:900, fontSize:30, color:"#0c4a6e", background:"rgba(56,189,248,.55)", padding:"6px 12px", borderRadius:999, letterSpacing:1.1, userSelect:"none", pointerEvents:"none" },
-
-  okCheck: (m)=>({ position:"absolute", top: m ? 4 : 6, right: m ? 4 : 6, background:"rgba(34,197,94,.94)", color:"#fff", borderRadius:999, padding: m ? "3px 6px" : "4px 7px", boxShadow:"0 2px 8px rgba(34,197,94,.28)", display:"grid", placeItems:"center", userSelect:"none", pointerEvents:"none" }),
-
-  modalBg: { position:"fixed", inset:0, background:"rgba(2,6,23,.45)", display:"grid", placeItems:"center", zIndex:9999 },
-  modal: { width:"min(92vw,620px)", background:"#ffffff", border:"1px solid #e2e8f0", borderRadius:14, boxShadow:"0 18px 48px rgba(0,0,0,.28)", padding:"16px 14px", position:"relative" },
-  modalClose: { position:"absolute", right:8, top:8, width:32, height:32, borderRadius:8, border:"1px solid #e2e8f0", background:"#fff", cursor:"pointer", display:"grid", placeItems:"center" },
-  infoTitleBase: { margin:"0 0 8px", fontWeight:800, color:"#0b4f8a" },
-  infoBodyBase: { margin:0, color:"#0f172a", lineHeight:1.5 },
-
-  // Confirm dialog (papelera)
-  confirmBox: {
-    width:"min(92vw,520px)",
-    background:"#ffffff",
-    border:"1px solid #e2e8f0",
-    borderRadius:14,
-    boxShadow:"0 18px 48px rgba(0,0,0,.28)",
-    padding:"16px 14px",
-    position:"relative"
+  // Grades e tarxetas
+  grid:(m)=>({ display:"grid", gridTemplateColumns: m ? "repeat(3, minmax(0,1fr))" : "repeat(4, minmax(0,1fr))", gap:12 }),
+  card:(picked)=>({
+    position:"relative",
+    border: picked ? "2px solid #16a34a" : "1px solid #d1fae5",
+    borderRadius:16, padding:10,
+    background: picked ? "linear-gradient(180deg,#e9fdf2,#d4f9e7)" : "linear-gradient(180deg,#f0f9ff,#e0f2fe)",
+    boxShadow: picked
+      ? "0 0 0 2px rgba(16,185,129,.2), 0 8px 26px rgba(16,185,129,.18)"
+      : "0 2px 8px rgba(0,0,0,.06)"
+  }),
+  frame:(m)=>({
+    width:"100%", height: m?172:320, borderRadius:12, overflow:"hidden",
+    background:"#ffffff", display:"grid", placeItems:"center", border:"1px solid #e5e7eb", position:"relative"
+  }),
+  img:(m)=>({ width:"100%", height:"100%", objectFit: m?"cover":"contain", background:"#ffffff", display:"block" }),
+  name:{
+    margin:"8px 0 0",
+    font:"700 15px/1.2 Montserrat, system-ui, sans-serif",
+    color:"#0f172a", textAlign:"center",
+    display:"-webkit-box", WebkitLineClamp:"2", WebkitBoxOrient:"vertical", overflow:"hidden", wordBreak:"break-word"
   },
-  confirmTitle: { margin:"0 0 6px", font:"800 18px/1.2 Montserrat,system-ui,sans-serif", color:"#7f1d1d" },
-  confirmText: { margin:"0 0 12px", color:"#0f172a" },
-  confirmRow: { display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 },
-  btnCancel: {
-    width:"100%", padding:"10px 12px", borderRadius:12,
-    background:"#fff", color:"#0f172a", fontWeight:800,
-    border:"1px solid #cbd5e1", cursor:"pointer",
-    boxShadow:"0 6px 16px rgba(15,23,42,.08)"
+  meta:{ margin:"2px 0 0", color:"#475569", fontSize:13, textAlign:"center" },
+
+  // Contador click
+  counter:{
+    position:"absolute", left:"50%", top:"78%", transform:"translate(-50%,-50%)",
+    fontFamily:"Montserrat, system-ui, sans-serif", fontWeight:900, fontSize:30, color:"#0c4a6e",
+    background:"rgba(56,189,248,.55)", padding:"6px 12px", borderRadius:999, letterSpacing:1.1,
+    userSelect:"none", pointerEvents:"none"
   },
-  btnAccept: {
-    width:"100%", padding:"10px 12px", borderRadius:12,
-    background: RESUMEN_BG, color:"#065f46", fontWeight:900,
-    border:"1px solid #22c55e", cursor:"pointer",
-    boxShadow:"inset 0 1px 0 rgba(255,255,255,.96), 0 10px 20px rgba(34,197,94,.22)"
-  }
+
+  // Marca “visto” (check) canto superior dereito
+  markBadge:(m)=>({
+    position:"absolute", top:m?6:8, right:m?6:8,
+    background:"rgba(16,185,129,.95)", color:"#fff",
+    borderRadius:999, padding: m?"2px 6px":"3px 8px",
+    font: m ? "800 11px/1 Montserrat,system-ui" : "800 13px/1 Montserrat,system-ui",
+    boxShadow:"0 2px 8px rgba(16,185,129,.35)", userSelect:"none", pointerEvents:"none"
+  }),
+
+  // Modal xenérico
+  modalBg:{ position:"fixed", inset:0, background:"rgba(2,6,23,.45)", display:"grid", placeItems:"center", zIndex:9999 },
+  modal:{ width:"min(92vw,640px)", background:"#ffffff", border:"1px solid #e2e8f0", borderRadius:14, boxShadow:"0 18px 48px rgba(0,0,0,.28)", padding:"16px 14px", position:"relative" },
+  modalClose:{ position:"absolute", right:8, top:8, width:32, height:32, borderRadius:8, border:"1px solid #e2e8f0", background:"#fff", cursor:"pointer", display:"grid", placeItems:"center" },
+
+  // Toast
+  toast:{ position:"fixed", bottom:18, left:"50%", transform:"translateX(-50%)", background:"#0ea5e9", color:"#fff", padding:"10px 16px", borderRadius:12, boxShadow:"0 10px 22px rgba(2,132,199,.35)", fontWeight:700, zIndex:9999 }
 };
 
-const extraStyles = `
-@keyframes blinkCelNeg{0%{color:#0ea5e9}50%{color:#000}100%{color:#0ea5e9}}
+// Animación parpadeo rexistro
+const blinkCss = `
+@keyframes blinkReg { 0%{color:#0ea5e9} 50%{color:#0f172a} 100%{color:#0ea5e9} }
 `;
 
 function Img({ src, alt, isMobile }) {
   return <img src={src} alt={alt} loading="lazy" decoding="async" style={S.img(isMobile)} crossOrigin="anonymous" referrerPolicy="no-referrer" />;
-}
-
-/* Nome móbil con autofit */
-function NameMobileTwoLines({ text }) {
-  const ref = useRef(null);
-  const { fontSize } = useFitText2Lines(ref, { deps: [text] });
-  return (
-    <p ref={ref} style={{ ...S.nameMobileBase, fontSize, maxHeight: fontSize ? `${fontSize * 1.2 * 2 + 0.5}px` : undefined }}>
-      {text}
-    </p>
-  );
-}
-
-/* ====== Audio ====== */
-function useAudio() {
-  const ctxRef = useRef(null);
-  const getCtx = () => {
-    if (ctxRef.current) return ctxRef.current;
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) return null;
-    const ctx = new Ctx();
-    ctxRef.current = ctx;
-    return ctx;
-  };
-
-  function playBip() {
-    const ctx = getCtx(); if (!ctx) return;
-    const now = ctx.currentTime;
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.type = "sine";
-    o.frequency.setValueAtTime(1046.5, now);
-    g.gain.setValueAtTime(0.0001, now);
-    g.gain.exponentialRampToValueAtTime(0.35, now + 0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.10);
-    o.connect(g).connect(ctx.destination);
-    o.start(now);
-    o.stop(now + 0.12);
-  }
-
-  // Confirmación: dos cortos + uno largo
-  function playConfirmTrio() {
-    const ctx = getCtx(); if (!ctx) return;
-    const start = ctx.currentTime;
-    const seq = [
-      { f: 880, d: 0.12, gap: 0.07 }, // corto 1
-      { f: 988, d: 0.12, gap: 0.12 }, // corto 2
-      { f: 784, d: 0.45, gap: 0.00 }, // largo
-    ];
-    let t = start;
-    for (const s of seq) {
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = "sine";
-      o.frequency.setValueAtTime(s.f, t);
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.5, t + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + s.d);
-      o.connect(g).connect(ctx.destination);
-      o.start(t);
-      o.stop(t + s.d + 0.02);
-      t += s.d + s.gap;
-    }
-  }
-
-  return { playBip, playConfirmTrio };
 }
 
 export default function HazTu11() {
@@ -275,16 +143,44 @@ export default function HazTu11() {
 
   const [sel, setSel] = useState(new Set());
   const [lastCounterId, setLastCounterId] = useState(null);
-  const [showOK, setShowOK] = useState(false);
-  const [showInfo, setShowInfo] = useState(false);
-  const [showConfirmClear, setShowConfirmClear] = useState(false);
   const [toast, setToast] = useState("");
+  const [showInfo, setShowInfo] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const max11 = 11;
 
-  const { playBip, playConfirmTrio } = useAudio();
+  // Sonidos
+  const audioRef = useRef(null);
+  function ensureCtx(){ if(!audioRef.current){ audioRef.current = new (window.AudioContext||window.webkitAudioContext)(); } return audioRef.current; }
+  function beepShort(freq=880, dur=0.12){
+    try{ const ctx=ensureCtx(); const o=ctx.createOscillator(); const g=ctx.createGain();
+      o.type="sine"; o.frequency.setValueAtTime(freq, ctx.currentTime);
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+dur);
+      o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime+dur+0.02);
+    }catch{}
+  }
+  async function bellConfirm(){
+    try{
+      const ctx=ensureCtx();
+      // dous pitidos curtos + un longo
+      const seq=[
+        {f:880, d:0.12, t:0},
+        {f:990, d:0.12, t:0.18},
+        {f:740, d:0.35, t:0.42}
+      ];
+      for(const s of seq){
+        const o=ctx.createOscillator(); const g=ctx.createGain();
+        o.type="sine"; o.frequency.setValueAtTime(s.f, ctx.currentTime+s.t);
+        g.gain.setValueAtTime(0.0001, ctx.currentTime+s.t);
+        g.gain.exponentialRampToValueAtTime(0.35, ctx.currentTime+s.t+0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+s.t+s.d);
+        o.connect(g); g.connect(ctx.destination); o.start(ctx.currentTime+s.t); o.stop(ctx.currentTime+s.t+s.d+0.02);
+      }
+    }catch{}
+  }
 
-  useEffect(() => {
+  useEffect(()=>{
     let raf=0;
     const onR=()=>{ cancelAnimationFrame(raf); raf=requestAnimationFrame(()=> setIsMobile(window.innerWidth<=560)); };
     window.addEventListener("resize", onR);
@@ -293,9 +189,11 @@ export default function HazTu11() {
 
   useEffect(() => {
     (async () => {
+      // Convocatoria publicada
       const { data: pub } = await supabase.from("convocatoria_publica").select("jugador_id");
       const ids = (pub || []).map(r => r.jugador_id);
 
+      // Match referencia
       const { data: top } = await supabase
         .from("matches_vindeiros")
         .select("equipo1,equipo2,match_iso")
@@ -317,23 +215,21 @@ export default function HazTu11() {
       const ordered = ids.map(id => byId.get(id)).filter(Boolean);
       setJugadores(ordered);
 
+      // Precarga do 11 previo do usuario
       try {
         const { data: sess } = await supabase.auth.getSession();
         const uid = sess?.session?.user?.id || null;
-        const keyIso = (top?.match_iso || (await supabase.from("next_match").select("match_iso").eq("id",1).maybeSingle())?.data?.match_iso);
+        const keyIso = top?.match_iso ?? (await supabase.from("next_match").select("match_iso").eq("id",1).maybeSingle())?.data?.match_iso;
         if (uid && keyIso) {
           const { data: prev } = await supabase
             .from("alineaciones_usuarios")
-            .select("jugador_id,updated_at")
+            .select("jugador_id, updated_at")
             .eq("user_id", uid)
             .eq("match_iso", keyIso);
-          if (prev && prev.length) {
+          if (prev && prev.length){
             setSel(new Set(prev.map(r=>r.jugador_id)));
-            const last = prev.reduce((a,r)=> {
-              const t = r.updated_at ? new Date(r.updated_at).getTime() : 0;
-              return t>a?t:a;
-            }, 0);
-            if (last) setLastSavedAt(new Date(last).toISOString());
+            const last = prev.reduce((a,r)=> Math.max(a, new Date(r.updated_at||0).getTime()), 0);
+            if(last) setLastSavedAt(new Date(last).toISOString());
           }
         }
       } catch {}
@@ -351,55 +247,45 @@ export default function HazTu11() {
     return g;
   }, [jugadores]);
 
-  const { fecha: sFecha, hora: sHora } = (() => {
-    if (!header?.match_iso) return { fecha:"-", hora:"-" };
-    try {
-      const d = new Date(header.match_iso);
+  function fmtDT(iso){
+    if(!iso) return {fecha:"-",hora:"-"};
+    try{
+      const d=new Date(iso);
       return {
-        fecha: d.toLocaleDateString("gl-ES", { day: "2-digit", month: "2-digit", year: "numeric" }),
-        hora:  d.toLocaleTimeString("gl-ES", { hour: "2-digit", minute: "2-digit" })
+        fecha:d.toLocaleDateString("gl-ES",{day:"2-digit",month:"2-digit",year:"numeric"}),
+        hora:d.toLocaleTimeString("gl-ES",{hour:"2-digit",minute:"2-digit"})
       };
-    } catch { return { fecha:"-", hora:"-" }; }
-  })();
+    }catch{return {fecha:"-",hora:"-"}}
+  }
+  const { fecha:sFecha, hora:sHora } = fmtDT(header?.match_iso);
 
   function togglePick(id) {
     setSel(prev => {
-      const wasSelected = prev.has(id);
       const n = new Set(prev);
-      if (wasSelected) {
-        n.delete(id);
-      } else {
-        if (n.size >= max11) return prev;
+      if (n.has(id)) n.delete(id);
+      else {
+        if (n.size >= 11) return prev;
         n.add(id);
-        try { playBip(); } catch {}
       }
       return n;
     });
     setLastCounterId(id);
+    beepShort();
   }
 
-  async function saveMy11(e) {
-    e?.preventDefault?.();
+  function showToast(m, ms=3000){ setToast(m); setTimeout(()=>setToast(""), ms); }
+
+  async function saveMy11() {
     if (sel.size !== 11) {
-      setToast("Tes que seleccionar 11 xogadores para poder confirmar a túa aliñación");
-      setTimeout(()=>setToast(""), 3000);
+      showToast("Tes que seleccionar 11 xogadores para poder confirmar a túa aliñación", 3000);
       return;
     }
-    if (!header?.match_iso) {
-      setToast("Falta o partido de referencia.");
-      setTimeout(()=>setToast(""), 2000);
-      return;
-    }
+    if (!header?.match_iso) { showToast("Falta o partido de referencia."); return; }
 
     try {
-      try { playConfirmTrio(); } catch {}
       const { data: sess } = await supabase.auth.getSession();
       const uid = sess?.session?.user?.id || null;
-      if (!uid) {
-        setToast("Precisas iniciar sesión.");
-        setTimeout(()=>setToast(""), 2000);
-        return;
-      }
+      if (!uid) { showToast("Precisas iniciar sesión."); return; }
 
       const iso = header.match_iso;
       await supabase.from("alineaciones_usuarios").delete().eq("user_id", uid).eq("match_iso", iso);
@@ -410,90 +296,82 @@ export default function HazTu11() {
       if (error) throw error;
 
       setLastSavedAt(now);
-      setShowOK(true);
-      setToast("Aliñación gardada!");
-      setTimeout(()=>setToast(""), 1600);
+      bellConfirm();
+      showToast("Aliñación gardada!");
     } catch (e) {
       console.error(e);
-      setToast("Erro gardando a aliñación.");
-      setTimeout(()=>setToast(""), 2000);
+      showToast("Erro gardando a aliñación.", 2200);
     }
   }
-  function clearMy11(){ setSel(new Set()); setLastCounterId(null); }
+
+  function clearMy11Ask(){
+    const ok = window.confirm("Seguro que queres borrar a túa aliñación e empezar de novo?");
+    if(ok){ setSel(new Set()); setLastCounterId(null); }
+  }
 
   if (loading) return <main style={S.wrap}>Cargando…</main>;
 
   const confirmLabel = isMobile
-    ? `CONFIRMAR | ${sel.size}/11`
-    : `CONFIRMAR ALIÑACIÓN | ${sel.size}/11`;
+    ? (sel.size===11 ? "CONFIRMAR" : `CONFIRMAR (${sel.size}/11)`)
+    : (sel.size===11 ? "CONFIRMAR ALIÑACIÓN" : `CONFIRMAR ALIÑACIÓN (${sel.size}/11)`);
 
-  const fmtLast = (iso) => {
-    if (!iso) return null;
-    try {
-      const d = new Date(iso);
-      return {
-        f: d.toLocaleDateString("gl-ES",{day:"2-digit",month:"2-digit",year:"numeric"}),
-        h: d.toLocaleTimeString("gl-ES",{hour:"2-digit",minute:"2-digit"})
-      };
-    } catch { return null; }
-  };
-  const last = fmtLast(lastSavedAt);
-
-  // tamaños de modal INFO en móvil (más pequeño)
-  const infoTitleStyle = {
-    ...S.infoTitleBase,
-    font: `${isMobile ? "800 16px/1.2" : "800 18px/1.2"} Montserrat,system-ui,sans-serif`
-  };
-  const infoBodyStyle = {
-    ...S.infoBodyBase,
-    fontSize: isMobile ? 13 : 14
-  };
+  const reg = lastSavedAt ? fmtDT(lastSavedAt) : null;
 
   return (
     <main style={S.wrap}>
-      <style>{extraStyles}</style>
-
+      <style>{blinkCss}</style>
       <h1 style={S.h1}>Fai aquí a túa aliñación</h1>
       <p style={S.sub}>Aquí é onde demostras o Giráldez que levas dentro.</p>
 
       {header && (
         <div style={S.resumen}>
-          <p style={S.resumeLine}><strong>{cap(header.equipo1)}</strong> vs <strong>{cap(header.equipo2)}</strong></p>
+          <p style={S.resumeLine}>{cap(header.equipo1)} vs {cap(header.equipo2)}</p>
           <p style={{...S.resumeLine, opacity:.9}}>{sFecha} | {sHora}</p>
-          <p style={S.resumeNoteTitle}>Rexistro da túa última aliñación:</p>
-          <p style={S.resumeNoteTime}>{last ? `${last.f} ás ${last.h}` : "-"}</p>
 
-          {/* Botonera (BORRAR | INFO | CONFIRMAR) */}
-          <div style={S.rowBtns}>
-            <button type="button" style={S.btnTrash} onClick={()=>setShowConfirmClear(true)} title="Borrar" aria-label="Borrar">
-              <svg width={24} height={24} viewBox="0 0 24 24" fill="none" aria-hidden="true"
-                   style={{display:"block",stroke:"#7f1d1d",strokeWidth:1.6,strokeLinecap:"round",strokeLinejoin:"round"}}>
-                <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
-              </svg>
+          {/* Rexistro última aliñación do usuario */}
+          <p style={S.resumeNoteTitle}>Rexistro da túa última aliñación:</p>
+          <p style={S.resumeNoteTime}>
+            {reg ? `${reg.fecha} ás ${reg.hora}` : "-"}
+          </p>
+
+          {/* Botoneira — Confirmar | Info | Papeleira */}
+          <div style={S.topRow(isMobile)}>
+            <button
+              style={S.btnConfirm(isMobile)}
+              onMouseDown={(e)=>Object.assign(e.currentTarget.style, S.pressableActive)}
+              onMouseUp={(e)=>e.currentTarget.removeAttribute("style")}
+              onClick={saveMy11}
+              disabled={sel.size!==11}
+            >
+              {confirmLabel}
             </button>
 
-            <button type="button" style={S.btnInfo} title="Información" aria-label="Información" onClick={()=>setShowInfo(true)}>
-              {/* Icono info azul */}
-              <svg width={26} height={26} viewBox="0 0 24 24" aria-hidden="true" style={{display:"block"}}>
-                <defs>
-                  <radialGradient id="infoGlow" cx="50%" cy="35%" r="65%">
-                    <stop offset="0%" stopColor="#ffffff"/><stop offset="70%" stopColor="#cfe0ff"/><stop offset="100%" stopColor="#a9c8ff"/>
-                  </radialGradient>
-                </defs>
-                <circle cx="12" cy="12" r="9.5" fill="url(#infoGlow)" stroke="#2563eb" strokeWidth="1"/>
-                <path d="M12 10v6" stroke="#1e40af" strokeWidth="2" strokeLinecap="round"/>
-                <circle cx="12" cy="7.3" r="1.1" fill="#1e40af"/>
+            <button
+              style={S.btnInfo(isMobile)}
+              onMouseDown={(e)=>Object.assign(e.currentTarget.style, S.pressableActive)}
+              onMouseUp={(e)=>e.currentTarget.removeAttribute("style")}
+              title="Información" aria-label="Información"
+              onClick={()=>setShowInfo(true)}
+            >
+              <svg width={isMobile?22:24} height={isMobile?22:24} viewBox="0 0 24 24" aria-hidden="true"
+                   style={{display:"block",stroke:"#1e40af",fill:"none",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round"}}>
+                <circle cx="12" cy="12" r="9"/><path d="M12 8.5h.01"/><path d="M11 12h2v4h-2z"/>
               </svg>
             </button>
 
             <button
-              type="button"
-              style={S.btnConfirm}
-              onClick={(e)=>{ e.currentTarget.blur(); e.currentTarget.style.transform='translateY(1px)'; setTimeout(()=>{ e.currentTarget.style.transform=''; }, 90); return saveMy11(e); }}
-              disabled={sel.size!==11}
-              aria-disabled={sel.size!==11}
+              style={S.btnTrash(isMobile)}
+              onMouseDown={(e)=>Object.assign(e.currentTarget.style, S.pressableActive)}
+              onMouseUp={(e)=>e.currentTarget.removeAttribute("style")}
+              onClick={clearMy11Ask}
+              title="Borrar" aria-label="Borrar"
             >
-              {confirmLabel}
+              <svg width={isMobile?18:22} height={isMobile?18:22} viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{display:"block"}}>
+                <path d="M3 6h18" stroke="#7f1d1d" strokeWidth="1.8" strokeLinecap="round"/>
+                <path d="M8 6V4h8v2" stroke="#7f1d1d" strokeWidth="1.8" strokeLinecap="round"/>
+                <path d="M19 6l-1 14H6L5 6" stroke="#7f1d1d" strokeWidth="1.8" strokeLinecap="round"/>
+                <path d="M10 11v6M14 11v6" stroke="#7f1d1d" strokeWidth="1.8" strokeLinecap="round"/>
+              </svg>
             </button>
           </div>
         </div>
@@ -510,21 +388,14 @@ export default function HazTu11() {
               {arr.map(p => {
                 const { dorsal, nombre, pos } = finalFromAll(p);
                 const picked = sel.has(p.id);
-                const nameLine = (dorsal != null ? `${String(dorsal).padStart(2,"0")} · ` : "") + nombre;
                 return (
                   <article key={p.id} style={S.card(picked)} onClick={()=>togglePick(p.id)}>
                     <div style={S.frame(isMobile)}>
-                      <Img src={p.foto_url} alt={`Foto de ${nombre}`} isMobile={isMobile} />
-                      {picked && (
-                        <span style={S.okCheck(isMobile)} aria-hidden="true">
-                          <svg width={isMobile ? 16 : 20} height={isMobile ? 16 : 20} viewBox="0 0 24 24" fill="none" style={{display:"block",stroke:"#ffffff",strokeWidth:2.6,strokeLinecap:"round",strokeLinejoin:"round"}}>
-                            <path d="M20 6L9 17l-5-5" />
-                          </svg>
-                        </span>
-                      )}
+                      <Img src={p.foto_url} alt={`Foto de ${nombre}`} isMobile={isMobile}/>
                       {lastCounterId === p.id && <span style={S.counter}>{`${sel.size}/11`}</span>}
+                      {picked && <span style={S.markBadge(isMobile)}>✔</span>}
                     </div>
-                    {isMobile ? <NameMobileTwoLines text={nameLine} /> : <p style={S.nameDesktop}>{nameLine}</p>}
+                    <p style={S.name}>{dorsal != null ? `${pad2(dorsal)} · ` : ""}{nombre}</p>
                     <p style={S.meta}>{pos}</p>
                   </article>
                 );
@@ -534,72 +405,45 @@ export default function HazTu11() {
         );
       })}
 
-      <button type="button" style={S.btnBottom} onClick={saveMy11} disabled={sel.size!==11} aria-disabled={sel.size!==11}>
-        {confirmLabel}
-      </button>
-
-      {/* Modal de INFO */}
+      {/* Modal INFO (móbil: título máis pequeno en 1 liña; texto lixeiramente maior) */}
       {showInfo && (
-        <div style={S.modalBg} role="dialog" aria-modal="true" aria-label="Información e normas">
+        <div style={S.modalBg} role="dialog" aria-modal="true" aria-label="Información de uso">
           <div style={S.modal}>
-            <button style={S.modalClose} onClick={()=>setShowInfo(false)} aria-label="Pechar">
-              ✕
-            </button>
-            <h3 style={infoTitleStyle}>FUNCIONAMENTO & NORMAS DO XOGO</h3>
-            <div style={{maxHeight:"60vh", overflow:"auto"}}>
-              <ol style={{...infoBodyStyle, paddingLeft:18}}>
-                <li style={{marginBottom:8}}>A App tenta automatizar case todo, evitando erros que invaliden a túa aliñación.</li>
-                <li style={{marginBottom:8}}>Como ves, hai un reloxo de conta atrás. Indica o tempo restante permitido para facer a túa aliñación (ata 2 horas antes do inicio do partido).</li>
-                <li style={{marginBottom:8}}>A aliñación só poderá facerse cando a Convocatoria sexa subida á App, polo que todas as persoas xogadoras que vexas no apartado «Fai aquí a túa aliñación» son perfectamente seleccionables para saír no once inicial.</li>
-                <li style={{marginBottom:8}}>Terás que elixir <strong>11 xogadores</strong>; non te preocupes por contar: se non chegan a 11, non poderás <strong>Confirmar</strong> a túa aliñación.</li>
-                <li style={{marginBottom:8}}>Poderás facer cantos cambios que queiras ata 2 horas antes. Só borra a aliñación (icona papeleira) e crea outra. Verás un rexistro coa data e hora da última aliñación gardada polo sistema.</li>
-                <li style={{marginBottom:8}}>No momento en que se suba a Aliñación inicial oficial presentada polo Club, cruzarase con todas as predicións feitas e amosaranse os resultados de cada partido en «Resultados da última aliñación».</li>
-                <li>Recomendámosche navegar un pouco pola App para situarte. Se tes algún problema, podes escribir a <strong>HDCLiga@gmail.com</strong>.</li>
+            <button style={S.modalClose} onClick={()=>setShowInfo(false)} aria-label="Pechar">✕</button>
+            <br /><br />
+            <h3
+              style={{
+                margin:"0 0 8px",
+                font: isMobile ? "800 15px/1 Montserrat,system-ui,sans-serif" : "800 18px/1.2 Montserrat,system-ui,sans-serif",
+                color:"#0f172a",
+                whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis"
+              }}
+            >
+              FUNCIONAMENTO E NORMAS DO XOGO
+            </h3>
+            <div
+              style={{
+                color:"#0f172a",
+                font: isMobile ? "500 15px/1.5 Montserrat,system-ui,sans-serif" : "500 14px/1.45 Montserrat,system-ui,sans-serif"
+              }}
+            >
+              <ol style={{ paddingLeft:18, margin:"6px 0 0" }}>
+                <li>A App automatiza case todo, evitando erros que invaliden a túa aliñación.</li>
+                <li>Como ves, hai un reloxo de conta atrás; indica o tempo que che queda para facer a túa aliñación (ata 2 horas antes do inicio do partido).</li>
+                <li>A aliñación só se poderá facer cando a convocatoria sexa subida á App, polo que todos os xogadores que vexas no apartado <strong>#Fai aquí a túa aliñación#</strong> son seleccionables para saír no once inicial.</li>
+                <li>Terás que elixir 11 xogadores; non te preocupes por contar: se non son 11, non poderás confirmar a túa aliñación.</li>
+                <li>Poderás facer cantos cambios queiras ata 2 horas antes do inicio. Para iso, borra a aliñación (icona papeleira) e fai outra. Verás un informe co rexistro de data e hora da túa última aliñación gardada.</li>
+                <li>Cando se publique a Aliñación inicial oficial do Club, cruzaranse todas as predicións e amosaranse os resultados en <strong>#Resultados da última aliñación#</strong>.</li>
+                <li><strong>Premio:</strong> Camiseta oficial do Celta desta tempada ou da próxima. Irás á tenda e ti decides talla e cor.</li>
+                <li>Recomendamos navegar un pouco pola App para situarte. Se tes algún problema, escribe a <strong>HDCLiga@gmail.com</strong>.</li>
               </ol>
             </div>
           </div>
         </div>
       )}
 
-      {/* Confirmación de borrado */}
-      {showConfirmClear && (
-        <div style={S.modalBg} role="dialog" aria-modal="true" aria-label="Confirmar borrado">
-          <div style={S.confirmBox}>
-            <button style={S.modalClose} onClick={()=>setShowConfirmClear(false)} aria-label="Pechar">✕</button>
-            <h3 style={S.confirmTitle}>Borrar aliñación</h3>
-            <p style={S.confirmText}>¿Seguro que queres borrar a túa aliñación actual? Poderás volver elixila de novo.</p>
-            <div style={S.confirmRow}>
-              <button style={S.btnCancel} onClick={()=>setShowConfirmClear(false)}>Cancelar</button>
-              <button style={S.btnAccept} onClick={()=>{ setShowConfirmClear(false); setSel(new Set()); setLastCounterId(null); setToast("Aliñación borrada"); setTimeout(()=>setToast(""),1600); }}>Borrar</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Popup éxito */}
-      {showOK && (
-        <div style={S.modalBg} role="dialog" aria-modal="true" aria-label="Aliñación enviada">
-          <div style={S.modal}>
-            <button style={S.modalClose} onClick={()=>setShowOK(false)} aria-label="Pechar">✕</button>
-            <h3 style={{ margin:"0 0 6px", font:"800 18px/1.2 Montserrat,system-ui,sans-serif", color:"#065f46" }}>
-              Aliñación feita e enviada
-            </h3>
-            <p style={{ margin:0, color:"#475569" }}>
-              Grazas! Podes modificar a túa aliñación ata 2h antes do inicio do partido.
-            </p>
-          </div>
-        </div>
-      )}
-
       {toast && (
-        <div role="status" aria-live="polite" style={{
-          position:"fixed", bottom:18, left:"50%", transform:"translateX(-50%)",
-          background:"#0ea5e9", color:"#fff", padding:"10px 16px",
-          borderRadius:12, boxShadow:"0 10px 22px rgba(2,132,199,.35)", fontWeight:700,
-          maxWidth:"92vw", textAlign:"center", zIndex:9999
-        }}>
-          {toast}
-        </div>
+        <div role="status" aria-live="polite" style={S.toast}>{toast}</div>
       )}
     </main>
   );
