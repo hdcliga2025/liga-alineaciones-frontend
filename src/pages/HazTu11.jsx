@@ -22,7 +22,7 @@ function finalFromAll(p = {}) {
 const cap = (s="") => (s || "").toUpperCase();
 const IMG_H = 320;
 
-/* === Autofit 2 liñas (móbil) como en Alineación Oficial === */
+/* === Autofit 2 liñas (móbil) === */
 function useFitText2Lines(
   ref,
   { min = 11, max = 14, lineHeight = 1.2, maxLines = 2, initial = 13.5, deps = [] } = {}
@@ -73,11 +73,11 @@ const S = {
   h1: { fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", fontSize: 24, margin: "6px 0 2px", color: "#0f172a" },
   sub: { margin: "0 0 12px", color: "#475569", fontSize: 16, fontWeight: 400 },
 
-  // 2) Cuadro de texto: verde un poco más OSCURO + sombra
+  // Cuadro de texto (un pouco máis escuro)
   resumen: {
     margin:"0 0 12px", padding:"12px 14px", borderRadius:12,
     border:"none",
-    background:"linear-gradient(180deg,#e6f7ef,#cdeee0)", // más oscuro que antes
+    background:"linear-gradient(180deg,#e6f7ef,#cdeee0)",
     color:"#064e3b",
     boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 10px 26px rgba(16,185,129,.20), 0 1px 0 rgba(16,185,129,.12)"
   },
@@ -85,52 +85,49 @@ const S = {
   resumeNoteTitle: { margin:"8px 0 0", color:"#065f46", fontSize:15, fontWeight:700, letterSpacing:.3 },
   resumeNoteTime: { margin:"2px 0 0", fontSize:16, fontWeight:800, letterSpacing:.4, animation: "blinkCelNeg 2.2s infinite" },
 
-  // Botonera DENTRO del cuadro (no desborda nunca) + más aire lateral
+  // Botonera dentro do cadro
   rowBtns: {
     display:"grid",
-    gridTemplateColumns:"17% 66% 17%", // INFO / CONFIRMAR / PAPELERA
+    gridTemplateColumns:"17% 66% 17%",
     gap:8,
     alignItems:"stretch",
     marginTop:10,
-    padding:"0 8px" // más margen para separar la papelera del borde
+    padding:"0 8px"
   },
 
-  // 1) INFO: azul degradado casi blanco + icono más grande
+  // INFO: azul degradado case branco (icono novo)
   btnInfo:{
     width:"100%", padding:"10px 12px", borderRadius:12,
-    background:"linear-gradient(180deg,#fbfdff,#f3f8ff,#e9f1ff,#dfeaff)", // muy claro
+    background:"linear-gradient(180deg,#fbfdff,#f3f8ff,#e9f1ff,#dfeaff)",
     color:"#0b4f8a", fontWeight:800, textAlign:"center",
     border:"1px solid #38bdf8", cursor:"pointer",
     boxShadow:"inset 0 1px 0 rgba(255,255,255,.96), 0 8px 18px rgba(2,132,199,.22)",
     display:"grid", placeItems:"center", minWidth:0,
     userSelect:"none", touchAction:"manipulation"
   },
-  // 3) CONFIRMAR: verde más degradado + respuesta táctil
+  // CONFIRMAR
   btnConfirm:{
     width:"100%", padding:"12px 14px", borderRadius:12,
-    background:"linear-gradient(180deg,#eefdf4,#dcfce7,#c8f6d8,#b7f3ce,#a7f3d0,#86efac)", // más degradado
+    background:"linear-gradient(180deg,#eefdf4,#dcfce7,#c8f6d8,#b7f3ce,#a7f3d0,#86efac)",
     color:"#065f46", fontWeight:900,
     border:"1px solid #22c55e", cursor:"pointer",
     boxShadow:"inset 0 1px 0 rgba(255,255,255,.96), 0 10px 20px rgba(34,197,94,.22)",
-    minWidth:0,
-    userSelect:"none", touchAction:"manipulation",
+    minWidth:0, userSelect:"none", touchAction:"manipulation",
     transition:"transform .06s ease, box-shadow .15s ease",
   },
   btnConfirmActive:{ transform:"translateY(1px)", boxShadow:"inset 0 1px 0 rgba(255,255,255,.9), 0 6px 14px rgba(34,197,94,.22)" },
 
-  // 2 & 4) PAPELERA: rojo casi blanco + más separación lateral
+  // Papeleira: vermello case branco
   btnTrash:{
     width:"100%", padding:"10px 12px", borderRadius:12,
-    background:"linear-gradient(180deg,#ffffff,#fff7f7,#ffecec,#ffe4e4)", // casi blanco
+    background:"linear-gradient(180deg,#ffffff,#fff7f7,#ffecec,#ffe4e4)",
     color:"#7f1d1d", fontWeight:800,
     border:"1px solid #ef4444", cursor:"pointer",
     display:"grid", placeItems:"center",
     boxShadow:"inset 0 1px 0 rgba(255,255,255,.96), 0 8px 18px rgba(239,68,68,.20)",
-    minWidth:0,
-    userSelect:"none", touchAction:"manipulation"
+    minWidth:0, userSelect:"none", touchAction:"manipulation"
   },
 
-  // Botón inferior (mismo ancho del contenedor principal)
   btnBottom:{
     width:"100%", padding:"12px 14px", borderRadius:12,
     background:"linear-gradient(180deg,#eefdf4,#dcfce7,#c8f6d8,#b7f3ce,#a7f3d0,#86efac)",
@@ -141,13 +138,9 @@ const S = {
   },
 
   posHeader: { margin:"16px 0 10px", padding:"2px 4px 8px", fontWeight:700, color:"#0c4a6e", borderLeft:"4px solid #7dd3fc", borderBottom:"2px solid #e2e8f0" },
-  grid: (isMobile)=>({
-    display:"grid",
-    gridTemplateColumns: isMobile ? "repeat(3, minmax(0,1fr))" : "repeat(4, minmax(0,1fr))",
-    gap:12
-  }),
+  grid: (isMobile)=>({ display:"grid", gridTemplateColumns: isMobile ? "repeat(3, minmax(0,1fr))" : "repeat(4, minmax(0,1fr))", gap:12 }),
 
-  // Tarjeta seleccionada: fondo VERDE degradado + borde verde grueso
+  // Tarxetas seleccionadas
   card: (picked)=>({
     position:"relative",
     borderRadius:16, padding:10,
@@ -156,63 +149,23 @@ const S = {
     boxShadow: picked ? "0 0 0 3px rgba(34,197,94,.18), 0 10px 24px rgba(34,197,94,.14)" : "0 2px 8px rgba(0,0,0,.06)"
   }),
 
-  frame: (isMobile)=>({
-    width:"100%", height: isMobile ? 172 : IMG_H,
-    borderRadius:12, overflow:"hidden",
-    background:"#ffffff", display:"grid", placeItems:"center",
-    border:"1px solid #e5e7eb", position:"relative"
-  }),
+  frame: (isMobile)=>({ width:"100%", height: isMobile ? 172 : IMG_H, borderRadius:12, overflow:"hidden", background:"#ffffff", display:"grid", placeItems:"center", border:"1px solid #e5e7eb", position:"relative" }),
   img: (isMobile) => ({ width:"100%", height:"100%", objectFit: isMobile ? "cover" : "contain", background:"#ffffff", display:"block" }),
 
-  nameDesktop: {
-    margin:"8px 0 0",
-    font:"700 15px/1.2 Montserrat, system-ui, sans-serif",
-    color:"#0f172a",
-    textAlign:"center",
-    display:"-webkit-box",
-    WebkitLineClamp:"2",
-    WebkitBoxOrient:"vertical",
-    overflow:"hidden",
-    wordBreak:"break-word"
-  },
-  nameMobileBase: {
-    margin:"8px 0 0",
-    fontWeight:700,
-    fontFamily:"Montserrat, system-ui, sans-serif",
-    lineHeight:1.2,
-    color:"#0f172a",
-    textAlign:"center"
-  },
+  nameDesktop: { margin:"8px 0 0", font:"700 15px/1.2 Montserrat, system-ui, sans-serif", color:"#0f172a", textAlign:"center", display:"-webkit-box", WebkitLineClamp:"2", WebkitBoxOrient:"vertical", overflow:"hidden", wordBreak:"break-word" },
+  nameMobileBase: { margin:"8px 0 0", fontWeight:700, fontFamily:"Montserrat, system-ui, sans-serif", lineHeight:1.2, color:"#0f172a", textAlign:"center" },
 
   meta: { margin:"2px 0 0", color:"#475569", fontSize:13, textAlign:"center" },
 
-  counter: {
-    position:"absolute", left:"50%", top:"78%", transform:"translate(-50%,-50%)",
-    fontFamily:"Montserrat, system-ui, sans-serif",
-    fontWeight:900, fontSize:30, color:"#0c4a6e",
-    background:"rgba(56,189,248,.55)", padding:"6px 12px", borderRadius:999,
-    letterSpacing:1.1, userSelect:"none", pointerEvents:"none"
-  },
+  counter: { position:"absolute", left:"50%", top:"78%", transform:"translate(-50%,-50%)", fontFamily:"Montserrat, system-ui, sans-serif", fontWeight:900, fontSize:30, color:"#0c4a6e", background:"rgba(56,189,248,.55)", padding:"6px 12px", borderRadius:999, letterSpacing:1.1, userSelect:"none", pointerEvents:"none" },
 
-  // Check (✔) arriba-dereita
-  okCheck: (m)=>({
-    position:"absolute", top: m ? 4 : 6, right: m ? 4 : 6,
-    background:"rgba(34,197,94,.94)", color:"#fff",
-    borderRadius:999, padding: m ? "3px 6px" : "4px 7px",
-    boxShadow:"0 2px 8px rgba(34,197,94,.28)",
-    display:"grid", placeItems:"center", userSelect:"none", pointerEvents:"none"
-  }),
+  okCheck: (m)=>({ position:"absolute", top: m ? 4 : 6, right: m ? 4 : 6, background:"rgba(34,197,94,.94)", color:"#fff", borderRadius:999, padding: m ? "3px 6px" : "4px 7px", boxShadow:"0 2px 8px rgba(34,197,94,.28)", display:"grid", placeItems:"center", userSelect:"none", pointerEvents:"none" }),
 
   modalBg: { position:"fixed", inset:0, background:"rgba(2,6,23,.45)", display:"grid", placeItems:"center", zIndex:9999 },
-  modal: {
-    width:"min(92vw,520px)",
-    background:"#ffffff", border:"1px solid #e2e8f0", borderRadius:14,
-    boxShadow:"0 18px 48px rgba(0,0,0,.28)", padding:"16px 14px", position:"relative"
-  },
-  modalClose: {
-    position:"absolute", right:8, top:8, width:32, height:32, borderRadius:8,
-    border:"1px solid #e2e8f0", background:"#fff", cursor:"pointer", display:"grid", placeItems:"center"
-  }
+  modal: { width:"min(92vw,620px)", background:"#ffffff", border:"1px solid #e2e8f0", borderRadius:14, boxShadow:"0 18px 48px rgba(0,0,0,.28)", padding:"16px 14px", position:"relative" },
+  modalClose: { position:"absolute", right:8, top:8, width:32, height:32, borderRadius:8, border:"1px solid #e2e8f0", background:"#fff", cursor:"pointer", display:"grid", placeItems:"center" },
+  infoTitle: { margin:"0 0 8px", font:"800 18px/1.2 Montserrat,system-ui,sans-serif", color:"#0b4f8a" },
+  infoBody: { margin:0, color:"#0f172a", lineHeight:1.5, fontSize:14 }
 };
 
 const extraStyles = `
@@ -220,40 +173,21 @@ const extraStyles = `
 `;
 
 function Img({ src, alt, isMobile }) {
-  return (
-    <img
-      src={src}
-      alt={alt}
-      loading="lazy"
-      decoding="async"
-      style={S.img(isMobile)}
-      crossOrigin="anonymous"
-      referrerPolicy="no-referrer"
-    />
-  );
+  return <img src={src} alt={alt} loading="lazy" decoding="async" style={S.img(isMobile)} crossOrigin="anonymous" referrerPolicy="no-referrer" />;
 }
 
-/* Componente de nome móbil con autofit a 2 liñas */
+/* Nome móbil con autofit */
 function NameMobileTwoLines({ text }) {
   const ref = useRef(null);
   const { fontSize } = useFitText2Lines(ref, { deps: [text] });
   return (
-    <p
-      ref={ref}
-      style={{
-        ...S.nameMobileBase,
-        fontSize,
-        maxHeight: fontSize ? `${fontSize * 1.2 * 2 + 0.5}px` : undefined,
-      }}
-    >
+    <p ref={ref} style={{ ...S.nameMobileBase, fontSize, maxHeight: fontSize ? `${fontSize * 1.2 * 2 + 0.5}px` : undefined }}>
       {text}
     </p>
   );
 }
 
-/* ====== Audio ======
-   - playBip(): beep cortito (selección)
-   - playBell(): campana breve al confirmar */
+/* ====== Audio ====== */
 function useAudio() {
   const ctxRef = useRef(null);
   const getCtx = () => {
@@ -271,38 +205,32 @@ function useAudio() {
     const o = ctx.createOscillator();
     const g = ctx.createGain();
     o.type = "sine";
-    o.frequency.setValueAtTime(1046.5, now); // C6
+    o.frequency.setValueAtTime(1046.5, now);
     g.gain.setValueAtTime(0.0001, now);
     g.gain.exponentialRampToValueAtTime(0.35, now + 0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.10); // ~100ms
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.10);
     o.connect(g).connect(ctx.destination);
     o.start(now);
     o.stop(now + 0.12);
   }
 
-  // campana: varias parciales + decaimiento
+  // campá breve ao confirmar
   function playBell() {
     const ctx = getCtx(); if (!ctx) return;
     const now = ctx.currentTime;
     const dur = 0.9;
-
     const partials = [
-      { f: 784.0, gain: 1.0 },   // G5
-      { f: 1176.0, gain: 0.5 },  // + quinta
-      { f: 1568.0, gain: 0.35 }, // + octava
-      { f: 2349.0, gain: 0.22 }, // brillo
+      { f: 784.0, gain: 1.0 },
+      { f: 1176.0, gain: 0.5 },
+      { f: 1568.0, gain: 0.35 },
+      { f: 2349.0, gain: 0.22 },
     ];
     partials.forEach(p => {
-      const o = ctx.createOscillator();
-      o.type = "sine";
-      o.frequency.setValueAtTime(p.f, now);
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0.0001, now);
+      const o = ctx.createOscillator(); o.type = "sine"; o.frequency.setValueAtTime(p.f, now);
+      const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, now);
       g.gain.exponentialRampToValueAtTime(0.9 * p.gain, now + 0.03);
       g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-      o.connect(g).connect(ctx.destination);
-      o.start(now);
-      o.stop(now + dur + 0.05);
+      o.connect(g).connect(ctx.destination); o.start(now); o.stop(now + dur + 0.05);
     });
   }
 
@@ -318,6 +246,7 @@ export default function HazTu11() {
   const [sel, setSel] = useState(new Set());
   const [lastCounterId, setLastCounterId] = useState(null);
   const [showOK, setShowOK] = useState(false);
+  const [showInfo, setShowInfo] = useState(false); // <<<<<< NEW
   const [toast, setToast] = useState("");
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const max11 = 11;
@@ -432,9 +361,7 @@ export default function HazTu11() {
     }
 
     try {
-      // campana al pulsar confirmar
       try { playBell(); } catch {}
-
       const { data: sess } = await supabase.auth.getSession();
       const uid = sess?.session?.user?.id || null;
       if (!uid) {
@@ -495,10 +422,10 @@ export default function HazTu11() {
           <p style={S.resumeNoteTitle}>Rexistro da túa última aliñación:</p>
           <p style={S.resumeNoteTime}>{last ? `${last.f} ás ${last.h}` : "-"}</p>
 
-          {/* Botonera dentro del cuadro, anchos exactos y sin desbordes */}
+          {/* Botonera */}
           <div style={S.rowBtns}>
-            <button type="button" style={S.btnInfo} title="Información" aria-label="Información">
-              {/* Icono distinto, más grande, azul */}
+            <button type="button" style={S.btnInfo} title="Información" aria-label="Información" onClick={()=>setShowInfo(true)}>
+              {/* Icono distinto, azul e algo máis grande */}
               <svg width={26} height={26} viewBox="0 0 24 24" aria-hidden="true" style={{display:"block"}}>
                 <defs>
                   <radialGradient id="infoGlow" cx="50%" cy="35%" r="65%">
@@ -511,13 +438,7 @@ export default function HazTu11() {
               </svg>
             </button>
 
-            <button
-              type="button"
-              style={S.btnConfirm}
-              onClick={(e)=>{ e.currentTarget.blur(); e.currentTarget.style.transform='translateY(1px)'; setTimeout(()=>{ e.currentTarget.style.transform=''; }, 90); return saveMy11(e); }}
-              disabled={sel.size!==11}
-              aria-disabled={sel.size!==11}
-            >
+            <button type="button" style={S.btnConfirm} onClick={(e)=>{ e.currentTarget.blur(); e.currentTarget.style.transform='translateY(1px)'; setTimeout(()=>{ e.currentTarget.style.transform=''; }, 90); return saveMy11(e); }} disabled={sel.size!==11} aria-disabled={sel.size!==11}>
               {confirmLabel}
             </button>
 
@@ -547,23 +468,16 @@ export default function HazTu11() {
                   <article key={p.id} style={S.card(picked)} onClick={()=>togglePick(p.id)}>
                     <div style={S.frame(isMobile)}>
                       <Img src={p.foto_url} alt={`Foto de ${nombre}`} isMobile={isMobile} />
-                      {/* Check “visto” arriba-dereita */}
                       {picked && (
                         <span style={S.okCheck(isMobile)} aria-hidden="true">
-                          <svg width={isMobile ? 16 : 20} height={isMobile ? 16 : 20} viewBox="0 0 24 24" fill="none"
-                               style={{display:"block",stroke:"#ffffff",strokeWidth:2.6,strokeLinecap:"round",strokeLinejoin:"round"}}>
+                          <svg width={isMobile ? 16 : 20} height={isMobile ? 16 : 20} viewBox="0 0 24 24" fill="none" style={{display:"block",stroke:"#ffffff",strokeWidth:2.6,strokeLinecap:"round",strokeLinejoin:"round"}}>
                             <path d="M20 6L9 17l-5-5" />
                           </svg>
                         </span>
                       )}
-                      {/* contador */}
                       {lastCounterId === p.id && <span style={S.counter}>{`${sel.size}/11`}</span>}
                     </div>
-                    {isMobile ? (
-                      <NameMobileTwoLines text={nameLine} />
-                    ) : (
-                      <p style={S.nameDesktop}>{nameLine}</p>
-                    )}
+                    {isMobile ? <NameMobileTwoLines text={nameLine} /> : <p style={S.nameDesktop}>{nameLine}</p>}
                     <p style={S.meta}>{pos}</p>
                   </article>
                 );
@@ -577,13 +491,34 @@ export default function HazTu11() {
         {confirmLabel}
       </button>
 
+      {/* Modal de INFO */}
+      {showInfo && (
+        <div style={S.modalBg} role="dialog" aria-modal="true" aria-label="Información e normas">
+          <div style={S.modal}>
+            <button style={S.modalClose} onClick={()=>setShowInfo(false)} aria-label="Pechar">
+              ✕
+            </button>
+            <h3 style={S.infoTitle}>FUNCIONAMENTO & NORMAS DO XOGO</h3>
+            <div style={{maxHeight:"60vh", overflow:"auto"}}>
+              <ol style={S.infoBody}>
+                <li style={{marginBottom:8}}>A App tenta automatizar case todo, evitando erros que invaliden a túa aliñación.</li>
+                <li style={{marginBottom:8}}>Como ves, hai un reloxo de conta atrás. Indica o tempo restante permitido para facer a túa aliñación (ata 2 horas antes do inicio do partido).</li>
+                <li style={{marginBottom:8}}>A aliñación só poderá facerse cando a Convocatoria sexa subida á App, polo que todas as persoas xogadoras que vexas no apartado «Fai aquí a túa aliñación» son perfectamente seleccionables para saír no once inicial.</li>
+                <li style={{marginBottom:8}}>Terás que elixir <strong>11 xogadores</strong>; non te preocupes por contar: se non chegan a 11, non poderás <strong>Confirmar</strong> a túa aliñación.</li>
+                <li style={{marginBottom:8}}>Poderás facer cantos cambios que queiras ata 2 horas antes. Só borra a aliñación (icona papeleira) e crea outra. Verás un rexistro coa data e hora da última aliñación gardada polo sistema.</li>
+                <li style={{marginBottom:8}}>No momento en que se suba a Aliñación inicial oficial presentada polo Club, cruzarase con todas as predicións feitas e amosaranse os resultados de cada partido en «Resultados da última aliñación».</li>
+                <li>Recomendámosche navegar un pouco pola App para situarte. Se tes algún problema, podes escribir a <strong>HDCLiga@gmail.com</strong>.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Popup éxito */}
       {showOK && (
         <div style={S.modalBg} role="dialog" aria-modal="true" aria-label="Aliñación enviada">
           <div style={S.modal}>
-            <button style={S.modalClose} onClick={()=>setShowOK(false)} aria-label="Pechar">
-              ✕
-            </button>
+            <button style={S.modalClose} onClick={()=>setShowOK(false)} aria-label="Pechar">✕</button>
             <h3 style={{ margin:"0 0 6px", font:"800 18px/1.2 Montserrat,system-ui,sans-serif", color:"#065f46" }}>
               Aliñación feita e enviada
             </h3>
