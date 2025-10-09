@@ -80,7 +80,7 @@ const S = {
     columnGap:8, alignItems:"stretch", margin:"12px 0 2px", padding:"0 6px"
   }),
 
-  /* Botones menos altos (alineado con ConvocatoriaProximo) + redondeados */
+  /* Botones menos altos + redondeados */
   pressable: {
     width:"100%", padding:"8px 10px", borderRadius:12, cursor:"pointer",
     display:"grid", placeItems:"center",
@@ -88,15 +88,14 @@ const S = {
     boxShadow:"0 10px 22px rgba(0,0,0,.14), inset 0 1px 0 rgba(255,255,255,.75)",
     transition:"transform .06s ease, box-shadow .2s ease, filter .2s ease, background .2s ease, border-color .2s ease"
   },
-  /* efecto “pressed” sin perder el borde redondeado */
   activeDown: { transform:"translateY(1.5px)", boxShadow:"0 6px 14px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.7)" },
 
-  /* Pedidos: info en blanco (móvil y desktop) */
+  /* Info en blanco (móbil e desktop) */
   btnInfo: {
     background:"#ffffff",
     color:"#1e40af", border:"1px solid #3b82f6", fontWeight:800
   },
-  /* Confirmar más degradado verde */
+  /* Confirmar verde */
   btnConfirm: {
     background:"linear-gradient(180deg,#eefef5,#c7f5dc)",
     color:"#065f46", border:"1px solid #10b981", fontWeight:900, letterSpacing:.35
@@ -189,7 +188,6 @@ export default function HazTu11() {
   function beepShort(freq=880,dur=0.11){ try{ const ctx=ensureCtx(); const o=ctx.createOscillator(); const g=ctx.createGain(); o.type="sine"; o.frequency.setValueAtTime(freq,ctx.currentTime); g.gain.setValueAtTime(0.0001,ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.28,ctx.currentTime+0.01); g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+dur); o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime+dur+0.02); }catch{} }
   async function bellConfirm(){ try{ const ctx=ensureCtx(); const seq=[{f:880,d:0.12,t:0},{f:980,d:0.12,t:0.18},{f:740,d:0.35,t:0.42}]; for(const s of seq){ const o=ctx.createOscillator(); const g=ctx.createGain(); o.type="sine"; o.frequency.setValueAtTime(s.f,ctx.currentTime+s.t); g.gain.setValueAtTime(0.0001,ctx.currentTime+s.t); g.gain.exponentialRampToValueAtTime(0.35,ctx.currentTime+s.t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+s.t+s.d); o.connect(g); g.connect(ctx.destination); o.start(ctx.currentTime+s.t); o.stop(ctx.currentTime+s.t+s.d+0.02);} }catch{} }
 
-  /* press handlers que NO rompen el redondeo */
   function pressDown(e){ try{ e.currentTarget.style.transform="translateY(1.5px)"; e.currentTarget.style.boxShadow="0 6px 14px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.7)"; }catch{} }
   function pressUp(e){ try{ e.currentTarget.style.transform=""; e.currentTarget.style.boxShadow="0 10px 22px rgba(0,0,0,.14), inset 0 1px 0 rgba(255,255,255,.75)"; }catch{} }
 
@@ -344,21 +342,7 @@ export default function HazTu11() {
               {confirmLabel}
             </button>
 
-            <button
-              style={{...S.pressable, ...S.btnInfo, borderRadius:12}}
-              title="Información" aria-label="Información"
-              onMouseDown={pressDown}
-              onMouseUp={pressUp}
-              onClick={()=>setShowInfo(true)}
-            >
-              {/* Icono “i” en azul, sin bold, más grande */}
-              <svg width={28} height={28} viewBox="0 0 24 24" aria-hidden="true" style={{display:"block"}}>
-                <circle cx="12" cy="12" r="10" fill="#1e40af" opacity="0.12"/>
-                <circle cx="12" cy="7" r="1.8" fill="#1e40af"/>
-                <rect x="10.9" y="10" width="2.2" height="8" rx="1.1" fill="#1e40af"/>
-              </svg>
-            </button>
-
+            {/* SWAP: agora papelera no medio e info á dereita */}
             <button
               style={{...S.pressable, ...S.btnTrash}}
               onMouseDown={pressDown}
@@ -371,6 +355,21 @@ export default function HazTu11() {
                 <path d="M8 6V4h8v2" stroke="#7f1d1d" strokeWidth="1.8" strokeLinecap="round"/>
                 <path d="M19 6l-1 14H6L5 6" stroke="#7f1d1d" strokeWidth="1.8" strokeLinecap="round"/>
                 <path d="M10 11v6M14 11v6" stroke="#7f1d1d" strokeWidth="1.8" strokeLinecap="round"/>
+              </svg>
+            </button>
+
+            <button
+              style={{...S.pressable, ...S.btnInfo, borderRadius:12}}
+              title="Información" aria-label="Información"
+              onMouseDown={pressDown}
+              onMouseUp={pressUp}
+              onClick={()=>setShowInfo(true)}
+            >
+              {/* Icono “i” azul, sen bold, máis grande */}
+              <svg width={28} height={28} viewBox="0 0 24 24" aria-hidden="true" style={{display:"block"}}>
+                <circle cx="12" cy="12" r="10" fill="#1e40af" opacity="0.12"/>
+                <circle cx="12" cy="7" r="1.8" fill="#1e40af"/>
+                <rect x="10.9" y="10" width="2.2" height="8" rx="1.1" fill="#1e40af"/>
               </svg>
             </button>
           </div>
@@ -436,31 +435,38 @@ export default function HazTu11() {
         </div>
       )}
 
-      {/* Modal INFO (texto EXACTO pedido) */}
+      {/* Modal INFO (ajustes de espazos + título 15% máis pequeno + galego) */}
       {showInfo && (
         <div style={S.modalBg} role="dialog" aria-modal="true" aria-label="Información de uso">
           <div style={S.modal}>
             <button style={S.modalClose} onClick={()=>setShowInfo(false)} aria-label="Pechar">✕</button>
+
+            {/* 1 liña en branco ANTES do título */}
+            <div style={{height:12}}/>
+
             <div style={S.modalScroll}>
-              {/* Título en una sola línea, y una línea en blanco después */}
-              <h3 style={{ margin:0, font: isMobile ? "800 18px/1.1 Montserrat,system-ui" : "800 21px/1.1 Montserrat,system-ui", color:"#0f172a" }}>
-                FUNCIONAMIENTO Y NORMAS DE JUEGO:
+              <h3 style={{
+                margin:0,
+                /* 15% máis pequeno ca antes */
+                font: isMobile ? "800 15.3px/1.1 Montserrat,system-ui" : "800 17.85px/1.1 Montserrat,system-ui",
+                color:"#0f172a"
+              }}>
+                FUNCIONAMENTO E NORMAS DO XOGO
               </h3>
+
+              {/* 1 liña en branco DESPOIS do título */}
               <div style={{height:12}}/>
-              {/* Dos líneas en blanco ANTES de empezar el texto */}
-              <div style={{height:16}}/>
-              <div style={{height:16}}/>
 
               <div style={{ color:"#0f172a", font: isMobile ? "500 16.5px/1.6 Montserrat,system-ui" : "500 15px/1.55 Montserrat,system-ui" }}>
                 <ol style={{ paddingLeft:18, margin:0 }}>
-                  <li>La App automatiza casi todo, evitando errores que invaliden tu aliñación.</li>
-                  <li>Como ves, hay un reloj de cuenta regresiva, indica el tiempo que queda para que puedas hacer tu alineación (hasta 2 horas antes del inicio de partido).</li>
-                  <li>La alineación solo podrá hacerse cuando la convocatoria sea subida a la App, así que los todos jugadores que veas en el apartado #Fai aqui a tua aliñación#, son seleccionables para salir en el once inicial.</li>
-                  <li>Tendrás que elegir 11 jugadores, y no te preocupes de contar, de lo contrario no podrás confirmar tú alineación.</li>
-                  <li>Podrás hacer tantos cambios como quieras hasta 2 horas antes del inicio del partido. Para ello, solo borra la alineación (icono papelera) y haz otra. Verás un informe de registro con la fecha y hora que el sistema tiene guardado de tú ultima alineación.</li>
-                  <li>En el momento que se suba la Alineación inicial oficial presentada por el Club, se cruzaran con todas las predicciones hechas y listo, se presentarán resultados de cada partido en #Resultados de la ultima alineación#.</li>
-                  <li>Premio: Camiseta oficial del Celta de esta temporada o la proxima. Vas a la tienda y tú decides talla y color.</li>
-                  <li>Recomendamos navegar un poco por la App para situarte. Si tienes algún problema, puedes escribir a HDCLiga@gmail.com.</li>
+                  <li>A App automatiza case todo, evitando erros que invaliden a túa aliñación.</li>
+                  <li>Como ves, hai un reloxo de conta atrás: indica o tempo que queda para facer a túa aliñación (ata 2 horas antes do inicio do partido).</li>
+                  <li>A aliñación só poderá facerse cando a convocatoria sexa subida á App, así que todos os xogadores que vexas en <em>Fai aquí a túa aliñación</em> son seleccionables para saír no once inicial.</li>
+                  <li>Terás que elixir 11 xogadores; non te preocupes por contar, se non chegan a 11 non poderás confirmar a aliñación.</li>
+                  <li>Poderás facer cantos cambios queiras ata 2 horas antes do inicio. Para iso, borra a aliñación (icona papeleira) e fai outra. Verás un rexistro coa data e hora da túa última aliñación gardada.</li>
+                  <li>No momento en que se publique a Aliñación inicial oficial presentada polo Club, cruzaranse coas predicións e presentarase o resultado en <em>Resultados da última aliñación</em>.</li>
+                  <li>Premio: camiseta oficial do Celta desta tempada ou da próxima. Vas á tenda e ti decides talla e cor.</li>
+                  <li>Recomendamos navegar un pouco pola App para situarte. Se tes algún problema, podes escribir a <strong>HDCLiga@gmail.com</strong>.</li>
                 </ol>
               </div>
             </div>

@@ -15,6 +15,7 @@ import {
   Clipboard,
   Pitch,
   Shirt,
+  // Book,  // ← Eliminamos Regulamento do xogo
   Target,
   Bars,
 } from "../components/icons.jsx";
@@ -44,6 +45,7 @@ export default function Dashboard() {
         return;
       }
 
+      // Traemos moitos campos para cubrir todos os casos
       const { data: prof } = await supabase
         .from("profiles")
         .select("first_name, nombre, full_name, email")
@@ -59,6 +61,7 @@ export default function Dashboard() {
 
       if (alive) setNome(first || "amig@");
 
+      // Pequeno reintento por se AuthWatcher acaba de upsertar
       setTimeout(async () => {
         if (!alive) return;
         const { data: prof2 } = await supabase
@@ -83,15 +86,11 @@ export default function Dashboard() {
 
   return (
     <div class="dash-wrap">
-      <style>
-        {`
-        @keyframes onlyIconBlink {
-          0% { opacity: 1 }
-          50% { opacity: .22 }
-          100% { opacity: 1 }
-        }
-        `}
-      </style>
+      {/* Pequeno estilo local: só para o parpadeo do ICONO da subtarxeta “Fai aquí a túa aliñación” */}
+      <style>{`
+        @keyframes blinkIconDash { 0%{opacity:.45} 50%{opacity:1} 100%{opacity:.45} }
+        .only-icon-blink { animation: blinkIconDash 1.6s infinite; }
+      `}</style>
 
       {/* Hero */}
       <section class="dash-hero two-cols">
@@ -125,6 +124,7 @@ export default function Dashboard() {
             >
               <Calendar color="#22c55e" size={40} />
             </div>
+            {/* Flecha (chevron) grande e que xira ao abrir */}
             <span
               class={`chev ${open === "partidos" ? "open" : ""}`}
               style="color:#22c55e"
@@ -144,6 +144,7 @@ export default function Dashboard() {
             id="sub-partidos"
             class={`subgrid ${open === "partidos" ? "open" : ""}`}
           >
+            {/* Próximo partido */}
             <a href="/proximo-partido" class="subcard">
               <div
                 class="sub-ico"
@@ -162,6 +163,7 @@ export default function Dashboard() {
               </div>
             </a>
 
+            {/* Vindeiros encontros */}
             <a href="/vindeiros-partidos" class="subcard">
               <div
                 class="sub-ico"
@@ -179,6 +181,7 @@ export default function Dashboard() {
               </div>
             </a>
 
+            {/* Partidos finalizados */}
             <a href="/partidos-finalizados" class="subcard">
               <div
                 class="sub-ico"
@@ -251,19 +254,13 @@ export default function Dashboard() {
               </div>
             </a>
 
-            {/* Fai aquí a túa aliñación — SÓ ICONO PARPADEA + DOBRE BORDE */}
-            <a
-              href="/haz-tu-11"
-              class="subcard"
-              style="border-width:2px; border-style:solid; border-color: rgba(245,158,11,.55);"
-            >
+            {/* Fai aquí a túa aliñación — sen parpadeo de fondo; só o icono e o seu bordo */}
+            <a href="/haz-tu-11" class="subcard">
               <div
-                class="sub-ico"
-                style="border:2px solid rgba(245,158,11,.55);"
+                class="sub-ico only-icon-blink"
+                style="border:1px solid rgba(245,158,11,.55);"
               >
-                <span style="display:inline-block; animation: onlyIconBlink 1.4s infinite;">
-                  <Pitch color="#f59e0b" size={36} />
-                </span>
+                <Pitch color="#f59e0b" size={36} />
               </div>
               <div class="sub-texts">
                 <p class="sub-title" style="color:#f59e0b">
@@ -290,7 +287,7 @@ export default function Dashboard() {
               </div>
             </a>
 
-            {/* Eliminada a subtarxeta “Regulamento do xogo” */}
+            {/* Eliminada a sub-tarxeta Regulamento do xogo */}
           </div>
         </div>
 
@@ -364,6 +361,7 @@ export default function Dashboard() {
               </div>
             </a>
 
+            {/* NOVA subtarxeta: Histórico de resultados */}
             <a href="/resultados-historicos" class="subcard">
               <div
                 class="sub-ico"
