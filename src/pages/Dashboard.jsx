@@ -15,7 +15,6 @@ import {
   Clipboard,
   Pitch,
   Shirt,
-  // Book,  // ← Eliminamos Regulamento do xogo
   Target,
   Bars,
 } from "../components/icons.jsx";
@@ -84,13 +83,35 @@ export default function Dashboard() {
     };
   }, []);
 
+  // ===== Animación específica para “Fai aquí a túa aliñación” =====
+  // Parpadeo cada 1,5s do icono, o borde do icono e o bordo da subtarxeta.
+  const blinkCss = `
+    @keyframes dashBlinkBorder15 {
+      0%   { border-color: #fcd34d; }
+      50%  { border-color: #f59e0b; }
+      100% { border-color: #fcd34d; }
+    }
+    @keyframes dashBlinkIcon15 {
+      0%   { transform: scale(1); opacity: 1; }
+      50%  { transform: scale(1.08); opacity: .8; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  `;
+
+  // Estilos de animación aplicados só á subtarxeta /haz-tu-11
+  const blinkSubcardStyle = {
+    borderWidth: "2px",
+    animation: "dashBlinkBorder15 1.5s ease-in-out infinite",
+  };
+  const blinkIconBoxStyle = {
+    borderWidth: "2px",
+    animation: "dashBlinkBorder15 1.5s ease-in-out infinite",
+  };
+  const blinkIconStyle = { animation: "dashBlinkIcon15 1.5s ease-in-out infinite" };
+
   return (
     <div class="dash-wrap">
-      {/* Pequeno estilo local: só para o parpadeo do ICONO da subtarxeta “Fai aquí a túa aliñación” */}
-      <style>{`
-        @keyframes blinkIconDash { 0%{opacity:.45} 50%{opacity:1} 100%{opacity:.45} }
-        .only-icon-blink { animation: blinkIconDash 1.6s infinite; }
-      `}</style>
+      <style>{blinkCss}</style>
 
       {/* Hero */}
       <section class="dash-hero two-cols">
@@ -124,7 +145,6 @@ export default function Dashboard() {
             >
               <Calendar color="#22c55e" size={40} />
             </div>
-            {/* Flecha (chevron) grande e que xira ao abrir */}
             <span
               class={`chev ${open === "partidos" ? "open" : ""}`}
               style="color:#22c55e"
@@ -254,13 +274,13 @@ export default function Dashboard() {
               </div>
             </a>
 
-            {/* Fai aquí a túa aliñación — sen parpadeo de fondo; só o icono e o seu bordo */}
-            <a href="/haz-tu-11" class="subcard">
+            {/* SUBTARXETA QUE PARPADEA (icono, bordo do icono e bordo da subcard) */}
+            <a href="/haz-tu-11" class="subcard" style={blinkSubcardStyle}>
               <div
-                class="sub-ico only-icon-blink"
-                style="border:1px solid rgba(245,158,11,.55);"
+                class="sub-ico"
+                style={{ border: "1px solid #f59e0b", ...blinkIconBoxStyle }}
               >
-                <Pitch color="#f59e0b" size={36} />
+                <Pitch color="#f59e0b" size={36} style={blinkIconStyle} />
               </div>
               <div class="sub-texts">
                 <p class="sub-title" style="color:#f59e0b">
@@ -278,7 +298,7 @@ export default function Dashboard() {
                 <Shirt color="#f59e0b" size={36} />
               </div>
               <div class="sub-texts">
-                <p class="sub-title" style="color:#f59e0b">
+                <p class="sub-title" style={{ color: "#f59e0b" }}>
                   Aliñación oficial do partido
                 </p>
                 <p class="sub-desc">
@@ -286,8 +306,6 @@ export default function Dashboard() {
                 </p>
               </div>
             </a>
-
-            {/* Eliminada a sub-tarxeta Regulamento do xogo */}
           </div>
         </div>
 
@@ -352,7 +370,7 @@ export default function Dashboard() {
                 <Bars color="#a78bfa" size={36} />
               </div>
               <div class="sub-texts">
-                <p class="sub-title" style="color:#a78bfa">
+                <p class="sub-title" style={{ color: "#a78bfa" }}>
                   Táboa de acertos acumulada
                 </p>
                 <p class="sub-desc">
@@ -370,7 +388,7 @@ export default function Dashboard() {
                 <CalendarClock color="#a78bfa" size={36} />
               </div>
               <div class="sub-texts">
-                <p class="sub-title" style="color:#a78bfa">
+                <p class="sub-title" style={{ color: "#a78bfa" }}>
                   Histórico de resultados
                 </p>
                 <p class="sub-desc">
