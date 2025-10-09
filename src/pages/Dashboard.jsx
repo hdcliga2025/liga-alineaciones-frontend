@@ -83,31 +83,27 @@ export default function Dashboard() {
     };
   }, []);
 
-  // ===== Animación específica para “Fai aquí a túa aliñación” =====
-  // Parpadeo cada 1,5s do icono, o borde do icono e o bordo da subtarxeta.
+  /* ===== Animación sincronizada 1,5s (icono, borde do icono e textos) ===== */
   const blinkCss = `
+    /* Borde do icono: alterna cor á mesma cadencia */
     @keyframes dashBlinkBorder15 {
       0%   { border-color: #fcd34d; }
       50%  { border-color: #f59e0b; }
       100% { border-color: #fcd34d; }
     }
-    @keyframes dashBlinkIcon15 {
-      0%   { transform: scale(1); opacity: 1; }
-      50%  { transform: scale(1.08); opacity: .8; }
-      100% { transform: scale(1); opacity: 1; }
+    /* Icono + textos: lixeiro “pop” e variación de opacidade */
+    @keyframes dashBlinkAll15 {
+      0%   { transform: scale(1);   opacity: 1;   }
+      50%  { transform: scale(1.08); opacity: .85; }
+      100% { transform: scale(1);   opacity: 1;   }
     }
   `;
-
-  // Estilos de animación aplicados só á subtarxeta /haz-tu-11
-  const blinkSubcardStyle = {
-    borderWidth: "2px",
-    animation: "dashBlinkBorder15 1.5s ease-in-out infinite",
-  };
   const blinkIconBoxStyle = {
     borderWidth: "2px",
     animation: "dashBlinkBorder15 1.5s ease-in-out infinite",
   };
-  const blinkIconStyle = { animation: "dashBlinkIcon15 1.5s ease-in-out infinite" };
+  const blinkIconStyle = { animation: "dashBlinkAll15 1.5s ease-in-out infinite" };
+  const blinkTextStyle = { animation: "dashBlinkAll15 1.5s ease-in-out infinite" };
 
   return (
     <div class="dash-wrap">
@@ -274,19 +270,21 @@ export default function Dashboard() {
               </div>
             </a>
 
-            {/* SUBTARXETA QUE PARPADEA (icono, bordo do icono e bordo da subcard) */}
-            <a href="/haz-tu-11" class="subcard" style={blinkSubcardStyle}>
+            {/* SUBTARXETA /haz-tu-11: Parpadean icono, bordo do icono e textos (sincronizados). Sen parpadeo no bordo da subcard */}
+            <a href="/haz-tu-11" class="subcard">
               <div
                 class="sub-ico"
-                style={{ border: "1px solid #f59e0b", ...blinkIconBoxStyle }}
+                style={{ border: "2px solid #f59e0b", ...blinkIconBoxStyle }}
               >
                 <Pitch color="#f59e0b" size={36} style={blinkIconStyle} />
               </div>
               <div class="sub-texts">
-                <p class="sub-title" style="color:#f59e0b">
+                <p class="sub-title" style={{ color: "#f59e0b", ...blinkTextStyle }}>
                   Fai aquí a túa aliñación
                 </p>
-                <p class="sub-desc">Escolle o teu once antes do peche</p>
+                <p class="sub-desc" style={blinkTextStyle}>
+                  Escolle o teu once antes do peche
+                </p>
               </div>
             </a>
 
@@ -353,7 +351,7 @@ export default function Dashboard() {
                 <Target color="#a78bfa" size={36} />
               </div>
               <div class="sub-texts">
-                <p class="sub-title" style="color:#a78bfa">
+                <p class="sub-title" style={{ color: "#a78bfa" }}>
                   Resultados da última aliñación
                 </p>
                 <p class="sub-desc">
