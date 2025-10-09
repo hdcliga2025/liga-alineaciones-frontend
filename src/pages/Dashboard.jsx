@@ -83,27 +83,15 @@ export default function Dashboard() {
     };
   }, []);
 
-  /* ===== Animación sincronizada 1,5s (icono, borde do icono e textos) ===== */
+  /* ===== Animación: só o icono (1,5s). SEN parpadeo en texto nin no bordo do icono ===== */
   const blinkCss = `
-    /* Borde do icono: alterna cor á mesma cadencia */
-    @keyframes dashBlinkBorder15 {
-      0%   { border-color: #fcd34d; }
-      50%  { border-color: #f59e0b; }
-      100% { border-color: #fcd34d; }
-    }
-    /* Icono + textos: lixeiro “pop” e variación de opacidade */
-    @keyframes dashBlinkAll15 {
-      0%   { transform: scale(1);   opacity: 1;   }
-      50%  { transform: scale(1.08); opacity: .85; }
-      100% { transform: scale(1);   opacity: 1;   }
+    @keyframes dashBlinkIcon15 {
+      0%   { transform: scale(1);   opacity: 1; }
+      50%  { transform: scale(1.08); opacity: .88; }
+      100% { transform: scale(1);   opacity: 1; }
     }
   `;
-  const blinkIconBoxStyle = {
-    borderWidth: "2px",
-    animation: "dashBlinkBorder15 1.5s ease-in-out infinite",
-  };
-  const blinkIconStyle = { animation: "dashBlinkAll15 1.5s ease-in-out infinite" };
-  const blinkTextStyle = { animation: "dashBlinkAll15 1.5s ease-in-out infinite" };
+  const blinkIconStyle = { animation: "dashBlinkIcon15 1.5s ease-in-out infinite" };
 
   return (
     <div class="dash-wrap">
@@ -169,7 +157,7 @@ export default function Dashboard() {
                 <CalendarClock color="#22c55e" size={36} />
               </div>
               <div class="sub-texts">
-                <p class="sub-title" style="color:#22c55e">
+                <p class="sub-title" style={{ color: "#22c55e" }}>
                   Próximo partido
                 </p>
                 <p class="sub-desc">
@@ -188,7 +176,7 @@ export default function Dashboard() {
                 <CalendarChevrons color="#22c55e" size={36} />
               </div>
               <div class="sub-texts">
-                <p class="sub-title" style="color:#22c55e">
+                <p class="sub-title" style={{ color: "#22c55e" }}>
                   Vindeiros encontros
                 </p>
                 <p class="sub-desc">
@@ -206,7 +194,7 @@ export default function Dashboard() {
                 <CalendarCheck color="#22c55e" size={36} />
               </div>
               <div class="sub-texts">
-                <p class="sub-title" style="color:#22c55e">
+                <p class="sub-title" style={{ color: "#22c55e" }}>
                   Partidos finalizados
                 </p>
                 <p class="sub-desc">
@@ -261,7 +249,7 @@ export default function Dashboard() {
                 <Clipboard color="#f59e0b" size={36} />
               </div>
               <div class="sub-texts">
-                <p class="sub-title" style="color:#f59e0b">
+                <p class="sub-title" style={{ color: "#f59e0b" }}>
                   Convocatoria oficial
                 </p>
                 <p class="sub-desc">
@@ -270,19 +258,27 @@ export default function Dashboard() {
               </div>
             </a>
 
-            {/* SUBTARXETA /haz-tu-11: Parpadean icono, bordo do icono e textos (sincronizados). Sen parpadeo no bordo da subcard */}
-            <a href="/haz-tu-11" class="subcard">
+            {/* SUBTARXETA /haz-tu-11: fondo moi degradado á cor do bordo, parpadea SÓ o icono */}
+            <a
+              href="/haz-tu-11"
+              class="subcard"
+              style={{
+                background:
+                  "linear-gradient(180deg, rgba(245,158,11,0.10), rgba(245,158,11,0.02))",
+              }}
+            >
               <div
                 class="sub-ico"
-                style={{ border: "2px solid #f59e0b", ...blinkIconBoxStyle }}
+                style={{ border: "2px solid #f59e0b" /* sen parpadeo no bordo */ }}
               >
                 <Pitch color="#f59e0b" size={36} style={blinkIconStyle} />
               </div>
               <div class="sub-texts">
-                <p class="sub-title" style={{ color: "#f59e0b", ...blinkTextStyle }}>
+                {/* sen parpadeo no texto */}
+                <p class="sub-title" style={{ color: "#f59e0b" }}>
                   Fai aquí a túa aliñación
                 </p>
-                <p class="sub-desc" style={blinkTextStyle}>
+                <p class="sub-desc">
                   Escolle o teu once antes do peche
                 </p>
               </div>
