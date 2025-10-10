@@ -113,13 +113,9 @@
 .sub-title{font:700 16px/1.15 'Montserrat',system-ui,sans-serif;margin:0}
 .sub-desc{font:400 13px/1.25 'Montserrat',system-ui,sans-serif;color:#4b5563;margin:0}
 
-/* ===== Animación sutil para a subtarxeta “Fai aquí a túa aliñación” ===== */
-@keyframes softPulse3s {
-  0%   { background: #ffffff; }
-  50%  { background: linear-gradient(180deg,#f0f9ff,#e0f2fe); }
-  100% { background: #ffffff; }
-}
-/* Aplicada unicamente á subtarxeta de /haz-tu-11 */
+/* ===== (ELIMINADO) Animación sutil para a subtarxeta “Fai aquí a túa aliñación” ===== */
+/* Eliminamos o parpadeo por petición: sen keyframes e sen animation */
 #sub-alineacions .subcard[href="/haz-tu-11"]{
-  animation: softPulse3s 3s ease-in-out infinite;
+  animation: none !important;
+  background: #fff; /* fondo estático */
 }

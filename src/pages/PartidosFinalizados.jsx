@@ -1,3 +1,4 @@
+// src/pages/PartidosFinalizados.jsx
 import { h } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { route } from "preact-router";
@@ -9,23 +10,30 @@ const PAGE_HEAD = { margin: "0 0 6px", font: "700 22px/1.2 Montserrat,system-ui,
 const PAGE_SUB_ROW = { display:"grid", gridTemplateColumns:"1fr auto", alignItems:"center", gap:10, marginBottom:12 };
 const PAGE_SUB  = { margin: 0, font: "400 16px/1.3 Montserrat,system-ui,sans-serif", color: "#475569" };
 
-/* Botón “+” rojo — centrado y trazo grueso (igual que Vindeiros) */
-const PLUS_BTN_RED = {
+/* Botón rojo (toggle + / −) */
+const BTN_BASE = {
   display:"inline-grid", placeItems:"center",
   width: 36, height: 36, borderRadius: 10,
-  background: "linear-gradient(180deg,#f87171,#ef4444)",
   border: "1px solid #ef4444",
-  boxShadow: "0 6px 18px rgba(239,68,68,.28)",
-  cursor: "pointer"
+  cursor: "pointer",
+  boxShadow: "0 6px 18px rgba(239,68,68,.28)"
 };
-const PLUS_SVG_RED = { fill:"none", stroke:"#ffffff", strokeWidth:2.2, strokeLinecap:"round", strokeLinejoin:"round" };
+const BTN_PLUS = {
+  ...BTN_BASE,
+  background: "linear-gradient(180deg,#f87171,#ef4444)",
+};
+const BTN_MINUS = {
+  ...BTN_BASE,
+  background: "#ef4444",
+};
+const ICON_SVG = { fill:"none", stroke:"#ffffff", strokeWidth:2.2, strokeLinecap:"round", strokeLinejoin:"round", vectorEffect:"non-scaling-stroke" };
 
-/* Tarjetas — fondo algo más rojo y textos con degradado suave */
+/* Tarjetas — fondo algo máis vermello e textos con degradado suave */
 const CARD_BASE = { position:"relative", borderRadius: 14, padding: 12, boxShadow: "0 6px 18px rgba(0,0,0,.05)", marginBottom: 10 };
 const CARD = {
   ...CARD_BASE,
   border: "1px solid #ef4444",
-  background: "linear-gradient(180deg,#ffe8e8,#ffe1e1)" // ↑ un chisco máis vermello
+  background: "linear-gradient(180deg,#ffe8e8,#ffe1e1)"
 };
 
 const ROW = (isMobile) => ({ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr auto", gap:8, alignItems:"start" });
@@ -33,7 +41,6 @@ const CARD_CONTENT = { paddingLeft: 48 };
 
 const RED = "#b91c1c";
 const TEAMS_LINE = (isMobile) => ({
-  // móvil -15% en Equipo1/2 + 5% general ya aplicado en Vindeiros → aquí consolidado
   font: `600 ${isMobile ? 13.6 : 16}px/1.12 Montserrat,system-ui,sans-serif`,
   textTransform: "uppercase",
   background: "linear-gradient(90deg,#b91c1c,#ef4444)",
@@ -56,7 +63,7 @@ const ACTIONS_MOBILE_COLUMN = { position:"absolute", left:8, top:36, display:"gr
 const ICONBTN = { width:34, height:34, display:"grid", placeItems:"center", borderRadius:10, border:"1px solid #e2e8f0", background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)", cursor:"pointer" };
 const SVGI = { fill:"none", stroke:"#0f172a", strokeWidth:1.9, strokeLinecap:"round", strokeLinejoin:"round" };
 const SVG_RED = { ...SVGI, stroke:"#dc2626" };
-const SVG_EYE = { ...SVGI }; // ojo (ver resultados)
+const SVG_EYE = { ...SVGI };
 
 /* Form creación */
 const EDIT_CARD = { border: "1px solid #fecaca", borderRadius: 14, background: "linear-gradient(180deg,#fff7f7,#fffafa)", padding: 12, boxShadow: "0 6px 18px rgba(0,0,0,.05)", marginBottom: 12 };
@@ -76,6 +83,24 @@ const sortDescByDate = (a, b) => (b.match_iso?new Date(b.match_iso).getTime():-I
 function dmyWithWeekday(iso){ if(!iso) return "—"; const d=new Date(iso); try{const w=new Intl.DateTimeFormat("gl-ES",{weekday:"long",timeZone:"Europe/Madrid"}).format(d); return `${w}, ${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`;}catch{ return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`;}}
 const toISOFromParts=(d,t)=>(!d||!t)?null:(isNaN(new Date(`${d}T${t}:00`).getTime())?null:new Date(`${d}T${t}:00`).toISOString());
 const timeOptions=()=>{const r=[];for(let h=11;h<=24;h++)for(const m of[0,15,30,45])r.push(`${String(h===24?0:h).padStart(2,"0")}:${String(m).padStart(2,"0")}`);return r;};
+
+/* ===== Sonido bip (Web Audio, 120ms) ===== */
+function bip() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioCtx();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "square";
+    o.frequency.value = 880;
+    g.gain.setValueAtTime(0.12, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
+    o.connect(g).connect(ctx.destination);
+    o.start();
+    o.stop(ctx.currentTime + 0.12);
+    setTimeout(() => ctx.close(), 200);
+  } catch { /* ignore */ }
+}
 
 export default function PartidosFinalizados() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -180,8 +205,23 @@ export default function PartidosFinalizados() {
       <div style={PAGE_SUB_ROW}>
         <p style={PAGE_SUB}>Encontros xa disputados polo Celta.</p>
         {isAdmin && (
-          <button type="button" style={PLUS_BTN_RED} onClick={()=> setCreateOpen(v=>!v)} title="Crear novo partido finalizado" aria-label="Crear novo partido finalizado">
-            <svg width="26" height="26" viewBox="0 0 24 24" style={PLUS_SVG_RED}><path d="M12 5v14M5 12h14" /></svg>
+          <button
+            type="button"
+            style={createOpen ? BTN_MINUS : BTN_PLUS}
+            onClick={() => { bip(); setCreateOpen(v=>!v); }}
+            title={createOpen ? "Pechar editor" : "Crear novo partido finalizado"}
+            aria-label={createOpen ? "Pechar editor" : "Crear novo partido finalizado"}
+          >
+            {/* Icono centrado 24x24 (mejor centrado visual en móbil) */}
+            {createOpen ? (
+              <svg width="24" height="24" viewBox="0 0 24 24" style={ICON_SVG} aria-hidden="true">
+                <path d="M5 12h14" />
+              </svg>
+            ) : (
+              <svg width="24" height="24" viewBox="0 0 24 24" style={ICON_SVG} aria-hidden="true">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            )}
           </button>
         )}
       </div>
@@ -232,14 +272,13 @@ export default function PartidosFinalizados() {
         const niceDate = dmyWithWeekday(r.match_iso);
         const timeStr = r.match_iso ? new Date(r.match_iso).toLocaleTimeString("gl-ES", { hour: "2-digit", minute:"2-digit", hour12: false }) : "—";
         const number = view.length - idx;
-
         const isMobileLocal = isMobile;
 
         return (
           <article key={r.id} style={CARD}>
             <span style={BADGE}>{number}</span>
 
-            {/* Columna de acciones vertical bajo el número (móvil), con OJO + PAPELERA */}
+            {/* Columna de accións (móbil) */}
             {isMobileLocal ? (
               <div style={ACTIONS_MOBILE_COLUMN}>
                 <button type="button" style={ICONBTN} title="Ver resultados da última aliñación" onClick={()=> route("/resultados-ultima-alineacion")} aria-label="Ver resultados da última aliñación">
@@ -256,7 +295,11 @@ export default function PartidosFinalizados() {
             <div style={ROW(isMobileLocal)}>
               <div style={CARD_CONTENT}>
                 <div style={TEAMS_LINE(isMobileLocal)}>
-                  {(r.equipo1||"—").toUpperCase()} <span style={{ margin:"0 4px" }}>{isMobileLocal ? "-" : "vs"}</span> {(r.equipo2||"—").toUpperCase()}
+                  {(r.equipo1||"—").toUpperCase()}
+                  <span style={{ margin:"0 6px", color:"#0f172a", background:"none", WebkitBackgroundClip:"initial" }}>
+                    -
+                  </span>
+                  {(r.equipo2||"—").toUpperCase()}
                 </div>
                 <div style={LINE(isMobileLocal)}><span style={LINE_LABEL(isMobileLocal)}>Competición:</span> {r.competition || "—"}</div>
                 <div style={LINE(isMobileLocal)}><span style={LINE_LABEL(isMobileLocal)}>Lugar:</span> {r.lugar || "—"}</div>
@@ -264,7 +307,7 @@ export default function PartidosFinalizados() {
                 <div style={LINE(isMobileLocal)}><span style={LINE_LABEL(isMobileLocal)}>Hora:</span> {timeStr}</div>
               </div>
 
-              {/* Acciones a la derecha (desktop): OJO para usuarios + PAPELERA para admin */}
+              {/* Acciones a dereita (desktop) */}
               {!isMobileLocal && (
                 <div style={ACTIONS}>
                   <button type="button" style={ICONBTN} title="Ver resultados da última aliñación" onClick={()=> route("/resultados-ultima-alineacion")} aria-label="Ver resultados da última aliñación">

@@ -5,9 +5,7 @@ import { supabase } from "../lib/supabaseClient.js";
 
 const cap = (s = "") => (s || "").toUpperCase();
 const isUUID = (v = "") =>
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    v
-  );
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
 const pad2 = (n) => String(n).padStart(2, "0");
 
 function fmtDT(iso) {
@@ -15,35 +13,19 @@ function fmtDT(iso) {
   try {
     const d = new Date(iso);
     return {
-      fecha: d.toLocaleDateString("gl-ES", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }),
+      fecha: d.toLocaleDateString("gl-ES", { day: "2-digit", month: "2-digit", year: "numeric" }),
       hora: d.toLocaleTimeString("gl-ES", { hour: "2-digit", minute: "2-digit" }),
     };
   } catch {
     return { fecha: "-", hora: "-" };
   }
 }
-function safeDecode(s = "") {
-  try {
-    return decodeURIComponent(s);
-  } catch {
-    return s.replace(/%20/g, " ");
-  }
-}
+function safeDecode(s = "") { try { return decodeURIComponent(s); } catch { return s.replace(/%20/g, " "); } }
 function parseFromFilename(url = "") {
   const last = (url.split("?")[0].split("#")[0].split("/").pop() || "").trim();
-  const m = last.match(
-    /^(\d+)-(.+)-(POR|DEF|CEN|DEL)\.(jpg|jpeg|png|webp)$/i
-  );
+  const m = last.match(/^(\d+)-(.+)-(POR|DEF|CEN|DEL)\.(jpg|jpeg|png|webp)$/i);
   if (!m) return { dorsalFile: null, nameFile: null, posFile: null };
-  return {
-    dorsalFile: parseInt(m[1], 10),
-    nameFile: safeDecode(m[2].replace(/_/g, " ")),
-    posFile: m[3].toUpperCase(),
-  };
+  return { dorsalFile: parseInt(m[1], 10), nameFile: safeDecode(m[2].replace(/_/g, " ")), posFile: m[3].toUpperCase() };
 }
 function finalFromAll(p = {}) {
   const { dorsalFile, nameFile, posFile } = parseFromFilename(p.foto_url || "");
@@ -57,15 +39,11 @@ function finalFromAll(p = {}) {
 const S = {
   wrap: { maxWidth: 1080, margin: "0 auto", padding: 16 },
   h1: {
-    fontFamily:
-      "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
-    fontSize: 24,
-    margin: "6px 0 2px",
-    color: "#0f172a",
+    fontFamily: "Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
+    fontSize: 24, margin: "6px 0 2px", color: "#0f172a",
   },
   sub: { margin: "0 0 12px", color: "#475569", fontSize: 16 },
 
-  // “cadro de texto” en vermello degradado (referencia para os botóns)
   resumen: {
     margin: "0 0 12px",
     padding: "12px 14px",
@@ -75,20 +53,8 @@ const S = {
     color: "#7f1d1d",
     boxShadow: "0 10px 26px rgba(239,68,68,.18)",
   },
-  resumeLine: {
-    margin: 0,
-    fontSize: 18,
-    fontWeight: 600,
-    letterSpacing: ".35px",
-    lineHeight: 1.45,
-  },
-  resumeTeams: {
-    margin: 0,
-    fontSize: 18,
-    fontWeight: 800,
-    letterSpacing: ".4px",
-    lineHeight: 1.45,
-  },
+  resumeLine: { margin: 0, fontSize: 18, fontWeight: 600, letterSpacing: ".35px", lineHeight: 1.45 },
+  resumeTeams: { margin: 0, fontSize: 18, fontWeight: 800, letterSpacing: ".4px", lineHeight: 1.45 },
 
   posHeader: {
     margin: "14px 0 10px",
@@ -101,9 +67,7 @@ const S = {
 
   grid: (isMobile) => ({
     display: "grid",
-    gridTemplateColumns: isMobile
-      ? "repeat(3, minmax(0,1fr))"
-      : "repeat(4, minmax(0,1fr))",
+    gridTemplateColumns: isMobile ? "repeat(3, minmax(0,1fr))" : "repeat(4, minmax(0,1fr))",
     gap: 12,
   }),
 
@@ -112,15 +76,12 @@ const S = {
     border: "1px solid #fecaca",
     borderRadius: 16,
     padding: 10,
-    background: picked
-      ? "linear-gradient(180deg,#fee2e2,#fecaca)"
-      : "#fff",
+    background: picked ? "linear-gradient(180deg,#fee2e2,#fecaca)" : "#fff",
     boxShadow: picked
-      ? "0 0 0 2px rgba(239,68,68,.25), 0 8px 26px rgba(239,68,68,.18)"
-      : "0 2px 8px rgba(0,0,0,.06)",
+      ? "0 0 0 2px rgba(239,68,68,.25), 0 10px 28px rgba(239,68,68,.25)"
+      : "0 4px 14px rgba(0,0,0,.10)",
   }),
 
-  // Marco de foto: copiamos comportamento “móbil coma Convocatoria” → sen bandas
   frame: (isMobile) => ({
     width: "100%",
     height: isMobile ? 172 : 320,
@@ -132,7 +93,6 @@ const S = {
     border: "1px solid #e5e7eb",
     position: "relative",
   }),
-  // En móbil: cover (sen marxes/bandas). En desktop: contain.
   img: (isMobile) => ({
     width: "100%",
     height: "100%",
@@ -140,7 +100,6 @@ const S = {
     background: "#ffffff",
   }),
 
-  // Nome + dorsal: clamp a 2 liñas (que se lea completo)
   name: {
     margin: "8px 0 0",
     font: "700 15px/1.2 Montserrat, system-ui, sans-serif",
@@ -154,7 +113,6 @@ const S = {
   },
   meta: { margin: "2px 0 0", color: "#475569", fontSize: 13, textAlign: "center" },
 
-  // Fila botóns superior: 85% gravar / 15% papeleira
   rowBtns: {
     display: "grid",
     gridTemplateColumns: "85% 15%",
@@ -163,37 +121,41 @@ const S = {
     marginTop: 10,
   },
 
-  // Botóns co MESMO degradado ca o cadro (vermello) e contorno fino (1px)
   btnLoad: (isMobile) => ({
     width: "100%",
-    padding: isMobile ? "8px 10px" : "10px 14px",
-    borderRadius: 10,
-    background: "linear-gradient(180deg,#fee2e2,#fecaca)", // ← igual ca S.resumen
+    padding: "8px 10px",
+    borderRadius: 12,
+    background: "linear-gradient(180deg,#fff1f1,#ffdcdc)",
     border: "1px solid #ef4444",
     color: "#7f1d1d",
     fontWeight: 800,
-    fontSize: isMobile ? 14 : 16, // ← reducir tamaño en móbil
+    fontSize: isMobile ? 14 : 16,
     letterSpacing: 0.4,
     cursor: "pointer",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,.9), 0 12px 26px rgba(239,68,68,.32)",
+    transition: "transform .06s ease, box-shadow .2s ease",
+    willChange: "transform",
   }),
 
   btnTrash: {
     width: "100%",
-    padding: "10px 12px",
-    borderRadius: 10,
+    padding: "8px 10px",
+    borderRadius: 12,
     background: "#fff",
     color: "#7f1d1d",
     border: "1px solid #ef4444",
     cursor: "pointer",
     display: "grid",
-    placeItems: "center", // ← icono centrado
+    placeItems: "center",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,.9), 0 12px 26px rgba(239,68,68,.32)",
+    transition: "transform .06s ease, box-shadow .2s ease",
   },
 
   btnBottom: (isMobile) => ({
     width: "100%",
-    padding: isMobile ? "8px 10px" : "10px 14px",
-    borderRadius: 10,
-    background: "linear-gradient(180deg,#fee2e2,#fecaca)", // ← igual ca S.resumen
+    padding: "8px 10px",
+    borderRadius: 12,
+    background: "linear-gradient(180deg,#fff1f1,#ffdcdc)",
     border: "1px solid #ef4444",
     color: "#7f1d1d",
     fontWeight: 800,
@@ -201,6 +163,8 @@ const S = {
     letterSpacing: 0.4,
     cursor: "pointer",
     marginTop: 14,
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,.9), 0 12px 26px rgba(239,68,68,.32)",
+    transition: "transform .06s ease, box-shadow .2s ease",
   }),
 
   counter: {
@@ -220,55 +184,45 @@ const S = {
     pointerEvents: "none",
   },
 
-  okBadge: {
+  upLabel: { margin: "0", font: "800 15px/1.25 Montserrat,system-ui", color: "#0f172a" },
+  // Parpadeo negro→vermello mantendo bold
+  upValue: { margin: "0", font: "800 15px/1.25 Montserrat,system-ui", animation: "blinkRedBlack 1.5s infinite" },
+
+  // OK reducido un 25% en móbil e escritorio
+  okBadge: (isMobile) => ({
     position: "absolute",
-    top: 8,
-    right: 8,
+    top: isMobile ? 6 : 8,
+    right: isMobile ? 6 : 8,
     background: "rgba(56,189,248,.95)",
     color: "#fff",
     borderRadius: 999,
-    padding: "3px 7px",
-    font: "700 12px/1 Montserrat,system-ui,sans-serif",
+    padding: isMobile ? "2px 5px" : "8px 12px",      // antes 3x7 (móbil) e 10x16 (desk)
+    font: isMobile
+      ? "800 9px/1 Montserrat,system-ui,sans-serif"  // antes 12px
+      : "800 20px/1 Montserrat,system-ui,sans-serif",// antes 26px
     boxShadow: "0 2px 8px rgba(56,189,248,.35)",
     userSelect: "none",
     pointerEvents: "none",
-  },
+  }),
 };
 
 export default function AlineacionOficial() {
   const [header, setHeader] = useState(null);
   const [players, setPlayers] = useState([]);
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== "undefined" ? window.innerWidth <= 560 : false
-  );
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
   const [sel, setSel] = useState(new Set());
   const [lastCounterId, setLastCounterId] = useState(null);
   const [toast, setToast] = useState("");
   const [saving, setSaving] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState(null);
-  const [blinkOn, setBlinkOn] = useState(true); // parpadeo fe/hora subida
   const audioCtxRef = useRef(null);
-  const max11 = 11;
 
-  // Parpadeo cada 1s (ajuste pedido)
-  useEffect(() => {
-    const id = setInterval(() => setBlinkOn((v) => !v), 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  // Resize móbil
   useEffect(() => {
     let raf = 0;
-    const onR = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => setIsMobile(window.innerWidth <= 560));
-    };
+    const onR = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => setIsMobile(window.innerWidth <= 560)); };
     window.addEventListener("resize", onR);
-    return () => {
-      window.removeEventListener("resize", onR);
-      cancelAnimationFrame(raf);
-    };
+    return () => { window.removeEventListener("resize", onR); cancelAnimationFrame(raf); };
   }, []);
 
   useEffect(() => {
@@ -277,52 +231,29 @@ export default function AlineacionOficial() {
         const { data: sess } = await supabase.auth.getSession();
         const uid = sess?.session?.user?.id || null;
         if (uid) {
-          const { data: prof } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("id", uid)
-            .maybeSingle();
+          const { data: prof } = await supabase.from("profiles").select("role").eq("id", uid).maybeSingle();
           setIsAdmin(((prof?.role) || "").toLowerCase() === "admin");
         }
       } catch {}
 
-      // Header
       const { data: top } = await supabase
         .from("matches_vindeiros")
         .select("id,equipo1,equipo2,match_iso")
         .order("match_iso", { ascending: true })
-        .limit(1)
-        .maybeSingle();
+        .limit(1).maybeSingle();
 
       if (top?.match_iso) {
-        setHeader({
-          equipo1: cap(top.equipo1 || ""),
-          equipo2: cap(top.equipo2 || ""),
-          match_iso: top.match_iso,
-          encuentro_id: top.id,
-        });
+        setHeader({ equipo1: cap(top.equipo1||""), equipo2: cap(top.equipo2||""), match_iso: top.match_iso, encuentro_id: top.id });
         await preloadOfficial(top.match_iso);
       } else {
-        const { data: nm } = await supabase
-          .from("next_match")
-          .select("equipo1,equipo2,match_iso")
-          .eq("id", 1)
-          .maybeSingle();
+        const { data: nm } = await supabase.from("next_match").select("equipo1,equipo2,match_iso").eq("id", 1).maybeSingle();
         if (nm?.match_iso) {
-          setHeader({
-            equipo1: cap(nm.equipo1 || ""),
-            equipo2: cap(nm.equipo2 || ""),
-            match_iso: nm.match_iso,
-            encuentro_id: null,
-          });
+          setHeader({ equipo1: cap(nm.equipo1||""), equipo2: cap(nm.equipo2||""), match_iso: nm.match_iso, encuentro_id: null });
           await preloadOfficial(nm.match_iso);
         }
       }
 
-      const { data: js } = await supabase
-        .from("jugadores")
-        .select("id, nombre, dorsal, foto_url")
-        .order("dorsal", { ascending: true });
+      const { data: js } = await supabase.from("jugadores").select("id, nombre, dorsal, foto_url").order("dorsal", { ascending: true });
       setPlayers(js || []);
     })();
   }, []);
@@ -336,10 +267,7 @@ export default function AlineacionOficial() {
 
       if (ofi && ofi.length) {
         setSel(new Set(ofi.map((r) => r.jugador_id)));
-        const last = ofi.reduce(
-          (acc, r) => (!acc || r.updated_at > acc ? r.updated_at : acc),
-          null
-        );
+        const last = ofi.reduce((acc, r) => (!acc || r.updated_at > acc ? r.updated_at : acc), null);
         if (last) setLastSavedAt(last);
       } else {
         setSel(new Set());
@@ -358,14 +286,10 @@ export default function AlineacionOficial() {
   }, [players]);
 
   const { fecha: sFecha, hora: sHora } = fmtDT(header?.match_iso);
-  const savedFmt = fmtDT(lastSavedAt);
 
-  // Sonido bip curto ao seleccionar
   function playBeep() {
     try {
-      const ctx =
-        audioCtxRef.current ||
-        new (window.AudioContext || window.webkitAudioContext)();
+      const ctx = audioCtxRef.current || new (window.AudioContext || window.webkitAudioContext)();
       audioCtxRef.current = ctx;
       const o = ctx.createOscillator();
       const g = ctx.createGain();
@@ -374,10 +298,8 @@ export default function AlineacionOficial() {
       g.gain.setValueAtTime(0.0001, ctx.currentTime);
       g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
       g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
-      o.connect(g);
-      g.connect(ctx.destination);
-      o.start();
-      o.stop(ctx.currentTime + 0.14);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.14);
     } catch {}
   }
 
@@ -385,101 +307,48 @@ export default function AlineacionOficial() {
     setSel((prev) => {
       const n = new Set(prev);
       if (n.has(id)) n.delete(id);
-      else {
-        if (n.size >= max11) return prev;
-        n.add(id);
-      }
+      else { if (n.size >= 11) return prev; n.add(id); }
       return n;
     });
     setLastCounterId(id);
     playBeep();
   }
 
-  function showToast(m, ms = 2600) {
-    setToast(m);
-    setTimeout(() => setToast(""), ms);
-  }
+  function showToast(m, ms = 2600) { setToast(m); setTimeout(() => setToast(""), ms); }
 
   async function resolveEncuentroId(iso) {
-    const a = await supabase
-      .from("matches_vindeiros")
-      .select("id")
-      .eq("match_iso", iso)
-      .maybeSingle();
+    const a = await supabase.from("matches_vindeiros").select("id").eq("match_iso", iso).maybeSingle();
     if (a?.data?.id) return a.data.id;
     return null;
   }
 
   async function loadOfficial() {
-    if (!isAdmin) {
-      showToast("Só admins poden gardar a aliñación oficial.");
-      return;
-    }
-    if (sel.size !== 11) {
-      showToast("Escolle 11 xogadores.");
-      return;
-    }
-    if (!header?.match_iso) {
-      showToast("Falta o partido de referencia.");
-      return;
-    }
+    if (!isAdmin) { showToast("Só admins poden gardar a aliñación oficial."); return; }
+    if (sel.size !== 11) { showToast("Escolle 11 xogadores."); return; }
+    if (!header?.match_iso) { showToast("Falta o partido de referencia."); return; }
 
     setSaving(true);
     try {
       const iso = header.match_iso;
-      const encuentro_id =
-        header.encuentro_id || (await resolveEncuentroId(iso));
-      if (!encuentro_id) {
-        showToast("Crea o encontro en Vindeiros antes de gardar.");
-        setSaving(false);
-        return;
-      }
+      const a = await supabase.from("matches_vindeiros").select("id").eq("match_iso", iso).maybeSingle();
+      const encuentro_id = header.encuentro_id || a?.data?.id || null;
+      if (!encuentro_id) { showToast("Crea o encontro en Vindeiros antes de gardar."); setSaving(false); return; }
 
       const ids = [...sel];
       const invalid = ids.filter((id) => !isUUID(id));
-      if (invalid.length) {
-        const byId = new Map(players.map((p) => [p.id, p]));
-        const names = invalid.map((id) => byId.get(id)?.nombre || String(id));
-        showToast(`IDs non-UUID en xogadores: ${names.join(", ")}`);
-        setSaving(false);
-        return;
-      }
+      if (invalid.length) { showToast("IDs non-UUID detectados."); setSaving(false); return; }
 
-      const check = await supabase
-        .from("jugadores")
-        .select("id")
-        .in("id", ids);
-      const okSet = new Set((check.data || []).map((r) => r.id));
-      if (okSet.size !== ids.length) {
-        const missing = ids.filter((id) => !okSet.has(id));
-        showToast(`Xogadores inexistentes: ${missing.join(", ")}`);
-        setSaving(false);
-        return;
-      }
-
-      await supabase
-        .from("alineacion_oficial")
-        .delete()
-        .eq("encuentro_id", encuentro_id);
+      await supabase.from("alineacion_oficial").delete().eq("encuentro_id", encuentro_id);
 
       const now = new Date().toISOString();
-      const rows = ids.map((jid) => ({
-        jugador_id: jid,
-        match_iso: iso,
-        encuentro_id,
-        updated_at: now,
-        jugadores_ids: [],
-      }));
-
+      const rows = ids.map((jid) => ({ jugador_id: jid, match_iso: iso, encuentro_id, updated_at: now, jugadores_ids: [] }));
       const ins = await supabase.from("alineacion_oficial").insert(rows);
       if (ins.error) throw ins.error;
 
-      setLastSavedAt(now); // actualizar “subida” (parpadeo)
+      setLastSavedAt(now);
       showToast("Aliñación oficial gardada.");
     } catch (e) {
-      const msg = [e?.code, e?.message, e?.details, e?.hint]
-        .filter(Boolean)
-        .join(" | ");
+      const msg = [e?.code, e?.message, e?.details, e?.hint].filter(Boolean).join(" | ");
       console.error("[AlineacionOficial] save error:", e);
       showToast(`Erro gardando: ${msg || "descoñecido"}`, 5200);
     } finally {
@@ -487,86 +356,43 @@ export default function AlineacionOficial() {
     }
   }
 
-  function resetAll() {
-    setSel(new Set());
-    setLastCounterId(null);
-  }
+  function resetAll() { setSel(new Set()); setLastCounterId(null); }
 
+  // ——— Etiqueta do botón: en móbil NON amosar o contador X/11 ———
   const baseText = "GUARDAR ONCE OFICIAL";
-  const loadLabel =
-    sel.size === 11 ? `${baseText}` : `${baseText} | ${sel.size}/11`;
+  const loadLabel = isMobile
+    ? baseText
+    : (sel.size === 11 ? baseText : `${baseText} | ${sel.size}/11`);
 
   return (
     <main style={S.wrap}>
+      <style>{`
+        @keyframes blinkRedBlack{0%{color:#000;font-weight:800}50%{color:#b91c1c;font-weight:800}100%{color:#000;font-weight:800}}
+      `}</style>
       <h1 style={S.h1}>Aliñación oficial</h1>
       <p style={S.sub}>Os once xogadores que saen de inicio neste partido.</p>
 
       {header && (
         <div style={S.resumen}>
-          {/* Equipos en bold */}
-          <p style={S.resumeTeams}>
-            <strong>{cap(header.equipo1)}</strong> vs{" "}
-            <strong>{cap(header.equipo2)}</strong>
-          </p>
-          <p style={{ ...S.resumeLine, opacity: 0.9 }}>
-            {sFecha} | {sHora}
-          </p>
+          <p style={S.resumeTeams}><strong>{cap(header.equipo1)}</strong> vs <strong>{cap(header.equipo2)}</strong></p>
+          <p style={{ ...S.resumeLine, opacity: 0.9 }}>{sFecha} | {sHora}</p>
 
-          {/* Liñas de última subida/gravación (con parpadeo) */}
           <p style={S.upLabel}>Aliñación oficial subida:</p>
-          <p style={S.upValue ? S.upValue(blinkOn) : {}}>
-            {lastSavedAt
-              ? `${fmtDT(lastSavedAt).fecha} ás ${fmtDT(lastSavedAt).hora}`
-              : "-"}
+          <p style={S.upValue}>
+            {lastSavedAt ? `${fmtDT(lastSavedAt).fecha} ás ${fmtDT(lastSavedAt).hora}` : "-"}
           </p>
 
-          {/* Botoneira superior — SOLO ADMIN */}
           {isAdmin && (
             <div style={S.rowBtns}>
-              <button
-                style={S.btnLoad(isMobile)}
-                onClick={loadOfficial}
-                disabled={sel.size !== 11 || saving}
-              >
+              <button style={S.btnLoad(isMobile)} onClick={loadOfficial} disabled={sel.size !== 11 || saving}>
                 {saving ? "Gardando…" : loadLabel}
               </button>
-              <button
-                style={S.btnTrash}
-                onClick={resetAll}
-                title="Restablecer"
-                aria-label="Restablecer"
-              >
-                <svg
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M3 6h18"
-                    stroke="#7f1d1d"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M8 6V4h8v2"
-                    stroke="#7f1d1d"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M19 6l-1 14H6L5 6"
-                    stroke="#7f1d1d"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M10 11v6M14 11v6"
-                    stroke="#7f1d1d"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                  />
+              <button style={S.btnTrash} onClick={resetAll} title="Restablecer" aria-label="Restablecer">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M3 6h18" stroke="#7f1d1d" strokeWidth="1.6" strokeLinecap="round"/>
+                  <path d="M8 6V4h8v2" stroke="#7f1d1d" strokeWidth="1.6" strokeLinecap="round"/>
+                  <path d="M19 6l-1 14H6L5 6" stroke="#7f1d1d" strokeWidth="1.6" strokeLinecap="round"/>
+                  <path d="M10 11v6M14 11v6" stroke="#7f1d1d" strokeWidth="1.6" strokeLinecap="round"/>
                 </svg>
               </button>
             </div>
@@ -574,17 +400,10 @@ export default function AlineacionOficial() {
         </div>
       )}
 
-      {["POR", "DEF", "CEN", "DEL"].map((k) => {
-        const arr = grouped[k] || [];
+      {["POR","DEF","CEN","DEL"].map((k) => {
+        const arr = (players||[]).filter(p => finalFromAll(p).pos === k);
         if (!arr.length) return null;
-        const label =
-          k === "POR"
-            ? "Porteiros"
-            : k === "DEF"
-            ? "Defensas"
-            : k === "CEN"
-            ? "Medios"
-            : "Dianteiros";
+        const label = k==="POR"?"Porteiros":k==="DEF"?"Defensas":k==="CEN"?"Medios":"Dianteiros";
         return (
           <section key={k}>
             <div style={S.posHeader}>{label}</div>
@@ -592,28 +411,13 @@ export default function AlineacionOficial() {
               {arr.map((p) => {
                 const { dorsal, nombre, pos } = finalFromAll(p);
                 const picked = sel.has(p.id);
-                const nameLine =
-                  (dorsal != null ? `${pad2(dorsal)} · ` : "") + nombre;
+                const nameLine = (dorsal != null ? `${pad2(dorsal)} · ` : "") + nombre;
                 return (
-                  <article
-                    key={p.id}
-                    style={S.card(picked)}
-                    onClick={() => togglePick(p.id)}
-                  >
+                  <article key={p.id} style={S.card(picked)} onClick={() => togglePick(p.id)}>
                     <div style={S.frame(isMobile)}>
-                      <img
-                        src={p.foto_url}
-                        alt={`Foto de ${nombre}`}
-                        style={S.img(isMobile)}
-                        loading="lazy"
-                        decoding="async"
-                      />
-                      {/* contador sobre a foto do último click */}
-                      {lastCounterId === p.id && (
-                        <span style={S.counter}>{`${sel.size}/11`}</span>
-                      )}
-                      {/* OK celeste no canto superior dereito cando está seleccionado */}
-                      {picked && <span style={S.okBadge}>OK</span>}
+                      <img src={p.foto_url} alt={`Foto de ${nombre}`} style={S.img(isMobile)} loading="lazy" decoding="async" />
+                      {lastCounterId === p.id && (<span style={S.counter}>{`${sel.size}/11`}</span>)}
+                      {picked && <span style={S.okBadge(isMobile)}>OK</span>}
                     </div>
                     <p style={S.name}>{nameLine}</p>
                     <p style={S.meta}>{pos}</p>
@@ -625,37 +429,19 @@ export default function AlineacionOficial() {
         );
       })}
 
-      {/* Botón inferior 100% — SOLO ADMIN */}
       {isAdmin && (
-        <button
-          style={S.btnBottom(isMobile)}
-          onClick={loadOfficial}
-          disabled={sel.size !== 11 || saving}
-        >
+        <button style={S.btnBottom(isMobile)} onClick={loadOfficial} disabled={sel.size !== 11 || saving}>
           {saving ? "Gardando…" : loadLabel}
         </button>
       )}
 
       {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          style={{
-            position: "fixed",
-            bottom: 18,
-            left: "50%",
-            transform: "translateX(-50%)",
-            background: "#0ea5e9",
-            color: "#fff",
-            padding: "10px 16px",
-            borderRadius: 12,
-            boxShadow: "0 10px 22px rgba(2,132,199,.35)",
-            fontWeight: 700,
-            maxWidth: "92vw",
-            textAlign: "center",
-            zIndex: 9999,
-          }}
-        >
+        <div role="status" aria-live="polite" style={{
+          position:"fixed", bottom:18, left:"50%", transform:"translateX(-50%)",
+          background:"#0ea5e9", color:"#fff", padding:"10px 16px",
+          borderRadius:12, boxShadow:"0 10px 22px rgba(2,132,199,.35)",
+          fontWeight:700, maxWidth:"92vw", textAlign:"center", zIndex:9999
+        }}>
           {toast}
         </div>
       )}
