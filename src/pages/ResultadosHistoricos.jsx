@@ -160,7 +160,7 @@ export default function ResultadosHistoricos() {
   const [openResultsMatchId, setOpenResultsMatchId] = useState(null);
   const [openInfoMatchId, setOpenInfoMatchId] = useState(null);
 
-  // NUEVO: panel de persoas (lista simple) por partido
+  // panel de persoas por partido
   const [openPeopleMatchId, setOpenPeopleMatchId] = useState(null);
 
   const showToast = (msg, ok=true) => { setToast({ msg, ok, t: Date.now() }); setTimeout(()=> setToast(""), 4200); };
@@ -217,19 +217,44 @@ export default function ResultadosHistoricos() {
     } catch (e) { console.error("Load players error:", e); setPlayers([]); }
   }
 
+  // FIX: cargar usuarios con email y filtrar vacíos (sin nombre, sin email)
   async function loadUsersList() {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, first_name, last_name, full_name")
+        .select("id, first_name, last_name, full_name, email")
         .order("first_name", { ascending: true, nullsFirst: true });
       if (error) throw error;
-      setUsers((data||[]).map(u => ({
-        id: u.id,
-        code: (u.first_name || "").trim(),
-        surname: (u.last_name || "").trim(),
-        name: (u.full_name || `${u.first_name||""} ${u.last_name||""}`).trim()
-      })));
+
+      const arr = (data||[])
+        .map(u => {
+          const code = (u.first_name || "").trim();
+          const surname = (u.last_name || "").trim();
+          const email = (u.email || "").trim();
+          const full = (u.full_name || "").trim();
+          const displayName =
+            full ||
+            `${code} ${surname}`.trim() ||
+            email ||
+            u.id; // fallback final para no romper
+          const allEmpty = !full && !code && !surname && !email;
+          return allEmpty ? null : {
+            id: u.id,
+            code,
+            surname,
+            name: displayName
+          };
+        })
+        .filter(Boolean)
+        // si siguen estando mezclados, prioriza códigos "01".."99"
+        .sort((a,b) => {
+          const na = /^\d{2}$/.test(a.code||"") ? 0 : 1;
+          const nb = /^\d{2}$/.test(b.code||"") ? 0 : 1;
+          if (na !== nb) return na - nb;
+          return (a.code||"").localeCompare(b.code||"");
+        });
+
+      setUsers(arr);
     } catch (e) {
       console.error("load users error:", e);
       showToast("Erro cargando usuarias/os.", false);
@@ -282,7 +307,7 @@ export default function ResultadosHistoricos() {
     }
   }
 
-  // Confirmar (igual que antes, dobre pulsación)
+  // Confirmar (dobre pulsación)
   async function confirmarMatch(matchId) {
     try {
       if (!openUserPanel) { showToast("Selecciona unha usuaria/o primeiro (teclado).", false); return; }
@@ -467,7 +492,6 @@ export default function ResultadosHistoricos() {
                 <div style={ACTIONS}>
                   {isAdmin && !isMobile && (
                     <>
-                      {/* Botón Persona (lista simple de usuarios stub) */}
                       <button
                         type="button"
                         style={ICONBTN}
@@ -482,8 +506,6 @@ export default function ResultadosHistoricos() {
                           <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                         </svg>
                       </button>
-
-                      {/* Botón Editar (abre cruce avanzado existente) */}
                       <button
                         type="button"
                         style={ICONBTN}
@@ -495,8 +517,6 @@ export default function ResultadosHistoricos() {
                       </button>
                     </>
                   )}
-
-                  {/* Ollo (todos os roles) */}
                   <button
                     type="button"
                     style={ICONBTN}
@@ -512,7 +532,6 @@ export default function ResultadosHistoricos() {
                   </button>
                 </div>
 
-                {/* Panel de persoas (lista simple) */}
                 {isPeopleOpen && isAdmin && !isMobile && (
                   <section style={USERS_PANEL} aria-label="Lista de usuarias/os">
                     {users.length === 0 ? (
@@ -533,17 +552,14 @@ export default function ResultadosHistoricos() {
                   </section>
                 )}
 
-                {/* Visor de resultados confirmados */}
                 {isResultsOpen && renderResultsViewer(r.id)}
 
-                {/* Editor/cruce avanzado (mantido, só desktop admin) */}
                 {isEditing && isAdmin && !isMobile && (
                   <section style={EDIT_WRAP}>
                     {players.length === 0 ? (
                       <div style={EMPTY}>Cargando xogadoras/es…</div>
                     ) : (
                       <div style={threeColStyle(colMinPx, false)}>
-                        {/* ALIÑACIÓN REALIZADA */}
                         <div style={{ ...COL_BASE, ...COL_BG_ALI, minWidth: `${colMinPx}px` }}>
                           <div style={COL_HEAD}>
                             <span style={COL_TITLE}>ALIÑACIÓN REALIZADA</span>
@@ -562,7 +578,6 @@ export default function ResultadosHistoricos() {
                           })}
                         </div>
 
-                        {/* ONCE OFICIAL */}
                         <div style={{ ...COL_BASE, ...COL_BG_OFI, minWidth: `${colMinPx}px` }}>
                           <div style={COL_HEAD}>
                             <span style={aliIs11 ? COL_TITLE_BLINK : COL_TITLE}>ONCE OFICIAL</span>
@@ -581,7 +596,6 @@ export default function ResultadosHistoricos() {
                           })}
                         </div>
 
-                        {/* ACERTOS DO PARTIDO */}
                         <div style={{ ...COL_BASE, ...COL_BG_ACE, minWidth: `${colMinPx}px` }}>
                           <div style={COL_HEAD}>
                             <span style={COL_TITLE}>ACERTOS DO PARTIDO</span>
