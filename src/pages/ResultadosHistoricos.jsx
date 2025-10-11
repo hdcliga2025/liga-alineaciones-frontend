@@ -29,8 +29,6 @@ const ACTIONS = { display:"flex", gap:8, alignItems:"center", justifySelf:"end" 
 const ICONBTN = { width:34, height:34, display:"grid", placeItems:"center", borderRadius:10, border:"1px solid #e2e8f0", background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)", cursor:"pointer" };
 const SVGI = { fill:"none", stroke:"#0f172a", strokeWidth:1.9, strokeLinecap:"round", strokeLinejoin:"round" };
 
-const EDIT_WRAP = { marginTop: 8, border: "1px solid #dbe2f0", borderRadius: 12, background:"#f8fafc", padding: 12, marginLeft: -12, marginRight: -12 };
-
 /* Toasts */
 const TOAST_OK = { margin:"8px 0 12px", padding:"10px 12px", borderRadius:10, background:"#ecfeff", border:"1px solid #67e8f9", color:"#0e7490", font:"600 12.5px/1.2 Montserrat,system-ui,sans-serif" };
 const TOAST_ERR = { ...TOAST_OK, background:"#fee2e2", border:"1px solid #fecaca", color:"#b91c1c" };
@@ -39,17 +37,19 @@ const TOAST_ERR = { ...TOAST_OK, background:"#fee2e2", border:"1px solid #fecaca
 const PEOPLE_SHELL = (twoCols) =>
   twoCols
     ? { marginTop:8, border:"1px solid #e2e8f0", borderRadius:10, background:"#fff", padding:12,
-        display:"grid", gridTemplateColumns:"320px 1fr", gap:12, alignItems:"start" }
+        display:"grid", gridTemplateColumns:"320px 1fr", gap:16, alignItems:"start" } // ↑ separación 2 espazos aprox.
     : { marginTop:8, border:"1px solid #e2e8f0", borderRadius:10, background:"#fff", padding:"10px 12px" };
 
 const USERS_LIST = { listStyle:"none", margin:0, padding:0, display:"grid", gap:6 };
-const USER_ROW = { display:"grid", gridTemplateColumns:"auto 1fr auto auto", gap:6, alignItems:"center", padding:"5px 8px", borderRadius:8, border:"1px solid #eef2f7", background:"#f9fafb" };
+/* a fila do usuario pode parpadear */
+const USER_ROW_BASE = { display:"grid", gridTemplateColumns:"auto 1fr auto", gap:6, alignItems:"center", padding:"6px 8px", borderRadius:8, border:"1px solid #eef2f7", background:"#f9fafb" };
+const USER_ROW_BLINK = { ...USER_ROW_BASE, animation:"userBlink 1.5s ease-in-out infinite", background:"linear-gradient(180deg,#e0f2fe,#f9fafb)" };
 const USER_BADGE = { font:"900 11px/1 Montserrat,system-ui,sans-serif", color:"#0ea5e9", background:"#e0f2fe", padding:"4px 7px", borderRadius:8, minWidth:38, textAlign:"center" };
 const USER_NAME = { font:"800 13px/1.05 Montserrat,system-ui,sans-serif", color:"#0f172a" };
 const USER_SUB  = { font:"600 11.5px/1.05 Montserrat,system-ui,sans-serif", color:"#64748b" };
 
 /* ===== Editor á dereita ===== */
-const RIGHT_PAD = { paddingLeft: 10 }; // separación dende a columna de persoas
+const RIGHT_PAD = { paddingLeft: 16 }; // “2 espazos” aprox. de separación coa columna de persoas
 const EDIT_RIGHT = { display:"grid", gridTemplateColumns:"minmax(260px,1fr) minmax(260px,1fr)", gap:10, alignItems:"start" };
 const COL_BASE = { border:"1px solid #e5e7eb", borderRadius:10, overflow:"hidden", position:"relative" };
 const COL_BG_ALI = { background:"#e9f9f2" };
@@ -60,17 +60,19 @@ const COL_TITLE_BLINK = { ...COL_TITLE, animation:"blinkSoft 1.5s ease-in-out in
 const COUNT = { font:"900 11.3px/1.05 Montserrat,system-ui,sans-serif", color:"#22c55e" };
 
 const GROUP_SCROLL = { maxHeight: 188, overflowY: "auto", background: "inherit" };
-const ROW_PLAYER = { display:"grid", gridTemplateColumns:"20px 1fr", gap:6, alignItems:"center", padding:"1px 6px", borderBottom:"1px solid #f1f5f9", minWidth:0 };
-const CHECKBOX = { width:16, height:16, transform:"scale(1.06)" };
-const playerNameStyle = { font:"700 12.6px/1.02 Montserrat,system-ui,sans-serif", color:"#0f172a", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" };
+/* interlineado mínimo */
+const ROW_PLAYER = { display:"grid", gridTemplateColumns:"18px 1fr", gap:4, alignItems:"center", padding:"0 6px", minWidth:0 };
+const CHECKBOX = { width:16, height:16, transform:"scale(1.02)" };
+const playerNameStyle = { font:"700 12.2px/1 Montserrat,system-ui,sans-serif", color:"#0f172a", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" };
 const POS_SEP = { height:1, background:"#e5e7eb" };
 const POS_TAG = (bg) => ({ font:"900 10px/1 Montserrat,system-ui,sans-serif", color:"#64748b", padding:"4px 6px", position:"sticky", top:0, zIndex:2, background:bg, borderBottom:"1px solid #e2e8f0" });
 
-/* Resumo de acertos (baixo das dúas táboas) */
+/* Resumo baixo as dúas táboas */
 const SUMMARY = { marginTop:8, border:"1px solid #e5e7eb", borderRadius:12, background:"#fff", padding:8 };
-const T_HEADER = { display:"grid", gridTemplateColumns:"120px 1fr 60px 3fr", gap:8, padding:"5px 6px", borderBottom:"1px solid #e5e7eb", color:"#0f172a", font:"800 12px/1.15 Montserrat,system-ui,sans-serif" };
-const T_ROW    = { display:"grid", gridTemplateColumns:"120px 1fr 60px 3fr", gap:8, padding:"5px 6px", borderBottom:"1px solid #f1f5f9", font:"600 11.8px/1.18 Montserrat,system-ui,sans-serif" };
-const CELSTE = { color:"#0ea5e9", fontWeight:800, animation:"none" };
+const SUMMARY_TITLE = { ...COL_TITLE, textTransform:"uppercase", margin:"2px 0 6px 0" }; // RESULTADOS OBTIDOS
+const T_HEADER = { display:"grid", gridTemplateColumns:"110px 1fr 60px 3fr", gap:8, padding:"4px 6px", borderBottom:"1px solid #e5e7eb", color:"#0f172a", font:"800 11.3px/1.05 Montserrat,system-ui,sans-serif" };
+const T_ROW    = { display:"grid", gridTemplateColumns:"110px 1fr 60px 3fr", gap:8, padding:"4px 6px", borderBottom:"1px solid #f1f5f9", font:"600 11.2px/1.05 Montserrat,system-ui,sans-serif" };
+const CELSTE = { color:"#0ea5e9", fontWeight:800 };
 
 const BTN_CONFIRM = { marginTop:8, width:"100%", borderRadius:10, padding:"9px 10px", font:"900 12.2px/1.05 Montserrat,system-ui,sans-serif", background:"linear-gradient(180deg,#38bdf8,#0ea5e9)", color:"#fff", border:"1px solid #0ea5e9", boxShadow:"0 3px 10px rgba(14,165,233,.18)", cursor:"pointer" };
 const BTN_CONFIRM_BLINK = { ...BTN_CONFIRM, animation:"pulseSoft 1.5s ease-in-out infinite" };
@@ -81,6 +83,11 @@ const ERR = { ...EMPTY, background:"#fee2e2", border:"1px solid #fecaca", color:
 const STYLES = `
 @keyframes blinkSoft{0%{opacity:1}50%{opacity:.6}100%{opacity:1}}
 @keyframes pulseSoft{0%{transform:scale(1)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
+@keyframes userBlink{
+  0%{filter:none}
+  50%{filter:brightness(1.03)}
+  100%{filter:none}
+}
 `;
 
 /* ===== Utils ===== */
@@ -396,14 +403,17 @@ export default function ResultadosHistoricos() {
 
     return (
       <div style={SUMMARY}>
-        <div style={{ ...T_HEADER, textTransform:"uppercase" }}> 
-          <div>Data e hora</div><div>HDC Peñista</div><div>Acertos</div><div>Aliñación presentada</div>
-        </div>
-        <div style={T_ROW}>
-          <div>{dmy(new Date().toISOString())} {new Date().toLocaleTimeString("gl-ES",{hour:"2-digit",minute:"2-digit",hour12:false})}</div>
-          <div>{user?.name || "—"}</div>
-          <div><span style={CELSTE}>{acertosLive}</span></div>
-          <div>{out}</div>
+        <div style={SUMMARY_TITLE}>RESULTADOS OBTIDOS</div>
+        <div role="table" style={{ width:"100%" }}>
+          <div role="row" style={T_HEADER}>
+            <div>Data e hora</div><div>HDC Peñista</div><div>Acertos</div><div>Aliñación presentada</div>
+          </div>
+          <div role="row" style={T_ROW}>
+            <div>{dmy(new Date().toISOString())} {new Date().toLocaleTimeString("gl-ES",{hour:"2-digit",minute:"2-digit",hour12:false})}</div>
+            <div>{user?.name || "—"}</div>
+            <div><span style={CELSTE}>{acertosLive}</span></div>
+            <div>{out}</div>
+          </div>
         </div>
         <button
           type="button"
@@ -443,24 +453,23 @@ export default function ResultadosHistoricos() {
                 <div style={ACTIONS}>
                   {isAdmin && !isMobile && (
                     <>
-                      {/* ICONO PERSOAS (abre/pecha panel) */}
-                      <button
-                        type="button"
-                        style={ICONBTN}
-                        title={isPeopleOpen ? "Pechar persoas" : "Ver usuarias/os"}
-                        aria-label={isPeopleOpen ? "Pechar persoas" : "Ver usuarias/os"}
-                        onClick={()=> onClickPeople(match.id)}
-                      >
-                        <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}>
-                          <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                          <circle cx="9" cy="7" r="4" />
-                          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                        </svg>
-                      </button>
-
-                      {/* X para pechar etiqueta xeral cando estea aberta con persoas */}
-                      {isPeopleOpen && (
+                      {/* Se está aberta a pestaña xeral, só X; se non, só persoas */}
+                      {!isPeopleOpen ? (
+                        <button
+                          type="button"
+                          style={ICONBTN}
+                          title="Ver usuarias/os"
+                          aria-label="Ver usuarias/os"
+                          onClick={()=> onClickPeople(match.id)}
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}>
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                          </svg>
+                        </button>
+                      ) : (
                         <button
                           type="button"
                           style={ICONBTN}
@@ -491,7 +500,6 @@ export default function ResultadosHistoricos() {
                     <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
                   </button>
 
-                  {/* X para pechar a pestaña de resultados cando está aberta */}
                   {isResultsOpen && (
                     <button
                       type="button"
@@ -516,40 +524,45 @@ export default function ResultadosHistoricos() {
                         <div style={EMPTY}>Cargando usuarias/os…</div>
                       ) : (
                         <ul style={USERS_LIST}>
-                          {users.map(u => (
-                            <li key={u.id} style={USER_ROW} title={u.name}>
-                              <span style={USER_BADGE}>{u.code || "—"}</span>
-                              <div>
-                                <div style={USER_NAME}>{u.name}</div>
-                                {u.surname && <div style={USER_SUB}>{u.surname}</div>}
-                              </div>
-                              {/* Teclado (abre editor) */}
-                              <button
-                                type="button"
-                                style={ICONBTN}
-                                title="Abrir táboas desta persoa"
-                                aria-label="Abrir táboas desta persoa"
-                                onClick={()=> onOpenUserEditor(match.id, u.id)}
-                              >
-                                <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}>
-                                  <rect x="3" y="6" width="18" height="12" rx="2" />
-                                  <path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" />
-                                </svg>
-                              </button>
-                              {/* X para pechar editor desa persoa */}
-                              <button
-                                type="button"
-                                style={ICONBTN}
-                                title="Pechar editor desta persoa"
-                                aria-label="Pechar editor desta persoa"
-                                onClick={()=> { if (openUserPanel === u.id) setOpenUserPanel(null); }}
-                              >
-                                <svg width="18" height="18" viewBox="0 0 24 24" style={SVGI}>
-                                  <path d="M18 6 6 18M6 6l12 12" />
-                                </svg>
-                              </button>
-                            </li>
-                          ))}
+                          {users.map(u => {
+                            const isOpen = openUserPanel === u.id;
+                            return (
+                              <li key={u.id} style={isOpen ? USER_ROW_BLINK : USER_ROW_BASE} title={u.name}>
+                                <span style={USER_BADGE}>{u.code || "—"}</span>
+                                <div>
+                                  <div style={USER_NAME}>{u.name}</div>
+                                  {u.surname && <div style={USER_SUB}>{u.surname}</div>}
+                                </div>
+                                {/* Se está aberta a edición desta persoa → só X; se non, só teclado */}
+                                {!isOpen ? (
+                                  <button
+                                    type="button"
+                                    style={ICONBTN}
+                                    title="Abrir táboas desta persoa"
+                                    aria-label="Abrir táboas desta persoa"
+                                    onClick={()=> onOpenUserEditor(match.id, u.id)}
+                                  >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}>
+                                      <rect x="3" y="6" width="18" height="12" rx="2" />
+                                      <path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" />
+                                    </svg>
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    style={ICONBTN}
+                                    title="Pechar editor desta persoa"
+                                    aria-label="Pechar editor desta persoa"
+                                    onClick={()=> { if (openUserPanel === u.id) setOpenUserPanel(null); }}
+                                  >
+                                    <svg width="18" height="18" viewBox="0 0 24 24" style={SVGI}>
+                                      <path d="M18 6 6 18M6 6l12 12" />
+                                    </svg>
+                                  </button>
+                                )}
+                              </li>
+                            );
+                          })}
                         </ul>
                       )}
                     </div>
@@ -575,7 +588,7 @@ export default function ResultadosHistoricos() {
                                 COL_BG_OFI
                               )}
                             </div>
-                            {renderSummary(userObj)}
+                            {renderSummary(users.find(u=>u.id===openUserPanel))}
                           </>
                         )}
                       </div>
@@ -586,8 +599,8 @@ export default function ResultadosHistoricos() {
                 {/* Pestaña de resultados confirmados (visor) */}
                 {openResultsMatchId === match.id && (
                   <section style={{ marginTop:8, border:"1px solid #e5e7eb", borderRadius:12, background:"#fff", padding:8 }}>
-                    <div style={{ font:"800 12px/1.15 Montserrat,system-ui,sans-serif", color:"#0f172a", marginBottom:6, textTransform:"uppercase" }}>Acertos obtidos (confirmados)</div>
-                    <div role="table" style={{ width:"100%", font:"600 11.8px/1.18 Montserrat,system-ui,sans-serif" }}>
+                    <div style={{ ...SUMMARY_TITLE }}>RESULTADOS OBTIDOS (confirmados)</div>
+                    <div role="table" style={{ width:"100%" }}>
                       <div role="row" style={T_HEADER}>
                         <div>Data e hora</div><div>HDC Peñista</div><div>Acertos</div><div>Aliñación presentada</div>
                       </div>
