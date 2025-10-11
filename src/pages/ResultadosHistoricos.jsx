@@ -37,41 +37,60 @@ const TOAST_ERR = { ...TOAST_OK, background:"#fee2e2", border:"1px solid #fecaca
 const PEOPLE_SHELL = (twoCols) =>
   twoCols
     ? { marginTop:8, border:"1px solid #e2e8f0", borderRadius:10, background:"#fff", padding:12,
-        display:"grid", gridTemplateColumns:"320px 1fr", gap:16, alignItems:"start" } // ↑ separación 2 espazos aprox.
+        display:"grid", gridTemplateColumns:"320px 1fr", gap:16, alignItems:"start" }
     : { marginTop:8, border:"1px solid #e2e8f0", borderRadius:10, background:"#fff", padding:"10px 12px" };
 
 const USERS_LIST = { listStyle:"none", margin:0, padding:0, display:"grid", gap:6 };
-/* a fila do usuario pode parpadear */
 const USER_ROW_BASE = { display:"grid", gridTemplateColumns:"auto 1fr auto", gap:6, alignItems:"center", padding:"6px 8px", borderRadius:8, border:"1px solid #eef2f7", background:"#f9fafb" };
-const USER_ROW_BLINK = { ...USER_ROW_BASE, animation:"userBlink 1.5s ease-in-out infinite", background:"linear-gradient(180deg,#e0f2fe,#f9fafb)" };
+const USER_ROW_BLINK = {
+  ...USER_ROW_BASE,
+  animation:"userBlink 1.5s ease-in-out infinite",
+  background:"linear-gradient(180deg,#e8f5ff,#f9fafb)",
+  boxShadow:"0 6px 18px rgba(14,165,233,.25)"
+};
+const USER_ROW_CONFIRMED = { ...USER_ROW_BASE, background:"linear-gradient(180deg,#eafff3,#f7fff9)", border:"1px solid #22c55e" };
 const USER_BADGE = { font:"900 11px/1 Montserrat,system-ui,sans-serif", color:"#0ea5e9", background:"#e0f2fe", padding:"4px 7px", borderRadius:8, minWidth:38, textAlign:"center" };
-const USER_NAME = { font:"800 13px/1.05 Montserrat,system-ui,sans-serif", color:"#0f172a" };
-const USER_SUB  = { font:"600 11.5px/1.05 Montserrat,system-ui,sans-serif", color:"#64748b" };
+const USER_NAME = { font:"800 13px/1.05 Montserrat,system-ui,sans-serif", color:"#0f172a", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" };
+const USER_SUB  = { font:"600 11.5px/1.05 Montserrat,system-ui,sans-serif", color:"#64748b", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" };
 
 /* ===== Editor á dereita ===== */
-const RIGHT_PAD = { paddingLeft: 16 }; // “2 espazos” aprox. de separación coa columna de persoas
+const RIGHT_PAD = { paddingLeft: 16 }; // 2 espazos aprox
 const EDIT_RIGHT = { display:"grid", gridTemplateColumns:"minmax(260px,1fr) minmax(260px,1fr)", gap:10, alignItems:"start" };
 const COL_BASE = { border:"1px solid #e5e7eb", borderRadius:10, overflow:"hidden", position:"relative" };
 const COL_BG_ALI = { background:"#e9f9f2" };
 const COL_BG_OFI = { background:"#fff5e7" };
-const COL_HEAD = { display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 8px", background:"#f1f5f9", borderBottom:"1px solid #e2e8f0" };
-const COL_TITLE = { font:"900 11.3px/1.05 Montserrat,system-ui,sans-serif", color:"#0f172a", letterSpacing:.2 };
+const COL_HEAD = { display:"flex", justifyContent:"space-between", alignItems:"center", padding:"4px 8px", background:"#f1f5f9", borderBottom:"1px solid #e2e8f0" };
+const COL_TITLE = { font:"900 11.3px/1.05 Montserrat,system-ui,sans-serif", color:"#0f172a", letterSpacing:.2, textTransform:"uppercase" };
 const COL_TITLE_BLINK = { ...COL_TITLE, animation:"blinkSoft 1.5s ease-in-out infinite" };
 const COUNT = { font:"900 11.3px/1.05 Montserrat,system-ui,sans-serif", color:"#22c55e" };
 
 const GROUP_SCROLL = { maxHeight: 188, overflowY: "auto", background: "inherit" };
-/* interlineado mínimo */
-const ROW_PLAYER = { display:"grid", gridTemplateColumns:"18px 1fr", gap:4, alignItems:"center", padding:"0 6px", minWidth:0 };
-const CHECKBOX = { width:16, height:16, transform:"scale(1.02)" };
+/* interlineado mínimo e espazo extra entre checkbox e dorsal */
+const ROW_PLAYER = { display:"grid", gridTemplateColumns:"18px 1fr", gap:6, alignItems:"center", padding:"0 6px", minWidth:0 };
+const CHECKBOX = { width:16, height:16, transform:"scale(1.02)", marginRight:2 };
 const playerNameStyle = { font:"700 12.2px/1 Montserrat,system-ui,sans-serif", color:"#0f172a", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" };
 const POS_SEP = { height:1, background:"#e5e7eb" };
-const POS_TAG = (bg) => ({ font:"900 10px/1 Montserrat,system-ui,sans-serif", color:"#64748b", padding:"4px 6px", position:"sticky", top:0, zIndex:2, background:bg, borderBottom:"1px solid #e2e8f0" });
+/* cabeceira de demarcación máis compacta */
+const POS_TAG = (bg) => ({ font:"900 10px/1 Montserrat,system-ui,sans-serif", color:"#64748b", padding:"2px 6px", position:"sticky", top:0, zIndex:2, background:bg, borderBottom:"1px solid #e2e8f0" });
 
 /* Resumo baixo as dúas táboas */
-const SUMMARY = { marginTop:8, border:"1px solid #e5e7eb", borderRadius:12, background:"#fff", padding:8 };
-const SUMMARY_TITLE = { ...COL_TITLE, textTransform:"uppercase", margin:"2px 0 6px 0" }; // RESULTADOS OBTIDOS
-const T_HEADER = { display:"grid", gridTemplateColumns:"110px 1fr 60px 3fr", gap:8, padding:"4px 6px", borderBottom:"1px solid #e5e7eb", color:"#0f172a", font:"800 11.3px/1.05 Montserrat,system-ui,sans-serif" };
-const T_ROW    = { display:"grid", gridTemplateColumns:"110px 1fr 60px 3fr", gap:8, padding:"4px 6px", borderBottom:"1px solid #f1f5f9", font:"600 11.2px/1.05 Montserrat,system-ui,sans-serif" };
+const SUMMARY = {
+  marginTop:8,
+  border:"1px solid #fecaca",
+  borderRadius:12,
+  background:"linear-gradient(180deg,#fff1f1,#ffe7e7)",
+  padding:8
+};
+const SUMMARY_TITLE = { ...COL_TITLE, textDecoration:"underline", margin:"2px 0 6px 0" }; // RESULTADOS OBTIDOS
+const T_HEADER = {
+  display:"grid", gridTemplateColumns:"120px 1fr 70px 3fr", gap:8, padding:"4px 6px",
+  borderBottom:"1px solid #e5e7eb", color:"#0f172a", font:"800 11.3px/1.05 Montserrat,system-ui,sans-serif"
+};
+const T_ROW    = {
+  display:"grid", gridTemplateColumns:"120px 1fr 70px 3fr", gap:8, padding:"4px 6px",
+  borderBottom:"1px solid #f1f5f9", font:"600 11.2px/1.05 Montserrat,system-ui,sans-serif"
+};
+const ACERTOS_CELL = { textAlign:"center" };
 const CELSTE = { color:"#0ea5e9", fontWeight:800 };
 
 const BTN_CONFIRM = { marginTop:8, width:"100%", borderRadius:10, padding:"9px 10px", font:"900 12.2px/1.05 Montserrat,system-ui,sans-serif", background:"linear-gradient(180deg,#38bdf8,#0ea5e9)", color:"#fff", border:"1px solid #0ea5e9", boxShadow:"0 3px 10px rgba(14,165,233,.18)", cursor:"pointer" };
@@ -81,19 +100,28 @@ const EMPTY = { marginTop:8, padding:"8px 10px", borderRadius:10, background:"#e
 const ERR = { ...EMPTY, background:"#fee2e2", border:"1px solid #fecaca", color:"#b91c1c" };
 
 const STYLES = `
-@keyframes blinkSoft{0%{opacity:1}50%{opacity:.6}100%{opacity:1}}
+@keyframes blinkSoft{0%{opacity:1}50%{opacity:.7}100%{opacity:1}}
 @keyframes pulseSoft{0%{transform:scale(1)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
 @keyframes userBlink{
-  0%{filter:none}
-  50%{filter:brightness(1.03)}
-  100%{filter:none}
+  0%{box-shadow:0 0 0 rgba(14,165,233,0.0)}
+  50%{box-shadow:0 8px 22px rgba(14,165,233,0.35)}
+  100%{box-shadow:0 0 0 rgba(14,165,233,0.0)}
 }
 `;
 
 /* ===== Utils ===== */
 const pad2 = (n) => String(n).padStart(2, "0");
 const sortDescByDate = (a, b) => (b.match_iso ? new Date(b.match_iso).getTime() : -Infinity) - (a.match_iso ? new Date(a.match_iso).getTime() : -Infinity);
-const dmy = (iso) => { if (!iso) return "—"; const d = new Date(iso); return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`; };
+const dmyShort = (iso) => { // dd/mm/yy-HH:MM
+  if (!iso) return "—";
+  const d = new Date(iso);
+  const dd = pad2(d.getDate());
+  const mm = pad2(d.getMonth()+1);
+  const yy = String(d.getFullYear()).slice(-2);
+  const hh = pad2(d.getHours());
+  const mi = pad2(d.getMinutes());
+  return `${dd}/${mm}/${yy}-${hh}:${mi}`;
+};
 
 function inferPosFromFoto(url = "") {
   const m = url.match(/-(POR|DEF|CEN|DEL)\.(?:jpg|jpeg|png|webp)$/i);
@@ -152,6 +180,7 @@ export default function ResultadosHistoricos() {
   const [selOnce, setSelOnce] = useState(new Set());
 
   const [resultsConfirmed, setResultsConfirmed] = useState({});
+  const [confirmedUsersByMatch, setConfirmedUsersByMatch] = useState({}); // {matchId: Set<userId>}
 
   const showToast = (msg, ok=true) => { setToast({ msg, ok, t: Date.now() }); setTimeout(()=> setToast(""), 4200); };
 
@@ -331,9 +360,14 @@ export default function ResultadosHistoricos() {
         .upsert(payload, { onConflict:"match_id,user_id", ignoreDuplicates:false });
       if (upErr) { showToast(`Erro gardando: ${upErr.message}`, false); armClear(); return; }
 
-      showToast("Resultados confirmados e gardados.", true);
+      // Marca esa persoa como confirmada (verde) para ese partido
+      setConfirmedUsersByMatch(prev => {
+        const cur = new Set(prev[matchId] || []);
+        cur.add(openUserPanel);
+        return { ...prev, [matchId]: cur };
+      });
 
-      // Pechar todo o despregable do teclado
+      // Pecha todo, sen abrir o ollo; a consulta verase no ollo xeral
       setOpenUserPanel(null);
       setOpenPeopleMatchId(null);
       setEditingMatchId(null);
@@ -397,7 +431,6 @@ export default function ResultadosHistoricos() {
       const label = p ? p.label : "—";
       return ok ? <strong style={CELSTE}>{label}</strong> : <span>{label}</span>;
     });
-
     const out = [];
     aliLabels.forEach((node, i) => { out.push(node); if (i < aliLabels.length - 1) out.push(<span style={{ opacity:.6 }}> {" | "} </span>); });
 
@@ -406,12 +439,12 @@ export default function ResultadosHistoricos() {
         <div style={SUMMARY_TITLE}>RESULTADOS OBTIDOS</div>
         <div role="table" style={{ width:"100%" }}>
           <div role="row" style={T_HEADER}>
-            <div>Data e hora</div><div>HDC Peñista</div><div>Acertos</div><div>Aliñación presentada</div>
+            <div>Data e hora</div><div>HDC Membro</div><div style={{textAlign:"center"}}>Acertos</div><div>Aliñación presentada</div>
           </div>
           <div role="row" style={T_ROW}>
-            <div>{dmy(new Date().toISOString())} {new Date().toLocaleTimeString("gl-ES",{hour:"2-digit",minute:"2-digit",hour12:false})}</div>
+            <div>{dmyShort(new Date().toISOString())}</div>
             <div>{user?.name || "—"}</div>
-            <div><span style={CELSTE}>{acertosLive}</span></div>
+            <div style={ACERTOS_CELL}><span style={CELSTE}>{acertosLive}</span></div>
             <div>{out}</div>
           </div>
         </div>
@@ -434,7 +467,7 @@ export default function ResultadosHistoricos() {
       <p style={PAGE_SUB}>Índice dos partidos rematados (máis recente → máis antigo).</p>
 
       {toast?.msg && <div style={toast.ok ? TOAST_OK : TOAST_ERR} aria-live="polite">{toast.msg}</div>}
-      {err && <div style={ERR} role="status" aria-live="polite">{err}</div>}
+      {err && <div style={ERR} role="status" aria-live="polite"> {err} </div>}
       {!err && loading && <div style={EMPTY} role="status" aria-live="polite">Cargando…</div>}
       {!err && !loading && view.length === 0 && (<div style={EMPTY} role="status" aria-live="polite">Non hai partidos rematados aínda.</div>)}
 
@@ -444,16 +477,17 @@ export default function ResultadosHistoricos() {
             const isPeopleOpen = openPeopleMatchId === match.id;
             const isResultsOpen = openResultsMatchId === match.id;
             const userObj = users.find(u => u.id === openUserPanel);
+            const confirmedSet = confirmedUsersByMatch[match.id] || new Set();
 
             return (
               <li key={`${match.id ?? match.match_iso ?? "noid"}-${i}`} style={{ ...ITEM, marginBottom: (isPeopleOpen || isResultsOpen) ? 12 : 8 }}>
-                <span style={DATE}>{dmy(match.match_iso)}</span>
+                <span style={DATE}>{dmyShort(match.match_iso)}</span>
                 <span style={TEAMS}>{match.equipo1 || "—"} <span style={SEP}>-</span> {match.equipo2 || "—"}</span>
 
                 <div style={ACTIONS}>
                   {isAdmin && !isMobile && (
                     <>
-                      {/* Se está aberta a pestaña xeral, só X; se non, só persoas */}
+                      {/* Se está aberta a pestaña xeral: só X; se non: só persoas */}
                       {!isPeopleOpen ? (
                         <button
                           type="button"
@@ -526,8 +560,10 @@ export default function ResultadosHistoricos() {
                         <ul style={USERS_LIST}>
                           {users.map(u => {
                             const isOpen = openUserPanel === u.id;
+                            const isConfirmed = confirmedSet.has(u.id);
+                            const rowStyle = isConfirmed ? USER_ROW_CONFIRMED : (isOpen ? USER_ROW_BLINK : USER_ROW_BASE);
                             return (
-                              <li key={u.id} style={isOpen ? USER_ROW_BLINK : USER_ROW_BASE} title={u.name}>
+                              <li key={u.id} style={rowStyle} title={u.name}>
                                 <span style={USER_BADGE}>{u.code || "—"}</span>
                                 <div>
                                   <div style={USER_NAME}>{u.name}</div>
@@ -588,7 +624,7 @@ export default function ResultadosHistoricos() {
                                 COL_BG_OFI
                               )}
                             </div>
-                            {renderSummary(users.find(u=>u.id===openUserPanel))}
+                            {renderSummary(userObj)}
                           </>
                         )}
                       </div>
@@ -602,13 +638,13 @@ export default function ResultadosHistoricos() {
                     <div style={{ ...SUMMARY_TITLE }}>RESULTADOS OBTIDOS (confirmados)</div>
                     <div role="table" style={{ width:"100%" }}>
                       <div role="row" style={T_HEADER}>
-                        <div>Data e hora</div><div>HDC Peñista</div><div>Acertos</div><div>Aliñación presentada</div>
+                        <div>Data e hora</div><div>HDC Membro</div><div style={{textAlign:"center"}}>Acertos</div><div>Aliñación presentada</div>
                       </div>
                       {(resultsConfirmed[match.id] || []).map((rec, idx) => (
                         <div key={`${rec.userId}-${idx}`} role="row" style={T_ROW}>
-                          <div>{dmy(rec.whenISO)} {new Date(rec.whenISO).toLocaleTimeString("gl-ES",{hour:"2-digit",minute:"2-digit",hour12:false})}</div>
+                          <div>{dmyShort(rec.whenISO)}</div>
                           <div>{rec.userName}</div>
-                          <div><span style={CELSTE}>{rec.acertos}</span></div>
+                          <div style={ACERTOS_CELL}><span style={CELSTE}>{rec.acertos}</span></div>
                           <div>
                             {(rec.plantillaIds||[]).map((pid, j, arr) => {
                               const p = players.find(px=>px.id===pid);
