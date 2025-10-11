@@ -29,7 +29,6 @@ const ACTIONS = { display:"flex", gap:8, alignItems:"center", justifySelf:"end" 
 const ICONBTN = { width:34, height:34, display:"grid", placeItems:"center", borderRadius:10, border:"1px solid #e2e8f0", background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)", cursor:"pointer" };
 const SVGI = { fill:"none", stroke:"#0f172a", strokeWidth:1.9, strokeLinecap:"round", strokeLinejoin:"round" };
 
-/* Panel edición por partido — full-bleed */
 const EDIT_WRAP = { marginTop: 8, border: "1px solid #dbe2f0", borderRadius: 12, background:"#f8fafc", padding: 12, marginLeft: -12, marginRight: -12 };
 
 /* Toasts */
@@ -56,13 +55,12 @@ const USER_SUB  = { font:"600 12.5px/1.15 Montserrat,system-ui,sans-serif", colo
 /* Panel cruce por usuario */
 const CROSS_WRAP = { marginTop: 8, border:"1px solid #e2e8f0", borderRadius:12, background:"#ffffff", padding:10 };
 
-/* Layout columnas (desktop 3 columnas; móbil apiladas) */
+/* Layout columnas */
 const threeColStyle = (minPx, isMobile) =>
   isMobile
     ? { display:"grid", gridTemplateColumns:"1fr", gap:12, alignItems:"start" }
     : { display:"grid", gridTemplateColumns:`repeat(3, minmax(${minPx}px, 1fr))`, gap:12, alignItems:"start" };
 
-/* Columnas opacas + fondos */
 const COL_BASE = { border:"1px solid #e5e7eb", borderRadius:10, overflow:"hidden", position:"relative" };
 const COL_BG_ALI = { background:"#e9f9f2" }; // verde
 const COL_BG_OFI = { background:"#fff5e7" }; // ámbar
@@ -74,37 +72,38 @@ const COL_TITLE_BLINK = { ...COL_TITLE, animation:"blinkSoft 1.5s ease-in-out in
 const COUNT = { font:"900 12px/1.05 Montserrat,system-ui,sans-serif", color:"#22c55e" };
 const COUNT_CELESTE_BLINK = { font:"900 12px/1.05 Montserrat,system-ui,sans-serif", color:"#0ea5e9", animation:"blinkScale 1.5s ease-in-out infinite" };
 
-/* Scroll por demarcación */
 const GROUP_SCROLL = (isMobile) => ({ maxHeight: isMobile ? 132 : 176, overflowY: "auto", background: "inherit" });
 
-/* Filas compactas + checkbox máis grande + espazo dorsal */
 const ROW_PLAYER = { display:"grid", gridTemplateColumns:"22px 1fr", gap:8, alignItems:"center", padding:"2px 6px", borderBottom:"1px solid #f1f5f9", minWidth:0 };
 const ROW_PLAYER_NOCHK = { display:"grid", gridTemplateColumns:"1fr", gap:2, alignItems:"center", padding:"2px 6px", borderBottom:"1px solid #f1f5f9", minWidth:0 };
 const CHECKBOX = { width:18, height:18, transform:"scale(1.18)" };
 const playerNameStyle = () => ({ font:"700 13.6px/1.04 Montserrat,system-ui,sans-serif", color:"#0f172a", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" });
 
-/* Separador + sticky */
 const POS_SEP = { height:1, background:"#e5e7eb" };
 const POS_TAG_BASE = { font:"900 10.5px/1 Montserrat,system-ui,sans-serif", color:"#64748b", padding:"5px 8px" };
 const POS_TAG_STICKY = (bg) => ({ ...POS_TAG_BASE, position:"sticky", top:0, zIndex:2, background:bg, borderBottom:"1px solid #e2e8f0" });
 
-/* Contador X/11 xunto ao apelido marcado */
 const COUNT_INLINE = { display:"inline-block", marginLeft:8, padding:"2px 8px", borderRadius:999, font:"900 12px/1 Montserrat,system-ui,sans-serif", color:"#fff", background:"#0ea5e9", boxShadow:"0 2px 8px rgba(14,165,233,.25)" };
 
-/* Botón confirmar (pulse sutil cando Once=11) */
 const BTN_CONFIRM = { width:"100%", borderRadius:10, padding:"10px 12px", font:"900 12.8px/1.05 Montserrat,system-ui,sans-serif", background:"linear-gradient(180deg,#38bdf8,#0ea5e9)", color:"#fff", border:"1px solid #0ea5e9", boxShadow:"0 3px 10px rgba(14,165,233,.20)", cursor:"pointer" };
 const BTN_CONFIRM_BLINK = { ...BTN_CONFIRM, animation:"pulseSoft 1.5s ease-in-out infinite" };
 
-/* Mensaxes */
 const EMPTY = { marginTop:8, padding:"10px 12px", borderRadius:10, background:"#ecfeff", border:"1px solid #67e8f9", color:"#0e7490", font:"600 13px/1.2 Montserrat,system-ui,sans-serif" };
 const ERR = { ...EMPTY, background:"#fee2e2", border:"1px solid #fecaca", color:"#b91c1c" };
+
+/* Animacións */
+const STYLES = `
+@keyframes blinkScale{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes blinkSoft{0%{opacity:1}50%{opacity:.6}100%{opacity:1}}
+@keyframes pulseSoft{0%{transform:scale(1)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
+`;
 
 /* ===== Utils ===== */
 const pad2 = (n) => String(n).padStart(2, "0");
 const sortDescByDate = (a, b) => (b.match_iso ? new Date(b.match_iso).getTime() : -Infinity) - (a.match_iso ? new Date(a.match_iso).getTime() : -Infinity);
 const dmy = (iso) => { if (!iso) return "—"; const d = new Date(iso); return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`; };
 
-/* Correccións de xogadores: Joel→Yoel (DEF), Jones El-Abdellaoui (DEL) */
+/* Correccións xogadores */
 function normalizePlayer(p) {
   let nombre = p.nombre || "";
   let pos = p.pos || null;
@@ -137,7 +136,7 @@ function groupByPos(players) {
 /* Sonidos */
 function bipSingle(freq = 880, dur = 0.11) {
   try {
-    const AC = window.AudioContext || window.webkitAudioContext;
+    const AC = window.AudioContext || (window).webkitAudioContext;
     const ctx = new AC(); const o = ctx.createOscillator(); const g = ctx.createGain();
     o.type = "sine"; o.frequency.value = freq; o.connect(g); g.connect(ctx.destination);
     g.gain.setValueAtTime(0.0001, ctx.currentTime);
@@ -148,6 +147,7 @@ function bipSingle(freq = 880, dur = 0.11) {
 }
 function bipDouble(){ bipSingle(880,0.1); setTimeout(()=>bipSingle(920,0.1), 160); }
 
+/* ===== Compo ===== */
 export default function ResultadosHistoricos() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [rows, setRows] = useState([]);
@@ -168,7 +168,6 @@ export default function ResultadosHistoricos() {
   const [selPlantilla, setSelPlantilla] = useState(new Set());
   const [selOnce, setSelOnce] = useState(new Set());
 
-  // último click → mostra conteo x/11 xunto ao apelido
   const [lastAli, setLastAli] = useState({ id: null, count: 0 });
   const [lastOfi, setLastOfi] = useState({ id: null, count: 0 });
   useEffect(() => { let t; if (lastAli.id) t = setTimeout(() => setLastAli({ id:null, count:0 }), 900); return () => clearTimeout(t); }, [lastAli]);
@@ -177,7 +176,7 @@ export default function ResultadosHistoricos() {
   const [openResultsMatchId, setOpenResultsMatchId] = useState(null);
   const [openInfoMatchId, setOpenInfoMatchId] = useState(null);
 
-  const showToast = (msg, ok=true) => { setToast({ msg, ok, t: Date.now() }); setTimeout(()=> setToast(""), 3800); };
+  const showToast = (msg, ok=true) => { setToast({ msg, ok, t: Date.now() }); setTimeout(()=> setToast(""), 4200); };
 
   async function resolveAdmin() {
     const { data: s } = await supabase.auth.getSession();
@@ -228,7 +227,6 @@ export default function ResultadosHistoricos() {
     await loadConfirmedForMatch(matchId);
   }
 
-  // Carga resultados confirmados e mapea nomes sen depender de `users`
   async function loadConfirmedForMatch(matchId) {
     try {
       const { data, error } = await supabase
@@ -261,52 +259,69 @@ export default function ResultadosHistoricos() {
     }
   }
 
-  // Confirmar: cruza seleccións e garda
+  // Confirmar con verificación inmediata
   async function confirmarMatch(matchId) {
-    if (!openUserPanel) return;
-    const plantillaSet = new Set(selPlantilla);
-    const onceSet = new Set(selOnce);
-    if (plantillaSet.size !== 11 || onceSet.size !== 11) return;
+    console.log("[CONFIRMAR] start", { matchId, openUserPanel, ali: selPlantilla.size, once: selOnce.size });
+    if (!openUserPanel) { showToast("Selecciona unha usuaria/o primeiro (teclado).", false); return; }
+    if (selPlantilla.size !== 11) { showToast("Aliñación realizada debe ter 11.", false); return; }
+    if (selOnce.size !== 11) { showToast("Once oficial debe ter 11.", false); return; }
 
-    // bip bip e confirmación
     bipDouble();
     const ok = window.confirm("¿Seguro que queres gardar esta aliñación?");
     if (!ok) return;
 
-    // cálculo acertos
-    let acertos = 0;
-    onceSet.forEach(id => { if (plantillaSet.has(id)) acertos++; });
+    const plantillaSet = new Set(selPlantilla);
+    const onceSet = new Set(selOnce);
+    let acertos = 0; onceSet.forEach(id => { if (plantillaSet.has(id)) acertos++; });
 
     const confirmedAtISO = new Date().toISOString();
-    try {
-      const payload = [{
-        match_id: matchId,
-        user_id: openUserPanel,
-        confirmed_at: confirmedAtISO,
-        acertos,
-        plantilla_ids: Array.from(plantillaSet),
-        once_ids: Array.from(onceSet),
-        updated_at: confirmedAtISO,
-      }];
-      const { error } = await supabase
-        .from("resultados_confirmados")
-        .upsert(payload, { onConflict:"match_id,user_id" });
-      if (error) throw error;
+    const payload = [{
+      match_id: matchId,
+      user_id: openUserPanel,
+      confirmed_at: confirmedAtISO,
+      acertos,
+      plantilla_ids: Array.from(plantillaSet),
+      once_ids: Array.from(onceSet),
+      updated_at: confirmedAtISO,
+    }];
+    console.log("[CONFIRMAR] upsert payload:", payload);
 
-      showToast("Resultados confirmados e gardados.", true);
-
-      // pecha editor e limpa estados; NON abre o ollo
-      setEditingMatchId(null);
-      setOpenUserPanel(null);
-      setSelPlantilla(new Set());
-      setSelOnce(new Set());
-
-      // refresca para que aparezan cando abras o ollo
-      await loadConfirmedForMatch(matchId);
-    } catch (e) {
-      console.error("confirmarMatch error:", e);
-      showToast("Erro gardando resultados confirmados.", false);
+    const { data: upData, error: upErr } = await supabase
+      .from("resultados_confirmados")
+      .upsert(payload, { onConflict:"match_id,user_id" })
+      .select("*");
+    if (upErr) {
+      console.error("[CONFIRMAR] upsert error:", upErr);
+      showToast(`Erro gardando: ${upErr.message||"descoñecido"}`, false);
+      return;
     }
+    console.log("[CONFIRMAR] upsert ok:", upData);
+
+    // Verificación inmediata: reler a fila
+    const { data: chk, error: chkErr } = await supabase
+      .from("resultados_confirmados")
+      .select("match_id,user_id,acertos,confirmed_at")
+      .eq("match_id", matchId)
+      .eq("user_id", openUserPanel)
+      .limit(1);
+    if (chkErr) {
+      console.error("[CONFIRMAR] check error:", chkErr);
+      showToast(`Gardado sen verificar (lectura fallou): ${chkErr.message}`, false);
+    } else if (!chk || chk.length === 0) {
+      console.error("[CONFIRMAR] check no rows");
+      showToast("Non foi posible verificar o gardado (sen filas). Revisa RLS/PK.", false);
+    } else {
+      showToast("Resultados confirmados e gardados.", true);
+    }
+
+    // limpar e pechar
+    setEditingMatchId(null);
+    setOpenUserPanel(null);
+    setSelPlantilla(new Set());
+    setSelOnce(new Set());
+
+    // refresco visor
+    await loadConfirmedForMatch(matchId);
   }
 
   const colMinPx = useMemo(() => !players?.length ? 260 : Math.max(240, measureLongestLabelPx(players)), [players]);
@@ -406,18 +421,12 @@ export default function ResultadosHistoricos() {
   }
 
   const MOBILE_INFO_TEXT = "A función de edición destas táboas é exclusiva das persoas administradoras da App, e só é operativa mediante a icona de teclado que verás na versión de ordenador de sobremesa.";
-
-  // estados derivados para parpadeos
   const aliIs11 = selPlantilla.size === 11;
   const onceIs11 = selOnce.size === 11;
 
   return (
     <main style={WRAP}>
-      <style>{`
-        @keyframes blinkScale{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
-        @keyframes blinkSoft{0%{opacity:1}50%{opacity:.6}100%{opacity:1}}
-        @keyframes pulseSoft{0%{transform:scale(1)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
-      `}</style>
+      <style>{STYLES}</style>
 
       <h2 style={PAGE_HEAD}>HISTÓRICO DE RESULTADOS</h2>
       <p style={PAGE_SUB}>Índice dos partidos rematados (máis recente → máis antigo).</p>
@@ -425,15 +434,14 @@ export default function ResultadosHistoricos() {
       {toast?.msg && <div style={toast.ok ? TOAST_OK : TOAST_ERR} aria-live="polite">{toast.msg}</div>}
       {err && <div style={ERR} role="status" aria-live="polite">{err}</div>}
       {!err && loading && <div style={EMPTY} role="status" aria-live="polite">Cargando…</div>}
-      {!err && !loading && view.length === 0 && (<div style={EMPTY} role="status" aria-live="polite">Non hai partidos rematados aínda.</div>)}
+      {!err && !loading && rows.length === 0 && (<div style={EMPTY} role="status" aria-live="polite">Non hai partidos rematados aínda.</div>)}
 
-      {!err && !loading && view.length > 0 && (
+      {!err && !loading && rows.length > 0 && (
         <ul style={LIST} aria-label="Lista de partidos rematados">
-          {view.map((r, i) => {
+          {rows.map((r, i) => {
             const isEditing = editingMatchId === r.id;
             const isResultsOpen = openResultsMatchId === r.id;
             const isInfoOpen = openInfoMatchId === r.id;
-
             const acertosLive = Array.from(selOnce).filter(id => selPlantilla.has(id)).length;
 
             return (
@@ -485,30 +493,10 @@ export default function ResultadosHistoricos() {
 
                           return (
                             <li key={u.id} style={USER_ROW}>
-                              {/* Liña 1: nome (plegado: truncado; aberto: completo) */}
-                              <div
-                                style={
-                                  isOpenUser
-                                    ? { ...USER_NAME, whiteSpace: "normal", overflow: "visible", textOverflow: "clip" }
-                                    : USER_NAME
-                                }
-                                title={u.name}
-                              >
-                                {u.name}
-                              </div>
+                              <div style={isOpenUser ? { ...USER_NAME, whiteSpace:"normal", overflow:"visible", textOverflow:"clip" } : USER_NAME} title={u.name}>{u.name}</div>
 
-                              {/* Liña 2: email + teclado á dereita */}
                               <div style={USER_EMAIL_ROW}>
-                                <div
-                                  style={
-                                    isOpenUser
-                                      ? { ...USER_SUB, whiteSpace: "normal", overflow: "visible", textOverflow: "clip" }
-                                      : USER_SUB
-                                  }
-                                  title={u.email}
-                                >
-                                  {u.email}
-                                </div>
+                                <div style={isOpenUser ? { ...USER_SUB, whiteSpace:"normal", overflow:"visible", textOverflow:"clip" } : USER_SUB} title={u.email}>{u.email}</div>
                                 <button
                                   type="button"
                                   style={{ ...ICONBTN, borderColor: isOpenUser ? "#fecaca" : "#bae6fd", background:"#fff" }}
@@ -527,7 +515,6 @@ export default function ResultadosHistoricos() {
                                 </button>
                               </div>
 
-                              {/* Panel de cruce */}
                               {isOpenUser && (
                                 <div>
                                   <div style={CROSS_WRAP} role="region" aria-label={`Cruce para ${u.name}`}>
@@ -536,7 +523,6 @@ export default function ResultadosHistoricos() {
                                     ) : (
                                       <>
                                         <div style={threeColStyle(colMinPx, false)}>
-                                          {/* ALIÑACIÓN REALIZADA */}
                                           <div style={{ ...COL_BASE, ...COL_BG_ALI, minWidth: `${colMinPx}px` }}>
                                             <div style={COL_HEAD}>
                                               <span style={COL_TITLE}>ALIÑACIÓN REALIZADA</span>
@@ -550,7 +536,6 @@ export default function ResultadosHistoricos() {
                                             }, stickyBg: "#e9f9f2", perDemarcScroll: true, which:"plantilla" })}
                                           </div>
 
-                                          {/* ONCE OFICIAL (parpadea cando ALIÑACIÓN = 11) */}
                                           <div style={{ ...COL_BASE, ...COL_BG_OFI, minWidth: `${colMinPx}px` }}>
                                             <div style={COL_HEAD}>
                                               <span style={aliIs11 ? COL_TITLE_BLINK : COL_TITLE}>ONCE OFICIAL</span>
@@ -564,7 +549,6 @@ export default function ResultadosHistoricos() {
                                             }, stickyBg: "#fff5e7", perDemarcScroll: true, which:"once" })}
                                           </div>
 
-                                          {/* ACERTOS DO PARTIDO */}
                                           <div style={{ ...COL_BASE, ...COL_BG_ACE, minWidth: `${colMinPx}px` }}>
                                             <div style={COL_HEAD}>
                                               <span style={COL_TITLE}>ACERTOS DO PARTIDO</span>
