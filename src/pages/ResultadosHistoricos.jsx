@@ -38,15 +38,12 @@ const TOAST_ERR = { ...TOAST_OK, background:"#fee2e2", border:"1px solid #fecaca
 /* Lista de usuarios (panel simple) */
 const USERS_PANEL = { marginTop:8, border:"1px solid #e2e8f0", borderRadius:10, background:"#fff", padding:"10px 12px" };
 const USERS_LIST = { listStyle:"none", margin:0, padding:0, display:"grid", gap:6 };
-const USER_ROW = { display:"grid", gridTemplateColumns:"auto 1fr", gap:8, alignItems:"center", padding:"4px 8px", borderRadius:8, border:"1px solid #eef2f7", background:"#f9fafb" };
+const USER_ROW = { display:"grid", gridTemplateColumns:"auto 1fr auto", gap:8, alignItems:"center", padding:"6px 8px", borderRadius:8, border:"1px solid #eef2f7", background:"#f9fafb" };
 const USER_BADGE = { font:"800 12px/1 Montserrat,system-ui,sans-serif", color:"#0ea5e9", background:"#e0f2fe", padding:"5px 8px", borderRadius:8, minWidth:42, textAlign:"center" };
 const USER_NAME = { font:"800 14px/1.1 Montserrat,system-ui,sans-serif", color:"#0f172a" };
 const USER_SUB  = { font:"600 12.5px/1.15 Montserrat,system-ui,sans-serif", color:"#64748b" };
 
-/* Panel cruce existente (mantido) */
-const CROSS_WRAP = { marginTop: 8, border:"1px solid #e2e8f0", borderRadius:12, background:"#ffffff", padding:10 };
-
-/* Columnas do cruce (mantemos) */
+/* Columnas do cruce */
 const threeColStyle = (minPx, isMobile) =>
   isMobile
     ? { display:"grid", gridTemplateColumns:"1fr", gap:12, alignItems:"start" }
@@ -143,12 +140,12 @@ export default function ResultadosHistoricos() {
   useEffect(() => { const onR = () => setIsMobile(window.innerWidth <= 560); window.addEventListener("resize", onR); return () => window.removeEventListener("resize", onR); }, []);
 
   const [editingMatchId, setEditingMatchId] = useState(null);
+  const [openUserPanel, setOpenUserPanel] = useState(null); // usuario seleccionado para cruce
+  const [openPeopleMatchId, setOpenPeopleMatchId] = useState(null); // lista de persoas
   const [users, setUsers] = useState([]);
   const [players, setPlayers] = useState([]);
 
   const [resultsConfirmed, setResultsConfirmed] = useState({});
-
-  const [openUserPanel, setOpenUserPanel] = useState(null);
   const [selPlantilla, setSelPlantilla] = useState(new Set());
   const [selOnce, setSelOnce] = useState(new Set());
 
@@ -159,9 +156,6 @@ export default function ResultadosHistoricos() {
 
   const [openResultsMatchId, setOpenResultsMatchId] = useState(null);
   const [openInfoMatchId, setOpenInfoMatchId] = useState(null);
-
-  // panel de persoas por partido
-  const [openPeopleMatchId, setOpenPeopleMatchId] = useState(null);
 
   const showToast = (msg, ok=true) => { setToast({ msg, ok, t: Date.now() }); setTimeout(()=> setToast(""), 4200); };
 
@@ -217,7 +211,6 @@ export default function ResultadosHistoricos() {
     } catch (e) { console.error("Load players error:", e); setPlayers([]); }
   }
 
-  // FIX: cargar usuarios con email y filtrar vacíos (sin nombre, sin email)
   async function loadUsersList() {
     try {
       const { data, error } = await supabase
@@ -236,17 +229,11 @@ export default function ResultadosHistoricos() {
             full ||
             `${code} ${surname}`.trim() ||
             email ||
-            u.id; // fallback final para no romper
+            u.id;
           const allEmpty = !full && !code && !surname && !email;
-          return allEmpty ? null : {
-            id: u.id,
-            code,
-            surname,
-            name: displayName
-          };
+          return allEmpty ? null : { id: u.id, code, surname, name: displayName };
         })
         .filter(Boolean)
-        // si siguen estando mezclados, prioriza códigos "01".."99"
         .sort((a,b) => {
           const na = /^\d{2}$/.test(a.code||"") ? 0 : 1;
           const nb = /^\d{2}$/.test(b.code||"") ? 0 : 1;
@@ -259,20 +246,6 @@ export default function ResultadosHistoricos() {
       console.error("load users error:", e);
       showToast("Erro cargando usuarias/os.", false);
     }
-  }
-
-  async function onOpenEdit(matchId) {
-    if (!isAdmin) return;
-    setEditingMatchId(cur => (cur === matchId ? null : matchId));
-    setOpenUserPanel(null); setSelPlantilla(new Set()); setSelOnce(new Set()); setOpenInfoMatchId(null);
-    await ensurePlayersLoaded();
-  }
-
-  async function togglePeoplePanel(matchId) {
-    if (!isAdmin) return;
-    const opening = openPeopleMatchId !== matchId;
-    setOpenPeopleMatchId(opening ? matchId : null);
-    if (opening) await loadUsersList();
   }
 
   async function loadConfirmedForMatch(matchId) {
@@ -307,6 +280,21 @@ export default function ResultadosHistoricos() {
     }
   }
 
+  async function onOpenEdit(matchId) {
+    if (!isAdmin) return;
+    setEditingMatchId(cur => (cur === matchId ? null : matchId));
+    setSelPlantilla(new Set());
+    setSelOnce(new Set());
+    await ensurePlayersLoaded();
+  }
+
+  async function togglePeoplePanel(matchId) {
+    if (!isAdmin) return;
+    const opening = openPeopleMatchId !== matchId;
+    setOpenPeopleMatchId(opening ? matchId : null);
+    if (opening) await loadUsersList();
+  }
+
   // Confirmar (dobre pulsación)
   async function confirmarMatch(matchId) {
     try {
@@ -324,7 +312,7 @@ export default function ResultadosHistoricos() {
       bipDouble();
       try {
         const ok = window.confirm("¿Seguro que queres gardar esta aliñación?");
-        if (!ok) console.warn("confirm cancelado; sigo por modo armado");
+        if (!ok) return;
       } catch {}
 
       const plantillaSet = new Set(selPlantilla);
@@ -352,6 +340,7 @@ export default function ResultadosHistoricos() {
       // pecha editor e limpa
       setEditingMatchId(null);
       setOpenUserPanel(null);
+      setOpenPeopleMatchId(null);
       setSelPlantilla(new Set());
       setSelOnce(new Set());
       armClear();
@@ -462,6 +451,7 @@ export default function ResultadosHistoricos() {
 
   const aliIs11 = selPlantilla.size === 11;
   const onceIs11 = selOnce.size === 11;
+  const acertosLive = Array.from(selOnce).filter(id => selPlantilla.has(id)).length;
 
   return (
     <main style={WRAP}>
@@ -480,18 +470,16 @@ export default function ResultadosHistoricos() {
           {view.map((r, i) => {
             const isEditing = editingMatchId === r.id;
             const isResultsOpen = openResultsMatchId === r.id;
-            const isInfoOpen = openInfoMatchId === r.id;
             const isPeopleOpen = openPeopleMatchId === r.id;
 
-            const acertosLive = Array.from(selOnce).filter(id => selPlantilla.has(id)).length;
-
             return (
-              <li key={`${r.id ?? r.match_iso ?? "noid"}-${i}`} style={{ ...ITEM, marginBottom: (isEditing || isResultsOpen || isInfoOpen || isPeopleOpen) ? 12 : 8 }}>
+              <li key={`${r.id ?? r.match_iso ?? "noid"}-${i}`} style={{ ...ITEM, marginBottom: (isEditing || isResultsOpen || isPeopleOpen) ? 12 : 8 }}>
                 <span style={DATE}>{dmy(r.match_iso)}</span>
                 <span style={TEAMS}>{r.equipo1 || "—"} <span style={SEP}>-</span> {r.equipo2 || "—"}</span>
                 <div style={ACTIONS}>
                   {isAdmin && !isMobile && (
                     <>
+                      {/* Botón Persona (lista de usuarias/os) */}
                       <button
                         type="button"
                         style={ICONBTN}
@@ -506,17 +494,10 @@ export default function ResultadosHistoricos() {
                           <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                         </svg>
                       </button>
-                      <button
-                        type="button"
-                        style={ICONBTN}
-                        title={isEditing ? "Pechar edición" : "Editar partido"}
-                        aria-label={isEditing ? "Pechar edición" : "Editar partido"}
-                        onClick={()=> onOpenEdit(r.id)}
-                      >
-                        <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" /></svg>
-                      </button>
                     </>
                   )}
+
+                  {/* Ollo (abre resultados) */}
                   <button
                     type="button"
                     style={ICONBTN}
@@ -524,14 +505,32 @@ export default function ResultadosHistoricos() {
                     aria-label={isResultsOpen ? "Pechar resultados" : "Ver resultados do partido"}
                     onClick={async ()=>{
                       setOpenResultsMatchId(cur => cur === r.id ? null : r.id);
-                      await ensurePlayersLoaded();
-                      await loadConfirmedForMatch(r.id);
+                      if (openResultsMatchId !== r.id) {
+                        await ensurePlayersLoaded();
+                        await loadConfirmedForMatch(r.id);
+                      }
                     }}
                   >
                     <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
                   </button>
+
+                  {/* NOVO: botón X para pechar a pestaña de resultados (só visible cando está aberta) */}
+                  {isResultsOpen && (
+                    <button
+                      type="button"
+                      style={ICONBTN}
+                      title="Pechar pestaña"
+                      aria-label="Pechar pestaña"
+                      onClick={()=> setOpenResultsMatchId(null)}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" style={SVGI}>
+                        <path d="M18 6 6 18M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
                 </div>
 
+                {/* Panel de persoas (con botón editar por usuario á dereita) */}
                 {isPeopleOpen && isAdmin && !isMobile && (
                   <section style={USERS_PANEL} aria-label="Lista de usuarias/os">
                     {users.length === 0 ? (
@@ -545,6 +544,23 @@ export default function ResultadosHistoricos() {
                               <div style={USER_NAME}>{u.name}</div>
                               {u.surname && <div style={USER_SUB}>{u.surname}</div>}
                             </div>
+                            {/* Icono editar (teclado) á dereita do usuario */}
+                            <button
+                              type="button"
+                              style={ICONBTN}
+                              title="Editar cruce para esta persoa"
+                              aria-label="Editar cruce para esta persoa"
+                              onClick={async ()=>{
+                                setOpenUserPanel(u.id);
+                                if (editingMatchId !== r.id) await onOpenEdit(r.id);
+                                await ensurePlayersLoaded();
+                              }}
+                            >
+                              <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}>
+                                <rect x="3" y="6" width="18" height="12" rx="2" />
+                                <path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" />
+                              </svg>
+                            </button>
                           </li>
                         ))}
                       </ul>
@@ -552,14 +568,17 @@ export default function ResultadosHistoricos() {
                   </section>
                 )}
 
+                {/* Visor de resultados confirmados */}
                 {isResultsOpen && renderResultsViewer(r.id)}
 
+                {/* Editor/cruce (só desktop admin) */}
                 {isEditing && isAdmin && !isMobile && (
                   <section style={EDIT_WRAP}>
                     {players.length === 0 ? (
                       <div style={EMPTY}>Cargando xogadoras/es…</div>
                     ) : (
                       <div style={threeColStyle(colMinPx, false)}>
+                        {/* ALIÑACIÓN REALIZADA */}
                         <div style={{ ...COL_BASE, ...COL_BG_ALI, minWidth: `${colMinPx}px` }}>
                           <div style={COL_HEAD}>
                             <span style={COL_TITLE}>ALIÑACIÓN REALIZADA</span>
@@ -578,6 +597,7 @@ export default function ResultadosHistoricos() {
                           })}
                         </div>
 
+                        {/* ONCE OFICIAL */}
                         <div style={{ ...COL_BASE, ...COL_BG_OFI, minWidth: `${colMinPx}px` }}>
                           <div style={COL_HEAD}>
                             <span style={aliIs11 ? COL_TITLE_BLINK : COL_TITLE}>ONCE OFICIAL</span>
@@ -596,6 +616,7 @@ export default function ResultadosHistoricos() {
                           })}
                         </div>
 
+                        {/* ACERTOS DO PARTIDO */}
                         <div style={{ ...COL_BASE, ...COL_BG_ACE, minWidth: `${colMinPx}px` }}>
                           <div style={COL_HEAD}>
                             <span style={COL_TITLE}>ACERTOS DO PARTIDO</span>
