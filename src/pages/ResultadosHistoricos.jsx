@@ -1,6 +1,6 @@
 // src/pages/ResultadosHistoricos.jsx
 import { h } from "preact";
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useState, useRef } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
 /* ===== Estilos base ===== */
@@ -61,10 +61,11 @@ const threeColStyle = (minPx, isMobile) =>
     ? { display:"grid", gridTemplateColumns:"1fr", gap:12, alignItems:"start" }
     : { display:"grid", gridTemplateColumns:`repeat(3, minmax(${minPx}px, 1fr))`, gap:12, alignItems:"start" };
 
+/* Columnas opacas + fondos */
 const COL_BASE = { border:"1px solid #e5e7eb", borderRadius:10, overflow:"hidden", position:"relative" };
-const COL_BG_ALI = { background:"#e9f9f2" }; // verde
-const COL_BG_OFI = { background:"#fff5e7" }; // ámbar
-const COL_BG_ACE = { background:"#ffe9e9" }; // vermello
+const COL_BG_ALI = { background:"#e9f9f2" }; // verde lixeiro
+const COL_BG_OFI = { background:"#fff5e7" }; // ámbar lixeiro
+const COL_BG_ACE = { background:"#ffe9e9" }; // vermello lixeiro
 
 const COL_HEAD = { display:"flex", justifyContent:"space-between", alignItems:"center", padding:"6px 10px", background:"#f1f5f9", borderBottom:"1px solid #e2e8f0" };
 const COL_TITLE = { font:"900 12px/1.05 Montserrat,system-ui,sans-serif", color:"#0f172a", letterSpacing:.2 };
@@ -72,22 +73,28 @@ const COL_TITLE_BLINK = { ...COL_TITLE, animation:"blinkSoft 1.5s ease-in-out in
 const COUNT = { font:"900 12px/1.05 Montserrat,system-ui,sans-serif", color:"#22c55e" };
 const COUNT_CELESTE_BLINK = { font:"900 12px/1.05 Montserrat,system-ui,sans-serif", color:"#0ea5e9", animation:"blinkScale 1.5s ease-in-out infinite" };
 
+/* Scroll por demarcación */
 const GROUP_SCROLL = (isMobile) => ({ maxHeight: isMobile ? 132 : 176, overflowY: "auto", background: "inherit" });
 
+/* Filas compactas + checkbox máis grande + espazo dorsal */
 const ROW_PLAYER = { display:"grid", gridTemplateColumns:"22px 1fr", gap:8, alignItems:"center", padding:"2px 6px", borderBottom:"1px solid #f1f5f9", minWidth:0 };
 const ROW_PLAYER_NOCHK = { display:"grid", gridTemplateColumns:"1fr", gap:2, alignItems:"center", padding:"2px 6px", borderBottom:"1px solid #f1f5f9", minWidth:0 };
 const CHECKBOX = { width:18, height:18, transform:"scale(1.18)" };
 const playerNameStyle = () => ({ font:"700 13.6px/1.04 Montserrat,system-ui,sans-serif", color:"#0f172a", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" });
 
+/* Separador + sticky */
 const POS_SEP = { height:1, background:"#e5e7eb" };
 const POS_TAG_BASE = { font:"900 10.5px/1 Montserrat,system-ui,sans-serif", color:"#64748b", padding:"5px 8px" };
 const POS_TAG_STICKY = (bg) => ({ ...POS_TAG_BASE, position:"sticky", top:0, zIndex:2, background:bg, borderBottom:"1px solid #e2e8f0" });
 
+/* Contador X/11 xunto ao apelido marcado */
 const COUNT_INLINE = { display:"inline-block", marginLeft:8, padding:"2px 8px", borderRadius:999, font:"900 12px/1 Montserrat,system-ui,sans-serif", color:"#fff", background:"#0ea5e9", boxShadow:"0 2px 8px rgba(14,165,233,.25)" };
 
+/* Botón confirmar (pulse sutil cando Once=11) */
 const BTN_CONFIRM = { width:"100%", borderRadius:10, padding:"10px 12px", font:"900 12.8px/1.05 Montserrat,system-ui,sans-serif", background:"linear-gradient(180deg,#38bdf8,#0ea5e9)", color:"#fff", border:"1px solid #0ea5e9", boxShadow:"0 3px 10px rgba(14,165,233,.20)", cursor:"pointer" };
 const BTN_CONFIRM_BLINK = { ...BTN_CONFIRM, animation:"pulseSoft 1.5s ease-in-out infinite" };
 
+/* Mensaxes */
 const EMPTY = { marginTop:8, padding:"10px 12px", borderRadius:10, background:"#ecfeff", border:"1px solid #67e8f9", color:"#0e7490", font:"600 13px/1.2 Montserrat,system-ui,sans-serif" };
 const ERR = { ...EMPTY, background:"#fee2e2", border:"1px solid #fecaca", color:"#b91c1c" };
 
@@ -103,7 +110,7 @@ const pad2 = (n) => String(n).padStart(2, "0");
 const sortDescByDate = (a, b) => (b.match_iso ? new Date(b.match_iso).getTime() : -Infinity) - (a.match_iso ? new Date(a.match_iso).getTime() : -Infinity);
 const dmy = (iso) => { if (!iso) return "—"; const d = new Date(iso); return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`; };
 
-/* Correccións xogadores */
+/* Correccións de xogadores: Yoel Lago DEF; Jones El-Abdellaoui DEL */
 function normalizePlayer(p) {
   let nombre = p.nombre || "";
   let pos = p.pos || null;
@@ -133,10 +140,10 @@ function groupByPos(players) {
   return buckets;
 }
 
-/* Sonidos */
+/* Sonidos (bip) */
 function bipSingle(freq = 880, dur = 0.11) {
   try {
-    const AC = window.AudioContext || (window).webkitAudioContext;
+    const AC = window.AudioContext || window.webkitAudioContext;
     const ctx = new AC(); const o = ctx.createOscillator(); const g = ctx.createGain();
     o.type = "sine"; o.frequency.value = freq; o.connect(g); g.connect(ctx.destination);
     g.gain.setValueAtTime(0.0001, ctx.currentTime);
@@ -168,6 +175,7 @@ export default function ResultadosHistoricos() {
   const [selPlantilla, setSelPlantilla] = useState(new Set());
   const [selOnce, setSelOnce] = useState(new Set());
 
+  // último click → mostra conteo x/11 xunto ao apelido
   const [lastAli, setLastAli] = useState({ id: null, count: 0 });
   const [lastOfi, setLastOfi] = useState({ id: null, count: 0 });
   useEffect(() => { let t; if (lastAli.id) t = setTimeout(() => setLastAli({ id:null, count:0 }), 900); return () => clearTimeout(t); }, [lastAli]);
@@ -177,6 +185,11 @@ export default function ResultadosHistoricos() {
   const [openInfoMatchId, setOpenInfoMatchId] = useState(null);
 
   const showToast = (msg, ok=true) => { setToast({ msg, ok, t: Date.now() }); setTimeout(()=> setToast(""), 4200); };
+
+  // NUEVO: confirmación “armada” (doble pulsación)
+  const [armedMatchId, setArmedMatchId] = useState(null);
+  const armTimerRef = useRef(null);
+  const armClear = () => { clearTimeout(armTimerRef.current); armTimerRef.current = null; setArmedMatchId(null); };
 
   async function resolveAdmin() {
     const { data: s } = await supabase.auth.getSession();
@@ -198,7 +211,12 @@ export default function ResultadosHistoricos() {
         await resolveAdmin();
         const { data, error } = await supabase.from("matches_finalizados").select("id,equipo1,equipo2,match_iso");
         if (error) throw error;
-        const norm = (data||[]).map(r => ({ id:r.id??null, equipo1:(r.equipo1||"").toUpperCase(), equipo2:(r.equipo2||"").toUpperCase(), match_iso:r.match_iso||null })).sort(sortDescByDate);
+        const norm = (data||[]).map(r => ({
+          id:r.id??null,
+          equipo1:(r.equipo1||"").toUpperCase(),
+          equipo2:(r.equipo2||"").toUpperCase(),
+          match_iso:r.match_iso||null
+        })).sort(sortDescByDate);
         if (alive) setRows(norm);
       } catch (e) { console.error("Historico load:", e); if (alive) setErr("Produciuse un erro ao cargar o histórico."); }
       finally { if (alive) setLoading(false); }
@@ -212,16 +230,26 @@ export default function ResultadosHistoricos() {
     setOpenUserPanel(null); setSelPlantilla(new Set()); setSelOnce(new Set()); setOpenInfoMatchId(null);
 
     try {
-      const { data: usersData, error: usersErr } = await supabase.from("profiles").select("id, full_name, email").order("full_name", { ascending: true, nullsFirst: false });
+      const { data: usersData, error: usersErr } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .order("full_name", { ascending: true, nullsFirst: false });
       if (usersErr) throw usersErr;
-      setUsers((usersData||[]).map(u => ({ id:u.id, name:(u.full_name || u.email || "").trim() || u.id, email:u.email || "" })));
+      setUsers((usersData||[]).map(u => ({
+        id:u.id, name:(u.full_name || u.email || "").trim() || u.id, email:u.email || ""
+      })));
     } catch (e) { console.error("Load users error:", e); setUsers([]); }
 
     if (!players.length) {
       try {
-        const { data: playersData, error: playersErr } = await supabase.from("jugadores").select("id, nombre, dorsal, foto_url");
+        const { data: playersData, error: playersErr } = await supabase
+          .from("jugadores").select("id, nombre, dorsal, foto_url");
         if (playersErr) throw playersErr;
-        setPlayers((playersData||[]).map(pp => { const p = normalizePlayer(pp); const pos = p.pos || inferPosFromFoto(p.foto_url || ""); return { id:p.id, dorsal:p.dorsal ?? null, pos, label: p.dorsal ? `${p.dorsal} - ${p.nombre}` : (p.nombre || "—") }; }));
+        setPlayers((playersData||[]).map(pp => {
+          const p = normalizePlayer(pp);
+          const pos = p.pos || inferPosFromFoto(p.foto_url || "");
+          return { id:p.id, dorsal:p.dorsal ?? null, pos, label: p.dorsal ? `${p.dorsal} - ${p.nombre}` : (p.nombre || "—") };
+        }));
       } catch (e) { console.error("Load players error:", e); setPlayers([]); }
     }
     await loadConfirmedForMatch(matchId);
@@ -259,69 +287,90 @@ export default function ResultadosHistoricos() {
     }
   }
 
-  // Confirmar con verificación inmediata
+  // Confirmar con dobre pulsación armada + verificación inmediata
   async function confirmarMatch(matchId) {
-    console.log("[CONFIRMAR] start", { matchId, openUserPanel, ali: selPlantilla.size, once: selOnce.size });
-    if (!openUserPanel) { showToast("Selecciona unha usuaria/o primeiro (teclado).", false); return; }
-    if (selPlantilla.size !== 11) { showToast("Aliñación realizada debe ter 11.", false); return; }
-    if (selOnce.size !== 11) { showToast("Once oficial debe ter 11.", false); return; }
+    try {
+      console.log("[CONFIRMAR] start", { matchId, openUserPanel, ali: selPlantilla.size, once: selOnce.size });
+      if (!openUserPanel) { showToast("Selecciona unha usuaria/o primeiro (teclado).", false); return; }
+      if (selPlantilla.size !== 11) { showToast("Aliñación realizada debe ter 11.", false); return; }
+      if (selOnce.size !== 11) { showToast("Once oficial debe ter 11.", false); return; }
 
-    bipDouble();
-    const ok = window.confirm("¿Seguro que queres gardar esta aliñación?");
-    if (!ok) return;
+      // 1ª pulsación: armar
+      if (armedMatchId !== matchId) {
+        bipSingle();
+        setArmedMatchId(matchId);
+        armTimerRef.current = setTimeout(() => setArmedMatchId(null), 8000);
+        showToast("Preme de novo para confirmar.", true);
+        return;
+      }
 
-    const plantillaSet = new Set(selPlantilla);
-    const onceSet = new Set(selOnce);
-    let acertos = 0; onceSet.forEach(id => { if (plantillaSet.has(id)) acertos++; });
+      // 2ª pulsación: confirmar gardado
+      bipDouble();
+      try {
+        const ok = window.confirm("¿Seguro que queres gardar esta aliñación?");
+        if (!ok) console.warn("[CONFIRMAR] cancelado no confirm nativo; continúo por modo armado");
+      } catch {
+        console.warn("[CONFIRMAR] window.confirm bloqueado; continúo por modo armado");
+      }
 
-    const confirmedAtISO = new Date().toISOString();
-    const payload = [{
-      match_id: matchId,
-      user_id: openUserPanel,
-      confirmed_at: confirmedAtISO,
-      acertos,
-      plantilla_ids: Array.from(plantillaSet),
-      once_ids: Array.from(onceSet),
-      updated_at: confirmedAtISO,
-    }];
-    console.log("[CONFIRMAR] upsert payload:", payload);
+      const plantillaSet = new Set(selPlantilla);
+      const onceSet = new Set(selOnce);
+      let acertos = 0; onceSet.forEach(id => { if (plantillaSet.has(id)) acertos++; });
 
-    const { data: upData, error: upErr } = await supabase
-      .from("resultados_confirmados")
-      .upsert(payload, { onConflict:"match_id,user_id" })
-      .select("*");
-    if (upErr) {
-      console.error("[CONFIRMAR] upsert error:", upErr);
-      showToast(`Erro gardando: ${upErr.message||"descoñecido"}`, false);
-      return;
+      const confirmedAtISO = new Date().toISOString();
+      const payload = [{
+        match_id: matchId,
+        user_id: openUserPanel,
+        confirmed_at: confirmedAtISO,
+        acertos,
+        plantilla_ids: Array.from(plantillaSet),
+        once_ids: Array.from(onceSet),
+        updated_at: confirmedAtISO,
+      }];
+      console.log("[CONFIRMAR] upsert payload:", payload);
+
+      const { data: upData, error: upErr } = await supabase
+        .from("resultados_confirmados")
+        .upsert(payload, { onConflict:"match_id,user_id", ignoreDuplicates: false })
+        .select("*");
+      if (upErr) {
+        console.error("[CONFIRMAR] upsert error:", upErr);
+        showToast(`Erro gardando: ${upErr.message||"descoñecido"}`, false);
+        armClear();
+        return;
+      }
+      console.log("[CONFIRMAR] upsert ok:", upData);
+
+      // Verificación inmediata
+      const { data: chk, error: chkErr } = await supabase
+        .from("resultados_confirmados")
+        .select("match_id,user_id,acertos,confirmed_at")
+        .eq("match_id", matchId)
+        .eq("user_id", openUserPanel)
+        .maybeSingle();
+      if (chkErr) {
+        console.error("[CONFIRMAR] check error:", chkErr);
+        showToast(`Gardado sen verificar (lectura fallou): ${chkErr.message}`, false);
+      } else if (!chk) {
+        console.error("[CONFIRMAR] check sen filas");
+        showToast("Non foi posible verificar o gardado (sen filas). Revisa RLS/PK.", false);
+      } else {
+        showToast("Resultados confirmados e gardados.", true);
+      }
+
+      // pecha editor e limpa estados
+      setEditingMatchId(null);
+      setOpenUserPanel(null);
+      setSelPlantilla(new Set());
+      setSelOnce(new Set());
+      armClear();
+
+      await loadConfirmedForMatch(matchId);
+    } catch (e) {
+      console.error("[CONFIRMAR] excepción non controlada:", e);
+      showToast("Erro inesperado ao confirmar. Revisa a consola.", false);
+      armClear();
     }
-    console.log("[CONFIRMAR] upsert ok:", upData);
-
-    // Verificación inmediata: reler a fila
-    const { data: chk, error: chkErr } = await supabase
-      .from("resultados_confirmados")
-      .select("match_id,user_id,acertos,confirmed_at")
-      .eq("match_id", matchId)
-      .eq("user_id", openUserPanel)
-      .limit(1);
-    if (chkErr) {
-      console.error("[CONFIRMAR] check error:", chkErr);
-      showToast(`Gardado sen verificar (lectura fallou): ${chkErr.message}`, false);
-    } else if (!chk || chk.length === 0) {
-      console.error("[CONFIRMAR] check no rows");
-      showToast("Non foi posible verificar o gardado (sen filas). Revisa RLS/PK.", false);
-    } else {
-      showToast("Resultados confirmados e gardados.", true);
-    }
-
-    // limpar e pechar
-    setEditingMatchId(null);
-    setOpenUserPanel(null);
-    setSelPlantilla(new Set());
-    setSelOnce(new Set());
-
-    // refresco visor
-    await loadConfirmedForMatch(matchId);
   }
 
   const colMinPx = useMemo(() => !players?.length ? 260 : Math.max(240, measureLongestLabelPx(players)), [players]);
@@ -335,6 +384,7 @@ export default function ResultadosHistoricos() {
     } = opts;
 
     const buckets = groupByPos(list);
+
     const makeRow = (p) => {
       const isOK = aciertosBaseSet ? aciertosBaseSet.has(p.id) : false;
       const nameStyle = { ...playerNameStyle(), fontWeight: isOK ? 900 : 700, color: isOK ? "#0ea5e9" : "#0f172a" };
@@ -344,7 +394,13 @@ export default function ResultadosHistoricos() {
         const isChecked = checkedSet.has(p.id);
         return (
           <label key={p.id} style={ROW_PLAYER}>
-            <input type="checkbox" style={CHECKBOX} checked={isChecked} onChange={()=> onToggle(p.id)} aria-label={`Seleccionar ${p.label}`} />
+            <input
+              type="checkbox"
+              style={CHECKBOX}
+              checked={isChecked}
+              onChange={()=> onToggle(p.id)}
+              aria-label={`Seleccionar ${p.label}`}
+            />
             <span style={{ display:"flex", alignItems:"center", minWidth:0 }}>
               <span style={{ ...nameStyle, minWidth:0 }}>{p.label}</span>
               {showInline && <span style={COUNT_INLINE}>{badgeText}</span>}
@@ -434,14 +490,15 @@ export default function ResultadosHistoricos() {
       {toast?.msg && <div style={toast.ok ? TOAST_OK : TOAST_ERR} aria-live="polite">{toast.msg}</div>}
       {err && <div style={ERR} role="status" aria-live="polite">{err}</div>}
       {!err && loading && <div style={EMPTY} role="status" aria-live="polite">Cargando…</div>}
-      {!err && !loading && rows.length === 0 && (<div style={EMPTY} role="status" aria-live="polite">Non hai partidos rematados aínda.</div>)}
+      {!err && !loading && view.length === 0 && (<div style={EMPTY} role="status" aria-live="polite">Non hai partidos rematados aínda.</div>)}
 
-      {!err && !loading && rows.length > 0 && (
+      {!err && !loading && view.length > 0 && (
         <ul style={LIST} aria-label="Lista de partidos rematados">
-          {rows.map((r, i) => {
+          {view.map((r, i) => {
             const isEditing = editingMatchId === r.id;
             const isResultsOpen = openResultsMatchId === r.id;
             const isInfoOpen = openInfoMatchId === r.id;
+
             const acertosLive = Array.from(selOnce).filter(id => selPlantilla.has(id)).length;
 
             return (
@@ -493,10 +550,22 @@ export default function ResultadosHistoricos() {
 
                           return (
                             <li key={u.id} style={USER_ROW}>
-                              <div style={isOpenUser ? { ...USER_NAME, whiteSpace:"normal", overflow:"visible", textOverflow:"clip" } : USER_NAME} title={u.name}>{u.name}</div>
+                              {/* Liña 1: nome (aberto: sen truncado) */}
+                              <div
+                                style={isOpenUser ? { ...USER_NAME, whiteSpace:"normal", overflow:"visible", textOverflow:"clip" } : USER_NAME}
+                                title={u.name}
+                              >
+                                {u.name}
+                              </div>
 
+                              {/* Liña 2: correo + teclado á dereita (celeste→vermello cando aberto) */}
                               <div style={USER_EMAIL_ROW}>
-                                <div style={isOpenUser ? { ...USER_SUB, whiteSpace:"normal", overflow:"visible", textOverflow:"clip" } : USER_SUB} title={u.email}>{u.email}</div>
+                                <div
+                                  style={isOpenUser ? { ...USER_SUB, whiteSpace:"normal", overflow:"visible", textOverflow:"clip" } : USER_SUB}
+                                  title={u.email}
+                                >
+                                  {u.email}
+                                </div>
                                 <button
                                   type="button"
                                   style={{ ...ICONBTN, borderColor: isOpenUser ? "#fecaca" : "#bae6fd", background:"#fff" }}
@@ -506,6 +575,7 @@ export default function ResultadosHistoricos() {
                                     const opening = openUserPanel !== u.id;
                                     setOpenUserPanel(opening ? u.id : null);
                                     setSelPlantilla(new Set()); setSelOnce(new Set());
+                                    armClear();
                                   }}
                                 >
                                   <svg width="20" height="20" viewBox="0 0 24 24" style={{ ...SVGI, stroke: isOpenUser ? "#ef4444" : "#0ea5e9" }}>
@@ -515,6 +585,7 @@ export default function ResultadosHistoricos() {
                                 </button>
                               </div>
 
+                              {/* Panel de cruce */}
                               {isOpenUser && (
                                 <div>
                                   <div style={CROSS_WRAP} role="region" aria-label={`Cruce para ${u.name}`}>
@@ -523,39 +594,57 @@ export default function ResultadosHistoricos() {
                                     ) : (
                                       <>
                                         <div style={threeColStyle(colMinPx, false)}>
+                                          {/* ALIÑACIÓN REALIZADA */}
                                           <div style={{ ...COL_BASE, ...COL_BG_ALI, minWidth: `${colMinPx}px` }}>
                                             <div style={COL_HEAD}>
                                               <span style={COL_TITLE}>ALIÑACIÓN REALIZADA</span>
                                               <span style={COUNT}>{selPlantilla.size}/11</span>
                                             </div>
-                                            {renderGroupedList({ list: players, withCheckbox: true, checkedSet: selPlantilla, onToggle: (id)=> {
-                                              const next = new Set(selPlantilla);
-                                              next.has(id) ? next.delete(id) : next.add(id);
-                                              setSelPlantilla(next);
-                                              setLastAli({ id, count: next.size });
-                                            }, stickyBg: "#e9f9f2", perDemarcScroll: true, which:"plantilla" })}
+                                            {renderGroupedList({
+                                              list: players, withCheckbox: true, checkedSet: selPlantilla,
+                                              onToggle: (id)=> {
+                                                const next = new Set(selPlantilla);
+                                                next.has(id) ? next.delete(id) : next.add(id);
+                                                setSelPlantilla(next);
+                                                setLastAli({ id, count: next.size });
+                                                armClear();
+                                              },
+                                              stickyBg: "#e9f9f2", perDemarcScroll: true, which:"plantilla"
+                                            })}
                                           </div>
 
+                                          {/* ONCE OFICIAL (parpadea cando ALIÑACIÓN = 11) */}
                                           <div style={{ ...COL_BASE, ...COL_BG_OFI, minWidth: `${colMinPx}px` }}>
                                             <div style={COL_HEAD}>
                                               <span style={aliIs11 ? COL_TITLE_BLINK : COL_TITLE}>ONCE OFICIAL</span>
                                               <span style={COUNT}>{selOnce.size}/11</span>
                                             </div>
-                                            {renderGroupedList({ list: players, withCheckbox: true, checkedSet: selOnce, onToggle: (id)=> {
-                                              const next = new Set(selOnce);
-                                              next.has(id) ? next.delete(id) : next.add(id);
-                                              setSelOnce(next);
-                                              setLastOfi({ id, count: next.size });
-                                            }, stickyBg: "#fff5e7", perDemarcScroll: true, which:"once" })}
+                                            {renderGroupedList({
+                                              list: players, withCheckbox: true, checkedSet: selOnce,
+                                              onToggle: (id)=> {
+                                                const next = new Set(selOnce);
+                                                next.has(id) ? next.delete(id) : next.add(id);
+                                                setSelOnce(next);
+                                                setLastOfi({ id, count: next.size });
+                                                armClear();
+                                              },
+                                              stickyBg: "#fff5e7", perDemarcScroll: true, which:"once"
+                                            })}
                                           </div>
 
+                                          {/* ACERTOS DO PARTIDO */}
                                           <div style={{ ...COL_BASE, ...COL_BG_ACE, minWidth: `${colMinPx}px` }}>
                                             <div style={COL_HEAD}>
                                               <span style={COL_TITLE}>ACERTOS DO PARTIDO</span>
                                               <span style={COUNT_CELESTE_BLINK}>{acertosLive}/11</span>
                                             </div>
                                             <div style={{ paddingBottom: 10 }}>
-                                              {renderGroupedList({ list: players, withCheckbox: false, onlyIds: selOnce, aciertosBaseSet: new Set(Array.from(selOnce).filter(id => selPlantilla.has(id))), stickyBg: "#ffe9e9", perDemarcScroll: false })}
+                                              {renderGroupedList({
+                                                list: players, withCheckbox: false,
+                                                onlyIds: selOnce,
+                                                aciertosBaseSet: new Set(Array.from(selOnce).filter(id => selPlantilla.has(id))),
+                                                stickyBg: "#ffe9e9", perDemarcScroll: false
+                                              })}
                                             </div>
                                             <div style={{ padding:10 }}>
                                               <button
