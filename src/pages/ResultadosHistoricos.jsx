@@ -21,9 +21,9 @@ const ITEM = {
   boxShadow: "0 2px 8px rgba(0,0,0,.05)",
   marginBottom: 8,
 };
-const DATE = { font: "600 14px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", whiteSpace: "nowrap" };
-const TEAMS = { font: "700 15.5px/1.2 Montserrat,system-ui,sans-serif", textTransform: "uppercase", color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
-const SEP = { margin: "0 6px", fontWeight: 700, color: "#0f172a" };
+const DATE = { font: "600 13px/1.1 Montserrat,system-ui,sans-serif", color: "#0f172a", whiteSpace: "nowrap" };
+const TEAMS = { font: "800 14px/1.1 Montserrat,system-ui,sans-serif", textTransform: "uppercase", color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
+const SEP = { margin: "0 6px", fontWeight: 800, color: "#0f172a" };
 
 const ACTIONS = { display:"flex", gap:8, alignItems:"center", justifySelf:"end" };
 const ICONBTN = { width:34, height:34, display:"grid", placeItems:"center", borderRadius:10, border:"1px solid #e2e8f0", background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)", cursor:"pointer" };
@@ -32,7 +32,7 @@ const SVGI = { fill:"none", stroke:"#0f172a", strokeWidth:1.9, strokeLinecap:"ro
 const EDIT_WRAP = { marginTop: 8, border: "1px solid #dbe2f0", borderRadius: 12, background:"#f8fafc", padding: 12, marginLeft: -12, marginRight: -12 };
 
 /* Toasts */
-const TOAST_OK = { margin:"8px 0 12px", padding:"10px 12px", borderRadius:10, background:"#ecfeff", border:"1px solid #67e8f9", color:"#0e7490", font:"600 13px/1.2 Montserrat,system-ui,sans-serif" };
+const TOAST_OK = { margin:"8px 0 12px", padding:"10px 12px", borderRadius:10, background:"#ecfeff", border:"1px solid #67e8f9", color:"#0e7490", font:"600 12.5px/1.2 Montserrat,system-ui,sans-serif" };
 const TOAST_ERR = { ...TOAST_OK, background:"#fee2e2", border:"1px solid #fecaca", color:"#b91c1c" };
 
 /* ===== Panel Persoas ===== */
@@ -43,38 +43,39 @@ const PEOPLE_SHELL = (twoCols) =>
     : { marginTop:8, border:"1px solid #e2e8f0", borderRadius:10, background:"#fff", padding:"10px 12px" };
 
 const USERS_LIST = { listStyle:"none", margin:0, padding:0, display:"grid", gap:6 };
-const USER_ROW = { display:"grid", gridTemplateColumns:"auto 1fr auto", gap:8, alignItems:"center", padding:"6px 8px", borderRadius:8, border:"1px solid #eef2f7", background:"#f9fafb" };
-const USER_BADGE = { font:"800 12px/1 Montserrat,system-ui,sans-serif", color:"#0ea5e9", background:"#e0f2fe", padding:"5px 8px", borderRadius:8, minWidth:42, textAlign:"center" };
-const USER_NAME = { font:"800 14px/1.1 Montserrat,system-ui,sans-serif", color:"#0f172a" };
-const USER_SUB  = { font:"600 12.5px/1.15 Montserrat,system-ui,sans-serif", color:"#64748b" };
+const USER_ROW = { display:"grid", gridTemplateColumns:"auto 1fr auto auto", gap:6, alignItems:"center", padding:"5px 8px", borderRadius:8, border:"1px solid #eef2f7", background:"#f9fafb" };
+const USER_BADGE = { font:"900 11px/1 Montserrat,system-ui,sans-serif", color:"#0ea5e9", background:"#e0f2fe", padding:"4px 7px", borderRadius:8, minWidth:38, textAlign:"center" };
+const USER_NAME = { font:"800 13px/1.05 Montserrat,system-ui,sans-serif", color:"#0f172a" };
+const USER_SUB  = { font:"600 11.5px/1.05 Montserrat,system-ui,sans-serif", color:"#64748b" };
 
 /* ===== Editor á dereita ===== */
-const EDIT_RIGHT = { display:"grid", gridTemplateColumns:"minmax(280px,1fr) minmax(280px,1fr)", gap:12, alignItems:"start" };
+const RIGHT_PAD = { paddingLeft: 10 }; // separación dende a columna de persoas
+const EDIT_RIGHT = { display:"grid", gridTemplateColumns:"minmax(260px,1fr) minmax(260px,1fr)", gap:10, alignItems:"start" };
 const COL_BASE = { border:"1px solid #e5e7eb", borderRadius:10, overflow:"hidden", position:"relative" };
 const COL_BG_ALI = { background:"#e9f9f2" };
 const COL_BG_OFI = { background:"#fff5e7" };
-const COL_HEAD = { display:"flex", justifyContent:"space-between", alignItems:"center", padding:"6px 10px", background:"#f1f5f9", borderBottom:"1px solid #e2e8f0" };
-const COL_TITLE = { font:"900 12px/1.05 Montserrat,system-ui,sans-serif", color:"#0f172a", letterSpacing:.2 };
+const COL_HEAD = { display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 8px", background:"#f1f5f9", borderBottom:"1px solid #e2e8f0" };
+const COL_TITLE = { font:"900 11.3px/1.05 Montserrat,system-ui,sans-serif", color:"#0f172a", letterSpacing:.2 };
 const COL_TITLE_BLINK = { ...COL_TITLE, animation:"blinkSoft 1.5s ease-in-out infinite" };
-const COUNT = { font:"900 12px/1.05 Montserrat,system-ui,sans-serif", color:"#22c55e" };
+const COUNT = { font:"900 11.3px/1.05 Montserrat,system-ui,sans-serif", color:"#22c55e" };
 
 const GROUP_SCROLL = { maxHeight: 188, overflowY: "auto", background: "inherit" };
-const ROW_PLAYER = { display:"grid", gridTemplateColumns:"22px 1fr", gap:8, alignItems:"center", padding:"2px 6px", borderBottom:"1px solid #f1f5f9", minWidth:0 };
-const CHECKBOX = { width:18, height:18, transform:"scale(1.18)" };
-const playerNameStyle = { font:"700 13.6px/1.04 Montserrat,system-ui,sans-serif", color:"#0f172a", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" };
+const ROW_PLAYER = { display:"grid", gridTemplateColumns:"20px 1fr", gap:6, alignItems:"center", padding:"1px 6px", borderBottom:"1px solid #f1f5f9", minWidth:0 };
+const CHECKBOX = { width:16, height:16, transform:"scale(1.06)" };
+const playerNameStyle = { font:"700 12.6px/1.02 Montserrat,system-ui,sans-serif", color:"#0f172a", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" };
 const POS_SEP = { height:1, background:"#e5e7eb" };
-const POS_TAG = (bg) => ({ font:"900 10.5px/1 Montserrat,system-ui,sans-serif", color:"#64748b", padding:"5px 8px", position:"sticky", top:0, zIndex:2, background:bg, borderBottom:"1px solid #e2e8f0" });
+const POS_TAG = (bg) => ({ font:"900 10px/1 Montserrat,system-ui,sans-serif", color:"#64748b", padding:"4px 6px", position:"sticky", top:0, zIndex:2, background:bg, borderBottom:"1px solid #e2e8f0" });
 
 /* Resumo de acertos (baixo das dúas táboas) */
-const SUMMARY = { marginTop:10, border:"1px solid #e5e7eb", borderRadius:12, background:"#fff", padding:10 };
-const T_HEADER = { display:"grid", gridTemplateColumns:"160px 1fr 70px 2fr", gap:10, padding:"6px 8px", borderBottom:"1px solid #e5e7eb", color:"#0f172a", font:"800 13px/1.2 Montserrat,system-ui,sans-serif" };
-const T_ROW    = { display:"grid", gridTemplateColumns:"160px 1fr 70px 2fr", gap:10, padding:"6px 8px", borderBottom:"1px solid #f1f5f9", font:"600 12.8px/1.3 Montserrat,system-ui,sans-serif" };
-const CELSTE = { color:"#0ea5e9", fontWeight:800 };
+const SUMMARY = { marginTop:8, border:"1px solid #e5e7eb", borderRadius:12, background:"#fff", padding:8 };
+const T_HEADER = { display:"grid", gridTemplateColumns:"120px 1fr 60px 3fr", gap:8, padding:"5px 6px", borderBottom:"1px solid #e5e7eb", color:"#0f172a", font:"800 12px/1.15 Montserrat,system-ui,sans-serif" };
+const T_ROW    = { display:"grid", gridTemplateColumns:"120px 1fr 60px 3fr", gap:8, padding:"5px 6px", borderBottom:"1px solid #f1f5f9", font:"600 11.8px/1.18 Montserrat,system-ui,sans-serif" };
+const CELSTE = { color:"#0ea5e9", fontWeight:800, animation:"none" };
 
-const BTN_CONFIRM = { marginTop:10, width:"100%", borderRadius:10, padding:"10px 12px", font:"900 12.8px/1.05 Montserrat,system-ui,sans-serif", background:"linear-gradient(180deg,#38bdf8,#0ea5e9)", color:"#fff", border:"1px solid #0ea5e9", boxShadow:"0 3px 10px rgba(14,165,233,.20)", cursor:"pointer" };
+const BTN_CONFIRM = { marginTop:8, width:"100%", borderRadius:10, padding:"9px 10px", font:"900 12.2px/1.05 Montserrat,system-ui,sans-serif", background:"linear-gradient(180deg,#38bdf8,#0ea5e9)", color:"#fff", border:"1px solid #0ea5e9", boxShadow:"0 3px 10px rgba(14,165,233,.18)", cursor:"pointer" };
 const BTN_CONFIRM_BLINK = { ...BTN_CONFIRM, animation:"pulseSoft 1.5s ease-in-out infinite" };
 
-const EMPTY = { marginTop:8, padding:"10px 12px", borderRadius:10, background:"#ecfeff", border:"1px solid #67e8f9", color:"#0e7490", font:"600 13px/1.2 Montserrat,system-ui,sans-serif" };
+const EMPTY = { marginTop:8, padding:"8px 10px", borderRadius:10, background:"#ecfeff", border:"1px solid #67e8f9", color:"#0e7490", font:"600 12.2px/1.2 Montserrat,system-ui,sans-serif" };
 const ERR = { ...EMPTY, background:"#fee2e2", border:"1px solid #fecaca", color:"#b91c1c" };
 
 const STYLES = `
@@ -273,6 +274,7 @@ export default function ResultadosHistoricos() {
     const opening = openPeopleMatchId !== matchId;
     setOpenPeopleMatchId(opening ? matchId : null);
     setOpenUserPanel(null);
+    setEditingMatchId(opening ? matchId : null);
     if (opening) { await loadUsersList(); await ensurePlayersLoaded(); }
   }
 
@@ -325,9 +327,9 @@ export default function ResultadosHistoricos() {
       showToast("Resultados confirmados e gardados.", true);
 
       // Pechar todo o despregable do teclado
-      setEditingMatchId(null);
       setOpenUserPanel(null);
       setOpenPeopleMatchId(null);
+      setEditingMatchId(null);
       setSelPlantilla(new Set());
       setSelOnce(new Set());
       armClear();
@@ -343,7 +345,6 @@ export default function ResultadosHistoricos() {
   const view = useMemo(() => rows, [rows]);
   const aliIs11 = selPlantilla.size === 11;
   const onceIs11 = selOnce.size === 11;
-  const acertosLive = Array.from(selOnce).filter(id => selPlantilla.has(id)).length;
 
   function renderPlayersColumn(list, checkedSet, onToggle, bg) {
     const buckets = groupByPos(list);
@@ -380,21 +381,22 @@ export default function ResultadosHistoricos() {
     );
   }
 
-  function renderSummary(match, user) {
+  function renderSummary(user) {
     const playersById = new Map(players.map(p => [p.id, p]));
+    const acertosLive = Array.from(selOnce).filter(id => selPlantilla.has(id)).length;
     const aliLabels = Array.from(selPlantilla).map(pid => {
       const p = playersById.get(pid);
-      const isOK = selOnce.has(pid);
+      const ok = selOnce.has(pid);
       const label = p ? p.label : "—";
-      return isOK ? <strong style={CELSTE}>{label}</strong> : <span>{label}</span>;
-    }).sort((a, b) => 0);
+      return ok ? <strong style={CELSTE}>{label}</strong> : <span>{label}</span>;
+    });
 
     const out = [];
     aliLabels.forEach((node, i) => { out.push(node); if (i < aliLabels.length - 1) out.push(<span style={{ opacity:.6 }}> {" | "} </span>); });
 
     return (
       <div style={SUMMARY}>
-        <div style={T_HEADER}>
+        <div style={{ ...T_HEADER, textTransform:"uppercase" }}> 
           <div>Data e hora</div><div>HDC Peñista</div><div>Acertos</div><div>Aliñación presentada</div>
         </div>
         <div style={T_ROW}>
@@ -406,7 +408,7 @@ export default function ResultadosHistoricos() {
         <button
           type="button"
           style={onceIs11 ? BTN_CONFIRM_BLINK : BTN_CONFIRM}
-          onClick={()=> confirmarMatch(match.id)}
+          onClick={()=> confirmarMatch(editingMatchId)}
         >
           CONFIRMAR
         </button>
@@ -431,8 +433,7 @@ export default function ResultadosHistoricos() {
           {view.map((match, i) => {
             const isPeopleOpen = openPeopleMatchId === match.id;
             const isResultsOpen = openResultsMatchId === match.id;
-
-            const twoCols = isPeopleOpen && isAdmin && !isMobile;
+            const userObj = users.find(u => u.id === openUserPanel);
 
             return (
               <li key={`${match.id ?? match.match_iso ?? "noid"}-${i}`} style={{ ...ITEM, marginBottom: (isPeopleOpen || isResultsOpen) ? 12 : 8 }}>
@@ -441,20 +442,41 @@ export default function ResultadosHistoricos() {
 
                 <div style={ACTIONS}>
                   {isAdmin && !isMobile && (
-                    <button
-                      type="button"
-                      style={ICONBTN}
-                      title={isPeopleOpen ? "Pechar edición" : "Editar (teclado)"}
-                      aria-label={isPeopleOpen ? "Pechar edición" : "Editar (teclado)"}
-                      onClick={()=> onClickPeople(match.id)}
-                    >
-                      <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}>
-                        <rect x="3" y="6" width="18" height="12" rx="2" />
-                        <path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" />
-                      </svg>
-                    </button>
+                    <>
+                      {/* ICONO PERSOAS (abre/pecha panel) */}
+                      <button
+                        type="button"
+                        style={ICONBTN}
+                        title={isPeopleOpen ? "Pechar persoas" : "Ver usuarias/os"}
+                        aria-label={isPeopleOpen ? "Pechar persoas" : "Ver usuarias/os"}
+                        onClick={()=> onClickPeople(match.id)}
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}>
+                          <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                          <circle cx="9" cy="7" r="4" />
+                          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                      </button>
+
+                      {/* X para pechar etiqueta xeral cando estea aberta con persoas */}
+                      {isPeopleOpen && (
+                        <button
+                          type="button"
+                          style={ICONBTN}
+                          title="Pechar etiqueta do partido"
+                          aria-label="Pechar etiqueta do partido"
+                          onClick={()=> { setOpenPeopleMatchId(null); setOpenUserPanel(null); setEditingMatchId(null); }}
+                        >
+                          <svg width="18" height="18" viewBox="0 0 24 24" style={SVGI}>
+                            <path d="M18 6 6 18M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                    </>
                   )}
 
+                  {/* Ollo (resultados confirmados) */}
                   <button
                     type="button"
                     style={ICONBTN}
@@ -469,7 +491,7 @@ export default function ResultadosHistoricos() {
                     <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
                   </button>
 
-                  {/* X sempre que a pestaña de resultados estea aberta */}
+                  {/* X para pechar a pestaña de resultados cando está aberta */}
                   {isResultsOpen && (
                     <button
                       type="button"
@@ -488,7 +510,7 @@ export default function ResultadosHistoricos() {
                 {/* PANEL PERSOAS + EDITOR Á DEREITA */}
                 {isPeopleOpen && isAdmin && !isMobile && (
                   <section style={PEOPLE_SHELL(!!openUserPanel)} aria-label="Edición por usuaria/o">
-                    {/* Columna esquerda: lista persoas */}
+                    {/* Columna esquerda: persoas */}
                     <div>
                       {users.length === 0 ? (
                         <div style={EMPTY}>Cargando usuarias/os…</div>
@@ -501,6 +523,7 @@ export default function ResultadosHistoricos() {
                                 <div style={USER_NAME}>{u.name}</div>
                                 {u.surname && <div style={USER_SUB}>{u.surname}</div>}
                               </div>
+                              {/* Teclado (abre editor) */}
                               <button
                                 type="button"
                                 style={ICONBTN}
@@ -513,15 +536,27 @@ export default function ResultadosHistoricos() {
                                   <path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" />
                                 </svg>
                               </button>
+                              {/* X para pechar editor desa persoa */}
+                              <button
+                                type="button"
+                                style={ICONBTN}
+                                title="Pechar editor desta persoa"
+                                aria-label="Pechar editor desta persoa"
+                                onClick={()=> { if (openUserPanel === u.id) setOpenUserPanel(null); }}
+                              >
+                                <svg width="18" height="18" viewBox="0 0 24 24" style={SVGI}>
+                                  <path d="M18 6 6 18M6 6l12 12" />
+                                </svg>
+                              </button>
                             </li>
                           ))}
                         </ul>
                       )}
                     </div>
 
-                    {/* Columna dereita: dúas táboas + resumo (só se hai usuario seleccionado) */}
+                    {/* Dereita: dúas táboas + resumo (se hai persoa aberta) */}
                     {openUserPanel && (
-                      <div>
+                      <div style={RIGHT_PAD}>
                         {players.length === 0 ? (
                           <div style={EMPTY}>Cargando xogadoras/es…</div>
                         ) : (
@@ -540,7 +575,7 @@ export default function ResultadosHistoricos() {
                                 COL_BG_OFI
                               )}
                             </div>
-                            {renderSummary(match, users.find(u=>u.id===openUserPanel))}
+                            {renderSummary(userObj)}
                           </>
                         )}
                       </div>
@@ -548,11 +583,11 @@ export default function ResultadosHistoricos() {
                   </section>
                 )}
 
-                {/* Pestaña de resultados confirmados (sección existente) */}
+                {/* Pestaña de resultados confirmados (visor) */}
                 {openResultsMatchId === match.id && (
-                  <section style={{ marginTop:8, border:"1px solid #e5e7eb", borderRadius:12, background:"#fff", padding:10 }}>
-                    <div style={{ font:"700 13.5px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", marginBottom:8 }}>ACERTOS POR USUARIA/O (confirmados)</div>
-                    <div role="table" style={{ width:"100%", font:"600 12.8px/1.3 Montserrat,system-ui,sans-serif" }}>
+                  <section style={{ marginTop:8, border:"1px solid #e5e7eb", borderRadius:12, background:"#fff", padding:8 }}>
+                    <div style={{ font:"800 12px/1.15 Montserrat,system-ui,sans-serif", color:"#0f172a", marginBottom:6, textTransform:"uppercase" }}>Acertos obtidos (confirmados)</div>
+                    <div role="table" style={{ width:"100%", font:"600 11.8px/1.18 Montserrat,system-ui,sans-serif" }}>
                       <div role="row" style={T_HEADER}>
                         <div>Data e hora</div><div>HDC Peñista</div><div>Acertos</div><div>Aliñación presentada</div>
                       </div>
