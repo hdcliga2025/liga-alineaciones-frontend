@@ -41,12 +41,12 @@ const PEOPLE_SHELL = (twoCols) =>
     : { marginTop:8, border:"1px solid #e2e8f0", borderRadius:10, background:"#fff", padding:"10px 12px" };
 
 const USERS_LIST = { listStyle:"none", margin:0, padding:0, display:"grid", gap:6 };
+/* activa: parpadeo MUY sutil + sombreado forte */
 const USER_ROW_BASE = { display:"grid", gridTemplateColumns:"auto 1fr auto", gap:6, alignItems:"center", padding:"6px 8px", borderRadius:8, border:"1px solid #eef2f7", background:"#f9fafb" };
 const USER_ROW_BLINK = {
   ...USER_ROW_BASE,
   animation:"userBlink 1.5s ease-in-out infinite",
-  background:"linear-gradient(180deg,#e8f5ff,#f9fafb)",
-  boxShadow:"0 6px 18px rgba(14,165,233,.25)"
+  background:"linear-gradient(180deg,#f4fbff,#fafcfe)" /* degradado máis leve */
 };
 const USER_ROW_CONFIRMED = { ...USER_ROW_BASE, background:"linear-gradient(180deg,#eafff3,#f7fff9)", border:"1px solid #22c55e" };
 const USER_BADGE = { font:"900 11px/1 Montserrat,system-ui,sans-serif", color:"#0ea5e9", background:"#e0f2fe", padding:"4px 7px", borderRadius:8, minWidth:38, textAlign:"center" };
@@ -64,16 +64,25 @@ const COL_TITLE = { font:"900 11.3px/1.05 Montserrat,system-ui,sans-serif", colo
 const COL_TITLE_BLINK = { ...COL_TITLE, animation:"blinkSoft 1.5s ease-in-out infinite" };
 const COUNT = { font:"900 11.3px/1.05 Montserrat,system-ui,sans-serif", color:"#22c55e" };
 
+/* Grupos de demarcación con etiqueta lateral */
 const GROUP_SCROLL = { maxHeight: 188, overflowY: "auto", background: "inherit" };
-/* interlineado mínimo e espazo extra entre checkbox e dorsal */
+const GROUP_WRAP = (bg) => ({ position:"relative", background:"inherit", paddingRight:24, marginBottom:6 });
+const POS_SIDE = (bg) => ({
+  position:"absolute", right:2, top:2, bottom:2,
+  writingMode:"vertical-rl", textOrientation:"mixed",
+  font:"900 10px/1 Montserrat,system-ui,sans-serif",
+  color:"#64748b", opacity:.85,
+  display:"grid", placeItems:"center",
+  background:"transparent", padding:"2px 0"
+});
+const POS_SEP = { height:1, background:"#e5e7eb" };
+
+/* Fila xogador: interlineado mínimo + espazo checkbox-dorsal */
 const ROW_PLAYER = { display:"grid", gridTemplateColumns:"18px 1fr", gap:6, alignItems:"center", padding:"0 6px", minWidth:0 };
 const CHECKBOX = { width:16, height:16, transform:"scale(1.02)", marginRight:2 };
 const playerNameStyle = { font:"700 12.2px/1 Montserrat,system-ui,sans-serif", color:"#0f172a", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" };
-const POS_SEP = { height:1, background:"#e5e7eb" };
-/* cabeceira de demarcación máis compacta */
-const POS_TAG = (bg) => ({ font:"900 10px/1 Montserrat,system-ui,sans-serif", color:"#64748b", padding:"2px 6px", position:"sticky", top:0, zIndex:2, background:bg, borderBottom:"1px solid #e2e8f0" });
 
-/* Resumo baixo as dúas táboas */
+/* Resumo / RESULTADOS OBTIDOS */
 const SUMMARY = {
   marginTop:8,
   border:"1px solid #fecaca",
@@ -81,7 +90,7 @@ const SUMMARY = {
   background:"linear-gradient(180deg,#fff1f1,#ffe7e7)",
   padding:8
 };
-const SUMMARY_TITLE = { ...COL_TITLE, textDecoration:"underline", margin:"2px 0 6px 0" }; // RESULTADOS OBTIDOS
+const SUMMARY_TITLE = { ...COL_TITLE, textDecoration:"underline", margin:"2px 0 6px 0" };
 const T_HEADER = {
   display:"grid", gridTemplateColumns:"120px 1fr 70px 3fr", gap:8, padding:"4px 6px",
   borderBottom:"1px solid #e5e7eb", color:"#0f172a", font:"800 11.3px/1.05 Montserrat,system-ui,sans-serif"
@@ -103,9 +112,9 @@ const STYLES = `
 @keyframes blinkSoft{0%{opacity:1}50%{opacity:.7}100%{opacity:1}}
 @keyframes pulseSoft{0%{transform:scale(1)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
 @keyframes userBlink{
-  0%{box-shadow:0 0 0 rgba(14,165,233,0.0)}
-  50%{box-shadow:0 8px 22px rgba(14,165,233,0.35)}
-  100%{box-shadow:0 0 0 rgba(14,165,233,0.0)}
+  0%{box-shadow:0 0 0 rgba(14,165,233,0)}
+  50%{box-shadow:0 8px 22px rgba(14,165,233,.35)}
+  100%{box-shadow:0 0 0 rgba(14,165,233,0)}
 }
 `;
 
@@ -367,7 +376,7 @@ export default function ResultadosHistoricos() {
         return { ...prev, [matchId]: cur };
       });
 
-      // Pecha todo, sen abrir o ollo; a consulta verase no ollo xeral
+      // Pecha todo (non abre ollo)
       setOpenUserPanel(null);
       setOpenPeopleMatchId(null);
       setEditingMatchId(null);
@@ -400,9 +409,9 @@ export default function ResultadosHistoricos() {
         {POS_ORDER.map((k) => {
           const group = buckets[k] || [];
           if (!group.length) return null;
+          const bgcol = (bg && bg.background) || "#fff";
           return (
-            <div key={k} style={{ background:"inherit" }}>
-              <div style={POS_TAG((bg && bg.background) || "#fff")}>{k}</div>
+            <div key={k} style={GROUP_WRAP(bgcol)}>
               <div style={POS_SEP} />
               <div style={GROUP_SCROLL}>
                 {group.map(p => {
@@ -415,6 +424,7 @@ export default function ResultadosHistoricos() {
                   );
                 })}
               </div>
+              <div aria-hidden="true" style={POS_SIDE(bgcol)}>{k}</div>
             </div>
           );
         })}
@@ -487,7 +497,6 @@ export default function ResultadosHistoricos() {
                 <div style={ACTIONS}>
                   {isAdmin && !isMobile && (
                     <>
-                      {/* Se está aberta a pestaña xeral: só X; se non: só persoas */}
                       {!isPeopleOpen ? (
                         <button
                           type="button"
@@ -519,7 +528,7 @@ export default function ResultadosHistoricos() {
                     </>
                   )}
 
-                  {/* Ollo (resultados confirmados) */}
+                  {/* Ollo */}
                   <button
                     type="button"
                     style={ICONBTN}
@@ -569,7 +578,6 @@ export default function ResultadosHistoricos() {
                                   <div style={USER_NAME}>{u.name}</div>
                                   {u.surname && <div style={USER_SUB}>{u.surname}</div>}
                                 </div>
-                                {/* Se está aberta a edición desta persoa → só X; se non, só teclado */}
                                 {!isOpen ? (
                                   <button
                                     type="button"
@@ -603,7 +611,7 @@ export default function ResultadosHistoricos() {
                       )}
                     </div>
 
-                    {/* Dereita: dúas táboas + resumo (se hai persoa aberta) */}
+                    {/* Dereita: dúas táboas + resumo */}
                     {openUserPanel && (
                       <div style={RIGHT_PAD}>
                         {players.length === 0 ? (
