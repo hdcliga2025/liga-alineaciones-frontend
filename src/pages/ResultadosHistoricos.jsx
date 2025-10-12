@@ -45,12 +45,12 @@ const PEOPLE_SHELL = (twoCols) =>
     : { marginTop:8, border:"1px solid #e2e8f0", borderRadius:10, background:"#fff", padding:"10px 12px" };
 
 const USERS_LIST = { listStyle:"none", margin:0, padding:0, display:"grid", gap:6 };
-/* activa: parpadeo con fondo máis celeste */
+/* activa: parpadeo con fondo máis celeste e sombra forte */
 const USER_ROW_BASE = { display:"grid", gridTemplateColumns:"auto 1fr auto", gap:6, alignItems:"center", padding:"6px 8px", borderRadius:8, border:"1px solid #eef2f7", background:"#f9fafb" };
 const USER_ROW_BLINK = {
   ...USER_ROW_BASE,
   animation:"userBlink 1.5s ease-in-out infinite",
-  background:"linear-gradient(180deg,#dff3ff,#eef7ff)" /* máis celeste */
+  background:"linear-gradient(180deg,#dff3ff,#eef7ff)"
 };
 const USER_ROW_CONFIRMED = { ...USER_ROW_BASE, background:"linear-gradient(180deg,#eafff3,#f7fff9)", border:"1px solid #22c55e" };
 const USER_BADGE = { font:"900 11px/1 Montserrat,system-ui,sans-serif", color:"#0ea5e9", background:"#e0f2fe", padding:"4px 7px", borderRadius:8, minWidth:38, textAlign:"center" };
@@ -81,14 +81,14 @@ const POS_SIDE = (bg) => ({
 });
 const POS_SEP = { height:1, background:"#e5e7eb" };
 
-/* Fila xogador: máis espazo checkbox–nome, letra algo menor, interliñado comprimido */
-const ROW_PLAYER = { display:"grid", gridTemplateColumns:"18px 1fr auto", gap:8, alignItems:"center", padding:"0 4px", minWidth:0 };
+/* Fila xogador — MÁS separación checkbox-nome, letra máis pequena, interliñado mínimo */
+const ROW_PLAYER = { display:"grid", gridTemplateColumns:"18px 1fr auto", gap:12, alignItems:"center", padding:"0 4px", minWidth:0 };
 const CHECKBOX = { width:16, height:16, transform:"scale(1.02)", marginRight:2 };
-const playerNameStyle = { font:"700 11.6px/.96 Montserrat,system-ui,sans-serif", color:"#0f172a", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" };
-const COUNT_MINI = { font:"900 10.5px/1 Montserrat,system-ui,sans-serif", color:"#0ea5e9", padding:"2px 4px", borderRadius:6, background:"#e0f2fe" };
+const playerNameStyle = { font:"700 10.6px/.90 Montserrat,system-ui,sans-serif", color:"#0f172a", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" };
+const COUNT_MINI = { font:"900 10px/1 Montserrat,system-ui,sans-serif", color:"#0ea5e9", padding:"1px 4px", borderRadius:6, background:"#e0f2fe" };
 
-/* Resumo / RESULTADOS OBTIDOS — ancho similar ás dúas táboas */
-const SUMMARY_WRAP = { maxWidth: 560, marginTop:8 };
+/* Resumo / RESULTADOS OBTIDOS – ancho similar ás dúas táboas */
+const SUMMARY_WRAP = { maxWidth: 560, marginTop:8, marginLeft:"auto", marginRight:"auto" };
 const SUMMARY = {
   border:"1px solid #fecaca",
   borderRadius:12,
@@ -107,7 +107,7 @@ const T_HEADER = {
 };
 const T_ROW    = {
   display:"grid", gridTemplateColumns:GRID_DEF, gap:0, padding:"4px 0",
-  borderBottom:"1px solid #f1f5f9", font:"600 11.1px/1.02 Montserrat,system-ui,sans-serif"
+  borderBottom:"1px solid #f1f5f9", font:"600 11px/.98 Montserrat,system-ui,sans-serif"
 };
 const CELL = { padding:"0 6px", borderRight:"1px solid #e5e7eb" };
 const CELL_LAST = { padding:"0 6px" };
@@ -125,7 +125,7 @@ const STYLES = `
 @keyframes pulseSoft{0%{transform:scale(1)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
 @keyframes userBlink{
   0%{box-shadow:0 0 0 rgba(14,165,233,0)}
-  50%{box-shadow:0 8px 22px rgba(14,165,233,.35)}
+  50%{box-shadow:0 10px 26px rgba(14,165,233,.45)}
   100%{box-shadow:0 0 0 rgba(14,165,233,0)}
 }
 `;
@@ -133,7 +133,7 @@ const STYLES = `
 /* ===== Utils ===== */
 const pad2 = (n) => String(n).padStart(2, "0");
 const sortDescByDate = (a, b) => (b.match_iso ? new Date(b.match_iso).getTime() : -Infinity) - (a.match_iso ? new Date(a.match_iso).getTime() : -Infinity);
-const dmyShort = (iso) => { // dd/mm/yy-HH:MM
+const dmyShort = (iso) => {
   if (!iso) return "—";
   const d = new Date(iso);
   const dd = pad2(d.getDate());
@@ -185,7 +185,6 @@ export default function ResultadosHistoricos() {
   const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
   useEffect(() => { const onR = () => setIsMobile(window.innerWidth <= 560); window.addEventListener("resize", onR); return () => window.removeEventListener("resize", onR); }, []);
 
-  const [editingMatchId, setEditingMatchId] = useState(null);
   const [openPeopleMatchId, setOpenPeopleMatchId] = useState(null);
   const [openResultsMatchId, setOpenResultsMatchId] = useState(null);
 
@@ -202,7 +201,7 @@ export default function ResultadosHistoricos() {
 
   const showToast = (msg, ok=true) => { setToast({ msg, ok, t: Date.now() }); setTimeout(()=> setToast(""), 4200); };
 
-  // Confirmación doble-clic
+  // Confirmación dobre-click (arma)
   const [armedMatchId, setArmedMatchId] = useState(null);
   const armTimerRef = useRef(null);
   const armClear = () => { clearTimeout(armTimerRef.current); armTimerRef.current = null; setArmedMatchId(null); };
@@ -235,7 +234,6 @@ export default function ResultadosHistoricos() {
         })).sort(sortDescByDate);
         if (alive) setRows(norm);
 
-        // Partidos con resultados confirmados
         if ((data||[]).length) {
           const ids = (data||[]).map(r=>r.id).filter(Boolean);
           const { data: rc } = await supabase.from("resultados_confirmados").select("match_id").in("match_id", ids);
@@ -332,14 +330,12 @@ export default function ResultadosHistoricos() {
     const opening = openPeopleMatchId !== matchId;
     setOpenPeopleMatchId(opening ? matchId : null);
     setOpenUserPanel(null);
-    setEditingMatchId(opening ? matchId : null);
     if (opening) { await loadUsersList(); await ensurePlayersLoaded(); }
   }
 
   async function onOpenUserEditor(matchId, userId) {
     if (!isAdmin) return;
     bipSingle();
-    setEditingMatchId(matchId);
     setOpenUserPanel(userId);
     setSelPlantilla(new Set());
     setSelOnce(new Set());
@@ -347,7 +343,9 @@ export default function ResultadosHistoricos() {
   }
 
   async function confirmarMatch(matchId) {
+    console.log("[CONFIRMAR] start", { matchId, ali: selPlantilla.size, once: selOnce.size, openUserPanel });
     try {
+      if (!matchId) { showToast("Falta o identificador do partido.", false); return; }
       if (!openUserPanel) { showToast("Selecciona unha usuaria/o primeiro (teclado).", false); return; }
       if (selPlantilla.size !== 11) { showToast("Aliñación realizada debe ter 11.", false); return; }
       if (selOnce.size !== 11) { showToast("Once oficial debe ter 11.", false); return; }
@@ -392,7 +390,6 @@ export default function ResultadosHistoricos() {
       }
       console.log("[CONFIRMAR] ok", upData);
 
-      // Marca confirmación na UI
       setConfirmedUsersByMatch(prev => {
         const cur = new Set(prev[matchId] || []);
         cur.add(openUserPanel);
@@ -400,10 +397,9 @@ export default function ResultadosHistoricos() {
       });
       setHasResults(prev => new Set([...prev, matchId]));
 
-      // Pechar toda a edición
+      // Pechar edición e limpar
       setOpenUserPanel(null);
       setOpenPeopleMatchId(null);
-      setEditingMatchId(null);
       setSelPlantilla(new Set());
       setSelOnce(new Set());
       armClear();
@@ -421,16 +417,15 @@ export default function ResultadosHistoricos() {
   const aliIs11 = selPlantilla.size === 11;
   const onceIs11 = selOnce.size === 11;
 
-  function renderPlayersColumn(list, checkedSet, onToggle, bg) {
+  function renderPlayersColumn(list, checkedSet, setChecked, bg) {
     const buckets = groupByPos(list);
-    const curCount = checkedSet.size;
     return (
       <div style={{ ...COL_BASE, ...(bg || {}) }}>
         <div style={COL_HEAD}>
           <span style={bg === COL_BG_OFI ? (aliIs11 ? COL_TITLE_BLINK : COL_TITLE) : COL_TITLE}>
             {bg === COL_BG_OFI ? "ONCE OFICIAL" : "ALIÑACIÓN REALIZADA"}
           </span>
-          <span style={COUNT}>{curCount}/11</span>
+          <span style={COUNT}>{checkedSet.size}/11</span>
         </div>
         {POS_ORDER.map((k) => {
           const group = buckets[k] || [];
@@ -448,11 +443,14 @@ export default function ResultadosHistoricos() {
                         type="checkbox"
                         style={CHECKBOX}
                         checked={isChecked}
-                        onChange={()=> { const nx=new Set(checkedSet); nx.has(p.id)?nx.delete(p.id):nx.add(p.id); onToggle instanceof Function ? onToggle(p.id) : null; }}
-                        onClick={(e)=>{ e.stopPropagation(); }}
+                        onChange={()=>{
+                          const nx = new Set(checkedSet);
+                          nx.has(p.id) ? nx.delete(p.id) : nx.add(p.id);
+                          setChecked(nx);  // ← Estado actualizado
+                        }}
                       />
                       <span style={playerNameStyle}>{p.label}</span>
-                      {isChecked && <span style={COUNT_MINI}>{curCount}/11</span>}
+                      {isChecked && <span style={COUNT_MINI}>{checkedSet.size}/11</span>}
                     </label>
                   );
                 })}
@@ -465,7 +463,7 @@ export default function ResultadosHistoricos() {
     );
   }
 
-  function renderSummary(user) {
+  function renderSummary(matchId, user) {
     const playersById = new Map(players.map(p => [p.id, p]));
     const acertosLive = Array.from(selOnce).filter(id => selPlantilla.has(id)).length;
     const aliLabels = Array.from(selPlantilla).map(pid => {
@@ -501,7 +499,7 @@ export default function ResultadosHistoricos() {
           <button
             type="button"
             style={onceIs11 ? BTN_CONFIRM_BLINK : BTN_CONFIRM}
-            onClick={()=> confirmarMatch(editingMatchId)}
+            onClick={()=> confirmarMatch(matchId)}   // ← matchId explícito
           >
             CONFIRMAR
           </button>
@@ -560,7 +558,7 @@ export default function ResultadosHistoricos() {
                           style={ICONBTN}
                           title="Pechar etiqueta do partido"
                           aria-label="Pechar etiqueta do partido"
-                          onClick={()=> { setOpenPeopleMatchId(null); setOpenUserPanel(null); setEditingMatchId(null); }}
+                          onClick={()=> { setOpenPeopleMatchId(null); setOpenUserPanel(null); }}
                         >
                           <svg width="18" height="18" viewBox="0 0 24 24" style={SVGI}>
                             <path d="M18 6 6 18M6 6l12 12" />
@@ -570,7 +568,7 @@ export default function ResultadosHistoricos() {
                     </>
                   )}
 
-                  {/* Ollo (indicador activo se hai resultados) */}
+                  {/* Ollo (activo se hai resultados) */}
                   <button
                     type="button"
                     style={eyeBtnStyle(eyeActive)}
@@ -615,7 +613,7 @@ export default function ResultadosHistoricos() {
                                       style={ICONBTN}
                                       title="Abrir táboas desta persoa"
                                       aria-label="Abrir táboas desta persoa"
-                                      onClick={()=> onOpenUserEditor(editingMatchId || openPeopleMatchId, u.id)}
+                                      onClick={()=> onOpenUserEditor(match.id, u.id)}
                                     >
                                       <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}>
                                         <rect x="3" y="6" width="18" height="12" rx="2" />
@@ -661,17 +659,17 @@ export default function ResultadosHistoricos() {
                               {renderPlayersColumn(
                                 players,
                                 selPlantilla,
-                                (id)=>{ const nx=new Set(selPlantilla); nx.has(id)?nx.delete(id):nx.add(id); setSelPlantilla(nx); armClear(); },
+                                setSelPlantilla,
                                 COL_BG_ALI
                               )}
                               {renderPlayersColumn(
                                 players,
                                 selOnce,
-                                (id)=>{ const nx=new Set(selOnce); nx.has(id)?nx.delete(id):nx.add(id); setSelOnce(nx); armClear(); },
+                                setSelOnce,
                                 COL_BG_OFI
                               )}
                             </div>
-                            {renderSummary(users.find(u=>u.id===openUserPanel))}
+                            {renderSummary(match.id, userObj)}
                           </>
                         )}
                       </div>
@@ -679,9 +677,9 @@ export default function ResultadosHistoricos() {
                   </section>
                 )}
 
-                {/* Pestaña de resultados confirmados (visor). X arriba-dereita */}
+                {/* Pestaña de resultados confirmados (visor). X arriba-dereita; centrada e ancho similar ás táboas */}
                 {openResultsMatchId === match.id && (
-                  <section style={{ marginTop:8, position:"relative", border:"1px solid #e5e7eb", borderRadius:12, background:"#fff", padding:8, maxWidth:560 }}>
+                  <section style={{ marginTop:8, position:"relative", border:"1px solid #e5e7eb", borderRadius:12, background:"#fff", padding:8, maxWidth:560, marginLeft:"auto", marginRight:"auto" }}>
                     <button
                       type="button"
                       title="Pechar"
