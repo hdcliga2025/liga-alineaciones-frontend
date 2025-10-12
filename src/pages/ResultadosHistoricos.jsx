@@ -28,9 +28,13 @@ const SEP = { margin: "0 6px", fontWeight: 800, color: "#0f172a" };
 const ACTIONS = { display: "flex", gap: 8, alignItems: "center", justifySelf: "end" };
 const ICONBTN = { width: 34, height: 34, display: "grid", placeItems: "center", borderRadius: 10, border: "1px solid #e2e8f0", background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,.06)", cursor: "pointer" };
 const SVGI = { fill: "none", stroke: "#0f172a", strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round" };
-const eyeBtnStyle = (active) =>
+const EYE_BTN = (active) =>
   active ? { ...ICONBTN, border: "1px solid #0ea5e9", background: "linear-gradient(180deg,#38bdf8,#0ea5e9)" } : ICONBTN;
-const eyeIconStyle = (active) => (active ? { ...SVGI, stroke: "#fff" } : SVGI);
+const EYE_SVG = (active) => (active ? { ...SVGI, stroke: "#fff" } : SVGI);
+
+/* Botón X (todos los cierres X) */
+const XBTN = { ...ICONBTN, border: "1px solid #ef4444", background: "#fff" };
+const XSVG = { fill: "none", stroke: "#ef4444", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
 
 /* Toasts */
 const TOAST_OK = { margin: "8px 0 12px", padding: "10px 12px", borderRadius: 10, background: "#ecfeff", border: "1px solid #67e8f9", color: "#0e7490", font: "600 12.5px/1.2 Montserrat,system-ui,sans-serif" };
@@ -68,54 +72,105 @@ const POS_SEP = { height: 1, background: "#e5e7eb" };
 
 /* Filas xogadores */
 const ROW_PLAYER = { display: "grid", gridTemplateColumns: "16px 1fr auto", gap: 8, alignItems: "center", padding: "0 2px", minWidth: 0 };
-const CHECKBOX = { width: 14, height: 14, transform: "scale(1.02)", marginRight: 4 };
-const playerNameStyle = { font: "700 11px/.8 Montserrat,system-ui,sans-serif", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
+const CHECKBOX = { width: 14, height: 14, transform: "scale(1.02)", marginRight: 6 };
+const playerNameStyle = { font: "700 10.8px/.78 Montserrat,system-ui,sans-serif", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
 const COUNT_MINI = { font: "900 10px/1 Montserrat,system-ui,sans-serif", color: "#0ea5e9", padding: "0 4px", borderRadius: 6, background: "#e0f2fe" };
 
-/* Preview / RESULTADOS OBTIDOS (baixo das dúas columnas) — estirado */
+/* Preview / RESULTADOS OBTIDOS (baixo das dúas columnas) — estirado ata a dereita */
 const SUMMARY_WRAP = { marginTop: 8, marginLeft: 0, marginRight: 0, width: "100%" };
 const SUMMARY = { border: "1px solid #fecaca", borderRadius: 12, background: "linear-gradient(180deg,#fff6f6,#ffeaea)", padding: 8, position: "relative", width: "100%" };
 const SUMMARY_TITLE_WRAP = { padding: "2px 6px 6px 6px", background: "linear-gradient(180deg,#fff,#fff6f6)", borderTopLeftRadius: 10, borderTopRightRadius: 10 };
 const SUMMARY_TITLE = { ...COL_TITLE, textDecoration: "none", margin: "2px 0 4px 0" };
 
 const HR = { height: 1, background: "#e5e7eb", width: "100%" };
-const GRID_DEF = "120px 1fr 70px 3fr";
-const T_HEADER = { display: "grid", gridTemplateColumns: GRID_DEF, gap: 0, padding: "4px 0", borderBottom: "1px solid #e5e7eb", color: "#0f172a", font: "800 11px/1.02 Montserrat,system-ui,sans-serif" };
-const T_ROW = { display: "grid", gridTemplateColumns: GRID_DEF, gap: 0, padding: "3px 0", borderBottom: "1px solid #f1f5f9", font: "600 10.5px/.96 Montserrat,system-ui,sans-serif" };
-const CELL = { padding: "0 6px", borderRight: "1px solid #e5e7eb" };
-const CELL_LAST = { padding: "0 6px" };
-const ACERTOS_CELL = { textAlign: "center" };
+const GRID_DEF = "auto 1fr auto 3fr";
+const T_HEADER = {
+  display: "grid",
+  gridTemplateColumns: GRID_DEF,
+  gap: 0,
+  padding: "4px 0",
+  borderBottom: "1px solid #e5e7eb",
+  color: "#0f172a",
+  font: "800 11px/1.02 Montserrat,system-ui,sans-serif",
+  alignItems: "center",
+};
+const T_ROW = { display: "grid", gridTemplateColumns: GRID_DEF, gap: 0, padding: "3px 0", borderBottom: "1px solid #f1f5f9", font: "600 10.2px/.96 Montserrat,system-ui,sans-serif", alignItems: "center" };
+const CELL = { padding: "0 6px", borderRight: "1px solid #e5e7eb", display: "flex", alignItems: "center" };
+const CELL_LAST = { padding: "0 6px", display: "flex", alignItems: "center" };
+const ACERTOS_CELL = { justifyContent: "center", minWidth: 60 };
 const CELSTE = { color: "#0ea5e9", fontWeight: 800 };
 const BTN_CONFIRM = { marginTop: 8, width: "100%", borderRadius: 10, padding: "8px 10px", font: "900 12px/1.02 Montserrat,system-ui,sans-serif", background: "linear-gradient(180deg,#38bdf8,#0ea5e9)", color: "#fff", border: "1px solid #0ea5e9", boxShadow: "0 3px 10px rgba(14,165,233,.18)", cursor: "pointer" };
 const BTN_CONFIRM_BLINK = { ...BTN_CONFIRM, animation: "pulseSoft 1.5s ease-in-out infinite" };
 
 /* Resultados a pantalla completa (Ollo) */
-const FULL_TITLE_WRAP = { padding: "8px 10px", border: "1px solid #bbf7d0", background: "linear-gradient(180deg,#dcfce7,#bbf7d0)", borderRadius: 10, marginTop: 6, marginBottom: 8 };
-const FULL_TITLE = { font: "900 14px/1.15 Montserrat,system-ui,sans-serif", color: "#065f46" };
+const FULL_TITLE_BAR = {
+  marginTop: 6,
+  marginBottom: 8,
+  padding: "9px 10px",
+  border: "1px solid #7dd3fc",
+  background: "linear-gradient(180deg,#38bdf8,#0ea5e9)",
+  borderRadius: 10,
+  color: "#fff",
+  display: "grid",
+  gridTemplateColumns: "1fr auto",
+  alignItems: "center",
+  gap: 8,
+};
+const FULL_TITLE = { font: "900 15px/1.15 Montserrat,system-ui,sans-serif", color: "#fff" };
 const FULL_TABLE = { width: "100%", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden", background: "#fff" };
 const FULL_HEAD = {
   display: "grid",
-  gridTemplateColumns: "160px 1fr 90px 3fr 60px",
-  padding: "8px 6px",
+  gridTemplateColumns: "auto 1fr auto 3fr",
+  padding: "10px 6px",
   borderBottom: "1px solid #e5e7eb",
   font: "800 13.75px/1.2 Montserrat,system-ui,sans-serif",
-  background: "linear-gradient(180deg,#dcfce7,#bbf7d0)" /* verde degradado */,
+  background: "linear-gradient(180deg,#dcfce7,#bbf7d0)",
   color: "#064e3b",
+  alignItems: "center",
 };
 const FULL_ROW = {
   display: "grid",
-  gridTemplateColumns: "160px 1fr 90px 3fr 60px",
-  padding: "7px 6px",
+  gridTemplateColumns: "auto 1fr auto 3fr",
+  padding: "8px 6px",
   borderBottom: "1px solid #f1f5f9",
   font: "600 12.5px/1.1 Montserrat,system-ui,sans-serif",
+  alignItems: "center",
 };
-const FULL_CELL = { padding: "0 6px", borderRight: "1px solid #e5e7eb" };
-const FULL_LAST = { padding: "0 6px" };
-const FULL_ACERTOS = { textAlign: "center", color: "#0ea5e9", fontWeight: 900 };
+const FULL_CELL = { padding: "0 6px", borderRight: "1px solid #e5e7eb", display: "flex", alignItems: "center" };
+const FULL_LAST = { padding: "0 6px", display: "flex", alignItems: "center" };
+const FULL_ACERTOS = { textAlign: "center", color: "#0ea5e9", fontWeight: 900, minWidth: 76, justifyContent: "center" };
 
-/* edición data/hora inline */
-const EDIT_ICONBTN = { ...ICONBTN, width: 28, height: 28 };
-const DT_INPUT = { border: "1px solid #cbd5e1", borderRadius: 8, padding: "4px 6px", font: "600 12px/1 Montserrat,system-ui,sans-serif" };
+/* Editor inline de data/hora en overlay */
+const EDIT_OVERLAY = {
+  position: "fixed",
+  inset: "auto auto 24px 50%",
+  transform: "translateX(-50%)",
+  zIndex: 60,
+  background: "rgba(255,255,255,.98)",
+  border: "1px solid #cbd5e1",
+  borderRadius: 12,
+  boxShadow: "0 12px 28px rgba(0,0,0,.22)",
+  padding: 12,
+  minWidth: 280,
+};
+const DT_INPUT = { border: "1px solid #cbd5e1", borderRadius: 8, padding: "6px 8px", font: "600 12px/1 Montserrat,system-ui,sans-serif", width: "100%" };
+const SAVE_BTN = { ...ICONBTN, position: "absolute", top: 8, right: 8, border: "1px solid #22c55e", background: "#fff" };
+const SAVE_SVG = { fill: "none", stroke: "#16a34a", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
+
+/* Móbil: info admins */
+const INFO_BTN = { ...ICONBTN };
+const INFO_SVG = { ...SVGI };
+const INFO_POP = {
+  position: "fixed",
+  inset: "10% 6% auto 6%",
+  background: "linear-gradient(180deg,#e0f2fe,#bae6fd)",
+  border: "1px solid #7dd3fc",
+  borderRadius: 12,
+  padding: 12,
+  zIndex: 80,
+  boxShadow: "0 16px 36px rgba(0,0,0,.25)",
+};
+const INFO_TEXT = { font: "600 13px/1.25 Montserrat,system-ui,sans-serif", color: "#0c4a6e" };
 
 const STYLES = `
 @keyframes blinkSoft{0%{opacity:1}50%{opacity:.7}100%{opacity:1}}
@@ -129,7 +184,12 @@ const sortDescByDate = (a, b) => (b.match_iso ? new Date(b.match_iso).getTime() 
 const dmyShort = (iso) => {
   if (!iso) return "—";
   const d = new Date(iso);
-  return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)}-${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)}, ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+};
+const dmyFull = (iso) => {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`;
 };
 const toLocalInput = (iso) => {
   if (!iso) return "";
@@ -168,7 +228,7 @@ function groupByPos(players) {
 }
 
 /* Sonidos */
-function bipSingle(freq = 880, dur = 0.11) {
+function bip(opacity = 0.22, freq = 880, dur = 0.11) {
   try {
     const AC = window.AudioContext || window.webkitAudioContext;
     const ctx = new AC();
@@ -179,15 +239,16 @@ function bipSingle(freq = 880, dur = 0.11) {
     o.connect(g);
     g.connect(ctx.destination);
     g.gain.setValueAtTime(0.0001, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + 0.01);
+    g.gain.exponentialRampToValueAtTime(opacity, ctx.currentTime + 0.01);
     o.start();
     o.stop(ctx.currentTime + dur);
     g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
   } catch {}
 }
-function bipDouble() {
-  bipSingle(880, 0.1);
-  setTimeout(() => bipSingle(920, 0.1), 160);
+function bipConfirm() {
+  // bip biiiiip "opaco"
+  bip(0.18, 820, 0.08);
+  setTimeout(() => bip(0.14, 700, 0.28), 130);
 }
 
 /* ===== Compo ===== */
@@ -226,16 +287,21 @@ export default function ResultadosHistoricos() {
     flashTimerRef.current = setTimeout(() => setFlash({ id: null, count: 0, t: 0 }), 900);
   };
 
-  // edición inline fecha/hora en resultados full
-  const [editingTs, setEditingTs] = useState(null); // {matchId,userId,valueLocal}
+  // edición inline fecha/hora en resultados full (overlay)
+  const [editOverlay, setEditOverlay] = useState(null); // {matchId,userId,valueLocal}
+
+  // info móvil admins
+  const [showMobileInfo, setShowMobileInfo] = useState(false);
 
   const [resultsConfirmed, setResultsConfirmed] = useState({});
   const [hasResults, setHasResults] = useState(new Set());
   const [confirmedByMatch, setConfirmedByMatch] = useState({}); // matchId -> Set(userIds)
 
-  const showToast = (msg, ok = true) => {
+  const [confirmSaving, setConfirmSaving] = useState(false);
+
+  const showToast = (msg, ok = true, ms = 1500) => {
     setToast({ msg, ok, t: Date.now() });
-    setTimeout(() => setToast(""), 4200);
+    setTimeout(() => setToast(""), ms);
   };
 
   async function resolveAdmin() {
@@ -303,7 +369,8 @@ export default function ResultadosHistoricos() {
         (playersData || []).map((pp) => {
           const p = normalizePlayer(pp);
           const pos = p.pos || inferPosFromFoto(p.foto_url || "");
-          return { id: p.id, dorsal: p.dorsal ?? null, pos, label: p.dorsal ? `${p.dorsal} - ${p.nombre}` : p.nombre || "—" };
+          const label = p.dorsal ? `${p.dorsal} - ${p.nombre}` : p.nombre || "—";
+          return { id: p.id, dorsal: p.dorsal ?? null, pos, label };
         })
       );
     } catch (e) {
@@ -401,7 +468,7 @@ export default function ResultadosHistoricos() {
 
   async function onOpenUserEditor(userId) {
     if (!isAdmin) return;
-    bipSingle();
+    bip(0.22, 880, 0.11);
     setOpenUserPanel(userId);
     setSelPlantilla(new Set());
     setSelOnce(new Set());
@@ -417,15 +484,15 @@ export default function ResultadosHistoricos() {
   }
 
   async function confirmarMatch(matchId) {
-    console.log("[CONFIRMAR] start", { matchId, ali: selPlantilla.size, once: selOnce.size, openUserPanel });
+    if (confirmSaving) return;
+    setConfirmSaving(true);
     try {
       if (!matchId) return showToast("Falta o identificador do partido.", false);
       if (!openUserPanel) return showToast("Selecciona unha usuaria/o primeiro (teclado).", false);
       if (selPlantilla.size !== 11) return showToast("Aliñación realizada debe ter 11.", false);
       if (selOnce.size !== 11) return showToast("Once oficial debe ter 11.", false);
 
-      showToast("Gardando…", true);
-      bipDouble();
+      bipConfirm();
 
       const plantillaSet = new Set(selPlantilla);
       const onceSet = new Set(selOnce);
@@ -443,33 +510,28 @@ export default function ResultadosHistoricos() {
         updated_at: nowISO,
       }];
 
-      const { data: upData, error: upErr } = await supabase
+      const { error: upErr } = await supabase
         .from("resultados_confirmados")
-        .upsert(payload, { onConflict: "match_id,user_id", ignoreDuplicates: false })
-        .select("*");
+        .upsert(payload, { onConflict: "match_id,user_id", ignoreDuplicates: false });
 
       if (upErr) return showToast(`Erro gardando: ${upErr.message || upErr.code}`, false);
 
-      setHasResults((prev) => new Set([...prev, matchId]));
-      setConfirmedByMatch((prev) => {
-        const s = new Set([...(prev[matchId] || new Set()), openUserPanel]);
-        return { ...prev, [matchId]: s };
-      });
-
+      // limpiar UI edición
       setOpenUserPanel(null);
       setOpenPeopleMatchId(null);
       setSelPlantilla(new Set());
       setSelOnce(new Set());
 
       await loadConfirmedForMatch(matchId);
-      showToast("Aliñación gardada.", true);
+      showToast("Resultado gardado.", true, 1500);
     } catch (e) {
       console.error("confirmarMatch error:", e);
       showToast("Erro inesperado ao confirmar.", false);
+    } finally {
+      setConfirmSaving(false);
     }
   }
 
-  // edición inline confirmed_at
   async function saveEditedTs(matchId, userId, valueLocal) {
     const iso = fromLocalInput(valueLocal);
     if (!iso) return showToast("Data/hora non válida.", false);
@@ -480,7 +542,7 @@ export default function ResultadosHistoricos() {
         .eq("match_id", matchId)
         .eq("user_id", userId);
       if (error) throw error;
-      setEditingTs(null);
+      setEditOverlay(null);
       await loadConfirmedForMatch(matchId);
       showToast("Data/hora actualizada.");
     } catch (e) {
@@ -555,13 +617,13 @@ export default function ResultadosHistoricos() {
           </div>
           <div role="table" style={{ width: "100%" }}>
             <div role="row" style={T_HEADER}>
-              <div style={CELL}>Data e hora</div>
+              <div style={{ ...CELL, minWidth: 120 }}>Data e hora</div>
               <div style={CELL}>HDC Membro</div>
-              <div style={{ ...CELL, textAlign: "center" }}>Acertos</div>
+              <div style={{ ...CELL, ...ACERTOS_CELL }}>Acertos</div>
               <div style={CELL_LAST}>Aliñación presentada</div>
             </div>
             <div role="row" style={T_ROW}>
-              <div style={CELL}>{dmyShort(new Date().toISOString())}</div>
+              <div style={{ ...CELL, minWidth: 120 }}>{dmyShort(new Date().toISOString())}</div>
               <div style={CELL}>{userLabel}</div>
               <div style={{ ...CELL, ...ACERTOS_CELL }}>
                 <span style={CELSTE}>{acertosLive}</span>
@@ -570,7 +632,7 @@ export default function ResultadosHistoricos() {
             </div>
           </div>
 
-          <button type="button" style={onceIs11 ? BTN_CONFIRM_BLINK : BTN_CONFIRM} onClick={() => confirmarMatch(matchId)} disabled={!onceIs11}>
+          <button type="button" style={onceIs11 ? BTN_CONFIRM_BLINK : BTN_CONFIRM} onClick={() => confirmarMatch(matchId)} disabled={!onceIs11 || confirmSaving}>
             CONFIRMAR
           </button>
         </div>
@@ -582,21 +644,23 @@ export default function ResultadosHistoricos() {
   function FullResults({ match }) {
     const recs = resultsConfirmed[match.id] || [];
     const playersMap = new Map(players.map((p) => [p.id, p.label]));
-    const title = `RESULTADOS OBTIDOS POR CADA XOGADOR NO PARTIDO — ${dmyShort(match.match_iso)} · ${match.equipo1} - ${match.equipo2}`;
+    const title = `LISTADO RESULTADOS EN EL PARTIDO: ${match.equipo1} - ${match.equipo2} | ${dmyFull(match.match_iso)}`;
 
     return (
       <section aria-label="Resultados do partido" style={{ marginTop: 6 }}>
-        <div style={FULL_TITLE_WRAP}>
+        <div style={FULL_TITLE_BAR}>
           <div style={FULL_TITLE}>{title}</div>
+          <button type="button" style={XBTN} aria-label="Pechar" title="Pechar" onClick={() => setOpenResultsMatchId(null)}>
+            <svg width="18" height="18" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
+          </button>
         </div>
 
         <div style={FULL_TABLE}>
           <div style={FULL_HEAD}>
-            <div style={FULL_CELL}>Data e hora</div>
+            <div style={{ ...FULL_CELL, minWidth: 140 }}>Data e hora</div>
             <div style={FULL_CELL}>HDC Membro</div>
-            <div style={FULL_CELL}>Acertos</div>
-            <div style={FULL_CELL}>Aliñación presentada</div>
-            <div style={FULL_LAST} />
+            <div style={{ ...FULL_CELL, ...FULL_ACERTOS }}>Acertos</div>
+            <div style={FULL_LAST}>Aliñación presentada</div>
           </div>
 
           {recs.length === 0 ? (
@@ -618,58 +682,51 @@ export default function ResultadosHistoricos() {
                 );
               });
 
-              const isEditing = editingTs && editingTs.matchId === rec.match_id && editingTs.userId === rec.user_id;
-
               return (
                 <div key={`${rec.user_id}`} style={FULL_ROW}>
-                  <div style={FULL_CELL}>
-                    {!isEditing ? (
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <button
-                          type="button"
-                          style={EDIT_ICONBTN}
-                          title="Editar data/hora"
-                          aria-label="Editar data/hora"
-                          onClick={() => setEditingTs({ matchId: rec.match_id, userId: rec.user_id, valueLocal: toLocalInput(rec.confirmed_at) })}
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" style={SVGI}><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z" /></svg>
-                        </button>
-                        <span>{dmyShort(rec.confirmed_at)}</span>
-                      </div>
-                    ) : (
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <input type="datetime-local" style={DT_INPUT} value={editingTs.valueLocal || ""} onInput={(e) => setEditingTs((s) => ({ ...s, valueLocal: e.currentTarget.value }))} />
-                        <button
-                          type="button"
-                          style={EDIT_ICONBTN}
-                          title="Gardar data/hora"
-                          aria-label="Gardar data/hora"
-                          onClick={() => saveEditedTs(rec.match_id, rec.user_id, editingTs.valueLocal)}
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" style={SVGI}><path d="M4 4h12l4 4v12H4z" /><path d="M16 4v6H8V4" /><path d="M8 18h8" /></svg>
-                        </button>
-                      </div>
-                    )}
+                  <div style={{ ...FULL_CELL, minWidth: 140 }}>
+                    <button
+                      type="button"
+                      style={{ ...ICONBTN, width: 28, height: 28, marginRight: 6 }}
+                      title="Editar data/hora"
+                      aria-label="Editar data/hora"
+                      onClick={() => setEditOverlay({ matchId: rec.match_id, userId: rec.user_id, valueLocal: toLocalInput(rec.confirmed_at) })}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" style={SVGI}><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                    </button>
+                    <span>{dmyShort(rec.confirmed_at)}</span>
                   </div>
                   <div style={FULL_CELL}>{uname}</div>
                   <div style={{ ...FULL_CELL, ...FULL_ACERTOS }}>{rec.acertos}</div>
-                  <div style={FULL_CELL}>{labels}</div>
-                  <div style={FULL_LAST}>
-                    <button
-                      type="button"
-                      style={EDIT_ICONBTN}
-                      title="Pechar resultados"
-                      aria-label="Pechar resultados"
-                      onClick={() => setOpenResultsMatchId(null)}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" style={SVGI}><path d="M18 6 6 18M6 6l12 12" /></svg>
-                    </button>
-                  </div>
+                  <div style={FULL_LAST}>{labels}</div>
                 </div>
               );
             })
           )}
         </div>
+
+        {editOverlay && (
+          <div role="dialog" aria-modal="true" style={EDIT_OVERLAY}>
+            <button type="button" style={XBTN} aria-label="Pechar" title="Pechar" onClick={() => setEditOverlay(null)}>
+              <svg width="16" height="16" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
+            </button>
+            <input
+              type="datetime-local"
+              style={{ ...DT_INPUT, marginTop: 10 }}
+              value={editOverlay.valueLocal || ""}
+              onInput={(e) => setEditOverlay((s) => ({ ...s, valueLocal: e.currentTarget.value }))}
+            />
+            <button
+              type="button"
+              style={SAVE_BTN}
+              title="Gardar"
+              aria-label="Gardar"
+              onClick={() => saveEditedTs(editOverlay.matchId, editOverlay.userId, editOverlay.valueLocal)}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" style={SAVE_SVG}><path d="M4 4h12l4 4v12H4z" /><path d="M16 4v6H8V4" /><path d="M8 18h8" /></svg>
+            </button>
+          </div>
+        )}
       </section>
     );
   }
@@ -686,12 +743,12 @@ export default function ResultadosHistoricos() {
       {!err && loading && <div style={TOAST_OK} role="status">Cargando…</div>}
       {!err && !loading && view.length === 0 && (<div style={TOAST_OK} role="status">Non hai partidos rematados aínda.</div>)}
 
-      {/* Vista completa de resultados (se ollo está aberto) */}
+      {/* Vista completa de resultados (ollo aberto) */}
       {!err && !loading && openResultsMatchId && (
         <FullResults match={view.find((m) => m.id === openResultsMatchId) || { id: openResultsMatchId, match_iso: null, equipo1: "", equipo2: "" }} />
       )}
 
-      {/* Lista de partidos e edición só cando o ollo NON está aberto */}
+      {/* Lista + Edición (ollo pechado) */}
       {!err && !loading && !openResultsMatchId && view.length > 0 && (
         <ul style={LIST} aria-label="Lista de partidos rematados">
           {view.map((match, i) => {
@@ -704,6 +761,18 @@ export default function ResultadosHistoricos() {
                 <span style={TEAMS}>{match.equipo1 || "—"} <span style={SEP}>-</span> {match.equipo2 || "—"}</span>
 
                 <div style={ACTIONS}>
+                  {isAdmin && isMobile && (
+                    <button
+                      type="button"
+                      style={INFO_BTN}
+                      title="Información"
+                      aria-label="Información"
+                      onClick={() => setShowMobileInfo(true)}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" style={INFO_SVG}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    </button>
+                  )}
+
                   {isAdmin && !isMobile && (
                     <>
                       {!isPeopleOpen ? (
@@ -711,8 +780,8 @@ export default function ResultadosHistoricos() {
                           <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
                         </button>
                       ) : (
-                        <button type="button" style={ICONBTN} title="Pechar etiqueta do partido" aria-label="Pechar etiqueta do partido" onClick={() => { setOpenPeopleMatchId(null); setOpenUserPanel(null); }}>
-                          <svg width="18" height="18" viewBox="0 0 24 24" style={SVGI}><path d="M18 6 6 18M6 6l12 12" /></svg>
+                        <button type="button" style={XBTN} title="Pechar etiqueta do partido" aria-label="Pechar etiqueta do partido" onClick={() => { setOpenPeopleMatchId(null); setOpenUserPanel(null); }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
                         </button>
                       )}
                     </>
@@ -720,7 +789,7 @@ export default function ResultadosHistoricos() {
 
                   <button
                     type="button"
-                    style={eyeBtnStyle(eyeActive)}
+                    style={EYE_BTN(eyeActive)}
                     title="Ver resultados do partido"
                     aria-label="Ver resultados do partido"
                     onClick={async ()=>{
@@ -731,7 +800,7 @@ export default function ResultadosHistoricos() {
                       await loadConfirmedForMatch(match.id);
                     }}
                   >
-                    <svg width="20" height="20" viewBox="0 0 24 24" style={eyeIconStyle(eyeActive)}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" style={EYE_SVG(eyeActive)}>
                       <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />
                     </svg>
                   </button>
@@ -760,8 +829,8 @@ export default function ResultadosHistoricos() {
                                     <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" /></svg>
                                   </button>
                                 ) : (
-                                  <button type="button" style={ICONBTN} title="Pechar editor desta persoa" aria-label="Pechar editor desta persoa" onClick={()=> setOpenUserPanel(null)}>
-                                    <svg width="18" height="18" viewBox="0 0 24 24" style={SVGI}><path d="M18 6 6 18M6 6l12 12" /></svg>
+                                  <button type="button" style={XBTN} title="Pechar editor desta persoa" aria-label="Pechar editor desta persoa" onClick={()=> setOpenUserPanel(null)}>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
                                   </button>
                                 )}
                               </li>
@@ -792,6 +861,19 @@ export default function ResultadosHistoricos() {
             );
           })}
         </ul>
+      )}
+
+      {/* Info admins móbil */}
+      {showMobileInfo && (
+        <div role="dialog" aria-modal="true" style={INFO_POP}>
+          <button type="button" style={{ ...XBTN, position: "absolute", top: 8, right: 8 }} aria-label="Pechar" title="Pechar" onClick={() => setShowMobileInfo(false)}>
+            <svg width="16" height="16" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
+          </button>
+          <p style={INFO_TEXT}>
+            No caso de ser necesaria algunha corrección, na versión PC de sobremesa existe funcionalidade engadida de edición
+            manual de resultados por partido e xogador/a.
+          </p>
+        </div>
       )}
     </main>
   );
