@@ -28,6 +28,10 @@ const SEP = { margin: "0 6px", fontWeight: 800, color: "#0f172a" };
 const ACTIONS = { display:"flex", gap:8, alignItems:"center", justifySelf:"end" };
 const ICONBTN = { width:34, height:34, display:"grid", placeItems:"center", borderRadius:10, border:"1px solid #e2e8f0", background:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,.06)", cursor:"pointer" };
 const SVGI = { fill:"none", stroke:"#0f172a", strokeWidth:1.9, strokeLinecap:"round", strokeLinejoin:"round" };
+const eyeBtnStyle = (active)=> active
+  ? { ...ICONBTN, border:"1px solid #0ea5e9", background:"linear-gradient(180deg,#38bdf8,#0ea5e9)" }
+  : ICONBTN;
+const eyeIconStyle = (active)=> active ? { ...SVGI, stroke:"#fff" } : SVGI;
 
 /* Toasts */
 const TOAST_OK = { margin:"8px 0 12px", padding:"10px 12px", borderRadius:10, background:"#ecfeff", border:"1px solid #67e8f9", color:"#0e7490", font:"600 12.5px/1.2 Montserrat,system-ui,sans-serif" };
@@ -41,12 +45,12 @@ const PEOPLE_SHELL = (twoCols) =>
     : { marginTop:8, border:"1px solid #e2e8f0", borderRadius:10, background:"#fff", padding:"10px 12px" };
 
 const USERS_LIST = { listStyle:"none", margin:0, padding:0, display:"grid", gap:6 };
-/* activa: parpadeo MUY sutil + sombreado forte */
+/* activa: parpadeo MUY sutil + sombreado */
 const USER_ROW_BASE = { display:"grid", gridTemplateColumns:"auto 1fr auto", gap:6, alignItems:"center", padding:"6px 8px", borderRadius:8, border:"1px solid #eef2f7", background:"#f9fafb" };
 const USER_ROW_BLINK = {
   ...USER_ROW_BASE,
   animation:"userBlink 1.5s ease-in-out infinite",
-  background:"linear-gradient(180deg,#f4fbff,#fafcfe)" /* degradado máis leve */
+  background:"linear-gradient(180deg,#f4fbff,#fafcfe)"
 };
 const USER_ROW_CONFIRMED = { ...USER_ROW_BASE, background:"linear-gradient(180deg,#eafff3,#f7fff9)", border:"1px solid #22c55e" };
 const USER_BADGE = { font:"900 11px/1 Montserrat,system-ui,sans-serif", color:"#0ea5e9", background:"#e0f2fe", padding:"4px 7px", borderRadius:8, minWidth:38, textAlign:"center" };
@@ -66,7 +70,7 @@ const COUNT = { font:"900 11.3px/1.05 Montserrat,system-ui,sans-serif", color:"#
 
 /* Grupos de demarcación con etiqueta lateral */
 const GROUP_SCROLL = { maxHeight: 188, overflowY: "auto", background: "inherit" };
-const GROUP_WRAP = (bg) => ({ position:"relative", background:"inherit", paddingRight:24, marginBottom:6 });
+const GROUP_WRAP = (bg) => ({ position:"relative", background:"inherit", paddingRight:24, marginBottom:4 }); // + compacto
 const POS_SIDE = (bg) => ({
   position:"absolute", right:2, top:2, bottom:2,
   writingMode:"vertical-rl", textOrientation:"mixed",
@@ -77,28 +81,34 @@ const POS_SIDE = (bg) => ({
 });
 const POS_SEP = { height:1, background:"#e5e7eb" };
 
-/* Fila xogador: interlineado mínimo + espazo checkbox-dorsal */
-const ROW_PLAYER = { display:"grid", gridTemplateColumns:"18px 1fr", gap:6, alignItems:"center", padding:"0 6px", minWidth:0 };
+/* Fila xogador: interlineado mínimo + espazo checkbox-dorsal (máis reducido) */
+const ROW_PLAYER = { display:"grid", gridTemplateColumns:"18px 1fr", gap:4, alignItems:"center", padding:"0 4px", minWidth:0 };
 const CHECKBOX = { width:16, height:16, transform:"scale(1.02)", marginRight:2 };
-const playerNameStyle = { font:"700 12.2px/1 Montserrat,system-ui,sans-serif", color:"#0f172a", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" };
+const playerNameStyle = { font:"700 12.2px/.98 Montserrat,system-ui,sans-serif", color:"#0f172a", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" };
 
 /* Resumo / RESULTADOS OBTIDOS */
 const SUMMARY = {
   marginTop:8,
   border:"1px solid #fecaca",
   borderRadius:12,
-  background:"linear-gradient(180deg,#fff1f1,#ffe7e7)",
+  background:"linear-gradient(180deg,#fff6f6,#ffeaea)", // menos degradado
   padding:8
 };
-const SUMMARY_TITLE = { ...COL_TITLE, textDecoration:"underline", margin:"2px 0 6px 0" };
+const SUMMARY_TITLE_WRAP = { padding:"2px 6px 6px 6px" };
+const SUMMARY_TITLE = { ...COL_TITLE, textDecoration:"none", margin:"2px 0 4px 0" };
+const HR = { height:1, background:"#e5e7eb", width:"100%" };
+
+const GRID_DEF = "120px 1fr 70px 3fr";
 const T_HEADER = {
-  display:"grid", gridTemplateColumns:"120px 1fr 70px 3fr", gap:8, padding:"4px 6px",
+  display:"grid", gridTemplateColumns:GRID_DEF, gap:0, padding:"4px 0",
   borderBottom:"1px solid #e5e7eb", color:"#0f172a", font:"800 11.3px/1.05 Montserrat,system-ui,sans-serif"
 };
 const T_ROW    = {
-  display:"grid", gridTemplateColumns:"120px 1fr 70px 3fr", gap:8, padding:"4px 6px",
+  display:"grid", gridTemplateColumns:GRID_DEF, gap:0, padding:"4px 0",
   borderBottom:"1px solid #f1f5f9", font:"600 11.2px/1.05 Montserrat,system-ui,sans-serif"
 };
+const CELL = { padding:"0 6px", borderRight:"1px solid #e5e7eb" };
+const CELL_LAST = { padding:"0 6px" };
 const ACERTOS_CELL = { textAlign:"center" };
 const CELSTE = { color:"#0ea5e9", fontWeight:800 };
 
@@ -190,6 +200,7 @@ export default function ResultadosHistoricos() {
 
   const [resultsConfirmed, setResultsConfirmed] = useState({});
   const [confirmedUsersByMatch, setConfirmedUsersByMatch] = useState({}); // {matchId: Set<userId>}
+  const [hasResults, setHasResults] = useState(new Set()); // matches con resultados
 
   const showToast = (msg, ok=true) => { setToast({ msg, ok, t: Date.now() }); setTimeout(()=> setToast(""), 4200); };
 
@@ -225,6 +236,14 @@ export default function ResultadosHistoricos() {
           match_iso:r.match_iso||null
         })).sort(sortDescByDate);
         if (alive) setRows(norm);
+
+        // Cargar que partidos teñen resultados confirmados
+        if ((data||[]).length) {
+          const ids = (data||[]).map(r=>r.id).filter(Boolean);
+          const { data: rc } = await supabase.from("resultados_confirmados").select("match_id").in("match_id", ids);
+          const s = new Set((rc||[]).map(x=>x.match_id));
+          if (alive) setHasResults(s);
+        }
       } catch (e) { console.error("Historico load:", e); if (alive) setErr("Produciuse un erro ao cargar o histórico."); }
       finally { if (alive) setLoading(false); }
     })();
@@ -308,6 +327,8 @@ export default function ResultadosHistoricos() {
       }));
 
       setResultsConfirmed(prev => ({ ...prev, [matchId]: arr }));
+      // marca o partido con resultados
+      setHasResults(prev => new Set([...prev, matchId]));
     } catch (e) {
       console.error("loadConfirmedForMatch error:", e);
       showToast("Erro cargando resultados confirmados.", false);
@@ -369,14 +390,15 @@ export default function ResultadosHistoricos() {
         .upsert(payload, { onConflict:"match_id,user_id", ignoreDuplicates:false });
       if (upErr) { showToast(`Erro gardando: ${upErr.message}`, false); armClear(); return; }
 
-      // Marca esa persoa como confirmada (verde) para ese partido
+      // Marca confirmación na UI
       setConfirmedUsersByMatch(prev => {
         const cur = new Set(prev[matchId] || []);
         cur.add(openUserPanel);
         return { ...prev, [matchId]: cur };
       });
+      setHasResults(prev => new Set([...prev, matchId]));
 
-      // Pecha todo (non abre ollo)
+      // Pechar toda a edición do usuario (deixa de parpadear)
       setOpenUserPanel(null);
       setOpenPeopleMatchId(null);
       setEditingMatchId(null);
@@ -384,6 +406,7 @@ export default function ResultadosHistoricos() {
       setSelOnce(new Set());
       armClear();
 
+      // Refresca visor
       await loadConfirmedForMatch(matchId);
     } catch (e) {
       console.error("confirmarMatch error:", e);
@@ -446,16 +469,22 @@ export default function ResultadosHistoricos() {
 
     return (
       <div style={SUMMARY}>
-        <div style={SUMMARY_TITLE}>RESULTADOS OBTIDOS</div>
+        <div style={SUMMARY_TITLE_WRAP}>
+          <div style={SUMMARY_TITLE}>RESULTADOS OBTIDOS</div>
+          <div style={HR} />
+        </div>
         <div role="table" style={{ width:"100%" }}>
           <div role="row" style={T_HEADER}>
-            <div>Data e hora</div><div>HDC Membro</div><div style={{textAlign:"center"}}>Acertos</div><div>Aliñación presentada</div>
+            <div style={CELL}>Data e hora</div>
+            <div style={CELL}>HDC Membro</div>
+            <div style={{...CELL, textAlign:"center"}}>Acertos</div>
+            <div style={CELL_LAST}>Aliñación presentada</div>
           </div>
           <div role="row" style={T_ROW}>
-            <div>{dmyShort(new Date().toISOString())}</div>
-            <div>{user?.name || "—"}</div>
-            <div style={ACERTOS_CELL}><span style={CELSTE}>{acertosLive}</span></div>
-            <div>{out}</div>
+            <div style={CELL}>{dmyShort(new Date().toISOString())}</div>
+            <div style={CELL}>{user?.name || "—"}</div>
+            <div style={{...CELL, ...ACERTOS_CELL}}><span style={CELSTE}>{acertosLive}</span></div>
+            <div style={CELL_LAST}>{out}</div>
           </div>
         </div>
         <button
@@ -488,6 +517,7 @@ export default function ResultadosHistoricos() {
             const isResultsOpen = openResultsMatchId === match.id;
             const userObj = users.find(u => u.id === openUserPanel);
             const confirmedSet = confirmedUsersByMatch[match.id] || new Set();
+            const eyeActive = isResultsOpen || hasResults.has(match.id);
 
             return (
               <li key={`${match.id ?? match.match_iso ?? "noid"}-${i}`} style={{ ...ITEM, marginBottom: (isPeopleOpen || isResultsOpen) ? 12 : 8 }}>
@@ -528,10 +558,10 @@ export default function ResultadosHistoricos() {
                     </>
                   )}
 
-                  {/* Ollo */}
+                  {/* Ollo (indicador activo se hai resultados) */}
                   <button
                     type="button"
-                    style={ICONBTN}
+                    style={eyeBtnStyle(eyeActive)}
                     title={isResultsOpen ? "Pechar resultados" : "Ver resultados do partido"}
                     aria-label={isResultsOpen ? "Pechar resultados" : "Ver resultados do partido"}
                     onClick={async ()=>{
@@ -540,7 +570,9 @@ export default function ResultadosHistoricos() {
                       if (opening) { await ensurePlayersLoaded(); await loadConfirmedForMatch(match.id); }
                     }}
                   >
-                    <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" style={eyeIconStyle(eyeActive)}>
+                      <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />
+                    </svg>
                   </button>
 
                   {isResultsOpen && (
@@ -578,19 +610,29 @@ export default function ResultadosHistoricos() {
                                   <div style={USER_NAME}>{u.name}</div>
                                   {u.surname && <div style={USER_SUB}>{u.surname}</div>}
                                 </div>
+                                {/* Accións: teclado; cando confirmado, amosa un check á dereita do teclado */}
                                 {!isOpen ? (
-                                  <button
-                                    type="button"
-                                    style={ICONBTN}
-                                    title="Abrir táboas desta persoa"
-                                    aria-label="Abrir táboas desta persoa"
-                                    onClick={()=> onOpenUserEditor(match.id, u.id)}
-                                  >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}>
-                                      <rect x="3" y="6" width="18" height="12" rx="2" />
-                                      <path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" />
-                                    </svg>
-                                  </button>
+                                  <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                                    <button
+                                      type="button"
+                                      style={ICONBTN}
+                                      title="Abrir táboas desta persoa"
+                                      aria-label="Abrir táboas desta persoa"
+                                      onClick={()=> onOpenUserEditor(editingMatchId || openPeopleMatchId, u.id)}
+                                    >
+                                      <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}>
+                                        <rect x="3" y="6" width="18" height="12" rx="2" />
+                                        <path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" />
+                                      </svg>
+                                    </button>
+                                    {isConfirmed && (
+                                      <span title="Confirmado" aria-label="Confirmado" style={{...ICONBTN, width:28, height:28, border:"1px solid #22c55e", background:"#dcfce7"}}>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" style={{ ...SVGI, stroke:"#16a34a" }}>
+                                          <path d="M20 6 9 17l-5-5" />
+                                        </svg>
+                                      </span>
+                                    )}
+                                  </div>
                                 ) : (
                                   <button
                                     type="button"
@@ -643,17 +685,23 @@ export default function ResultadosHistoricos() {
                 {/* Pestaña de resultados confirmados (visor) */}
                 {openResultsMatchId === match.id && (
                   <section style={{ marginTop:8, border:"1px solid #e5e7eb", borderRadius:12, background:"#fff", padding:8 }}>
-                    <div style={{ ...SUMMARY_TITLE }}>RESULTADOS OBTIDOS (confirmados)</div>
+                    <div style={{ ...SUMMARY_TITLE_WRAP }}>
+                      <div style={SUMMARY_TITLE}>RESULTADOS OBTIDOS (confirmados)</div>
+                      <div style={HR} />
+                    </div>
                     <div role="table" style={{ width:"100%" }}>
                       <div role="row" style={T_HEADER}>
-                        <div>Data e hora</div><div>HDC Membro</div><div style={{textAlign:"center"}}>Acertos</div><div>Aliñación presentada</div>
+                        <div style={CELL}>Data e hora</div>
+                        <div style={CELL}>HDC Membro</div>
+                        <div style={{...CELL, textAlign:"center"}}>Acertos</div>
+                        <div style={CELL_LAST}>Aliñación presentada</div>
                       </div>
                       {(resultsConfirmed[match.id] || []).map((rec, idx) => (
                         <div key={`${rec.userId}-${idx}`} role="row" style={T_ROW}>
-                          <div>{dmyShort(rec.whenISO)}</div>
-                          <div>{rec.userName}</div>
-                          <div style={ACERTOS_CELL}><span style={CELSTE}>{rec.acertos}</span></div>
-                          <div>
+                          <div style={CELL}>{dmyShort(rec.whenISO)}</div>
+                          <div style={CELL}>{rec.userName}</div>
+                          <div style={{...CELL, ...ACERTOS_CELL}}><span style={CELSTE}>{rec.acertos}</span></div>
+                          <div style={CELL_LAST}>
                             {(rec.plantillaIds||[]).map((pid, j, arr) => {
                               const p = players.find(px=>px.id===pid);
                               const ok = (rec.onceIds||[]).includes(pid);
