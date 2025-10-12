@@ -6,7 +6,8 @@ import { supabase } from "../lib/supabaseClient.js";
 /* ===== Estilos base ===== */
 const WRAP = { maxWidth: 1120, margin: "0 auto", padding: "16px" };
 const PAGE_HEAD = { margin: "0 0 6px", font: "700 22px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a" };
-const PAGE_SUB = { margin: "0 0 12px", font: "400 14.5px/1.25 Montserrat,system-ui,sans-serif", color: "#475569" };
+const PAGE_SUB_ROW = { display:"grid", gridTemplateColumns:"1fr auto", alignItems:"center", gap:10, margin:"0 0 12px" };
+const PAGE_SUB = { margin: 0, font: "400 14.5px/1.25 Montserrat,system-ui,sans-serif", color: "#475569" };
 
 const LIST = { listStyle: "none", margin: 0, padding: 0 };
 const itemGrid = (isMobile) =>
@@ -29,7 +30,7 @@ const DATE = (isMobile) => ({
   whiteSpace: "nowrap",
 });
 const TEAMS = (isMobile) => ({
-  font: isMobile ? "800 11.5px/1.1 Montserrat,system-ui,sans-serif" : "800 14px/1.1 Montserrat,system-ui,sans-serif",
+  font: isMobile ? "800 13px/1.1 Montserrat,system-ui,sans-serif" : "800 14px/1.1 Montserrat,system-ui,sans-serif",
   textTransform: "uppercase",
   color: "#111827",
   overflow: "hidden",
@@ -57,10 +58,17 @@ const EYE_BTN = (active) =>
 const EYE_SVG = (active) => (active ? { ...SVGI, stroke: "#fff" } : SVGI);
 const CONF_COUNT = { font: "800 12.5px/1 Montserrat,system-ui,sans-serif", color: "#16a34a", minWidth: 18, textAlign: "right" };
 
-/* Botóns X (peches) */
+/* Botón X (peche) */
 const XBTN = { ...ICONBTN, width: 30, height: 30, border: "1px solid #ef4444", background: "#fff" };
 const XBTN_SMALL = { ...ICONBTN, width: 26, height: 26, border: "1px solid #ef4444", background: "#fff" };
 const XSVG = { fill: "none", stroke: "#ef4444", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
+
+/* Info admins (móbil) */
+const INFO_BTN = { ...ICONBTN, width: 30, height: 30 };
+const INFO_SVG = { ...SVGI };
+const INFO_POP = { position: "fixed", inset: "10% 6% auto 6%", background: "linear-gradient(180deg,#e0f2fe,#bae6fd)", border: "1px solid #7dd3fc", borderRadius: 12, padding: 12, zIndex: 80, boxShadow: "0 16px 36px rgba(0,0,0,.25)" };
+const INFO_TITLE = { font: "900 13px/1.2 Montserrat,system-ui,sans-serif", color: "#0c4a6e", marginBottom: 6 };
+const INFO_TEXT = { font: "600 12.5px/1.25 Montserrat,system-ui,sans-serif", color: "#0c4a6e" };
 
 /* Toasts */
 const TOAST_OK = { margin: "8px 0 12px", padding: "10px 12px", borderRadius: 10, background: "#ecfeff", border: "1px solid #67e8f9", color: "#0e7490", font: "600 12.5px/1.2 Montserrat,system-ui,sans-serif" };
@@ -84,8 +92,6 @@ const PEOPLE_SHELL = (twoCols) =>
 
 const USERS_LIST = { listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 6 };
 const USER_ROW_BASE = { display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 6, alignItems: "center", padding: "6px 8px", borderRadius: 8, border: "1px solid #eef2f7", background: "#f9fafb" };
-const USER_ROW_BLINK = { ...USER_ROW_BASE, animation: "userBlink 1.5s ease-in-out infinite", background: "linear-gradient(180deg,#e6f4ff,#f2f8ff)" };
-const USER_ROW_CONFIRMED = { ...USER_ROW_BASE, background: "linear-gradient(180deg,#eafff3,#f7fff9)", border: "1px solid #22c55e" };
 const USER_BADGE = { font: "900 11px/1 Montserrat,system-ui,sans-serif", color: "#0ea5e9", background: "#e0f2fe", padding: "4px 7px", borderRadius: 8, minWidth: 38, textAlign: "center" };
 const USER_NAME = { font: "800 13px/1.05 Montserrat,system-ui,sans-serif", color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
 const USER_SUB = { font: "600 11.5px/1.05 Montserrat,system-ui,sans-serif", color: "#64748b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
@@ -109,20 +115,20 @@ const GROUP_WRAP = (bg) => ({ position: "relative", background: "inherit", paddi
 const POS_SIDE = (bg) => ({ position: "absolute", right: 2, top: 2, bottom: 2, writingMode: "vertical-rl", textOrientation: "mixed", font: "900 9.8px/1 Montserrat,system-ui,sans-serif", color: "#64748b", opacity: 0.85, display: "grid", placeItems: "center", background: "transparent", padding: "2px 0" });
 const POS_SEP = { height: 1, background: "#e5e7eb" };
 const ROW_PLAYER = { display: "grid", gridTemplateColumns: "16px 1fr auto", gap: 8, alignItems: "center", padding: "0 2px", minWidth: 0 };
-const CHECKBOX = { width: 14, height: 14, transform: "scale(1.02)", marginRight: 10 }; // +espazo co dorsal
+const CHECKBOX = { width: 14, height: 14, transform: "scale(1.02)", marginRight: 10 };
 const playerNameStyle = { font: "700 10.2px/.72 Montserrat,system-ui,sans-serif", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
 const COUNT_MINI = { font: "900 10px/1 Montserrat,system-ui,sans-serif", color: "#0ea5e9", padding: "0 4px", borderRadius: 6, background: "#e0f2fe" };
 
 /* Preview / RESULTADOS OBTIDOS (EN DEREITA) */
 const SUMMARY = { border: "1px solid #fecaca", borderRadius: 12, background: "linear-gradient(180deg,#fff6f6,#ffeaea)", padding: 8, position: "relative", width: "100%", marginTop: 8 };
 const SUMMARY_TITLE_WRAP = { padding: "2px 6px 6px 6px", background: "linear-gradient(180deg,#fff,#fff6f6)", borderTopLeftRadius: 10, borderTopRightRadius: 10 };
-const SUMMARY_TITLE = { font: "800 11px/1.02 Montserrat,system-ui,sans-serif", color: "#0f172a", textDecoration: "none", margin: "2px 0 4px 0" };
+const SUMMARY_TITLE = { font: "800 11px/1.02 Montserrat,system-ui,sans-serif", color: "#0f172a", margin: "2px 0 4px 0" };
 const HR = { height: 1, background: "#e5e7eb", width: "100%" };
 const GRID_DEF = "auto 1fr auto 3fr";
 const T_HEADER = { display: "grid", gridTemplateColumns: GRID_DEF, gap: 0, padding: "4px 0", borderBottom: "1px solid #e5e7eb", color: "#0f172a", font: "800 11px/1.02 Montserrat,system-ui,sans-serif", alignItems: "center" };
 const T_ROW = { display: "grid", gridTemplateColumns: GRID_DEF, gap: 0, padding: "3px 0", borderBottom: "1px solid #f1f5f9", font: "600 10.2px/.96 Montserrat,system-ui,sans-serif", alignItems: "center" };
-const CELL = { padding: "0 6px", borderRight: "1px solid #e5e7eb", display: "flex", alignItems: "center" };
-const CELL_LAST = { padding: "0 6px", display: "flex", alignItems: "center" };
+const CELL = { padding: "0 6px", borderRight: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent:"flex-start" };
+const CELL_LAST = { padding: "0 6px", display: "flex", alignItems: "center", justifyContent:"flex-start" };
 const ACERTOS_CELL = { justifyContent: "center", minWidth: 60 };
 const CELSTE = { color: "#0ea5e9", fontWeight: 800 };
 const BTN_CONFIRM = { marginTop: 8, width: "100%", borderRadius: 10, padding: "8px 10px", font: "900 12px/1.02 Montserrat,system-ui,sans-serif", background: "linear-gradient(180deg,#38bdf8,#0ea5e9)", color: "#fff", border: "1px solid #0ea5e9", boxShadow: "0 3px 10px rgba(14,165,233,.18)", cursor: "pointer" };
@@ -155,8 +161,8 @@ const FULL_HEAD = {
   alignItems: "center",
 };
 const FULL_ROW = { display: "grid", gridTemplateColumns: "auto 1fr auto 3fr", padding: "8px 6px", borderBottom: "1px solid #f1f5f9", font: "600 12.6px/1.05 Montserrat,system-ui,sans-serif", alignItems: "center" };
-const FULL_CELL = { padding: "0 6px", borderRight: "1px solid #e5e7eb", display: "flex", alignItems: "center" };
-const FULL_LAST = { padding: "0 6px", display: "flex", alignItems: "center", wordBreak: "break-word" };
+const FULL_CELL = { padding: "0 6px", borderRight: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent:"flex-start" };
+const FULL_LAST = { padding: "0 6px", display: "flex", alignItems: "center", wordBreak: "break-word", justifyContent:"flex-start" };
 const FULL_ACERTOS = { textAlign: "center", color: "#0ea5e9", fontWeight: 900, minWidth: 76, justifyContent: "center" };
 
 /* Editor inline de data/hora (overlay) */
@@ -165,21 +171,10 @@ const DT_INPUT = { border: "1px solid #cbd5e1", borderRadius: 8, padding: "6px 8
 const SAVE_BTN = { ...ICONBTN, width: 28, height: 28, position: "absolute", top: 8, right: 8, border: "1px solid #22c55e", background: "#fff" };
 const SAVE_SVG = { fill: "none", stroke: "#16a34a", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
 
-/* Móbil: info admins + popup aliñación por fila + tooltip data */
-const INFO_BTN = { ...ICONBTN, width: 26, height: 26 };
-const INFO_SVG = { ...SVGI };
-const INFO_POP = { position: "fixed", inset: "10% 6% auto 6%", background: "linear-gradient(180deg,#e0f2fe,#bae6fd)", border: "1px solid #7dd3fc", borderRadius: 12, padding: 12, zIndex: 80, boxShadow: "0 16px 36px rgba(0,0,0,.25)" };
-const INFO_TITLE = { font: "900 13px/1.2 Montserrat,system-ui,sans-serif", color: "#0c4a6e", marginBottom: 6 };
-const INFO_TEXT = { font: "600 12.5px/1.25 Montserrat,system-ui,sans-serif", color: "#0c4a6e" };
-
-const MOBILE_ALIGN_POP = { position: "fixed", inset: "12% 5% auto 5%", zIndex: 90, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, boxShadow: "0 18px 38px rgba(0,0,0,.28)", padding: 12, maxHeight: "70vh", overflowY: "auto" };
-const TOAST_DATE = { position: "fixed", left: "50%", bottom: "8%", transform: "translateX(-50%)", background: "rgba(15,23,42,.92)", color: "#fff", font: "800 12.5px/1.1 Montserrat,system-ui,sans-serif", padding: "8px 10px", borderRadius: 10, zIndex: 100 };
-
 /* Animacións */
 const STYLES = `
 @keyframes blinkSoft{0%{opacity:1}50%{opacity:.7}100%{opacity:1}}
 @keyframes pulseSoft{0%{transform:scale(1)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
-@keyframes userBlink{0%{box-shadow:0 0 0 rgba(14,165,233,0)}50%{box-shadow:0 10px 26px rgba(14,165,233,.45)}100%{box-shadow:0 0 0 rgba(14,165,233,0)}}
 `;
 
 /* ===== Utils ===== */
@@ -188,7 +183,6 @@ const sortDescByDate = (a, b) => (b.match_iso ? new Date(b.match_iso).getTime() 
 const dmyShort = (iso) => { if (!iso) return "—"; const d = new Date(iso); return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${String(d.getFullYear()).slice(-2)}, ${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
 const dmyFull = (iso) => { if (!iso) return "—"; const d = new Date(iso); return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`; };
 const toLocalInput = (iso) => { if (!iso) return ""; const d = new Date(iso); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
-const fromLocalInput = (localStr) => { if (!localStr) return null; const ms = Date.parse(localStr); return isNaN(ms) ? null : new Date(ms).toISOString(); };
 
 function inferPosFromFoto(url = "") { const m = url.match(/-(POR|DEF|CEN|DEL)\.(?:jpg|jpeg|png|webp)$/i); return m ? m[1].toUpperCase() : "CEN"; }
 function normalizePlayer(p) {
@@ -230,14 +224,7 @@ export default function ResultadosHistoricos() {
   const [selPlantilla, setSelPlantilla] = useState(new Set());
   const [selOnce, setSelOnce] = useState(new Set());
 
-  const [flash, setFlash] = useState({ id: null, count: 0, t: 0 });
-  const flashTimerRef = useRef(null);
-  const showFlash = (id, count) => { clearTimeout(flashTimerRef.current); setFlash({ id, count, t: Date.now() }); flashTimerRef.current = setTimeout(() => setFlash({ id: null, count: 0, t: 0 }), 900); };
-
-  const [editOverlay, setEditOverlay] = useState(null);
   const [showMobileInfo, setShowMobileInfo] = useState(false);
-  const [mobileAlignFor, setMobileAlignFor] = useState(null);
-  const [mobileDateToast, setMobileDateToast] = useState("");
 
   const [resultsConfirmed, setResultsConfirmed] = useState({});
   const [hasResults, setHasResults] = useState(new Set());
@@ -281,7 +268,7 @@ export default function ResultadosHistoricos() {
       } catch (e) { console.error("Historico load:", e); if (alive) setErr("Produciuse un erro ao cargar o histórico."); }
       finally { if (alive) setLoading(false); }
     })();
-    return () => { alive = false; clearTimeout(flashTimerRef.current); };
+    return () => { alive = false; };
   }, []);
 
   async function ensurePlayersLoaded() {
@@ -292,9 +279,8 @@ export default function ResultadosHistoricos() {
       setPlayers((playersData || []).map(pp => {
         const p = normalizePlayer(pp);
         const pos = p.pos || inferPosFromFoto(p.foto_url || "");
-        const nameOnly = p.nombre || "";
-        const label = p.dorsal ? `${p.dorsal} - ${nameOnly}` : nameOnly;
-        return { id: p.id, dorsal: p.dorsal ?? null, pos, name: nameOnly, label };
+        const labelName = p.nombre || "";
+        return { id: p.id, dorsal: p.dorsal ?? null, pos, name: labelName };
       }));
     } catch (e) { console.error("Load players error:", e); setPlayers([]); }
   }
@@ -321,24 +307,15 @@ export default function ResultadosHistoricos() {
     try {
       const { data, error } = await supabase.from("profiles").select("id, first_name, last_name, full_name, email").order("first_name", { ascending: true, nullsFirst: true });
       if (error) throw error;
-      const arr = (data || [])
-        .map(u => {
-          const code = (u.first_name || "").trim();
-          const surname = (u.last_name || "").trim();
-          const email = (u.email || "").trim();
-          const full = (u.full_name || "").trim();
-          const display = full || `${code} ${surname}`.trim() || email || u.id;
-          const allEmpty = !full && !code && !surname && !email;
-          return allEmpty ? null : { id: u.id, code, surname, name: display };
-        })
-        .filter(Boolean)
-        .sort((a, b) => {
-          const na = /^\d{2}$/.test(a.code || "") ? 0 : 1;
-          const nb = /^\d{2}$/.test(b.code || "") ? 0 : 1;
-          if (na !== nb) return na - nb;
-          return (a.code || "").localeCompare(b.code || "");
-        });
-      setUsers(arr);
+      const arr = (data || []).map(u => {
+        const code = (u.first_name || "").trim();
+        const surname = (u.last_name || "").trim();
+        const full = (u.full_name || "").trim();
+        const email = (u.email || "").trim();
+        const name = full || `${code} ${surname}`.trim() || email || u.id;
+        return { id: u.id, code, surname, name };
+      });
+      setUsers(arr); // <- no filtramos en esta pasada para evitar quedarse “baleiro”
       const m = new Map(userNames); arr.forEach(u => m.set(u.id, u.name)); setUserNames(m);
     } catch (e) { console.error("load users error:", e); showToast("Erro cargando usuarias/os.", false); }
   }
@@ -359,13 +336,74 @@ export default function ResultadosHistoricos() {
     if (!isAdmin) return;
     const opening = openPeopleMatchId !== matchId;
     setOpenResultsMatchId(null);
-    setOpenPeopleMatchId(opening ? matchId : null);
     setOpenUserPanel(null);
+    setOpenPeopleMatchId(opening ? matchId : null);
     if (opening) { await loadUsersList(); await ensurePlayersLoaded(); await loadConfirmedForMatch(matchId); }
   }
 
-  async function onOpenUserEditor(userId) { if (!isAdmin) return; bip(0.22, 880, 0.11); setOpenUserPanel(userId); setSelPlantilla(new Set()); setSelOnce(new Set()); await ensurePlayersLoaded(); }
-  function toggleSelect(id, checkedSet, setSet) { const nx = new Set(checkedSet); if (nx.has(id)) nx.delete(id); else nx.add(id); setSet(nx); showFlash(id, nx.size); }
+  function fmtPlayer(p) { return `${pad2(p.dorsal ?? "")} · ${p.name || ""}`; }
+
+  function listLinear(ids, onceIdsSet, map) {
+    return (ids || []).map((pid, idx, arr) => {
+      const p = map.get(pid);
+      const txt = p ? fmtPlayer(p) : String(pid);
+      const node = onceIdsSet?.has(pid) ? <strong style={{ color: "#0ea5e9" }}>{txt}</strong> : txt;
+      return (
+        <span key={`${pid}-${idx}`}>
+          {node}
+          {idx < arr.length - 1 && <span style={{ opacity: 0.6 }}>|</span>}
+        </span>
+      );
+    });
+  }
+
+  function groupByPos(players) {
+    const b = { POR: [], DEF: [], CEN: [], DEL: [] };
+    for (const p of players || []) (b[(p.pos || "CEN").toUpperCase()] || b.CEN).push(p);
+    POS_ORDER.forEach(k => b[k].sort((a, b) => (a.dorsal ?? 999) - (b.dorsal ?? 999)));
+    return b;
+  }
+
+  function renderPlayersColumn(list, checkedSet, setSet, bg) {
+    const buckets = groupByPos(list);
+    return (
+      <div style={{ ...COL_BASE, ...(bg || {}) }}>
+        <div style={COL_HEAD}>
+          <span style={bg === COL_BG_OFI ? COL_TITLE_BLINK : COL_TITLE}>
+            {bg === COL_BG_OFI ? "ONCE OFICIAL" : "ALIÑACIÓN REALIZADA"}
+          </span>
+          <span style={COUNT}>{checkedSet.size}/11</span>
+        </div>
+        {POS_ORDER.map((k) => {
+          const group = buckets[k] || [];
+          if (!group.length) return null;
+          const bgcol = (bg && bg.background) || "#fff";
+          return (
+            <div key={k} style={GROUP_WRAP(bgcol)}>
+              <div style={POS_SEP} />
+              <div style={GROUP_SCROLL}>
+                {group.map((p) => {
+                  const isChecked = checkedSet.has(p.id);
+                  return (
+                    <label key={p.id} style={ROW_PLAYER} title={fmtPlayer(p)}>
+                      <input type="checkbox" style={CHECKBOX} checked={isChecked} onChange={() => {
+                        const nx = new Set(checkedSet);
+                        if (nx.has(p.id)) nx.delete(p.id); else nx.add(p.id);
+                        setSet(nx);
+                      }} />
+                      <span style={playerNameStyle}>{fmtPlayer(p)}</span>
+                      {/* contador fugaz eliminado: solo compactamos para ganar espacio */}
+                    </label>
+                  );
+                })}
+              </div>
+              <div aria-hidden="true" style={POS_SIDE(bgcol)}>{k}</div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
 
   async function confirmarMatch(matchId) {
     if (confirmSaving) return;
@@ -388,7 +426,7 @@ export default function ResultadosHistoricos() {
       const { error: upErr } = await supabase.from("resultados_confirmados").upsert(payload, { onConflict: "match_id,user_id", ignoreDuplicates: false });
       if (upErr) return showToast(`Erro gardando: ${upErr.message || upErr.code}`, false);
 
-      // Deixar aberto o panel do partido; pechar só o editor da persoa
+      // Mantemos aberto o panel do partido; pechamos o editor da persoa
       setOpenUserPanel(null);
       setSelPlantilla(new Set());
       setSelOnce(new Set());
@@ -399,222 +437,31 @@ export default function ResultadosHistoricos() {
     finally { setConfirmSaving(false); }
   }
 
-  async function saveEditedTs(matchId, userId, valueLocal) {
-    const iso = fromLocalInput(valueLocal); if (!iso) return showToast("Data/hora non válida.", false);
-    try {
-      const { error } = await supabase.from("resultados_confirmados").update({ confirmed_at: iso, updated_at: iso }).eq("match_id", matchId).eq("user_id", userId);
-      if (error) throw error;
-      setEditOverlay(null);
-      await loadConfirmedForMatch(matchId);
-      showToast("Data/hora actualizada.");
-    } catch (e) { console.error("saveEditedTs:", e); showToast("Erro actualizando data/hora.", false); }
-  }
-
   const view = useMemo(() => rows, [rows]);
   const aliIs11 = selPlantilla.size === 11;
   const onceIs11 = selOnce.size === 11;
 
-  /* Helpers de formateo 'DD · Nome' e unión con '|' */
-  const fmtPlayer = (p) => `${pad2(p.dorsal ?? "")} · ${p.name || (p.label?.split(" - ").slice(-1)[0] || "")}`;
-  const listLinear = (ids, onceIdsSet, map) =>
-    ids.map((pid, idx, arr) => {
-      const p = map.get(pid);
-      const txt = p ? fmtPlayer(p) : String(pid);
-      const part = onceIdsSet?.has(pid) ? <strong style={{ color: "#0ea5e9" }}>{txt}</strong> : txt;
-      return (
-        <span key={`${pid}-${idx}`}>
-          {part}
-          {idx < arr.length - 1 && <span style={{ opacity: 0.6 }}>|</span>}
-        </span>
-      );
-    });
-
-  function renderPlayersColumn(list, checkedSet, setSet, bg) {
-    const buckets = groupByPos(list);
-    return (
-      <div style={{ ...COL_BASE, ...(bg || {}) }}>
-        <div style={COL_HEAD}>
-          <span style={bg === COL_BG_OFI ? (aliIs11 ? COL_TITLE_BLINK : COL_TITLE) : COL_TITLE}>
-            {bg === COL_BG_OFI ? "ONCE OFICIAL" : "ALIÑACIÓN REALIZADA"}
-          </span>
-          <span style={COUNT}>{checkedSet.size}/11</span>
-        </div>
-        {POS_ORDER.map((k) => {
-          const group = buckets[k] || [];
-          if (!group.length) return null;
-          const bgcol = (bg && bg.background) || "#fff";
-          return (
-            <div key={k} style={GROUP_WRAP(bgcol)}>
-              <div style={POS_SEP} />
-              <div style={GROUP_SCROLL}>
-                {group.map((p) => {
-                  const isChecked = checkedSet.has(p.id);
-                  return (
-                    <label key={p.id} style={ROW_PLAYER} title={fmtPlayer(p)}>
-                      <input type="checkbox" style={CHECKBOX} checked={isChecked} onChange={() => toggleSelect(p.id, checkedSet, setSet)} />
-                      <span style={playerNameStyle}>{fmtPlayer(p)}</span>
-                      {flash.id === p.id && <span style={COUNT_MINI}>{flash.count}/11</span>}
-                    </label>
-                  );
-                })}
-              </div>
-              <div aria-hidden="true" style={POS_SIDE(bgcol)}>{k}</div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-
-  function renderSummaryRight(matchId) {
-    const uMap = new Map(users.map((u) => [u.id, u]));
-    const userLabel = uMap.get(openUserPanel)?.name || "—";
-    const playersById = new Map(players.map((p) => [p.id, p]));
-    const onceSet = new Set(selOnce);
-    const aliNodes = listLinear(Array.from(selPlantilla), onceSet, playersById);
-    const acertosLive = Array.from(selOnce).filter((id) => selPlantilla.has(id)).length;
-
-    return (
-      <div style={SUMMARY}>
-        <div style={SUMMARY_TITLE_WRAP}>
-          <div style={SUMMARY_TITLE}>RESULTADOS OBTIDOS</div>
-          <div style={HR} />
-        </div>
-        <div role="table" style={{ width: "100%" }}>
-          <div role="row" style={T_HEADER}>
-            <div style={{ ...CELL, minWidth: 120 }}>Data e hora</div>
-            <div style={CELL}>HDC Membro</div>
-            <div style={{ ...CELL, ...ACERTOS_CELL }}>Acertos</div>
-            <div style={CELL_LAST}>Aliñación presentada</div>
-          </div>
-          <div role="row" style={T_ROW}>
-            <div style={{ ...CELL, minWidth: 120 }}>{dmyShort(new Date().toISOString())}</div>
-            <div style={CELL}>{userLabel}</div>
-            <div style={{ ...CELL, ...ACERTOS_CELL }}>
-              <span style={CELSTE}>{acertosLive}</span>
-            </div>
-            <div style={CELL_LAST}>{aliNodes}</div>
-          </div>
-        </div>
-        <button type="button" style={onceIs11 ? BTN_CONFIRM_BLINK : BTN_CONFIRM} onClick={() => confirmarMatch(matchId)} disabled={!onceIs11 || confirmSaving}>
-          CONFIRMAR
-        </button>
-      </div>
-    );
-  }
-
-  function FullResults({ match }) {
-    const recs = resultsConfirmed[match.id] || [];
-    const pMap = new Map(players.map((p) => [p.id, p]));
-    const [dateToast, setDateToast] = useState("");
-
-    const revealDate = (iso) => {
-      setDateToast(dmyShort(iso));
-      setTimeout(() => setDateToast(""), 2000);
-    };
-
-    return (
-      <section aria-label="Resultados do partido" style={{ marginTop: 6 }}>
-        <div style={FULL_TITLE_BAR}>
-          <div style={FULL_TITLE}>
-            LISTADO DOS RESULTADOS DO PARTIDO | <span style={{ fontWeight: 900 }}>{match.equipo1} - {match.equipo2}</span> do {dmyFull(match.match_iso)}
-          </div>
-          <button type="button" style={{ ...XBTN_SMALL }} aria-label="Pechar" title="Pechar" onClick={() => setOpenResultsMatchId(null)}>
-            <svg width="14" height="14" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
-          </button>
-        </div>
-
-        <div style={FULL_TABLE}>
-          <div style={FULL_HEAD}>
-            <div style={{ ...FULL_CELL, minWidth: 140 }}>Data e hora</div>
-            <div style={FULL_CELL}>HDC Membro</div>
-            <div style={{ ...FULL_CELL, ...FULL_ACERTOS }}>Acertos</div>
-            <div style={FULL_LAST}>Aliñación presentada</div>
-          </div>
-
-          {recs.length === 0 ? (
-            <div style={{ padding: 10, font: "600 13px/1.2 Montserrat,system-ui,sans-serif", color: "#64748b" }}>Sen confirmacións aínda para este partido.</div>
-          ) : (
-            recs.map((rec) => {
-              const uname = userNames.get(rec.user_id) || rec.user_id;
-              const onceSet = new Set(rec.once_ids || []);
-              const ali = listLinear(rec.plantilla_ids || [], onceSet, pMap);
-
-              if (isMobile) {
-                return (
-                  <div key={`${rec.user_id}`} style={FULL_ROW}>
-                    <div style={{ ...FULL_CELL, minWidth: 140 }}>
-                      <button type="button" style={{ ...ICONBTN, width: 28, height: 28 }} title="Ver data" aria-label="Ver data" onClick={() => revealDate(rec.confirmed_at)}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" style={SVGI}><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                      </button>
-                    </div>
-                    <div style={FULL_CELL}>{uname}</div>
-                    <div style={{ ...FULL_CELL, ...FULL_ACERTOS }}>{rec.acertos}</div>
-                    <div style={FULL_LAST}>
-                      <button
-                        type="button"
-                        style={{ ...EYE_BTN(true), width: 28, height: 28 }}
-                        title="Ver aliñación"
-                        aria-label="Ver aliñación"
-                        onClick={() => setMobileAlignFor({ matchId: rec.match_id, userId: rec.user_id, labels: ali })}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" style={EYE_SVG(true)}><path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                      </button>
-                    </div>
-                  </div>
-                );
-              }
-
-              return (
-                <div key={`${rec.user_id}`} style={FULL_ROW}>
-                  <div style={{ ...FULL_CELL, minWidth: 140 }}>
-                    <button type="button" style={{ ...ICONBTN, width: 28, height: 28, marginRight: 6 }} title="Editar data/hora" aria-label="Editar data/hora" onClick={() => setEditOverlay({ matchId: rec.match_id, userId: rec.user_id, valueLocal: toLocalInput(rec.confirmed_at) })}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" style={SVGI}><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                    </button>
-                    <span>{dmyShort(rec.confirmed_at)}</span>
-                  </div>
-                  <div style={FULL_CELL}>{uname}</div>
-                  <div style={{ ...FULL_CELL, ...FULL_ACERTOS }}>{rec.acertos}</div>
-                  <div style={FULL_LAST}>{ali}</div>
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        {editOverlay && !isMobile && (
-          <div role="dialog" aria-modal="true" style={EDIT_OVERLAY}>
-            <button type="button" style={XBTN_SMALL} aria-label="Pechar" title="Pechar" onClick={() => setEditOverlay(null)}>
-              <svg width="14" height="14" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
-            </button>
-            <input type="datetime-local" style={{ ...DT_INPUT, marginTop: 10 }} value={editOverlay.valueLocal || ""} onInput={(e) => setEditOverlay((s) => ({ ...s, valueLocal: e.currentTarget.value }))} />
-            <button type="button" style={SAVE_BTN} title="Gardar" aria-label="Gardar" onClick={() => saveEditedTs(editOverlay.matchId, editOverlay.userId, editOverlay.valueLocal)}>
-              <svg width="14" height="14" viewBox="0 0 24 24" style={SAVE_SVG}><path d="M4 4h12l4 4v12H4z" /><path d="M16 4v6H8V4" /><path d="M8 18h8" /></svg>
-            </button>
-          </div>
-        )}
-
-        {mobileAlignFor && (
-          <div role="dialog" aria-modal="true" style={MOBILE_ALIGN_POP}>
-            <button type="button" style={{ ...XBTN_SMALL, position: "absolute", top: 8, right: 8 }} aria-label="Pechar" title="Pechar" onClick={() => setMobileAlignFor(null)}>
-              <svg width="14" height="14" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
-            </button>
-            <div style={{ font: "800 13px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", marginBottom: 8 }}>Aliñación presentada</div>
-            <div style={{ font: "700 12.8px/1.35 Montserrat,system-ui,sans-serif", color: "#0f172a" }}>{mobileAlignFor.labels}</div>
-          </div>
-        )}
-
-        {dateToast && <div style={TOAST_DATE}>{dateToast}</div>}
-      </section>
-    );
-  }
-
+  /* ===== Render principal ===== */
   return (
     <main style={WRAP}>
       <style>{STYLES}</style>
 
       <h2 style={PAGE_HEAD}>HISTÓRICO DE RESULTADOS</h2>
-      <p style={PAGE_SUB}>Aquí podes consultar os resultados individuais e xerais de cada partido.</p>
+      <div style={PAGE_SUB_ROW}>
+        <p style={PAGE_SUB}>Aquí podes consultar os resultados individuais e xerais de cada partido.</p>
+        {/* Info móbil moved here */}
+        {isAdmin && (
+          <button
+            type="button"
+            style={{ ...INFO_BTN, display: (typeof window !== "undefined" && window.innerWidth <= 560) ? "grid" : "none" }}
+            title="Información"
+            aria-label="Información"
+            onClick={() => setShowMobileInfo(true)}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" style={INFO_SVG}><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
+          </button>
+        )}
+      </div>
 
       {toast?.msg && <div style={toast.ok ? TOAST_OK : TOAST_ERR} aria-live="polite">{toast.msg}</div>}
       {err && <div style={{ ...TOAST_ERR }} role="status">{err}</div>}
@@ -623,7 +470,44 @@ export default function ResultadosHistoricos() {
 
       {/* Visor completo (ollo) */}
       {!err && !loading && openResultsMatchId && (
-        <FullResults match={view.find((m) => m.id === openResultsMatchId) || { id: openResultsMatchId, match_iso: null, equipo1: "", equipo2: "" }} />
+        <section aria-label="Resultados do partido" style={{ marginTop: 6 }}>
+          <div style={FULL_TITLE_BAR}>
+            <div style={FULL_TITLE}>
+              LISTADO DOS RESULTADOS DO PARTIDO | <span style={{ fontWeight: 900 }}>
+                {(view.find(m=>m.id===openResultsMatchId)?.equipo1) || ""} - {(view.find(m=>m.id===openResultsMatchId)?.equipo2) || ""}
+              </span> do {dmyFull((view.find(m=>m.id===openResultsMatchId)||{}).match_iso)}
+            </div>
+            <button type="button" style={{ ...XBTN_SMALL }} aria-label="Pechar" title="Pechar" onClick={() => setOpenResultsMatchId(null)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
+            </button>
+          </div>
+
+          {/* Taboa completa */}
+          <div style={FULL_TABLE}>
+            <div style={FULL_HEAD}>
+              <div style={{ ...FULL_CELL, minWidth: 140 }}>Data e hora</div>
+              <div style={FULL_CELL}>HDC Membro</div>
+              <div style={{ ...FULL_CELL, ...FULL_ACERTOS }}>Acertos</div>
+              <div style={FULL_LAST}>Aliñación presentada</div>
+            </div>
+
+            {(resultsConfirmed[openResultsMatchId] || []).map((rec) => {
+              const uname = userNames.get(rec.user_id) || rec.user_id;
+              const pMap = new Map(players.map(p=>[p.id,p]));
+              const onceSet = new Set(rec.once_ids || []);
+              const ali = listLinear(rec.plantilla_ids || [], onceSet, pMap);
+
+              return (
+                <div key={`${rec.user_id}`} style={FULL_ROW}>
+                  <div style={{ ...FULL_CELL, minWidth: 140 }}>{dmyShort(rec.confirmed_at)}</div>
+                  <div style={FULL_CELL}>{uname}</div>
+                  <div style={{ ...FULL_CELL, ...FULL_ACERTOS }}>{rec.acertos}</div>
+                  <div style={FULL_LAST}>{ali}</div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
       )}
 
       {/* Lista + Edición */}
@@ -650,11 +534,6 @@ export default function ResultadosHistoricos() {
                 )}
 
                 <div style={ACTIONS}>
-                  {isAdmin && isMobile && (
-                    <button type="button" style={INFO_BTN} title="Información" aria-label="Información" onClick={() => setShowMobileInfo(true)}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" style={INFO_SVG}><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
-                    </button>
-                  )}
                   {isAdmin && !isMobile && (
                     <>
                       {!isPeopleOpen ? (
@@ -698,10 +577,8 @@ export default function ResultadosHistoricos() {
                         <ul style={USERS_LIST}>
                           {users.map((u) => {
                             const isOpen = openUserPanel === u.id;
-                            const isConfirmed = (confirmedByMatch[match.id]?.has(u.id)) || false;
-                            const rowStyle = isOpen ? USER_ROW_BLINK : (isConfirmed ? USER_ROW_CONFIRMED : USER_ROW_BASE);
                             return (
-                              <li key={u.id} style={rowStyle} title={u.name}>
+                              <li key={u.id} style={USER_ROW_BASE} title={u.name}>
                                 <span style={USER_BADGE}>{u.code || "—"}</span>
                                 <div>
                                   <div style={USER_NAME}>{u.name}</div>
@@ -733,8 +610,35 @@ export default function ResultadosHistoricos() {
                               {renderPlayersColumn(players, selPlantilla, setSelPlantilla, COL_BG_ALI)}
                               {renderPlayersColumn(players, selOnce, setSelOnce, COL_BG_OFI)}
                             </div>
-                            {/* Resumo SÓ NA COLUMNA DEREITA (non invade etiquetas) */}
-                            {renderSummaryRight(match.id)}
+
+                            {/* Resumo á dereita (aliñación presentada á ESQUERDA dentro da cela) */}
+                            <div style={SUMMARY}>
+                              <div style={SUMMARY_TITLE_WRAP}>
+                                <div style={SUMMARY_TITLE}>RESULTADOS OBTIDOS</div>
+                                <div style={HR} />
+                              </div>
+                              <div role="table" style={{ width: "100%" }}>
+                                <div role="row" style={T_HEADER}>
+                                  <div style={{ ...CELL, minWidth: 120 }}>Data e hora</div>
+                                  <div style={CELL}>HDC Membro</div>
+                                  <div style={{ ...CELL, ...ACERTOS_CELL }}>Acertos</div>
+                                  <div style={CELL_LAST}>Aliñación presentada</div>
+                                </div>
+                                <div role="row" style={T_ROW}>
+                                  <div style={{ ...CELL, minWidth: 120 }}>{dmyShort(new Date().toISOString())}</div>
+                                  <div style={CELL}>—</div>
+                                  <div style={{ ...CELL, ...ACERTOS_CELL }}>
+                                    <span style={CELSTE}>{Array.from(selOnce).filter((id)=>selPlantilla.has(id)).length}</span>
+                                  </div>
+                                  <div style={CELL_LAST}>
+                                    {listLinear(Array.from(selPlantilla), new Set(selOnce), new Map(players.map(p=>[p.id,p])))}
+                                  </div>
+                                </div>
+                              </div>
+                              <button type="button" style={onceIs11 ? BTN_CONFIRM_BLINK : BTN_CONFIRM} onClick={() => confirmarMatch(match.id)} disabled={!onceIs11 || confirmSaving}>
+                                CONFIRMAR
+                              </button>
+                            </div>
                           </>
                         )}
                       </div>
@@ -747,7 +651,7 @@ export default function ResultadosHistoricos() {
         </ul>
       )}
 
-      {/* Info admins móbil */}
+      {/* Info admins móbil (global) */}
       {showMobileInfo && (
         <div role="dialog" aria-modal="true" style={INFO_POP}>
           <button type="button" style={{ ...XBTN_SMALL, position: "absolute", top: 8, right: 8 }} aria-label="Pechar" title="Pechar" onClick={() => setShowMobileInfo(false)}>
