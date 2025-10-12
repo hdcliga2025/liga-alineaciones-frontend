@@ -1,12 +1,12 @@
 // src/pages/ResultadosHistoricos.jsx
 import { h } from "preact";
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useState, useRef } from "preact/hooks";
 import { supabase } from "../lib/supabaseClient.js";
 
 /* ===== Estilos base ===== */
 const WRAP = { maxWidth: 1120, margin: "0 auto", padding: "16px" };
 const PAGE_HEAD = { margin: "0 0 6px", font: "700 22px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a" };
-const PAGE_SUB = { margin: "0 0 12px", font: "400 16px/1.3 Montserrat,system-ui,sans-serif", color: "#475569" };
+const PAGE_SUB = { margin: "0 0 12px", font: "400 14.5px/1.25 Montserrat,system-ui,sans-serif", color: "#475569" };
 
 const LIST = { listStyle: "none", margin: 0, padding: 0 };
 const ITEM = {
@@ -53,44 +53,44 @@ const USER_NAME = { font:"800 13px/1.05 Montserrat,system-ui,sans-serif", color:
 const USER_SUB  = { font:"600 11.5px/1.05 Montserrat,system-ui,sans-serif", color:"#64748b", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" };
 
 const RIGHT_PAD = { paddingLeft: 16 };
-const EDIT_RIGHT = { display:"grid", gridTemplateColumns:"minmax(260px,1fr) minmax(260px,1fr)", gap:10, alignItems:"start" };
+const EDIT_RIGHT = { display:"grid", gridTemplateColumns:"minmax(252px,1fr) minmax(252px,1fr)", gap:8, alignItems:"start" };
 const COL_BASE = { border:"1px solid #e5e7eb", borderRadius:10, overflow:"hidden", position:"relative" };
 const COL_BG_ALI = { background:"#e9f9f2" };
 const COL_BG_OFI = { background:"#fff5e7" };
-const COL_HEAD = { display:"flex", justifyContent:"space-between", alignItems:"center", padding:"4px 8px", background:"#f1f5f9", borderBottom:"1px solid #e2e8f0" };
-const COL_TITLE = { font:"900 11.3px/1.05 Montserrat,system-ui,sans-serif", color:"#0f172a", letterSpacing:.2, textTransform:"uppercase" };
+const COL_HEAD = { display:"flex", justifyContent:"space-between", alignItems:"center", padding:"3px 6px", background:"#f1f5f9", borderBottom:"1px solid #e2e8f0" };
+const COL_TITLE = { font:"900 10.8px/1.02 Montserrat,system-ui,sans-serif", color:"#0f172a", letterSpacing:.2, textTransform:"uppercase" };
 const COL_TITLE_BLINK = { ...COL_TITLE, animation:"blinkSoft 1.5s ease-in-out infinite" };
-const COUNT = { font:"900 11.3px/1.05 Montserrat,system-ui,sans-serif", color:"#22c55e" };
+const COUNT = { font:"900 10.5px/1.02 Montserrat,system-ui,sans-serif", color:"#22c55e" };
 
 /* Demarcacións */
-const GROUP_SCROLL = { maxHeight: 188, overflowY: "auto", background: "inherit" };
-const GROUP_WRAP = (bg) => ({ position:"relative", background:"inherit", paddingRight:24, marginBottom:4 });
-const POS_SIDE = (bg) => ({ position:"absolute", right:2, top:2, bottom:2, writingMode:"vertical-rl", textOrientation:"mixed", font:"900 10px/1 Montserrat,system-ui,sans-serif", color:"#64748b", opacity:.85, display:"grid", placeItems:"center", background:"transparent", padding:"2px 0" });
+const GROUP_SCROLL = { maxHeight: 260, overflowY: "auto", background: "inherit" };
+const GROUP_WRAP = (bg) => ({ position:"relative", background:"inherit", paddingRight:20, marginBottom:3 });
+const POS_SIDE = (bg) => ({ position:"absolute", right:2, top:2, bottom:2, writingMode:"vertical-rl", textOrientation:"mixed", font:"900 9.8px/1 Montserrat,system-ui,sans-serif", color:"#64748b", opacity:.85, display:"grid", placeItems:"center", background:"transparent", padding:"2px 0" });
 const POS_SEP = { height:1, background:"#e5e7eb" };
 
-/* Filas xogadores (texto máis pequeno e interliñado comprimido) */
-const ROW_PLAYER = { display:"grid", gridTemplateColumns:"18px 1fr auto", gap:12, alignItems:"center", padding:"0 4px", minWidth:0 };
-const CHECKBOX = { width:16, height:16, transform:"scale(1.02)", marginRight:2 };
-const playerNameStyle = { font:"700 10.2px/.88 Montserrat,system-ui,sans-serif", color:"#0f172a", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" };
-const COUNT_MINI = { font:"900 10px/1 Montserrat,system-ui,sans-serif", color:"#0ea5e9", padding:"1px 4px", borderRadius:6, background:"#e0f2fe" };
+/* Filas xogadores — MUY compactas */
+const ROW_PLAYER = { display:"grid", gridTemplateColumns:"16px 1fr auto", gap:8, alignItems:"center", padding:"0 2px", minWidth:0 };
+const CHECKBOX = { width:14, height:14, transform:"scale(1.02)", marginRight:2 };
+const playerNameStyle = { font:"700 9.6px/.82 Montserrat,system-ui,sans-serif", color:"#0f172a", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" };
+const COUNT_MINI = { font:"900 10px/1 Montserrat,system-ui,sans-serif", color:"#0ea5e9", padding:"0 4px", borderRadius:6, background:"#e0f2fe" };
 
 /* Resumo / RESULTADOS OBTIDOS */
-const SUMMARY_WRAP = { maxWidth: 560, marginTop:8, marginLeft:"auto", marginRight:"auto" };
+const SUMMARY_WRAP = { maxWidth: 540, marginTop:8, marginLeft:"auto", marginRight:"auto" };
 const SUMMARY = { border:"1px solid #fecaca", borderRadius:12, background:"linear-gradient(180deg,#fff6f6,#ffeaea)", padding:8, position:"relative" };
 const SUMMARY_TITLE_WRAP = { padding:"2px 6px 6px 6px", background:"linear-gradient(180deg,#fff,#fff6f6)", borderTopLeftRadius:10, borderTopRightRadius:10 };
 const SUMMARY_TITLE = { ...COL_TITLE, textDecoration:"none", margin:"2px 0 4px 0" };
 const HR = { height:1, background:"#e5e7eb", width:"100%" };
 const GRID_DEF = "120px 1fr 70px 3fr";
-const T_HEADER = { display:"grid", gridTemplateColumns:GRID_DEF, gap:0, padding:"4px 0", borderBottom:"1px solid #e5e7eb", color:"#0f172a", font:"800 11.3px/1.05 Montserrat,system-ui,sans-serif" };
-const T_ROW = { display:"grid", gridTemplateColumns:GRID_DEF, gap:0, padding:"4px 0", borderBottom:"1px solid #f1f5f9", font:"600 11px/.98 Montserrat,system-ui,sans-serif" };
+const T_HEADER = { display:"grid", gridTemplateColumns:GRID_DEF, gap:0, padding:"4px 0", borderBottom:"1px solid #e5e7eb", color:"#0f172a", font:"800 11px/1.02 Montserrat,system-ui,sans-serif" };
+const T_ROW = { display:"grid", gridTemplateColumns:GRID_DEF, gap:0, padding:"3px 0", borderBottom:"1px solid #f1f5f9", font:"600 10.5px/.96 Montserrat,system-ui,sans-serif" };
 const CELL = { padding:"0 6px", borderRight:"1px solid #e5e7eb" };
 const CELL_LAST = { padding:"0 6px" };
 const ACERTOS_CELL = { textAlign:"center" };
 const CELSTE = { color:"#0ea5e9", fontWeight:800 };
-const BTN_CONFIRM = { marginTop:8, width:"100%", borderRadius:10, padding:"9px 10px", font:"900 12.2px/1.05 Montserrat,system-ui,sans-serif", background:"linear-gradient(180deg,#38bdf8,#0ea5e9)", color:"#fff", border:"1px solid #0ea5e9", boxShadow:"0 3px 10px rgba(14,165,233,.18)", cursor:"pointer" };
+const BTN_CONFIRM = { marginTop:8, width:"100%", borderRadius:10, padding:"8px 10px", font:"900 12px/1.02 Montserrat,system-ui,sans-serif", background:"linear-gradient(180deg,#38bdf8,#0ea5e9)", color:"#fff", border:"1px solid #0ea5e9", boxShadow:"0 3px 10px rgba(14,165,233,.18)", cursor:"pointer" };
 const BTN_CONFIRM_BLINK = { ...BTN_CONFIRM, animation:"pulseSoft 1.5s ease-in-out infinite" };
 
-const EMPTY = { marginTop:8, padding:"8px 10px", borderRadius:10, background:"#ecfeff", border:"1px solid #67e8f9", color:"#0e7490", font:"600 12.2px/1.2 Montserrat,system-ui,sans-serif" };
+const EMPTY = { marginTop:8, padding:"8px 10px", borderRadius:10, background:"#ecfeff", border:"1px solid #67e8f9", color:"#0e7490", font:"600 12px/1.2 Montserrat,system-ui,sans-serif" };
 const ERR = { ...EMPTY, background:"#fee2e2", border:"1px solid #fecaca", color:"#b91c1c" };
 
 const STYLES = `
@@ -149,11 +149,18 @@ export default function ResultadosHistoricos() {
   const [users, setUsers] = useState([]);
   const [players, setPlayers] = useState([]);
 
-  // Sets + ORDEN por selección (queda fixo: n/11)
+  // Sets de selección
   const [selPlantilla, setSelPlantilla] = useState(new Set());
   const [selOnce, setSelOnce] = useState(new Set());
-  const [orderPlantilla, setOrderPlantilla] = useState(new Map());
-  const [orderOnce, setOrderOnce] = useState(new Map());
+
+  // Contador efímero por pulsación
+  const [flash, setFlash] = useState({ id:null, count:0, t:0 });
+  const flashTimerRef = useRef(null);
+  const showFlash = (id, count) => {
+    clearTimeout(flashTimerRef.current);
+    setFlash({ id, count, t: Date.now() });
+    flashTimerRef.current = setTimeout(()=> setFlash({ id:null, count:0, t:0 }), 900);
+  };
 
   const [resultsConfirmed, setResultsConfirmed] = useState({});
   const [hasResults, setHasResults] = useState(new Set());
@@ -197,7 +204,7 @@ export default function ResultadosHistoricos() {
       } catch (e) { console.error("Historico load:", e); if (alive) setErr("Produciuse un erro ao cargar o histórico."); }
       finally { if (alive) setLoading(false); }
     })();
-    return () => { alive = false; };
+    return () => { alive = false; clearTimeout(flashTimerRef.current); };
   }, []);
 
   async function ensurePlayersLoaded() {
@@ -251,8 +258,6 @@ export default function ResultadosHistoricos() {
         .eq("match_id", matchId)
         .order("confirmed_at", { ascending:false });
       if (error) throw error;
-
-      // (Mostramos en visor; nomes vendrán do full_name se existe)
       setResultsConfirmed(prev => ({ ...prev, [matchId]: data || [] }));
       setHasResults(prev => new Set([...prev, matchId]));
     } catch (e) { console.error("loadConfirmedForMatch error:", e); showToast("Erro cargando resultados confirmados.", false); }
@@ -271,17 +276,14 @@ export default function ResultadosHistoricos() {
     bipSingle();
     setOpenUserPanel(userId);
     setSelPlantilla(new Set()); setSelOnce(new Set());
-    setOrderPlantilla(new Map()); setOrderOnce(new Map());
     await ensurePlayersLoaded();
   }
 
-  // toggle con ORDEN por selección
-  function toggleWithOrder(id, checkedSet, setSet, orderMap, setOrderMap) {
+  function toggleSelect(id, checkedSet, setSet) {
     const nx = new Set(checkedSet);
-    const nm = new Map(orderMap);
-    if (nx.has(id)) { nx.delete(id); nm.delete(id); }
-    else { nx.add(id); nm.set(id, (nx.size)); } // número de orde fixo no momento da selección
-    setSet(nx); setOrderMap(nm);
+    if (nx.has(id)) nx.delete(id); else nx.add(id);
+    setSet(nx);
+    showFlash(id, nx.size); // contador efímero
   }
 
   async function confirmarMatch(matchId) {
@@ -292,9 +294,11 @@ export default function ResultadosHistoricos() {
       if (selPlantilla.size !== 11) { showToast("Aliñación realizada debe ter 11.", false); return; }
       if (selOnce.size !== 11) { showToast("Once oficial debe ter 11.", false); return; }
 
-      if (!window.confirm("¿Seguro que queres gardar esta aliñación?")) return;
+      let proceed = true;
+      try { proceed = window.confirm("¿Seguro que queres gardar esta aliñación?"); } catch {}
+      if (!proceed) return;
 
-      // bip bip
+      showToast("Gardando…", true);
       bipDouble();
 
       const plantillaSet = new Set(selPlantilla);
@@ -316,21 +320,19 @@ export default function ResultadosHistoricos() {
       const { data: upData, error: upErr } = await supabase
         .from("resultados_confirmados")
         .upsert(payload, { onConflict:"match_id,user_id", ignoreDuplicates:false })
-        .select("match_id,user_id,acertos");
+        .select("*");
 
+      console.log("[CONFIRMAR] response", { upData, upErr });
       if (upErr) {
-        console.error("[CONFIRMAR] upsert error", upErr);
         showToast(`Erro gardando: ${upErr.message || upErr.code}`, false);
         return;
       }
-      console.log("[CONFIRMAR] ok", upData);
 
       // Marca UI, pecha edición
       setHasResults(prev => new Set([...prev, matchId]));
       setOpenUserPanel(null);
       setOpenPeopleMatchId(null);
       setSelPlantilla(new Set()); setSelOnce(new Set());
-      setOrderPlantilla(new Map()); setOrderOnce(new Map());
 
       await loadConfirmedForMatch(matchId);
       showToast("Aliñación gardada.", true);
@@ -344,7 +346,7 @@ export default function ResultadosHistoricos() {
   const aliIs11 = selPlantilla.size === 11;
   const onceIs11 = selOnce.size === 11;
 
-  function renderPlayersColumn(list, checkedSet, setSet, orderMap, setOrderMap, bg) {
+  function renderPlayersColumn(list, checkedSet, setSet, bg) {
     const buckets = groupByPos(list);
     return (
       <div style={{ ...COL_BASE, ...(bg || {}) }}>
@@ -364,17 +366,16 @@ export default function ResultadosHistoricos() {
               <div style={GROUP_SCROLL}>
                 {group.map(p => {
                   const isChecked = checkedSet.has(p.id);
-                  const ord = orderMap.get(p.id);
                   return (
                     <label key={p.id} style={ROW_PLAYER} title={p.label}>
                       <input
                         type="checkbox"
                         style={CHECKBOX}
                         checked={isChecked}
-                        onChange={()=> toggleWithOrder(p.id, checkedSet, setSet, orderMap, setOrderMap)}
+                        onChange={()=> toggleSelect(p.id, checkedSet, setSet)}
                       />
                       <span style={playerNameStyle}>{p.label}</span>
-                      {isChecked && <span style={COUNT_MINI}>{ord}/11</span>}
+                      {flash.id === p.id && <span style={COUNT_MINI}>{flash.count}/11</span>}
                     </label>
                   );
                 })}
@@ -436,7 +437,7 @@ export default function ResultadosHistoricos() {
       <style>{STYLES}</style>
 
       <h2 style={PAGE_HEAD}>HISTÓRICO DE RESULTADOS</h2>
-      <p style={PAGE_SUB}>Índice dos partidos rematados (máis recente → máis antigo).</p>
+      <p style={PAGE_SUB}>Aquí podes consultar os resultados individuais e xerais de cada partido.</p>
 
       {toast?.msg && <div style={toast.ok ? TOAST_OK : TOAST_ERR} aria-live="polite">{toast.msg}</div>}
       {err && <div style={ERR} role="status" aria-live="polite"> {err} </div>}
@@ -526,8 +527,8 @@ export default function ResultadosHistoricos() {
                         ) : (
                           <>
                             <div style={EDIT_RIGHT}>
-                              {renderPlayersColumn(players, selPlantilla, setSelPlantilla, orderPlantilla, setOrderPlantilla, COL_BG_ALI)}
-                              {renderPlayersColumn(players, selOnce, setSelOnce, orderOnce, setOrderOnce, COL_BG_OFI)}
+                              {renderPlayersColumn(players, selPlantilla, setSelPlantilla, COL_BG_ALI)}
+                              {renderPlayersColumn(players, selOnce, setSelOnce, COL_BG_OFI)}
                             </div>
                             {renderSummary(match.id)}
                           </>
@@ -538,7 +539,7 @@ export default function ResultadosHistoricos() {
                 )}
 
                 {openResultsMatchId === match.id && (
-                  <section style={{ marginTop:8, position:"relative", border:"1px solid #e5e7eb", borderRadius:12, background:"#fff", padding:8, maxWidth:560, marginLeft:"auto", marginRight:"auto" }}>
+                  <section style={{ marginTop:8, position:"relative", border:"1px solid #e5e7eb", borderRadius:12, background:"#fff", padding:8, maxWidth:540, marginLeft:"auto", marginRight:"auto" }}>
                     <button type="button" title="Pechar" aria-label="Pechar" onClick={()=> setOpenResultsMatchId(null)} style={{ position:"absolute", top:8, right:8, ...ICONBTN, width:28, height:28 }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" style={SVGI}><path d="M18 6 6 18M6 6l12 12" /></svg>
                     </button>
