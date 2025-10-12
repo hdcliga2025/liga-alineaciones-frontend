@@ -9,10 +9,14 @@ const PAGE_HEAD = { margin: "0 0 6px", font: "700 22px/1.2 Montserrat,system-ui,
 const PAGE_SUB = { margin: "0 0 12px", font: "400 14.5px/1.25 Montserrat,system-ui,sans-serif", color: "#475569" };
 
 const LIST = { listStyle: "none", margin: 0, padding: 0 };
-const ITEM = {
+const itemGrid = (isMobile) =>
+  isMobile
+    ? { gridTemplateColumns: "1fr auto auto" } // texto compacto + info (se admin) + ollo
+    : { gridTemplateColumns: "140px 1fr auto" };
+
+const ITEM_BASE = {
   display: "grid",
-  gridTemplateColumns: "140px 1fr auto",
-  gap: 12,
+  gap: 8,
   alignItems: "center",
   padding: "10px 12px",
   borderRadius: 12,
@@ -21,19 +25,32 @@ const ITEM = {
   boxShadow: "0 2px 8px rgba(0,0,0,.05)",
   marginBottom: 8,
 };
-const DATE = { font: "600 13px/1.1 Montserrat,system-ui,sans-serif", color: "#0f172a", whiteSpace: "nowrap" };
-const TEAMS = { font: "800 14px/1.1 Montserrat,system-ui,sans-serif", textTransform: "uppercase", color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
+const DATE = (isMobile) => ({
+  font: isMobile ? "700 11.5px/1.1 Montserrat,system-ui,sans-serif" : "600 13px/1.1 Montserrat,system-ui,sans-serif",
+  color: "#0f172a",
+  whiteSpace: "nowrap",
+});
+const TEAMS = (isMobile) => ({
+  font: isMobile ? "800 11.5px/1.1 Montserrat,system-ui,sans-serif" : "800 14px/1.1 Montserrat,system-ui,sans-serif",
+  textTransform: "uppercase",
+  color: "#111827",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+});
 const SEP = { margin: "0 6px", fontWeight: 800, color: "#0f172a" };
+const COMPACT_TEXT = { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
 
 const ACTIONS = { display: "flex", gap: 8, alignItems: "center", justifySelf: "end" };
 const ICONBTN = { width: 34, height: 34, display: "grid", placeItems: "center", borderRadius: 10, border: "1px solid #e2e8f0", background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,.06)", cursor: "pointer" };
 const SVGI = { fill: "none", stroke: "#0f172a", strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round" };
 const EYE_BTN = (active) =>
-  active ? { ...ICONBTN, border: "1px solid #0ea5e9", background: "linear-gradient(180deg,#38bdf8,#0ea5e9)" } : ICONBTN;
+  active ? { ...ICONBTN, width: 30, height: 30, border: "1px solid #0ea5e9", background: "linear-gradient(180deg,#38bdf8,#0ea5e9)" } : { ...ICONBTN, width: 30, height: 30 };
 const EYE_SVG = (active) => (active ? { ...SVGI, stroke: "#fff" } : SVGI);
 
-/* Botón X (todos los cierres X) */
-const XBTN = { ...ICONBTN, border: "1px solid #ef4444", background: "#fff" };
+/* Botón X (cierres) */
+const XBTN = { ...ICONBTN, width: 30, height: 30, border: "1px solid #ef4444", background: "#fff" };
+const XBTN_SMALL = { ...ICONBTN, width: 26, height: 26, border: "1px solid #ef4444", background: "#fff" };
 const XSVG = { fill: "none", stroke: "#ef4444", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
 
 /* Toasts */
@@ -48,52 +65,43 @@ const PEOPLE_SHELL = (twoCols) =>
 
 const USERS_LIST = { listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 6 };
 const USER_ROW_BASE = { display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 6, alignItems: "center", padding: "6px 8px", borderRadius: 8, border: "1px solid #eef2f7", background: "#f9fafb" };
-const USER_ROW_BLINK = { ...USER_ROW_BASE, animation: "userBlink 1.5s ease-in-out infinite", background: "linear-gradient(180deg,#dff3ff,#eef7ff)" };
+const USER_ROW_BLINK = { ...USER_ROW_BASE, animation: "userBlink 1.5s ease-in-out infinite", background: "linear-gradient(180deg,#e6f4ff,#f2f8ff)" };
 const USER_ROW_CONFIRMED = { ...USER_ROW_BASE, background: "linear-gradient(180deg,#eafff3,#f7fff9)", border: "1px solid #22c55e" };
 const USER_BADGE = { font: "900 11px/1 Montserrat,system-ui,sans-serif", color: "#0ea5e9", background: "#e0f2fe", padding: "4px 7px", borderRadius: 8, minWidth: 38, textAlign: "center" };
 const USER_NAME = { font: "800 13px/1.05 Montserrat,system-ui,sans-serif", color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
 const USER_SUB = { font: "600 11.5px/1.05 Montserrat,system-ui,sans-serif", color: "#64748b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
 
 const RIGHT_PAD = { paddingLeft: 16 };
-const EDIT_RIGHT = { display: "grid", gridTemplateColumns: "minmax(252px,1fr) minmax(252px,1fr)", gap: 8, alignItems: "start" };
+
+/* Grid de edición + resumo a ancho completo dentro do mesmo grid */
+const EDIT_GRID = { display: "grid", gridTemplateColumns: "minmax(252px,1fr) minmax(252px,1fr)", gap: 8, alignItems: "start" };
+
 const COL_BASE = { border: "1px solid #e5e7eb", borderRadius: 10, overflow: "hidden", position: "relative" };
-const COL_BG_ALI = { background: "#e9f9f2" };
-const COL_BG_OFI = { background: "#fff5e7" };
+const COL_BG_ALI = { background: "linear-gradient(180deg,#f0fff6,#e9f9f2)" };
+const COL_BG_OFI = { background: "linear-gradient(180deg,#fff9ee,#fff5e7)" };
 const COL_HEAD = { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "3px 6px", background: "#f1f5f9", borderBottom: "1px solid #e2e8f0" };
 const COL_TITLE = { font: "900 10.9px/1.02 Montserrat,system-ui,sans-serif", color: "#0f172a", letterSpacing: 0.2, textTransform: "uppercase" };
 const COL_TITLE_BLINK = { ...COL_TITLE, animation: "blinkSoft 1.5s ease-in-out infinite" };
 const COUNT = { font: "900 10.5px/1.02 Montserrat,system-ui,sans-serif", color: "#22c55e" };
 
-/* Demarcacións */
+/* Demarcacións + filas */
 const GROUP_SCROLL = { maxHeight: 260, overflowY: "auto", background: "inherit" };
 const GROUP_WRAP = (bg) => ({ position: "relative", background: "inherit", paddingRight: 20, marginBottom: 3 });
 const POS_SIDE = (bg) => ({ position: "absolute", right: 2, top: 2, bottom: 2, writingMode: "vertical-rl", textOrientation: "mixed", font: "900 9.8px/1 Montserrat,system-ui,sans-serif", color: "#64748b", opacity: 0.85, display: "grid", placeItems: "center", background: "transparent", padding: "2px 0" });
 const POS_SEP = { height: 1, background: "#e5e7eb" };
-
-/* Filas xogadores */
 const ROW_PLAYER = { display: "grid", gridTemplateColumns: "16px 1fr auto", gap: 8, alignItems: "center", padding: "0 2px", minWidth: 0 };
-const CHECKBOX = { width: 14, height: 14, transform: "scale(1.02)", marginRight: 6 };
-const playerNameStyle = { font: "700 10.8px/.78 Montserrat,system-ui,sans-serif", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
+const CHECKBOX = { width: 14, height: 14, transform: "scale(1.02)", marginRight: 8 };
+const playerNameStyle = { font: "700 10.4px/.74 Montserrat,system-ui,sans-serif", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
 const COUNT_MINI = { font: "900 10px/1 Montserrat,system-ui,sans-serif", color: "#0ea5e9", padding: "0 4px", borderRadius: 6, background: "#e0f2fe" };
 
-/* Preview / RESULTADOS OBTIDOS (baixo das dúas columnas) — estirado ata a dereita */
-const SUMMARY_WRAP = { marginTop: 8, marginLeft: 0, marginRight: 0, width: "100%" };
+/* Preview / RESULTADOS OBTIDOS (baixo, ANCHO COMPLETO das dúas columnas) */
+const SUMMARY_WRAP = { gridColumn: "1 / -1", marginTop: 8, width: "100%" };
 const SUMMARY = { border: "1px solid #fecaca", borderRadius: 12, background: "linear-gradient(180deg,#fff6f6,#ffeaea)", padding: 8, position: "relative", width: "100%" };
 const SUMMARY_TITLE_WRAP = { padding: "2px 6px 6px 6px", background: "linear-gradient(180deg,#fff,#fff6f6)", borderTopLeftRadius: 10, borderTopRightRadius: 10 };
-const SUMMARY_TITLE = { ...COL_TITLE, textDecoration: "none", margin: "2px 0 4px 0" };
-
+const SUMMARY_TITLE = { font: "800 11px/1.02 Montserrat,system-ui,sans-serif", color: "#0f172a", textDecoration: "none", margin: "2px 0 4px 0" };
 const HR = { height: 1, background: "#e5e7eb", width: "100%" };
 const GRID_DEF = "auto 1fr auto 3fr";
-const T_HEADER = {
-  display: "grid",
-  gridTemplateColumns: GRID_DEF,
-  gap: 0,
-  padding: "4px 0",
-  borderBottom: "1px solid #e5e7eb",
-  color: "#0f172a",
-  font: "800 11px/1.02 Montserrat,system-ui,sans-serif",
-  alignItems: "center",
-};
+const T_HEADER = { display: "grid", gridTemplateColumns: GRID_DEF, gap: 0, padding: "4px 0", borderBottom: "1px solid #e5e7eb", color: "#0f172a", font: "800 11px/1.02 Montserrat,system-ui,sans-serif", alignItems: "center" };
 const T_ROW = { display: "grid", gridTemplateColumns: GRID_DEF, gap: 0, padding: "3px 0", borderBottom: "1px solid #f1f5f9", font: "600 10.2px/.96 Montserrat,system-ui,sans-serif", alignItems: "center" };
 const CELL = { padding: "0 6px", borderRight: "1px solid #e5e7eb", display: "flex", alignItems: "center" };
 const CELL_LAST = { padding: "0 6px", display: "flex", alignItems: "center" };
@@ -108,7 +116,7 @@ const FULL_TITLE_BAR = {
   marginBottom: 8,
   padding: "9px 10px",
   border: "1px solid #7dd3fc",
-  background: "linear-gradient(180deg,#38bdf8,#0ea5e9)",
+  background: "linear-gradient(180deg,#4cc9ff,#2ab6f0)", // degradado un pouco máis suave
   borderRadius: 10,
   color: "#fff",
   display: "grid",
@@ -123,54 +131,28 @@ const FULL_HEAD = {
   gridTemplateColumns: "auto 1fr auto 3fr",
   padding: "10px 6px",
   borderBottom: "1px solid #e5e7eb",
-  font: "800 13.75px/1.2 Montserrat,system-ui,sans-serif",
+  font: "800 13.5px/1.2 Montserrat,system-ui,sans-serif",
   background: "linear-gradient(180deg,#dcfce7,#bbf7d0)",
   color: "#064e3b",
   alignItems: "center",
 };
-const FULL_ROW = {
-  display: "grid",
-  gridTemplateColumns: "auto 1fr auto 3fr",
-  padding: "8px 6px",
-  borderBottom: "1px solid #f1f5f9",
-  font: "600 12.5px/1.1 Montserrat,system-ui,sans-serif",
-  alignItems: "center",
-};
+const FULL_ROW = { display: "grid", gridTemplateColumns: "auto 1fr auto 3fr", padding: "8px 6px", borderBottom: "1px solid #f1f5f9", font: "600 12.3px/1.1 Montserrat,system-ui,sans-serif", alignItems: "center" };
 const FULL_CELL = { padding: "0 6px", borderRight: "1px solid #e5e7eb", display: "flex", alignItems: "center" };
 const FULL_LAST = { padding: "0 6px", display: "flex", alignItems: "center" };
 const FULL_ACERTOS = { textAlign: "center", color: "#0ea5e9", fontWeight: 900, minWidth: 76, justifyContent: "center" };
 
-/* Editor inline de data/hora en overlay */
-const EDIT_OVERLAY = {
-  position: "fixed",
-  inset: "auto auto 24px 50%",
-  transform: "translateX(-50%)",
-  zIndex: 60,
-  background: "rgba(255,255,255,.98)",
-  border: "1px solid #cbd5e1",
-  borderRadius: 12,
-  boxShadow: "0 12px 28px rgba(0,0,0,.22)",
-  padding: 12,
-  minWidth: 280,
-};
+/* Editor inline de data/hora (overlay) */
+const EDIT_OVERLAY = { position: "fixed", inset: "auto auto 24px 50%", transform: "translateX(-50%)", zIndex: 60, background: "rgba(255,255,255,.98)", border: "1px solid #cbd5e1", borderRadius: 12, boxShadow: "0 12px 28px rgba(0,0,0,.22)", padding: 12, minWidth: 280 };
 const DT_INPUT = { border: "1px solid #cbd5e1", borderRadius: 8, padding: "6px 8px", font: "600 12px/1 Montserrat,system-ui,sans-serif", width: "100%" };
-const SAVE_BTN = { ...ICONBTN, position: "absolute", top: 8, right: 8, border: "1px solid #22c55e", background: "#fff" };
+const SAVE_BTN = { ...ICONBTN, width: 28, height: 28, position: "absolute", top: 8, right: 8, border: "1px solid #22c55e", background: "#fff" };
 const SAVE_SVG = { fill: "none", stroke: "#16a34a", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
 
 /* Móbil: info admins */
-const INFO_BTN = { ...ICONBTN };
+const INFO_BTN = { ...ICONBTN, width: 28, height: 28 };
 const INFO_SVG = { ...SVGI };
-const INFO_POP = {
-  position: "fixed",
-  inset: "10% 6% auto 6%",
-  background: "linear-gradient(180deg,#e0f2fe,#bae6fd)",
-  border: "1px solid #7dd3fc",
-  borderRadius: 12,
-  padding: 12,
-  zIndex: 80,
-  boxShadow: "0 16px 36px rgba(0,0,0,.25)",
-};
-const INFO_TEXT = { font: "600 13px/1.25 Montserrat,system-ui,sans-serif", color: "#0c4a6e" };
+const INFO_POP = { position: "fixed", inset: "10% 6% auto 6%", background: "linear-gradient(180deg,#e0f2fe,#bae6fd)", border: "1px solid #7dd3fc", borderRadius: 12, padding: 12, zIndex: 80, boxShadow: "0 16px 36px rgba(0,0,0,.25)" };
+const INFO_TITLE = { font: "900 13px/1.2 Montserrat,system-ui,sans-serif", color: "#0c4a6e", marginBottom: 6 };
+const INFO_TEXT = { font: "600 12.5px/1.25 Montserrat,system-ui,sans-serif", color: "#0c4a6e" };
 
 const STYLES = `
 @keyframes blinkSoft{0%{opacity:1}50%{opacity:.7}100%{opacity:1}}
@@ -181,403 +163,212 @@ const STYLES = `
 /* ===== Utils ===== */
 const pad2 = (n) => String(n).padStart(2, "0");
 const sortDescByDate = (a, b) => (b.match_iso ? new Date(b.match_iso).getTime() : -Infinity) - (a.match_iso ? new Date(a.match_iso).getTime() : -Infinity);
-const dmyShort = (iso) => {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)}, ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-};
-const dmyFull = (iso) => {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`;
-};
-const toLocalInput = (iso) => {
-  if (!iso) return "";
-  const d = new Date(iso);
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-};
-const fromLocalInput = (localStr) => {
-  if (!localStr) return null;
-  const ms = Date.parse(localStr);
-  return isNaN(ms) ? null : new Date(ms).toISOString();
-};
+const dmyShort = (iso) => { if (!iso) return "—"; const d = new Date(iso); return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${String(d.getFullYear()).slice(-2)}, ${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
+const dmyFull = (iso) => { if (!iso) return "—"; const d = new Date(iso); return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`; };
+const toLocalInput = (iso) => { if (!iso) return ""; const d = new Date(iso); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
+const fromLocalInput = (localStr) => { if (!localStr) return null; const ms = Date.parse(localStr); return isNaN(ms) ? null : new Date(ms).toISOString(); };
 
-function inferPosFromFoto(url = "") {
-  const m = url.match(/-(POR|DEF|CEN|DEL)\.(?:jpg|jpeg|png|webp)$/i);
-  return m ? m[1].toUpperCase() : "CEN";
-}
-function normalizePlayer(p) {
-  let nombre = p.nombre || "";
-  let pos = p.pos || null;
-  const nlow = nombre.trim().toLowerCase();
-  if (nlow === "joel lago") {
-    nombre = "Yoel Lago";
-    pos = "DEF";
-  }
-  if (nlow.includes("jones") && nlow.includes("el-abdellaoui")) {
-    pos = "DEL";
-  }
-  return { ...p, nombre, pos };
-}
-const POS_ORDER = ["POR", "DEF", "CEN", "DEL"];
-function groupByPos(players) {
-  const b = { POR: [], DEF: [], CEN: [], DEL: [] };
-  for (const p of players || []) (b[(p.pos || "CEN").toUpperCase()] || b.CEN).push(p);
-  POS_ORDER.forEach((k) => b[k].sort((a, b) => (a.dorsal ?? 999) - (b.dorsal ?? 999)));
-  return b;
-}
+function inferPosFromFoto(url=""){ const m=url.match(/-(POR|DEF|CEN|DEL)\.(?:jpg|jpeg|png|webp)$/i); return m?m[1].toUpperCase():"CEN"; }
+function normalizePlayer(p){ let nombre=p.nombre||""; let pos=p.pos||null; const nlow=nombre.trim().toLowerCase(); if(nlow==="joel lago"){ nombre="Yoel Lago"; pos="DEF"; } if(nlow.includes("jones")&&nlow.includes("el-abdellaoui")){ pos="DEL"; } return {...p,nombre,pos}; }
+const POS_ORDER=["POR","DEF","CEN","DEL"];
+function groupByPos(players){ const b={POR:[],DEF:[],CEN:[],DEL:[]}; for(const p of players||[]) (b[(p.pos||"CEN").toUpperCase()]||b.CEN).push(p); POS_ORDER.forEach(k=>b[k].sort((a,b)=>(a.dorsal??999)-(b.dorsal??999))); return b; }
 
 /* Sonidos */
-function bip(opacity = 0.22, freq = 880, dur = 0.11) {
-  try {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    const ctx = new AC();
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.type = "sine";
-    o.frequency.value = freq;
-    o.connect(g);
-    g.connect(ctx.destination);
-    g.gain.setValueAtTime(0.0001, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(opacity, ctx.currentTime + 0.01);
-    o.start();
-    o.stop(ctx.currentTime + dur);
-    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
-  } catch {}
-}
-function bipConfirm() {
-  // bip biiiiip "opaco"
-  bip(0.18, 820, 0.08);
-  setTimeout(() => bip(0.14, 700, 0.28), 130);
-}
+function bip(opacity=0.22,freq=880,dur=0.11){ try{ const AC=window.AudioContext||window.webkitAudioContext; const ctx=new AC(); const o=ctx.createOscillator(); const g=ctx.createGain(); o.type="sine"; o.frequency.value=freq; o.connect(g); g.connect(ctx.destination); g.gain.setValueAtTime(0.0001,ctx.currentTime); g.gain.exponentialRampToValueAtTime(opacity,ctx.currentTime+0.01); o.start(); o.stop(ctx.currentTime+dur); g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+dur);}catch{} }
+function bipConfirm(){ bip(0.18,820,0.08); setTimeout(()=>bip(0.14,700,0.28),130); }
 
 /* ===== Compo ===== */
-export default function ResultadosHistoricos() {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [rows, setRows] = useState([]);
-  const [err, setErr] = useState("");
-  const [toast, setToast] = useState("");
-  const [loading, setLoading] = useState(true);
+export default function ResultadosHistoricos(){
+  const [isAdmin,setIsAdmin]=useState(false);
+  const [rows,setRows]=useState([]);
+  const [err,setErr]=useState("");
+  const [toast,setToast]=useState("");
+  const [loading,setLoading]=useState(true);
 
-  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
-  useEffect(() => {
-    const onR = () => setIsMobile(window.innerWidth <= 560);
-    window.addEventListener("resize", onR);
-    return () => window.removeEventListener("resize", onR);
-  }, []);
+  const [isMobile,setIsMobile]=useState(typeof window!=="undefined"?window.innerWidth<=560:false);
+  useEffect(()=>{ const onR=()=>setIsMobile(window.innerWidth<=560); window.addEventListener("resize",onR); return ()=>window.removeEventListener("resize",onR); },[]);
 
-  const [openPeopleMatchId, setOpenPeopleMatchId] = useState(null);
-  const [openResultsMatchId, setOpenResultsMatchId] = useState(null);
+  const [openPeopleMatchId,setOpenPeopleMatchId]=useState(null);
+  const [openResultsMatchId,setOpenResultsMatchId]=useState(null);
+  const [openUserPanel,setOpenUserPanel]=useState(null);
 
-  const [openUserPanel, setOpenUserPanel] = useState(null);
-  const [users, setUsers] = useState([]);
-  const [userNames, setUserNames] = useState(new Map()); // id -> name
-  const [players, setPlayers] = useState([]);
+  const [users,setUsers]=useState([]);
+  const [userNames,setUserNames]=useState(new Map());
+  const [players,setPlayers]=useState([]);
 
-  // selección
-  const [selPlantilla, setSelPlantilla] = useState(new Set());
-  const [selOnce, setSelOnce] = useState(new Set());
+  const [selPlantilla,setSelPlantilla]=useState(new Set());
+  const [selOnce,setSelOnce]=useState(new Set());
 
-  // contador efímero
-  const [flash, setFlash] = useState({ id: null, count: 0, t: 0 });
-  const flashTimerRef = useRef(null);
-  const showFlash = (id, count) => {
-    clearTimeout(flashTimerRef.current);
-    setFlash({ id, count, t: Date.now() });
-    flashTimerRef.current = setTimeout(() => setFlash({ id: null, count: 0, t: 0 }), 900);
-  };
+  const [flash,setFlash]=useState({id:null,count:0,t:0});
+  const flashTimerRef=useRef(null);
+  const showFlash=(id,count)=>{ clearTimeout(flashTimerRef.current); setFlash({id,count,t:Date.now()}); flashTimerRef.current=setTimeout(()=>setFlash({id:null,count:0,t:0}),900); };
 
-  // edición inline fecha/hora en resultados full (overlay)
-  const [editOverlay, setEditOverlay] = useState(null); // {matchId,userId,valueLocal}
+  const [editOverlay,setEditOverlay]=useState(null);
+  const [showMobileInfo,setShowMobileInfo]=useState(false);
 
-  // info móvil admins
-  const [showMobileInfo, setShowMobileInfo] = useState(false);
+  const [resultsConfirmed,setResultsConfirmed]=useState({});
+  const [hasResults,setHasResults]=useState(new Set());
+  const [confirmedByMatch,setConfirmedByMatch]=useState({});
 
-  const [resultsConfirmed, setResultsConfirmed] = useState({});
-  const [hasResults, setHasResults] = useState(new Set());
-  const [confirmedByMatch, setConfirmedByMatch] = useState({}); // matchId -> Set(userIds)
+  const [confirmSaving,setConfirmSaving]=useState(false);
 
-  const [confirmSaving, setConfirmSaving] = useState(false);
+  const showToast=(msg,ok=true,ms=1500)=>{ setToast({msg,ok,t:Date.now()}); setTimeout(()=>setToast(""),ms); };
 
-  const showToast = (msg, ok = true, ms = 1500) => {
-    setToast({ msg, ok, t: Date.now() });
-    setTimeout(() => setToast(""), ms);
-  };
-
-  async function resolveAdmin() {
-    const { data: s } = await supabase.auth.getSession();
-    const email = s?.session?.user?.email?.toLowerCase() || "";
-    const uid = s?.session?.user?.id || null;
-    let admin = email === "hdcliga@gmail.com" || email === "hdcliga2@gmail.com";
-    if (!admin && uid) {
-      const { data: prof } = await supabase.from("profiles").select("role").eq("id", uid).maybeSingle();
-      if ((prof?.role || "").toLowerCase() === "admin") admin = true;
+  async function resolveAdmin(){
+    const { data:s }=await supabase.auth.getSession();
+    const email=s?.session?.user?.email?.toLowerCase()||"";
+    const uid=s?.session?.user?.id||null;
+    let admin=email==="hdcliga@gmail.com"||email==="hdcliga2@gmail.com";
+    if(!admin&&uid){
+      const { data:prof }=await supabase.from("profiles").select("role").eq("id",uid).maybeSingle();
+      if((prof?.role||"").toLowerCase()==="admin") admin=true;
     }
     setIsAdmin(admin);
   }
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      setErr("");
-      setLoading(true);
-      try {
+  useEffect(()=>{ let alive=true; (async()=>{ setErr(""); setLoading(true);
+      try{
         await resolveAdmin();
-        const { data, error } = await supabase.from("matches_finalizados").select("id,equipo1,equipo2,match_iso");
-        if (error) throw error;
-        const norm = (data || [])
-          .map((r) => ({
-            id: r.id ?? null,
-            equipo1: (r.equipo1 || "").toUpperCase(),
-            equipo2: (r.equipo2 || "").toUpperCase(),
-            match_iso: r.match_iso || null,
-          }))
-          .sort(sortDescByDate);
-        if (alive) setRows(norm);
-
-        if ((data || []).length) {
-          const ids = (data || []).map((r) => r.id).filter(Boolean);
-          const { data: rc } = await supabase.from("resultados_confirmados").select("match_id,user_id").in("match_id", ids);
-          const map = {};
-          (rc || []).forEach((r) => {
-            if (!map[r.match_id]) map[r.match_id] = new Set();
-            map[r.match_id].add(r.user_id);
-          });
-          if (alive) setConfirmedByMatch(map);
-          const s = new Set((rc || []).map((x) => x.match_id));
-          if (alive) setHasResults(s);
+        const { data,error }=await supabase.from("matches_finalizados").select("id,equipo1,equipo2,match_iso");
+        if(error) throw error;
+        const norm=(data||[]).map(r=>({ id:r.id??null, equipo1:(r.equipo1||"").toUpperCase(), equipo2:(r.equipo2||"").toUpperCase(), match_iso:r.match_iso||null })).sort(sortDescByDate);
+        if(alive) setRows(norm);
+        if((data||[]).length){
+          const ids=(data||[]).map(r=>r.id).filter(Boolean);
+          const { data:rc }=await supabase.from("resultados_confirmados").select("match_id,user_id").in("match_id",ids);
+          const map={}; (rc||[]).forEach(r=>{ if(!map[r.match_id]) map[r.match_id]=new Set(); map[r.match_id].add(r.user_id); });
+          if(alive) setConfirmedByMatch(map);
+          const s=new Set((rc||[]).map(x=>x.match_id)); if(alive) setHasResults(s);
         }
-      } catch (e) {
-        console.error("Historico load:", e);
-        if (alive) setErr("Produciuse un erro ao cargar o histórico.");
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
-    return () => {
-      alive = false;
-      clearTimeout(flashTimerRef.current);
-    };
-  }, []);
+      }catch(e){ console.error("Historico load:",e); if(alive) setErr("Produciuse un erro ao cargar o histórico."); }
+      finally{ if(alive) setLoading(false); }
+  })(); return ()=>{ alive=false; clearTimeout(flashTimerRef.current); }; },[]);
 
-  async function ensurePlayersLoaded() {
-    if (players.length) return;
-    try {
-      const { data: playersData, error: playersErr } = await supabase.from("jugadores").select("id, nombre, dorsal, foto_url");
-      if (playersErr) throw playersErr;
-      setPlayers(
-        (playersData || []).map((pp) => {
-          const p = normalizePlayer(pp);
-          const pos = p.pos || inferPosFromFoto(p.foto_url || "");
-          const label = p.dorsal ? `${p.dorsal} - ${p.nombre}` : p.nombre || "—";
-          return { id: p.id, dorsal: p.dorsal ?? null, pos, label };
-        })
-      );
-    } catch (e) {
-      console.error("Load players error:", e);
-      setPlayers([]);
-    }
+  async function ensurePlayersLoaded(){
+    if(players.length) return;
+    try{
+      const { data:playersData,error:playersErr }=await supabase.from("jugadores").select("id, nombre, dorsal, foto_url");
+      if(playersErr) throw playersErr;
+      setPlayers((playersData||[]).map(pp=>{ const p=normalizePlayer(pp); const pos=p.pos||inferPosFromFoto(p.foto_url||""); const label=p.dorsal?`${p.dorsal} - ${p.nombre}`:p.nombre||"—"; return { id:p.id, dorsal:p.dorsal??null, pos, label }; }));
+    }catch(e){ console.error("Load players error:",e); setPlayers([]); }
   }
 
-  async function ensureUserNames(ids) {
-    const missing = ids.filter((id) => !userNames.has(id));
-    if (!missing.length) return;
-    try {
-      const { data, error } = await supabase.from("profiles").select("id, first_name, last_name, full_name, email").in("id", missing);
-      if (error) throw error;
-      const m = new Map(userNames);
-      (data || []).forEach((u) => {
-        const code = (u.first_name || "").trim();
-        const surname = (u.last_name || "").trim();
-        const full = (u.full_name || "").trim();
-        const email = (u.email || "").trim();
-        const displayName = full || `${code} ${surname}`.trim() || email || u.id;
-        m.set(u.id, displayName);
-      });
+  async function ensureUserNames(ids){
+    const missing=ids.filter(id=>!userNames.has(id)); if(!missing.length) return;
+    try{
+      const { data,error }=await supabase.from("profiles").select("id, first_name, last_name, full_name, email").in("id",missing);
+      if(error) throw error;
+      const m=new Map(userNames);
+      (data||[]).forEach(u=>{ const code=(u.first_name||"").trim(); const surname=(u.last_name||"").trim(); const full=(u.full_name||"").trim(); const email=(u.email||"").trim(); const display=full||`${code} ${surname}`.trim()||email||u.id; m.set(u.id,display); });
       setUserNames(m);
-    } catch (e) {
-      console.error("ensureUserNames:", e);
-    }
+    }catch(e){ console.error("ensureUserNames:",e); }
   }
 
-  async function loadUsersList() {
-    try {
-      const { data, error } = await supabase.from("profiles").select("id, first_name, last_name, full_name, email").order("first_name", { ascending: true, nullsFirst: true });
-      if (error) throw error;
-
-      const arr = (data || [])
-        .map((u) => {
-          const code = (u.first_name || "").trim();
-          const surname = (u.last_name || "").trim();
-          const email = (u.email || "").trim();
-          const full = (u.full_name || "").trim();
-          const displayName = full || `${code} ${surname}`.trim() || email || u.id;
-          const allEmpty = !full && !code && !surname && !email;
-          return allEmpty ? null : { id: u.id, code, surname, name: displayName };
-        })
-        .filter(Boolean)
-        .sort((a, b) => {
-          const na = /^\d{2}$/.test(a.code || "") ? 0 : 1;
-          const nb = /^\d{2}$/.test(b.code || "") ? 0 : 1;
-          if (na !== nb) return na - nb;
-          return (a.code || "").localeCompare(b.code || "");
-        });
-
+  async function loadUsersList(){
+    try{
+      const { data,error }=await supabase.from("profiles").select("id, first_name, last_name, full_name, email").order("first_name",{ascending:true,nullsFirst:true});
+      if(error) throw error;
+      const arr=(data||[]).map(u=>{ const code=(u.first_name||"").trim(); const surname=(u.last_name||"").trim(); const email=(u.email||"").trim(); const full=(u.full_name||"").trim(); const display=full||`${code} ${surname}`.trim()||email||u.id; const allEmpty=!full&&!code&&!surname&&!email; return allEmpty?null:{id:u.id,code,surname,name:display}; }).filter(Boolean)
+        .sort((a,b)=>{ const na=/^\d{2}$/.test(a.code||"")?0:1; const nb=/^\d{2}$/.test(b.code||"")?0:1; if(na!==nb) return na-nb; return (a.code||"").localeCompare(b.code||""); });
       setUsers(arr);
-      const m = new Map(userNames);
-      arr.forEach((u) => m.set(u.id, u.name));
-      setUserNames(m);
-    } catch (e) {
-      console.error("load users error:", e);
-      showToast("Erro cargando usuarias/os.", false);
-    }
+      const m=new Map(userNames); arr.forEach(u=>m.set(u.id,u.name)); setUserNames(m);
+    }catch(e){ console.error("load users error:",e); showToast("Erro cargando usuarias/os.",false); }
   }
 
-  async function loadConfirmedForMatch(matchId) {
-    try {
-      const { data, error } = await supabase
-        .from("resultados_confirmados")
-        .select("match_id,user_id,confirmed_at,acertos,plantilla_ids,once_ids")
-        .eq("match_id", matchId)
-        .order("confirmed_at", { ascending: false });
-      if (error) throw error;
-
-      setResultsConfirmed((prev) => ({ ...prev, [matchId]: data || [] }));
-      setHasResults((prev) => new Set([...prev, matchId]));
-      const setU = new Set((data || []).map((r) => r.user_id));
-      setConfirmedByMatch((prev) => ({ ...prev, [matchId]: setU }));
+  async function loadConfirmedForMatch(matchId){
+    try{
+      const { data,error }=await supabase.from("resultados_confirmados").select("match_id,user_id,confirmed_at,acertos,plantilla_ids,once_ids").eq("match_id",matchId).order("confirmed_at",{ascending:false});
+      if(error) throw error;
+      setResultsConfirmed(prev=>({ ...prev, [matchId]: data||[] }));
+      setHasResults(prev=>new Set([...prev,matchId]));
+      const setU=new Set((data||[]).map(r=>r.user_id));
+      setConfirmedByMatch(prev=>({ ...prev, [matchId]: setU }));
       await ensureUserNames(Array.from(setU));
-    } catch (e) {
-      console.error("loadConfirmedForMatch error:", e);
-      showToast("Erro cargando resultados confirmados.", false);
-    }
+    }catch(e){ console.error("loadConfirmedForMatch error:",e); showToast("Erro cargando resultados confirmados.",false); }
   }
 
-  async function onClickPeople(matchId) {
-    if (!isAdmin) return;
-    const opening = openPeopleMatchId !== matchId;
+  async function onClickPeople(matchId){
+    if(!isAdmin) return;
+    const opening=openPeopleMatchId!==matchId;
     setOpenResultsMatchId(null);
-    setOpenPeopleMatchId(opening ? matchId : null);
+    setOpenPeopleMatchId(opening?matchId:null);
     setOpenUserPanel(null);
-    if (opening) {
-      await loadUsersList();
-      await ensurePlayersLoaded();
-      await loadConfirmedForMatch(matchId);
-    }
+    if(opening){ await loadUsersList(); await ensurePlayersLoaded(); await loadConfirmedForMatch(matchId); }
   }
 
-  async function onOpenUserEditor(userId) {
-    if (!isAdmin) return;
-    bip(0.22, 880, 0.11);
-    setOpenUserPanel(userId);
-    setSelPlantilla(new Set());
-    setSelOnce(new Set());
-    await ensurePlayersLoaded();
-  }
+  async function onOpenUserEditor(userId){ if(!isAdmin) return; bip(0.22,880,0.11); setOpenUserPanel(userId); setSelPlantilla(new Set()); setSelOnce(new Set()); await ensurePlayersLoaded(); }
+  function toggleSelect(id,checkedSet,setSet){ const nx=new Set(checkedSet); if(nx.has(id)) nx.delete(id); else nx.add(id); setSet(nx); showFlash(id,nx.size); }
 
-  function toggleSelect(id, checkedSet, setSet) {
-    const nx = new Set(checkedSet);
-    if (nx.has(id)) nx.delete(id);
-    else nx.add(id);
-    setSet(nx);
-    showFlash(id, nx.size);
-  }
-
-  async function confirmarMatch(matchId) {
-    if (confirmSaving) return;
+  async function confirmarMatch(matchId){
+    if(confirmSaving) return;
     setConfirmSaving(true);
-    try {
-      if (!matchId) return showToast("Falta o identificador do partido.", false);
-      if (!openUserPanel) return showToast("Selecciona unha usuaria/o primeiro (teclado).", false);
-      if (selPlantilla.size !== 11) return showToast("Aliñación realizada debe ter 11.", false);
-      if (selOnce.size !== 11) return showToast("Once oficial debe ter 11.", false);
+    try{
+      if(!matchId) return showToast("Falta o identificador do partido.",false);
+      if(!openUserPanel) return showToast("Selecciona unha usuaria/o primeiro (teclado).",false);
+      if(selPlantilla.size!==11) return showToast("Aliñación realizada debe ter 11.",false);
+      if(selOnce.size!==11) return showToast("Once oficial debe ter 11.",false);
 
       bipConfirm();
 
-      const plantillaSet = new Set(selPlantilla);
-      const onceSet = new Set(selOnce);
-      let acertos = 0;
-      onceSet.forEach((id) => { if (plantillaSet.has(id)) acertos++; });
+      const plantillaSet=new Set(selPlantilla);
+      const onceSet=new Set(selOnce);
+      let acertos=0; onceSet.forEach(id=>{ if(plantillaSet.has(id)) acertos++; });
 
-      const nowISO = new Date().toISOString();
-      const payload = [{
-        match_id: matchId,
-        user_id: openUserPanel,
-        confirmed_at: nowISO,
-        acertos,
-        plantilla_ids: Array.from(plantillaSet),
-        once_ids: Array.from(onceSet),
-        updated_at: nowISO,
-      }];
+      const nowISO=new Date().toISOString();
+      const payload=[{ match_id:matchId, user_id:openUserPanel, confirmed_at:nowISO, acertos, plantilla_ids:Array.from(plantillaSet), once_ids:Array.from(onceSet), updated_at:nowISO }];
 
-      const { error: upErr } = await supabase
-        .from("resultados_confirmados")
-        .upsert(payload, { onConflict: "match_id,user_id", ignoreDuplicates: false });
+      const { error:upErr }=await supabase.from("resultados_confirmados").upsert(payload,{ onConflict:"match_id,user_id", ignoreDuplicates:false });
+      if(upErr) return showToast(`Erro gardando: ${upErr.message||upErr.code}`,false);
 
-      if (upErr) return showToast(`Erro gardando: ${upErr.message || upErr.code}`, false);
-
-      // limpiar UI edición
+      // limpar edición
       setOpenUserPanel(null);
       setOpenPeopleMatchId(null);
       setSelPlantilla(new Set());
       setSelOnce(new Set());
 
       await loadConfirmedForMatch(matchId);
-      showToast("Resultado gardado.", true, 1500);
-    } catch (e) {
-      console.error("confirmarMatch error:", e);
-      showToast("Erro inesperado ao confirmar.", false);
-    } finally {
-      setConfirmSaving(false);
-    }
+      showToast("Resultado gardado.",true,1500);
+    }catch(e){ console.error("confirmarMatch error:",e); showToast("Erro inesperado ao confirmar.",false); }
+    finally{ setConfirmSaving(false); }
   }
 
-  async function saveEditedTs(matchId, userId, valueLocal) {
-    const iso = fromLocalInput(valueLocal);
-    if (!iso) return showToast("Data/hora non válida.", false);
-    try {
-      const { error } = await supabase
-        .from("resultados_confirmados")
-        .update({ confirmed_at: iso, updated_at: iso })
-        .eq("match_id", matchId)
-        .eq("user_id", userId);
-      if (error) throw error;
+  async function saveEditedTs(matchId,userId,valueLocal){
+    const iso=fromLocalInput(valueLocal); if(!iso) return showToast("Data/hora non válida.",false);
+    try{
+      const { error }=await supabase.from("resultados_confirmados").update({ confirmed_at:iso, updated_at:iso }).eq("match_id",matchId).eq("user_id",userId);
+      if(error) throw error;
       setEditOverlay(null);
       await loadConfirmedForMatch(matchId);
       showToast("Data/hora actualizada.");
-    } catch (e) {
-      console.error("saveEditedTs:", e);
-      showToast("Erro actualizando data/hora.", false);
-    }
+    }catch(e){ console.error("saveEditedTs:",e); showToast("Erro actualizando data/hora.",false); }
   }
 
-  const view = useMemo(() => rows, [rows]);
-  const aliIs11 = selPlantilla.size === 11;
-  const onceIs11 = selOnce.size === 11;
+  const view=useMemo(()=>rows,[rows]);
+  const aliIs11=selPlantilla.size===11;
+  const onceIs11=selOnce.size===11;
 
-  function renderPlayersColumn(list, checkedSet, setSet, bg) {
-    const buckets = groupByPos(list);
+  function renderPlayersColumn(list,checkedSet,setSet,bg){
+    const buckets=groupByPos(list);
     return (
-      <div style={{ ...COL_BASE, ...(bg || {}) }}>
+      <div style={{ ...COL_BASE, ...(bg||{}) }}>
         <div style={COL_HEAD}>
-          <span style={bg === COL_BG_OFI ? (aliIs11 ? COL_TITLE_BLINK : COL_TITLE) : COL_TITLE}>{bg === COL_BG_OFI ? "ONCE OFICIAL" : "ALIÑACIÓN REALIZADA"}</span>
+          <span style={bg===COL_BG_OFI?(aliIs11?COL_TITLE_BLINK:COL_TITLE):COL_TITLE}>{bg===COL_BG_OFI?"ONCE OFICIAL":"ALIÑACIÓN REALIZADA"}</span>
           <span style={COUNT}>{checkedSet.size}/11</span>
         </div>
-        {POS_ORDER.map((k) => {
-          const group = buckets[k] || [];
-          if (!group.length) return null;
-          const bgcol = (bg && bg.background) || "#fff";
+        {POS_ORDER.map(k=>{
+          const group=buckets[k]||[]; if(!group.length) return null;
+          const bgcol=(bg&&bg.background)||"#fff";
           return (
             <div key={k} style={GROUP_WRAP(bgcol)}>
               <div style={POS_SEP} />
               <div style={GROUP_SCROLL}>
-                {group.map((p) => {
-                  const isChecked = checkedSet.has(p.id);
+                {group.map(p=>{
+                  const isChecked=checkedSet.has(p.id);
                   return (
                     <label key={p.id} style={ROW_PLAYER} title={p.label}>
-                      <input type="checkbox" style={CHECKBOX} checked={isChecked} onChange={() => toggleSelect(p.id, checkedSet, setSet)} />
+                      <input type="checkbox" style={CHECKBOX} checked={isChecked} onChange={()=>toggleSelect(p.id,checkedSet,setSet)} />
                       <span style={playerNameStyle}>{p.label}</span>
-                      {flash.id === p.id && <span style={COUNT_MINI}>{flash.count}/11</span>}
+                      {flash.id===p.id && <span style={COUNT_MINI}>{flash.count}/11</span>}
                     </label>
                   );
                 })}
@@ -590,22 +381,21 @@ export default function ResultadosHistoricos() {
     );
   }
 
-  function renderSummary(matchId) {
-    const uMap = new Map(users.map((u) => [u.id, u]));
-    const userLabel = uMap.get(openUserPanel)?.name || "—";
-
-    const playersById = new Map(players.map((p) => [p.id, p]));
-    const acertosLive = Array.from(selOnce).filter((id) => selPlantilla.has(id)).length;
-    const aliLabels = Array.from(selPlantilla).map((pid) => {
-      const p = playersById.get(pid);
-      const ok = selOnce.has(pid);
-      const label = p ? p.label : "—";
-      return ok ? <strong style={CELSTE}>{label}</strong> : <span>{label}</span>;
-    });
-    const out = [];
-    aliLabels.forEach((node, i) => {
-      out.push(node);
-      if (i < aliLabels.length - 1) out.push(<span style={{ opacity: 0.6 }}> {" | "} </span>);
+  function renderSummary(matchId){
+    const uMap=new Map(users.map(u=>[u.id,u]));
+    const userLabel=uMap.get(openUserPanel)?.name||"—";
+    const playersById=new Map(players.map(p=>[p.id,p]));
+    const acertosLive=Array.from(selOnce).filter(id=>selPlantilla.has(id)).length;
+    const aliNodes=Array.from(selPlantilla).map((pid,idx,arr)=>{
+      const p=playersById.get(pid);
+      const ok=selOnce.has(pid);
+      const label=p ? (p.dorsal?`${p.dorsal} - ${p.label.split(" - ").slice(-1)[0]}`:p.label) : "—";
+      return (
+        <span key={`${pid}-${idx}`}>
+          {ok ? <strong style={CELSTE}>{p?.label||label}</strong> : (p?.label||label)}
+          {idx<arr.length-1 && <span style={{opacity:.6}}> {" | "} </span>}
+        </span>
+      );
     });
 
     return (
@@ -615,43 +405,41 @@ export default function ResultadosHistoricos() {
             <div style={SUMMARY_TITLE}>RESULTADOS OBTIDOS</div>
             <div style={HR} />
           </div>
-          <div role="table" style={{ width: "100%" }}>
+          <div role="table" style={{ width:"100%" }}>
             <div role="row" style={T_HEADER}>
-              <div style={{ ...CELL, minWidth: 120 }}>Data e hora</div>
+              <div style={{ ...CELL, minWidth:120 }}>Data e hora</div>
               <div style={CELL}>HDC Membro</div>
               <div style={{ ...CELL, ...ACERTOS_CELL }}>Acertos</div>
               <div style={CELL_LAST}>Aliñación presentada</div>
             </div>
             <div role="row" style={T_ROW}>
-              <div style={{ ...CELL, minWidth: 120 }}>{dmyShort(new Date().toISOString())}</div>
+              <div style={{ ...CELL, minWidth:120 }}>{dmyShort(new Date().toISOString())}</div>
               <div style={CELL}>{userLabel}</div>
-              <div style={{ ...CELL, ...ACERTOS_CELL }}>
-                <span style={CELSTE}>{acertosLive}</span>
-              </div>
-              <div style={CELL_LAST}>{out}</div>
+              <div style={{ ...CELL, ...ACERTOS_CELL }}><span style={CELSTE}>{acertosLive}</span></div>
+              <div style={CELL_LAST}>{aliNodes}</div>
             </div>
           </div>
-
-          <button type="button" style={onceIs11 ? BTN_CONFIRM_BLINK : BTN_CONFIRM} onClick={() => confirmarMatch(matchId)} disabled={!onceIs11 || confirmSaving}>
-            CONFIRMAR
-          </button>
+          <button type="button" style={onceIs11?BTN_CONFIRM_BLINK:BTN_CONFIRM} onClick={()=>confirmarMatch(matchId)} disabled={!onceIs11||confirmSaving}>CONFIRMAR</button>
         </div>
       </div>
     );
   }
 
-  // Vista completa de resultados (al premer o ollo)
-  function FullResults({ match }) {
-    const recs = resultsConfirmed[match.id] || [];
-    const playersMap = new Map(players.map((p) => [p.id, p.label]));
-    const title = `LISTADO RESULTADOS EN EL PARTIDO: ${match.equipo1} - ${match.equipo2} | ${dmyFull(match.match_iso)}`;
+  function FullResults({ match }){
+    const recs=resultsConfirmed[match.id]||[];
+    const playersMap=new Map(players.map(p=>[p.id,p.label]));
+    const title = `LISTADO DOS RESULTADOS DO PARTIDO |  **${match.equipo1} - ${match.equipo2}** do ${dmyFull(match.match_iso)}`;
 
     return (
       <section aria-label="Resultados do partido" style={{ marginTop: 6 }}>
         <div style={FULL_TITLE_BAR}>
-          <div style={FULL_TITLE}>{title}</div>
-          <button type="button" style={XBTN} aria-label="Pechar" title="Pechar" onClick={() => setOpenResultsMatchId(null)}>
-            <svg width="18" height="18" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
+          {/* título con equipos en bold (interpretado no markdown simple via <span> */}
+          <div style={FULL_TITLE}>
+            LISTADO DOS RESULTADOS DO PARTIDO |{" "}
+            <span style={{ fontWeight: 900 }}>{match.equipo1} - {match.equipo2}</span> do {dmyFull(match.match_iso)}
+          </div>
+          <button type="button" style={{ ...XBTN_SMALL }} aria-label="Pechar" title="Pechar" onClick={()=>setOpenResultsMatchId(null)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12"/></svg>
           </button>
         </div>
 
@@ -663,21 +451,20 @@ export default function ResultadosHistoricos() {
             <div style={FULL_LAST}>Aliñación presentada</div>
           </div>
 
-          {recs.length === 0 ? (
-            <div style={{ padding: 10, font: "600 13px/1.2 Montserrat,system-ui,sans-serif", color: "#64748b" }}>
-              Sen confirmacións aínda para este partido.
-            </div>
+          {recs.length===0 ? (
+            <div style={{ padding:10, font:"600 13px/1.2 Montserrat,system-ui,sans-serif", color:"#64748b" }}>Sen confirmacións aínda para este partido.</div>
           ) : (
-            recs.map((rec) => {
-              const uname = userNames.get(rec.user_id) || rec.user_id;
-              const onceSet = new Set(rec.once_ids || []);
-              const labels = (rec.plantilla_ids || []).map((pid, j, arr) => {
-                const txt = playersMap.get(pid) || String(pid);
-                const ok = onceSet.has(pid);
+            recs.map(rec=>{
+              const uname=userNames.get(rec.user_id)||rec.user_id;
+              const onceSet=new Set(rec.once_ids||[]);
+              // VISUALIZACIÓN COMO ANTES: lista con separador " | " e acertados en celeste
+              const labels=(rec.plantilla_ids||[]).map((pid,j,arr)=>{
+                const txt=playersMap.get(pid)||String(pid);
+                const ok=onceSet.has(pid);
                 return (
                   <span key={`${pid}-${j}`}>
-                    {ok ? <strong style={{ color: "#0ea5e9" }}>{txt}</strong> : txt}
-                    {j < arr.length - 1 && <span style={{ opacity: 0.6 }}> {" | "} </span>}
+                    {ok ? <strong style={{ color:"#0ea5e9" }}>{txt}</strong> : txt}
+                    {j<arr.length-1 && <span style={{opacity:.6}}> {" | "} </span>}
                   </span>
                 );
               });
@@ -685,14 +472,8 @@ export default function ResultadosHistoricos() {
               return (
                 <div key={`${rec.user_id}`} style={FULL_ROW}>
                   <div style={{ ...FULL_CELL, minWidth: 140 }}>
-                    <button
-                      type="button"
-                      style={{ ...ICONBTN, width: 28, height: 28, marginRight: 6 }}
-                      title="Editar data/hora"
-                      aria-label="Editar data/hora"
-                      onClick={() => setEditOverlay({ matchId: rec.match_id, userId: rec.user_id, valueLocal: toLocalInput(rec.confirmed_at) })}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" style={SVGI}><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                    <button type="button" style={{ ...ICONBTN, width: 28, height: 28, marginRight: 6 }} title="Editar data/hora" aria-label="Editar data/hora" onClick={()=>setEditOverlay({ matchId:rec.match_id, userId:rec.user_id, valueLocal:toLocalInput(rec.confirmed_at) })}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" style={SVGI}><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>
                     </button>
                     <span>{dmyShort(rec.confirmed_at)}</span>
                   </div>
@@ -707,23 +488,12 @@ export default function ResultadosHistoricos() {
 
         {editOverlay && (
           <div role="dialog" aria-modal="true" style={EDIT_OVERLAY}>
-            <button type="button" style={XBTN} aria-label="Pechar" title="Pechar" onClick={() => setEditOverlay(null)}>
-              <svg width="16" height="16" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
+            <button type="button" style={XBTN_SMALL} aria-label="Pechar" title="Pechar" onClick={()=>setEditOverlay(null)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
-            <input
-              type="datetime-local"
-              style={{ ...DT_INPUT, marginTop: 10 }}
-              value={editOverlay.valueLocal || ""}
-              onInput={(e) => setEditOverlay((s) => ({ ...s, valueLocal: e.currentTarget.value }))}
-            />
-            <button
-              type="button"
-              style={SAVE_BTN}
-              title="Gardar"
-              aria-label="Gardar"
-              onClick={() => saveEditedTs(editOverlay.matchId, editOverlay.userId, editOverlay.valueLocal)}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" style={SAVE_SVG}><path d="M4 4h12l4 4v12H4z" /><path d="M16 4v6H8V4" /><path d="M8 18h8" /></svg>
+            <input type="datetime-local" style={{ ...DT_INPUT, marginTop:10 }} value={editOverlay.valueLocal||""} onInput={(e)=>setEditOverlay(s=>({ ...s, valueLocal:e.currentTarget.value }))}/>
+            <button type="button" style={SAVE_BTN} title="Gardar" aria-label="Gardar" onClick={()=>saveEditedTs(editOverlay.matchId,editOverlay.userId,editOverlay.valueLocal)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" style={SAVE_SVG}><path d="M4 4h12l4 4v12H4z"/><path d="M16 4v6H8V4"/><path d="M8 18h8"/></svg>
             </button>
           </div>
         )}
@@ -738,50 +508,54 @@ export default function ResultadosHistoricos() {
       <h2 style={PAGE_HEAD}>HISTÓRICO DE RESULTADOS</h2>
       <p style={PAGE_SUB}>Aquí podes consultar os resultados individuais e xerais de cada partido.</p>
 
-      {toast?.msg && <div style={toast.ok ? TOAST_OK : TOAST_ERR} aria-live="polite">{toast.msg}</div>}
+      {toast?.msg && <div style={toast.ok?TOAST_OK:TOAST_ERR} aria-live="polite">{toast.msg}</div>}
       {err && <div style={{ ...TOAST_ERR }} role="status">{err}</div>}
       {!err && loading && <div style={TOAST_OK} role="status">Cargando…</div>}
-      {!err && !loading && view.length === 0 && (<div style={TOAST_OK} role="status">Non hai partidos rematados aínda.</div>)}
+      {!err && !loading && view.length===0 && <div style={TOAST_OK} role="status">Non hai partidos rematados aínda.</div>}
 
-      {/* Vista completa de resultados (ollo aberto) */}
+      {/* Visor completo (ollo) */}
       {!err && !loading && openResultsMatchId && (
-        <FullResults match={view.find((m) => m.id === openResultsMatchId) || { id: openResultsMatchId, match_iso: null, equipo1: "", equipo2: "" }} />
+        <FullResults match={view.find(m=>m.id===openResultsMatchId) || { id:openResultsMatchId, match_iso:null, equipo1:"", equipo2:"" }} />
       )}
 
-      {/* Lista + Edición (ollo pechado) */}
-      {!err && !loading && !openResultsMatchId && view.length > 0 && (
+      {/* Lista + Edición */}
+      {!err && !loading && !openResultsMatchId && view.length>0 && (
         <ul style={LIST} aria-label="Lista de partidos rematados">
-          {view.map((match, i) => {
-            const isPeopleOpen = openPeopleMatchId === match.id;
-            const eyeActive = hasResults.has(match.id);
+          {view.map((match)=>{
+            const isPeopleOpen=openPeopleMatchId===match.id;
+            const eyeActive=hasResults.has(match.id);
 
             return (
-              <li key={`${match.id ?? match.match_iso ?? "noid"}-${i}`} style={{ ...ITEM, marginBottom: isPeopleOpen ? 12 : 8 }}>
-                <span style={DATE}>{dmyShort(match.match_iso)}</span>
-                <span style={TEAMS}>{match.equipo1 || "—"} <span style={SEP}>-</span> {match.equipo2 || "—"}</span>
+              <li key={match.id} style={{ ...ITEM_BASE, ...itemGrid(isMobile), marginBottom: isPeopleOpen ? 12 : 8 }}>
+                {/* línea compacta en móbil: data + equipos nun só bloque */}
+                {isMobile ? (
+                  <div style={COMPACT_TEXT}>
+                    <span style={DATE(true)}>{dmyFull(match.match_iso)}</span>
+                    <span style={{ margin:"0 6px" }}>·</span>
+                    <span style={TEAMS(true)}>{match.equipo1} <span style={{ color:"#0f172a" }}>-</span> {match.equipo2}</span>
+                  </div>
+                ) : (
+                  <>
+                    <span style={DATE(false)}>{dmyShort(match.match_iso)}</span>
+                    <span style={TEAMS(false)}>{match.equipo1} <span style={SEP}>-</span> {match.equipo2}</span>
+                  </>
+                )}
 
                 <div style={ACTIONS}>
                   {isAdmin && isMobile && (
-                    <button
-                      type="button"
-                      style={INFO_BTN}
-                      title="Información"
-                      aria-label="Información"
-                      onClick={() => setShowMobileInfo(true)}
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" style={INFO_SVG}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    <button type="button" style={{ ...INFO_BTN, width: 26, height: 26 }} title="Información" aria-label="Información" onClick={()=>setShowMobileInfo(true)}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" style={INFO_SVG}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                     </button>
                   )}
-
                   {isAdmin && !isMobile && (
                     <>
                       {!isPeopleOpen ? (
-                        <button type="button" style={ICONBTN} title="Ver usuarias/os" aria-label="Ver usuarias/os" onClick={() => onClickPeople(match.id)}>
-                          <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                        <button type="button" style={ICONBTN} title="Ver usuarias/os" aria-label="Ver usuarias/os" onClick={()=>onClickPeople(match.id)}>
+                          <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         </button>
                       ) : (
-                        <button type="button" style={XBTN} title="Pechar etiqueta do partido" aria-label="Pechar etiqueta do partido" onClick={() => { setOpenPeopleMatchId(null); setOpenUserPanel(null); }}>
-                          <svg width="18" height="18" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
+                        <button type="button" style={XBTN} title="Pechar etiqueta do partido" aria-label="Pechar etiqueta do partido" onClick={()=>{ setOpenPeopleMatchId(null); setOpenUserPanel(null); }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12"/></svg>
                         </button>
                       )}
                     </>
@@ -800,8 +574,8 @@ export default function ResultadosHistoricos() {
                       await loadConfirmedForMatch(match.id);
                     }}
                   >
-                    <svg width="20" height="20" viewBox="0 0 24 24" style={EYE_SVG(eyeActive)}>
-                      <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />
+                    <svg width="18" height="18" viewBox="0 0 24 24" style={EYE_SVG(eyeActive)}>
+                      <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
                     </svg>
                   </button>
                 </div>
@@ -809,28 +583,28 @@ export default function ResultadosHistoricos() {
                 {isPeopleOpen && isAdmin && !isMobile && (
                   <section style={PEOPLE_SHELL(!!openUserPanel)} aria-label="Edición por usuaria/o">
                     <div>
-                      {users.length === 0 ? (
+                      {users.length===0 ? (
                         <div style={TOAST_OK}>Cargando usuarias/os…</div>
                       ) : (
                         <ul style={USERS_LIST}>
-                          {users.map(u => {
-                            const isOpen = openUserPanel === u.id;
-                            const isConfirmed = (confirmedByMatch[match.id]?.has(u.id)) || false;
-                            const rowStyle = isOpen ? USER_ROW_BLINK : (isConfirmed ? USER_ROW_CONFIRMED : USER_ROW_BASE);
+                          {users.map(u=>{
+                            const isOpen=openUserPanel===u.id;
+                            const isConfirmed=(confirmedByMatch[match.id]?.has(u.id))||false;
+                            const rowStyle=isOpen?USER_ROW_BLINK:(isConfirmed?USER_ROW_CONFIRMED:USER_ROW_BASE);
                             return (
                               <li key={u.id} style={rowStyle} title={u.name}>
-                                <span style={USER_BADGE}>{u.code || "—"}</span>
+                                <span style={USER_BADGE}>{u.code||"—"}</span>
                                 <div>
                                   <div style={USER_NAME}>{u.name}</div>
                                   {u.surname && <div style={USER_SUB}>{u.surname}</div>}
                                 </div>
                                 {!isOpen ? (
-                                  <button type="button" style={ICONBTN} title="Abrir táboas desta persoa" aria-label="Abrir táboas desta persoa" onClick={()=> onOpenUserEditor(u.id)}>
-                                    <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" /></svg>
+                                  <button type="button" style={ICONBTN} title="Abrir táboas desta persoa" aria-label="Abrir táboas desta persoa" onClick={()=>onOpenUserEditor(u.id)}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/></svg>
                                   </button>
                                 ) : (
-                                  <button type="button" style={XBTN} title="Pechar editor desta persoa" aria-label="Pechar editor desta persoa" onClick={()=> setOpenUserPanel(null)}>
-                                    <svg width="18" height="18" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
+                                  <button type="button" style={XBTN} title="Pechar editor desta persoa" aria-label="Pechar editor desta persoa" onClick={()=>setOpenUserPanel(null)}>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12"/></svg>
                                   </button>
                                 )}
                               </li>
@@ -842,16 +616,14 @@ export default function ResultadosHistoricos() {
 
                     {openUserPanel && (
                       <div style={RIGHT_PAD}>
-                        {players.length === 0 ? (
+                        {players.length===0 ? (
                           <div style={TOAST_OK}>Cargando xogadoras/es…</div>
                         ) : (
-                          <>
-                            <div style={EDIT_RIGHT}>
-                              {renderPlayersColumn(players, selPlantilla, setSelPlantilla, COL_BG_ALI)}
-                              {renderPlayersColumn(players, selOnce, setSelOnce, COL_BG_OFI)}
-                            </div>
+                          <div style={EDIT_GRID}>
+                            {renderPlayersColumn(players,selPlantilla,setSelPlantilla,COL_BG_ALI)}
+                            {renderPlayersColumn(players,selOnce,setSelOnce,COL_BG_OFI)}
                             {renderSummary(match.id)}
-                          </>
+                          </div>
                         )}
                       </div>
                     )}
@@ -866,12 +638,13 @@ export default function ResultadosHistoricos() {
       {/* Info admins móbil */}
       {showMobileInfo && (
         <div role="dialog" aria-modal="true" style={INFO_POP}>
-          <button type="button" style={{ ...XBTN, position: "absolute", top: 8, right: 8 }} aria-label="Pechar" title="Pechar" onClick={() => setShowMobileInfo(false)}>
-            <svg width="16" height="16" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
+          <button type="button" style={{ ...XBTN_SMALL, position:"absolute", top:8, right:8 }} aria-label="Pechar" title="Pechar" onClick={()=>setShowMobileInfo(false)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12"/></svg>
           </button>
+          <p style={INFO_TITLE}>AVISO A ADMINISTRADORES</p>
           <p style={INFO_TEXT}>
-            No caso de ser necesaria algunha corrección, na versión PC de sobremesa existe funcionalidade engadida de edición
-            manual de resultados por partido e xogador/a.
+            No caso de ser necesaria algunha corrección, na versión PC de sobremesa existe funcionalidade engadida de
+            edición manual de resultados por partido e xogador/a.
           </p>
         </div>
       )}
