@@ -11,7 +11,7 @@ const PAGE_SUB = { margin: "0 0 12px", font: "400 14.5px/1.25 Montserrat,system-
 const LIST = { listStyle: "none", margin: 0, padding: 0 };
 const itemGrid = (isMobile) =>
   isMobile
-    ? { gridTemplateColumns: "1fr auto auto" } // texto compacto + info (se admin) + ollo
+    ? { gridTemplateColumns: "1fr auto auto" }
     : { gridTemplateColumns: "140px 1fr auto" };
 
 const ITEM_BASE = {
@@ -41,12 +41,13 @@ const TEAMS = (isMobile) => ({
 const SEP = { margin: "0 6px", fontWeight: 800, color: "#0f172a" };
 const COMPACT_TEXT = { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
 
-const ACTIONS = { display: "flex", gap: 8, alignItems: "center", justifySelf: "end" };
+const ACTIONS = { display: "flex", gap: 6, alignItems: "center", justifySelf: "end" };
 const ICONBTN = { width: 34, height: 34, display: "grid", placeItems: "center", borderRadius: 10, border: "1px solid #e2e8f0", background: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,.06)", cursor: "pointer" };
 const SVGI = { fill: "none", stroke: "#0f172a", strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round" };
 const EYE_BTN = (active) =>
   active ? { ...ICONBTN, width: 30, height: 30, border: "1px solid #0ea5e9", background: "linear-gradient(180deg,#38bdf8,#0ea5e9)" } : { ...ICONBTN, width: 30, height: 30 };
 const EYE_SVG = (active) => (active ? { ...SVGI, stroke: "#fff" } : SVGI);
+const CONF_COUNT = { font: "800 12.5px/1 Montserrat,system-ui,sans-serif", color: "#16a34a", minWidth: 18, textAlign: "right" };
 
 /* Botón X (cierres) */
 const XBTN = { ...ICONBTN, width: 30, height: 30, border: "1px solid #ef4444", background: "#fff" };
@@ -73,7 +74,7 @@ const USER_SUB = { font: "600 11.5px/1.05 Montserrat,system-ui,sans-serif", colo
 
 const RIGHT_PAD = { paddingLeft: 16 };
 
-/* Grid de edición + resumo a ancho completo dentro do mesmo grid */
+/* Grid de edición (dúas columnas) */
 const EDIT_GRID = { display: "grid", gridTemplateColumns: "minmax(252px,1fr) minmax(252px,1fr)", gap: 8, alignItems: "start" };
 
 const COL_BASE = { border: "1px solid #e5e7eb", borderRadius: 10, overflow: "hidden", position: "relative" };
@@ -91,11 +92,11 @@ const POS_SIDE = (bg) => ({ position: "absolute", right: 2, top: 2, bottom: 2, w
 const POS_SEP = { height: 1, background: "#e5e7eb" };
 const ROW_PLAYER = { display: "grid", gridTemplateColumns: "16px 1fr auto", gap: 8, alignItems: "center", padding: "0 2px", minWidth: 0 };
 const CHECKBOX = { width: 14, height: 14, transform: "scale(1.02)", marginRight: 8 };
-const playerNameStyle = { font: "700 10.4px/.74 Montserrat,system-ui,sans-serif", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
+const playerNameStyle = { font: "700 10.2px/.72 Montserrat,system-ui,sans-serif", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
 const COUNT_MINI = { font: "900 10px/1 Montserrat,system-ui,sans-serif", color: "#0ea5e9", padding: "0 4px", borderRadius: 6, background: "#e0f2fe" };
 
-/* Preview / RESULTADOS OBTIDOS (baixo, ANCHO COMPLETO das dúas columnas) */
-const SUMMARY_WRAP = { gridColumn: "1 / -1", marginTop: 8, width: "100%" };
+/* Preview / RESULTADOS OBTIDOS (agora fóra do grid, A ANCHO TOTAL DO ÍTEM) */
+const SUMMARY_FULLWIDTH = { marginTop: 8, width: "100%" };
 const SUMMARY = { border: "1px solid #fecaca", borderRadius: 12, background: "linear-gradient(180deg,#fff6f6,#ffeaea)", padding: 8, position: "relative", width: "100%" };
 const SUMMARY_TITLE_WRAP = { padding: "2px 6px 6px 6px", background: "linear-gradient(180deg,#fff,#fff6f6)", borderTopLeftRadius: 10, borderTopRightRadius: 10 };
 const SUMMARY_TITLE = { font: "800 11px/1.02 Montserrat,system-ui,sans-serif", color: "#0f172a", textDecoration: "none", margin: "2px 0 4px 0" };
@@ -116,7 +117,7 @@ const FULL_TITLE_BAR = {
   marginBottom: 8,
   padding: "9px 10px",
   border: "1px solid #7dd3fc",
-  background: "linear-gradient(180deg,#4cc9ff,#2ab6f0)", // degradado un pouco máis suave
+  background: "linear-gradient(180deg,#4cc9ff,#2ab6f0)",
   borderRadius: 10,
   color: "#fff",
   display: "grid",
@@ -136,24 +137,27 @@ const FULL_HEAD = {
   color: "#064e3b",
   alignItems: "center",
 };
-const FULL_ROW = { display: "grid", gridTemplateColumns: "auto 1fr auto 3fr", padding: "8px 6px", borderBottom: "1px solid #f1f5f9", font: "600 12.3px/1.1 Montserrat,system-ui,sans-serif", alignItems: "center" };
+const FULL_ROW = { display: "grid", gridTemplateColumns: "auto 1fr auto 3fr", padding: "8px 6px", borderBottom: "1px solid #f1f5f9", font: "600 12.6px/1.05 Montserrat,system-ui,sans-serif", alignItems: "center" };
 const FULL_CELL = { padding: "0 6px", borderRight: "1px solid #e5e7eb", display: "flex", alignItems: "center" };
 const FULL_LAST = { padding: "0 6px", display: "flex", alignItems: "center" };
 const FULL_ACERTOS = { textAlign: "center", color: "#0ea5e9", fontWeight: 900, minWidth: 76, justifyContent: "center" };
 
-/* Editor inline de data/hora (overlay) */
+/* Editor inline de data/hora (overlay, só desktop) */
 const EDIT_OVERLAY = { position: "fixed", inset: "auto auto 24px 50%", transform: "translateX(-50%)", zIndex: 60, background: "rgba(255,255,255,.98)", border: "1px solid #cbd5e1", borderRadius: 12, boxShadow: "0 12px 28px rgba(0,0,0,.22)", padding: 12, minWidth: 280 };
 const DT_INPUT = { border: "1px solid #cbd5e1", borderRadius: 8, padding: "6px 8px", font: "600 12px/1 Montserrat,system-ui,sans-serif", width: "100%" };
 const SAVE_BTN = { ...ICONBTN, width: 28, height: 28, position: "absolute", top: 8, right: 8, border: "1px solid #22c55e", background: "#fff" };
 const SAVE_SVG = { fill: "none", stroke: "#16a34a", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
 
-/* Móbil: info admins */
-const INFO_BTN = { ...ICONBTN, width: 28, height: 28 };
+/* Móbil: info admins + popup aliñación por fila */
+const INFO_BTN = { ...ICONBTN, width: 26, height: 26 };
 const INFO_SVG = { ...SVGI };
 const INFO_POP = { position: "fixed", inset: "10% 6% auto 6%", background: "linear-gradient(180deg,#e0f2fe,#bae6fd)", border: "1px solid #7dd3fc", borderRadius: 12, padding: 12, zIndex: 80, boxShadow: "0 16px 36px rgba(0,0,0,.25)" };
 const INFO_TITLE = { font: "900 13px/1.2 Montserrat,system-ui,sans-serif", color: "#0c4a6e", marginBottom: 6 };
 const INFO_TEXT = { font: "600 12.5px/1.25 Montserrat,system-ui,sans-serif", color: "#0c4a6e" };
 
+const MOBILE_ALIGN_POP = { position: "fixed", inset: "12% 5% auto 5%", zIndex: 90, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, boxShadow: "0 18px 38px rgba(0,0,0,.28)", padding: 12, maxHeight: "70vh", overflowY: "auto" };
+
+/* Animacións */
 const STYLES = `
 @keyframes blinkSoft{0%{opacity:1}50%{opacity:.7}100%{opacity:1}}
 @keyframes pulseSoft{0%{transform:scale(1)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
@@ -169,7 +173,10 @@ const toLocalInput = (iso) => { if (!iso) return ""; const d = new Date(iso); re
 const fromLocalInput = (localStr) => { if (!localStr) return null; const ms = Date.parse(localStr); return isNaN(ms) ? null : new Date(ms).toISOString(); };
 
 function inferPosFromFoto(url=""){ const m=url.match(/-(POR|DEF|CEN|DEL)\.(?:jpg|jpeg|png|webp)$/i); return m?m[1].toUpperCase():"CEN"; }
-function normalizePlayer(p){ let nombre=p.nombre||""; let pos=p.pos||null; const nlow=nombre.trim().toLowerCase(); if(nlow==="joel lago"){ nombre="Yoel Lago"; pos="DEF"; } if(nlow.includes("jones")&&nlow.includes("el-abdellaoui")){ pos="DEL"; } return {...p,nombre,pos}; }
+function normalizePlayer(p){ let nombre=p.nombre||""; let pos=p.pos||null; const nlow=nombre.trim().toLowerCase();
+  if(nlow==="joel lago"){ nombre="Yoel Lago"; pos="DEF"; }
+  if(nlow.includes("jones")&&nlow.includes("el-abdellaoui")){ pos="DEL"; }
+  return {...p,nombre,pos}; }
 const POS_ORDER=["POR","DEF","CEN","DEL"];
 function groupByPos(players){ const b={POR:[],DEF:[],CEN:[],DEL:[]}; for(const p of players||[]) (b[(p.pos||"CEN").toUpperCase()]||b.CEN).push(p); POS_ORDER.forEach(k=>b[k].sort((a,b)=>(a.dorsal??999)-(b.dorsal??999))); return b; }
 
@@ -211,6 +218,8 @@ export default function ResultadosHistoricos(){
   const [confirmedByMatch,setConfirmedByMatch]=useState({});
 
   const [confirmSaving,setConfirmSaving]=useState(false);
+
+  const [mobileAlignFor,setMobileAlignFor]=useState(null); // {matchId,userId,labels[]}
 
   const showToast=(msg,ok=true,ms=1500)=>{ setToast({msg,ok,t:Date.now()}); setTimeout(()=>setToast(""),ms); };
 
@@ -320,7 +329,7 @@ export default function ResultadosHistoricos(){
       const { error:upErr }=await supabase.from("resultados_confirmados").upsert(payload,{ onConflict:"match_id,user_id", ignoreDuplicates:false });
       if(upErr) return showToast(`Erro gardando: ${upErr.message||upErr.code}`,false);
 
-      // limpar edición
+      // Pechar editor
       setOpenUserPanel(null);
       setOpenPeopleMatchId(null);
       setSelPlantilla(new Set());
@@ -381,7 +390,7 @@ export default function ResultadosHistoricos(){
     );
   }
 
-  function renderSummary(matchId){
+  function renderSummaryFullwidth(matchId){
     const uMap=new Map(users.map(u=>[u.id,u]));
     const userLabel=uMap.get(openUserPanel)?.name||"—";
     const playersById=new Map(players.map(p=>[p.id,p]));
@@ -399,7 +408,7 @@ export default function ResultadosHistoricos(){
     });
 
     return (
-      <div style={SUMMARY_WRAP}>
+      <div style={SUMMARY_FULLWIDTH}>
         <div style={SUMMARY}>
           <div style={SUMMARY_TITLE_WRAP}>
             <div style={SUMMARY_TITLE}>RESULTADOS OBTIDOS</div>
@@ -428,12 +437,10 @@ export default function ResultadosHistoricos(){
   function FullResults({ match }){
     const recs=resultsConfirmed[match.id]||[];
     const playersMap=new Map(players.map(p=>[p.id,p.label]));
-    const title = `LISTADO DOS RESULTADOS DO PARTIDO |  **${match.equipo1} - ${match.equipo2}** do ${dmyFull(match.match_iso)}`;
 
     return (
       <section aria-label="Resultados do partido" style={{ marginTop: 6 }}>
         <div style={FULL_TITLE_BAR}>
-          {/* título con equipos en bold (interpretado no markdown simple via <span> */}
           <div style={FULL_TITLE}>
             LISTADO DOS RESULTADOS DO PARTIDO |{" "}
             <span style={{ fontWeight: 900 }}>{match.equipo1} - {match.equipo2}</span> do {dmyFull(match.match_iso)}
@@ -457,7 +464,6 @@ export default function ResultadosHistoricos(){
             recs.map(rec=>{
               const uname=userNames.get(rec.user_id)||rec.user_id;
               const onceSet=new Set(rec.once_ids||[]);
-              // VISUALIZACIÓN COMO ANTES: lista con separador " | " e acertados en celeste
               const labels=(rec.plantilla_ids||[]).map((pid,j,arr)=>{
                 const txt=playersMap.get(pid)||String(pid);
                 const ok=onceSet.has(pid);
@@ -469,14 +475,34 @@ export default function ResultadosHistoricos(){
                 );
               });
 
+              if (isMobile) {
+                // móbil: non mostramos directamente a aliñación, ollo por fila que abre popup
+                return (
+                  <div key={`${rec.user_id}`} style={FULL_ROW}>
+                    <div style={{ ...FULL_CELL, minWidth: 140 }}>{dmyShort(rec.confirmed_at)}</div>
+                    <div style={FULL_CELL}>{uname}</div>
+                    <div style={{ ...FULL_CELL, ...FULL_ACERTOS }}>{rec.acertos}</div>
+                    <div style={FULL_LAST}>
+                      <button type="button" style={{ ...EYE_BTN(true), width: 28, height: 28 }} title="Ver aliñación" aria-label="Ver aliñación"
+                        onClick={()=>setMobileAlignFor({ matchId:rec.match_id, userId:rec.user_id, labels })}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" style={EYE_SVG(true)}><path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <div key={`${rec.user_id}`} style={FULL_ROW}>
-                  <div style={{ ...FULL_CELL, minWidth: 140 }}>
-                    <button type="button" style={{ ...ICONBTN, width: 28, height: 28, marginRight: 6 }} title="Editar data/hora" aria-label="Editar data/hora" onClick={()=>setEditOverlay({ matchId:rec.match_id, userId:rec.user_id, valueLocal:toLocalInput(rec.confirmed_at) })}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" style={SVGI}><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                    </button>
-                    <span>{dmyShort(rec.confirmed_at)}</span>
-                  </div>
+                  {!isMobile && (
+                    <div style={{ ...FULL_CELL, minWidth: 140 }}>
+                      <button type="button" style={{ ...ICONBTN, width: 28, height: 28, marginRight: 6 }} title="Editar data/hora" aria-label="Editar data/hora" onClick={()=>setEditOverlay({ matchId:rec.match_id, userId:rec.user_id, valueLocal:toLocalInput(rec.confirmed_at) })}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" style={SVGI}><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                      </button>
+                      <span>{dmyShort(rec.confirmed_at)}</span>
+                    </div>
+                  )}
+                  {isMobile && <div style={{ ...FULL_CELL, minWidth: 140 }}>{dmyShort(rec.confirmed_at)}</div>}
                   <div style={FULL_CELL}>{uname}</div>
                   <div style={{ ...FULL_CELL, ...FULL_ACERTOS }}>{rec.acertos}</div>
                   <div style={FULL_LAST}>{labels}</div>
@@ -486,7 +512,7 @@ export default function ResultadosHistoricos(){
           )}
         </div>
 
-        {editOverlay && (
+        {editOverlay && !isMobile && (
           <div role="dialog" aria-modal="true" style={EDIT_OVERLAY}>
             <button type="button" style={XBTN_SMALL} aria-label="Pechar" title="Pechar" onClick={()=>setEditOverlay(null)}>
               <svg width="14" height="14" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -495,6 +521,18 @@ export default function ResultadosHistoricos(){
             <button type="button" style={SAVE_BTN} title="Gardar" aria-label="Gardar" onClick={()=>saveEditedTs(editOverlay.matchId,editOverlay.userId,editOverlay.valueLocal)}>
               <svg width="14" height="14" viewBox="0 0 24 24" style={SAVE_SVG}><path d="M4 4h12l4 4v12H4z"/><path d="M16 4v6H8V4"/><path d="M8 18h8"/></svg>
             </button>
+          </div>
+        )}
+
+        {mobileAlignFor && (
+          <div role="dialog" aria-modal="true" style={MOBILE_ALIGN_POP}>
+            <button type="button" style={{ ...XBTN_SMALL, position:"absolute", top:8, right:8 }} aria-label="Pechar" title="Pechar" onClick={()=>setMobileAlignFor(null)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+            <div style={{ font:"800 13px/1.2 Montserrat,system-ui,sans-serif", color:"#0f172a", marginBottom:8 }}>Aliñación presentada</div>
+            <div style={{ font:"700 12.8px/1.35 Montserrat,system-ui,sans-serif", color:"#0f172a" }}>
+              {mobileAlignFor.labels}
+            </div>
           </div>
         )}
       </section>
@@ -524,10 +562,10 @@ export default function ResultadosHistoricos(){
           {view.map((match)=>{
             const isPeopleOpen=openPeopleMatchId===match.id;
             const eyeActive=hasResults.has(match.id);
+            const confirmedCount=(confirmedByMatch[match.id]?.size)||0;
 
             return (
               <li key={match.id} style={{ ...ITEM_BASE, ...itemGrid(isMobile), marginBottom: isPeopleOpen ? 12 : 8 }}>
-                {/* línea compacta en móbil: data + equipos nun só bloque */}
                 {isMobile ? (
                   <div style={COMPACT_TEXT}>
                     <span style={DATE(true)}>{dmyFull(match.match_iso)}</span>
@@ -543,7 +581,7 @@ export default function ResultadosHistoricos(){
 
                 <div style={ACTIONS}>
                   {isAdmin && isMobile && (
-                    <button type="button" style={{ ...INFO_BTN, width: 26, height: 26 }} title="Información" aria-label="Información" onClick={()=>setShowMobileInfo(true)}>
+                    <button type="button" style={INFO_BTN} title="Información" aria-label="Información" onClick={()=>setShowMobileInfo(true)}>
                       <svg width="16" height="16" viewBox="0 0 24 24" style={INFO_SVG}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                     </button>
                   )}
@@ -578,6 +616,7 @@ export default function ResultadosHistoricos(){
                       <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
                     </svg>
                   </button>
+                  <span style={CONF_COUNT}>{confirmedCount}</span>
                 </div>
 
                 {isPeopleOpen && isAdmin && !isMobile && (
@@ -622,13 +661,16 @@ export default function ResultadosHistoricos(){
                           <div style={EDIT_GRID}>
                             {renderPlayersColumn(players,selPlantilla,setSelPlantilla,COL_BG_ALI)}
                             {renderPlayersColumn(players,selOnce,setSelOnce,COL_BG_OFI)}
-                            {renderSummary(match.id)}
                           </div>
                         )}
                       </div>
                     )}
                   </section>
                 )}
+
+                {/* Resumo a ANCHO TOTAL por baixo do panel, fóra do grid → ocupa ata as marxes */}
+                {isPeopleOpen && isAdmin && !isMobile && openUserPanel && renderSummaryFullwidth(match.id)}
+
               </li>
             );
           })}
