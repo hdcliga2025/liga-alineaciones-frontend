@@ -66,13 +66,14 @@ const GROUP_WRAP = (bg) => ({ position: "relative", background: "inherit", paddi
 const POS_SIDE = (bg) => ({ position: "absolute", right: 2, top: 2, bottom: 2, writingMode: "vertical-rl", textOrientation: "mixed", font: "900 9.8px/1 Montserrat,system-ui,sans-serif", color: "#64748b", opacity: 0.85, display: "grid", placeItems: "center", background: "transparent", padding: "2px 0" });
 const POS_SEP = { height: 1, background: "#e5e7eb" };
 
-/* Filas xogadores — MUY compactas */
+/* Filas xogadores — compactas */
 const ROW_PLAYER = { display: "grid", gridTemplateColumns: "16px 1fr auto", gap: 6, alignItems: "center", padding: "0 2px", minWidth: 0 };
 const CHECKBOX = { width: 14, height: 14, transform: "scale(1.02)", marginRight: 2 };
-const playerNameStyle = { font: "700 10.3px/.82 Montserrat,system-ui,sans-serif", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
+/* ↑ tamaño un pouco maior sen aumentar a altura, line-height comprimida */
+const playerNameStyle = { font: "700 11px/.82 Montserrat,system-ui,sans-serif", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
 const COUNT_MINI = { font: "900 10px/1 Montserrat,system-ui,sans-serif", color: "#0ea5e9", padding: "0 4px", borderRadius: 6, background: "#e0f2fe" };
 
-/* Resumo / RESULTADOS OBTIDOS */
+/* Resumo / RESULTADOS OBTIDOS (preview) */
 const SUMMARY_WRAP = { maxWidth: 540, marginTop: 8, marginLeft: "auto", marginRight: "auto" };
 const SUMMARY = { border: "1px solid #fecaca", borderRadius: 12, background: "linear-gradient(180deg,#fff6f6,#ffeaea)", padding: 8, position: "relative" };
 const SUMMARY_TITLE_WRAP = { padding: "2px 6px 6px 6px", background: "linear-gradient(180deg,#fff,#fff6f6)", borderTopLeftRadius: 10, borderTopRightRadius: 10 };
@@ -88,9 +89,9 @@ const CELSTE = { color: "#0ea5e9", fontWeight: 800 };
 const BTN_CONFIRM = { marginTop: 8, width: "100%", borderRadius: 10, padding: "8px 10px", font: "900 12px/1.02 Montserrat,system-ui,sans-serif", background: "linear-gradient(180deg,#38bdf8,#0ea5e9)", color: "#fff", border: "1px solid #0ea5e9", boxShadow: "0 3px 10px rgba(14,165,233,.18)", cursor: "pointer" };
 const BTN_CONFIRM_BLINK = { ...BTN_CONFIRM, animation: "pulseSoft 1.5s ease-in-out infinite" };
 
-/* Modal confirm */
-const MODAL_BACK = { position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "grid", placeItems: "center", zIndex: 50 };
-const MODAL_CARD = { width: 420, maxWidth: "92vw", background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, boxShadow: "0 20px 60px rgba(0,0,0,.25)", padding: 16 };
+/* Modal confirm & resultados */
+const MODAL_BACK = { position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "grid", placeItems: "center", zIndex: 60 };
+const MODAL_CARD = { width: 740, maxWidth: "95vw", background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, boxShadow: "0 20px 60px rgba(0,0,0,.25)", padding: 12, position: "relative" };
 const MODAL_T = { margin: 0, font: "800 16px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a" };
 const MODAL_P = { margin: "8px 0 14px", font: "600 13px/1.25 Montserrat,system-ui,sans-serif", color: "#334155" };
 const MODAL_ROW = { display: "flex", gap: 10, justifyContent: "flex-end" };
@@ -183,6 +184,7 @@ export default function ResultadosHistoricos() {
 
   const [openUserPanel, setOpenUserPanel] = useState(null);
   const [users, setUsers] = useState([]);
+  const [userNames, setUserNames] = useState(new Map()); // id -> name
   const [players, setPlayers] = useState([]);
 
   // Sets de selección
@@ -203,6 +205,7 @@ export default function ResultadosHistoricos() {
 
   const [resultsConfirmed, setResultsConfirmed] = useState({});
   const [hasResults, setHasResults] = useState(new Set());
+  const [confirmedByMatch, setConfirmedByMatch] = useState({}); // matchId -> Set(userIds)
 
   const showToast = (msg, ok = true) => {
     setToast({ msg, ok, t: Date.now() });
@@ -242,7 +245,13 @@ export default function ResultadosHistoricos() {
 
         if ((data || []).length) {
           const ids = (data || []).map((r) => r.id).filter(Boolean);
-          const { data: rc } = await supabase.from("resultados_confirmados").select("match_id").in("match_id", ids);
+          const { data: rc } = await supabase.from("resultados_confirmados").select("match_id,user_id").in("match_id", ids);
+          const map = {};
+          (rc || []).forEach((r) => {
+            if (!map[r.match_id]) map[r.match_id] = new Set();
+            map[r.match_id].add(r.user_id);
+          });
+          if (alive) setConfirmedByMatch(map);
           const s = new Set((rc || []).map((x) => x.match_id));
           if (alive) setHasResults(s);
         }
@@ -277,6 +286,27 @@ export default function ResultadosHistoricos() {
     }
   }
 
+  async function ensureUserNames(ids) {
+    const missing = ids.filter((id) => !userNames.has(id));
+    if (!missing.length) return;
+    try {
+      const { data, error } = await supabase.from("profiles").select("id, first_name, last_name, full_name, email").in("id", missing);
+      if (error) throw error;
+      const m = new Map(userNames);
+      (data || []).forEach((u) => {
+        const code = (u.first_name || "").trim();
+        const surname = (u.last_name || "").trim();
+        const full = (u.full_name || "").trim();
+        const email = (u.email || "").trim();
+        const displayName = full || `${code} ${surname}`.trim() || email || u.id;
+        m.set(u.id, displayName);
+      });
+      setUserNames(m);
+    } catch (e) {
+      console.error("ensureUserNames:", e);
+    }
+  }
+
   async function loadUsersList() {
     try {
       const { data, error } = await supabase.from("profiles").select("id, first_name, last_name, full_name, email").order("first_name", { ascending: true, nullsFirst: true });
@@ -301,6 +331,10 @@ export default function ResultadosHistoricos() {
         });
 
       setUsers(arr);
+      // cache para nomes
+      const m = new Map(userNames);
+      arr.forEach((u) => m.set(u.id, u.name));
+      setUserNames(m);
     } catch (e) {
       console.error("load users error:", e);
       showToast("Erro cargando usuarias/os.", false);
@@ -315,8 +349,16 @@ export default function ResultadosHistoricos() {
         .eq("match_id", matchId)
         .order("confirmed_at", { ascending: false });
       if (error) throw error;
+
       setResultsConfirmed((prev) => ({ ...prev, [matchId]: data || [] }));
       setHasResults((prev) => new Set([...prev, matchId]));
+
+      // marcar confirmados para as tarxetas (verde degradado)
+      const setU = new Set((data || []).map((r) => r.user_id));
+      setConfirmedByMatch((prev) => ({ ...prev, [matchId]: setU }));
+
+      // garantir nomes de usuarios
+      await ensureUserNames(Array.from(setU));
     } catch (e) {
       console.error("loadConfirmedForMatch error:", e);
       showToast("Erro cargando resultados confirmados.", false);
@@ -325,12 +367,17 @@ export default function ResultadosHistoricos() {
 
   async function onClickPeople(matchId) {
     if (!isAdmin) return;
+    // abrir/pechar
     const opening = openPeopleMatchId !== matchId;
+    // pecha o visor de resultados se está aberto
+    setOpenResultsMatchId(null);
     setOpenPeopleMatchId(opening ? matchId : null);
     setOpenUserPanel(null);
     if (opening) {
       await loadUsersList();
       await ensurePlayersLoaded();
+      // para colorear en verde as confirmadas
+      await loadConfirmedForMatch(matchId);
     }
   }
 
@@ -405,6 +452,11 @@ export default function ResultadosHistoricos() {
 
       // Marca UI, pecha edición
       setHasResults((prev) => new Set([...prev, matchId]));
+      setConfirmedByMatch((prev) => {
+        const s = new Set([...(prev[matchId] || new Set()), openUserPanel]);
+        return { ...prev, [matchId]: s };
+      });
+
       setOpenUserPanel(null);
       setOpenPeopleMatchId(null);
       setSelPlantilla(new Set());
@@ -460,7 +512,6 @@ export default function ResultadosHistoricos() {
   }
 
   function renderSummary(matchId) {
-    // Nome do usuario activo
     const uMap = new Map(users.map((u) => [u.id, u]));
     const userLabel = uMap.get(openUserPanel)?.name || "—";
 
@@ -510,6 +561,65 @@ export default function ResultadosHistoricos() {
     );
   }
 
+  // Modal de resultados confirmados (centrado pantalla)
+  function ResultsModal({ matchId, onClose }) {
+    const recs = resultsConfirmed[matchId] || [];
+    const playersMap = new Map(players.map((p) => [p.id, p.label]));
+    return (
+      <div role="dialog" aria-modal="true" style={MODAL_BACK}>
+        <div style={MODAL_CARD}>
+          <button type="button" title="Pechar" aria-label="Pechar" onClick={onClose} style={{ position: "absolute", top: 8, right: 8, ...ICONBTN, width: 28, height: 28 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" style={SVGI}>
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+
+          <div style={{ ...SUMMARY_TITLE_WRAP, borderRadius: 8 }}>
+            <div style={SUMMARY_TITLE}>RESULTADOS OBTIDOS (confirmados)</div>
+            <div style={HR} />
+          </div>
+
+          <div role="table" style={{ width: "100%" }}>
+            <div role="row" style={T_HEADER}>
+              <div style={CELL}>Data e hora</div>
+              <div style={CELL}>HDC Membro</div>
+              <div style={{ ...CELL, textAlign: "center" }}>Acertos</div>
+              <div style={CELL_LAST}>Aliñación presentada</div>
+            </div>
+            {recs.length === 0 ? (
+              <div style={{ padding: "8px 6px", font: "600 12px/1.2 Montserrat,system-ui,sans-serif", color: "#64748b" }}>Sen confirmacións aínda.</div>
+            ) : (
+              recs.map((rec, idx) => {
+                const uname = userNames.get(rec.user_id) || rec.user_id;
+                const onceSet = new Set(rec.once_ids || []);
+                const labels = (rec.plantilla_ids || []).map((pid, j, arr) => {
+                  const txt = playersMap.get(pid) || String(pid);
+                  const ok = onceSet.has(pid);
+                  return (
+                    <span key={`${pid}-${j}`}>
+                      {ok ? <strong style={CELSTE}>{txt}</strong> : txt}
+                      {j < arr.length - 1 && <span style={{ opacity: 0.6 }}> {" | "} </span>}
+                    </span>
+                  );
+                });
+                return (
+                  <div key={`${rec.user_id}-${idx}`} role="row" style={T_ROW}>
+                    <div style={CELL}>{dmyShort(rec.confirmed_at)}</div>
+                    <div style={CELL}>{uname}</div>
+                    <div style={{ ...CELL, ...ACERTOS_CELL }}>
+                      <span style={CELSTE}>{rec.acertos}</span>
+                    </div>
+                    <div style={CELL_LAST}>{labels}</div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <main style={WRAP}>
       <style>{STYLES}</style>
@@ -518,21 +628,9 @@ export default function ResultadosHistoricos() {
       <p style={PAGE_SUB}>Aquí podes consultar os resultados individuais e xerais de cada partido.</p>
 
       {toast?.msg && <div style={toast.ok ? TOAST_OK : TOAST_ERR} aria-live="polite">{toast.msg}</div>}
-      {err && (
-        <div style={ERR} role="status" aria-live="polite">
-          {err}
-        </div>
-      )}
-      {!err && loading && (
-        <div style={EMPTY} role="status" aria-live="polite">
-          Cargando…
-        </div>
-      )}
-      {!err && !loading && view.length === 0 && (
-        <div style={EMPTY} role="status" aria-live="polite">
-          Non hai partidos rematados aínda.
-        </div>
-      )}
+      {err && <div style={ERR} role="status" aria-live="polite">{err}</div>}
+      {!err && loading && <div style={EMPTY} role="status" aria-live="polite">Cargando…</div>}
+      {!err && !loading && view.length === 0 && (<div style={EMPTY} role="status" aria-live="polite">Non hai partidos rematados aínda.</div>)}
 
       {!err && !loading && view.length > 0 && (
         <ul style={LIST} aria-label="Lista de partidos rematados">
@@ -542,38 +640,20 @@ export default function ResultadosHistoricos() {
             const eyeActive = isResultsOpen || hasResults.has(match.id);
 
             return (
-              <li key={`${match.id ?? match.match_iso ?? "noid"}-${i}`} style={{ ...ITEM, marginBottom: isPeopleOpen || isResultsOpen ? 12 : 8 }}>
+              <li key={`${match.id ?? match.match_iso ?? "noid"}-${i}`} style={{ ...ITEM, marginBottom: (isPeopleOpen || isResultsOpen) ? 12 : 8 }}>
                 <span style={DATE}>{dmyShort(match.match_iso)}</span>
-                <span style={TEAMS}>
-                  {match.equipo1 || "—"} <span style={SEP}>-</span> {match.equipo2 || "—"}
-                </span>
+                <span style={TEAMS}>{match.equipo1 || "—"} <span style={SEP}>-</span> {match.equipo2 || "—"}</span>
 
                 <div style={ACTIONS}>
                   {isAdmin && !isMobile && (
                     <>
                       {!isPeopleOpen ? (
                         <button type="button" style={ICONBTN} title="Ver usuarias/os" aria-label="Ver usuarias/os" onClick={() => onClickPeople(match.id)}>
-                          <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}>
-                            <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                            <circle cx="9" cy="7" r="4" />
-                            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                          </svg>
+                          <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
                         </button>
                       ) : (
-                        <button
-                          type="button"
-                          style={ICONBTN}
-                          title="Pechar etiqueta do partido"
-                          aria-label="Pechar etiqueta do partido"
-                          onClick={() => {
-                            setOpenPeopleMatchId(null);
-                            setOpenUserPanel(null);
-                          }}
-                        >
-                          <svg width="18" height="18" viewBox="0 0 24 24" style={SVGI}>
-                            <path d="M18 6 6 18M6 6l12 12" />
-                          </svg>
+                        <button type="button" style={ICONBTN} title="Pechar etiqueta do partido" aria-label="Pechar etiqueta do partido" onClick={() => { setOpenPeopleMatchId(null); setOpenUserPanel(null); }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" style={SVGI}><path d="M18 6 6 18M6 6l12 12" /></svg>
                         </button>
                       )}
                     </>
@@ -584,18 +664,17 @@ export default function ResultadosHistoricos() {
                     style={eyeBtnStyle(eyeActive)}
                     title={isResultsOpen ? "Pechar resultados" : "Ver resultados do partido"}
                     aria-label={isResultsOpen ? "Pechar resultados" : "Ver resultados do partido"}
-                    onClick={async () => {
+                    onClick={async ()=>{
                       const opening = openResultsMatchId !== match.id;
+                      // siempre cerrar ediciones abiertas
+                      setOpenPeopleMatchId(null);
+                      setOpenUserPanel(null);
                       setOpenResultsMatchId(opening ? match.id : null);
-                      if (opening) {
-                        await ensurePlayersLoaded();
-                        await loadConfirmedForMatch(match.id);
-                      }
+                      if (opening) { await ensurePlayersLoaded(); await loadConfirmedForMatch(match.id); }
                     }}
                   >
                     <svg width="20" height="20" viewBox="0 0 24 24" style={eyeIconStyle(eyeActive)}>
-                      <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" />
-                      <circle cx="12" cy="12" r="3" />
+                      <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />
                     </svg>
                   </button>
                 </div>
@@ -607,9 +686,10 @@ export default function ResultadosHistoricos() {
                         <div style={EMPTY}>Cargando usuarias/os…</div>
                       ) : (
                         <ul style={USERS_LIST}>
-                          {users.map((u) => {
+                          {users.map(u => {
                             const isOpen = openUserPanel === u.id;
-                            const rowStyle = isOpen ? USER_ROW_BLINK : USER_ROW_BASE;
+                            const isConfirmed = (confirmedByMatch[match.id]?.has(u.id)) || false;
+                            const rowStyle = isOpen ? USER_ROW_BLINK : (isConfirmed ? USER_ROW_CONFIRMED : USER_ROW_BASE);
                             return (
                               <li key={u.id} style={rowStyle} title={u.name}>
                                 <span style={USER_BADGE}>{u.code || "—"}</span>
@@ -618,17 +698,12 @@ export default function ResultadosHistoricos() {
                                   {u.surname && <div style={USER_SUB}>{u.surname}</div>}
                                 </div>
                                 {!isOpen ? (
-                                  <button type="button" style={ICONBTN} title="Abrir táboas desta persoa" aria-label="Abrir táboas desta persoa" onClick={() => onOpenUserEditor(u.id)}>
-                                    <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}>
-                                      <rect x="3" y="6" width="18" height="12" rx="2" />
-                                      <path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" />
-                                    </svg>
+                                  <button type="button" style={ICONBTN} title="Abrir táboas desta persoa" aria-label="Abrir táboas desta persoa" onClick={()=> onOpenUserEditor(u.id)}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" /></svg>
                                   </button>
                                 ) : (
-                                  <button type="button" style={ICONBTN} title="Pechar editor desta persoa" aria-label="Pechar editor desta persoa" onClick={() => setOpenUserPanel(null)}>
-                                    <svg width="18" height="18" viewBox="0 0 24 24" style={SVGI}>
-                                      <path d="M18 6 6 18M6 6l12 12" />
-                                    </svg>
+                                  <button type="button" style={ICONBTN} title="Pechar editor desta persoa" aria-label="Pechar editor desta persoa" onClick={()=> setOpenUserPanel(null)}>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" style={SVGI}><path d="M18 6 6 18M6 6l12 12" /></svg>
                                   </button>
                                 )}
                               </li>
@@ -655,68 +730,20 @@ export default function ResultadosHistoricos() {
                     )}
                   </section>
                 )}
-
-                {openResultsMatchId === match.id && (
-                  <section style={{ marginTop: 8, position: "relative", border: "1px solid #e5e7eb", borderRadius: 12, background: "#fff", padding: 8, maxWidth: 540, marginLeft: "auto", marginRight: "auto" }}>
-                    <button
-                      type="button"
-                      title="Pechar"
-                      aria-label="Pechar"
-                      onClick={() => setOpenResultsMatchId(null)}
-                      style={{ position: "absolute", top: 8, right: 8, ...ICONBTN, width: 28, height: 28 }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" style={SVGI}>
-                        <path d="M18 6 6 18M6 6l12 12" />
-                      </svg>
-                    </button>
-
-                    <div style={{ ...SUMMARY_TITLE_WRAP }}>
-                      <div style={SUMMARY_TITLE}>RESULTADOS OBTIDOS (confirmados)</div>
-                      <div style={HR} />
-                    </div>
-                    <div role="table" style={{ width: "100%" }}>
-                      <div role="row" style={T_HEADER}>
-                        <div style={CELL}>Data e hora</div>
-                        <div style={CELL}>HDC Membro</div>
-                        <div style={{ ...CELL, textAlign: "center" }}>Acertos</div>
-                        <div style={CELL_LAST}>Aliñación presentada</div>
-                      </div>
-                      {(resultsConfirmed[match.id] || []).map((rec, idx) => (
-                        <div key={`${rec.user_id}-${idx}`} role="row" style={T_ROW}>
-                          <div style={CELL}>{dmyShort(rec.confirmed_at)}</div>
-                          <div style={CELL}>{rec.user_id}</div>
-                          <div style={{ ...CELL, ...ACERTOS_CELL }}>
-                            <span style={CELSTE}>{rec.acertos}</span>
-                          </div>
-                          <div style={CELL_LAST}>
-                            {(rec.plantilla_ids || []).map((pid, j, arr) => (
-                              <span key={`${pid}-${j}`}>
-                                {pid}
-                                {j < arr.length - 1 && <span style={{ opacity: 0.6 }}> {" | "} </span>}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
               </li>
             );
           })}
         </ul>
       )}
 
-      {/* Modal de confirmación propio (sen depender do window.confirm) */}
+      {/* Modal Confirmación */}
       {ask.open && (
         <div role="dialog" aria-modal="true" style={MODAL_BACK}>
-          <div style={MODAL_CARD}>
+          <div style={{ ...MODAL_CARD, width: 440 }}>
             <h3 style={MODAL_T}>Confirmar aliñación</h3>
             <p style={MODAL_P}>¿Seguro que queres gardar esta aliñación?</p>
             <div style={MODAL_ROW}>
-              <button type="button" style={BTN_LIGHT} onClick={() => setAsk({ open: false, matchId: null })}>
-                Cancelar
-              </button>
+              <button type="button" style={BTN_LIGHT} onClick={() => setAsk({ open: false, matchId: null })}>Cancelar</button>
               <button
                 type="button"
                 style={BTN_MAIN}
@@ -725,13 +752,20 @@ export default function ResultadosHistoricos() {
                   setAsk({ open: false, matchId: null });
                   await confirmarMatch(m);
                 }}
-              >
-                Gardar
-              </button>
+              >Gardar</button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Modal Resultados confirmados */}
+      {openResultsMatchId && (
+        <ResultsModal
+          matchId={openResultsMatchId}
+          onClose={() => setOpenResultsMatchId(null)}
+        />
+      )}
     </main>
   );
 }
+
