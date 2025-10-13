@@ -67,7 +67,17 @@ const EYE_BTN_DESKTOP = (active) =>
     : { ...ICONBTN, width: 30, height: 30 };
 const EYE_SVG = (active) => (active ? { ...SVGI, stroke: "#fff" } : SVGI);
 
-/* Ollo móbil: azul con fondo branco e bordo azul (un chisco maior) */
+/* Ollo móbil (para fila de resultados) — máis pequeno agora */
+const EYE_BTN_MOBILE_SMALL = {
+  ...ICONBTN,
+  width: 28,
+  height: 28,
+  border: "1px solid #0ea5e9",
+  background: "#fff",
+};
+const EYE_SVG_BLUE = { ...SVGI, stroke: "#0ea5e9" };
+
+/* Ollo móbil nas etiquetas de partido (segue algo maior) */
 const EYE_BTN_MOBILE = {
   ...ICONBTN,
   width: 36,
@@ -75,7 +85,6 @@ const EYE_BTN_MOBILE = {
   border: "1px solid #0ea5e9",
   background: "#fff",
 };
-const EYE_SVG_BLUE = { ...SVGI, stroke: "#0ea5e9" };
 
 const CONF_COUNT = { font: "800 12.5px/1 Montserrat,system-ui,sans-serif", color: "#16a34a", minWidth: 18, textAlign: "right" };
 
@@ -88,7 +97,7 @@ const XSVG = { fill: "none", stroke: "#ef4444", strokeWidth: 2, strokeLinecap: "
 const TOAST_OK = { margin: "8px 0 12px", padding: "10px 12px", borderRadius: 10, background: "#ecfeff", border: "1px solid #67e8f9", color: "#0e7490", font: "600 12.5px/1.2 Montserrat,system-ui,sans-serif" };
 const TOAST_ERR = { ...TOAST_OK, background: "#fee2e2", border: "1px solid #fecaca", color: "#b91c1c" };
 
-/* Panel Persoas (edición) — escritorio */
+/* Panel Persoas — escritorio */
 const PEOPLE_SHELL = (twoCols) =>
   twoCols
     ? {
@@ -114,7 +123,7 @@ const USER_SUB = { font: "600 11.5px/1.05 Montserrat,system-ui,sans-serif", colo
 
 const RIGHT_PAD = { paddingLeft: 16 };
 
-/* Grid edición (dúas columnas) — escritorio */
+/* Edición — escritorio */
 const EDIT_GRID = { display: "grid", gridTemplateColumns: "minmax(252px,1fr) minmax(252px,1fr)", gap: 8, alignItems: "start" };
 
 const COL_BASE = { border: "1px solid #e5e7eb", borderRadius: 10, overflow: "hidden", position: "relative" };
@@ -125,7 +134,7 @@ const COL_TITLE = { font: "900 10.9px/1.02 Montserrat,system-ui,sans-serif", col
 const COL_TITLE_BLINK = { ...COL_TITLE, animation: "blinkSoft 1.5s ease-in-out infinite" };
 const COUNT = { font: "900 10.5px/1.02 Montserrat,system-ui,sans-serif", color: "#22c55e" };
 
-/* Demarcacións + filas — escritorio */
+/* Demarcacións */
 const GROUP_SCROLL = { maxHeight: 260, overflowY: "auto", background: "inherit" };
 const GROUP_WRAP = (bg) => ({ position: "relative", background: "inherit", paddingRight: 20, marginBottom: 3 });
 const POS_SIDE = (bg) => ({ position: "absolute", right: 2, top: 2, bottom: 2, writingMode: "vertical-rl", textOrientation: "mixed", font: "900 9.8px/1 Montserrat,system-ui,sans-serif", color: "#64748b", opacity: 0.85, display: "grid", placeItems: "center", background: "transparent", padding: "2px 0" });
@@ -135,7 +144,7 @@ const CHECKBOX = { width: 14, height: 14, transform: "scale(1.02)", marginRight:
 const playerNameStyle = { font: "700 10.2px/.72 Montserrat,system-ui,sans-serif", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
 const COUNT_MINI = { font: "900 10px/1 Montserrat,system-ui,sans-serif", color: "#0ea5e9", padding: "0 4px", borderRadius: 6, background: "#e0f2fe" };
 
-/* Preview / RESULTADOS OBTIDOS — escritorio */
+/* Preview escritorio */
 const SUMMARY = { border: "1px solid #fecaca", borderRadius: 12, background: "linear-gradient(180deg,#fff6f6,#ffeaea)", padding: 8, position: "relative", width: "100%", marginTop: 8 };
 const SUMMARY_TITLE_WRAP = { padding: "2px 6px 6px 6px", background: "linear-gradient(180deg,#fff,#fff6f6)", borderTopLeftRadius: 10, borderTopRightRadius: 10 };
 const SUMMARY_TITLE = { font: "800 11px/1.02 Montserrat,system-ui,sans-serif", color: "#0f172a", textDecoration: "none", margin: "2px 0 4px 0" };
@@ -150,7 +159,7 @@ const CELSTE = { color: "#0ea5e9", fontWeight: 800 };
 const BTN_CONFIRM = { marginTop: 8, width: "100%", borderRadius: 10, padding: "8px 10px", font: "900 12px/1.02 Montserrat,system-ui,sans-serif", background: "linear-gradient(180deg,#38bdf8,#0ea5e9)", color: "#fff", border: "1px solid #0ea5e9", boxShadow: "0 3px 10px rgba(14,165,233,.18)", cursor: "pointer" };
 const BTN_CONFIRM_BLINK = { ...BTN_CONFIRM, animation: "pulseSoft 1.5s ease-in-out infinite" };
 
-/* Resultados — título escritorio */
+/* Resultados — escritorio */
 const FULL_TITLE_BAR_DESKTOP = {
   marginTop: 6,
   marginBottom: 8,
@@ -181,8 +190,7 @@ const FULL_CELL = { padding: "0 6px", borderRight: "1px solid #e5e7eb", display:
 const FULL_LAST = { padding: "0 6px", display: "flex", alignItems: "center", wordBreak: "break-word" };
 const FULL_ACERTOS = { textAlign: "center", color: "#0ea5e9", fontWeight: 900, minWidth: 76, justifyContent: "center" };
 
-/* Resultados — móbil */
-const BORDER_V = "1px solid #dbe3ef";
+/* ====== Resultados — móbil (AQUÍ VAN OS CAMBIOS) ====== */
 const FULL_TITLE_BAR_MOBILE = {
   marginTop: 6,
   marginBottom: 8,
@@ -197,37 +205,47 @@ const FULL_TITLE_BAR_MOBILE = {
   gap: 8,
 };
 const FULL_TITLE_MOBILE = { font: "600 14.5px/1.15 Montserrat,system-ui,sans-serif", color: "#fff" };
+
+/* Cabeceira máis pequena */
 const FULL_HEAD_MOBILE = {
   display: "grid",
   gridTemplateColumns: "1fr max-content max-content",
-  padding: "8px 6px",
+  padding: "6px 6px",
   borderBottom: "1px solid #e5e7eb",
   background: "linear-gradient(180deg,#dcfce7,#bbf7d0)",
   color: "#064e3b",
-  alignItems: "center"
+  alignItems: "center",
+  font: "700 11.2px/1.05 Montserrat,system-ui,sans-serif",
+  textTransform: "none"
 };
+
+/* Filas con contido un pouco máis grande */
 const FULL_ROW_MOBILE = {
   display: "grid",
   gridTemplateColumns: "1fr max-content max-content",
-  padding: "8px 6px",
+  padding: "9px 6px",
   borderBottom: "1px solid #eef2f7",
-  font: "600 12.2px/1.05 Montserrat,system-ui,sans-serif",
+  font: "600 13.4px/1.15 Montserrat,system-ui,sans-serif",
   alignItems: "center"
 };
-const FULL_CELL_SPLIT = { padding: "0 6px", borderRight: BORDER_V, display: "flex", alignItems: "center" };
+
+/* Sen liñas verticais agora */
+const FULL_CELL_SPLIT = { padding: "0 6px", display: "flex", alignItems: "center" };
 const FULL_CELL_SPLIT_CENTER = { ...FULL_CELL_SPLIT, justifyContent: "center" };
-const FULL_CELL_LAST_CENTER = { padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "center", borderLeft: BORDER_V };
+const FULL_CELL_LAST_CENTER = { padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "center" };
+
+/* Valor de acertos centrado */
 const FULL_ACERTOS_VAL = { textAlign: "center", color: "#0ea5e9", fontWeight: 900, width: "100%", justifyContent: "center", display: "flex" };
 
-/* Editor inline de data/hora — escritorio */
+/* Editor inline — escritorio */
 const EDIT_OVERLAY = { position: "fixed", inset: "auto auto 24px 50%", transform: "translateX(-50%)", zIndex: 60, background: "rgba(255,255,255,.98)", border: "1px solid #cbd5e1", borderRadius: 12, boxShadow: "0 12px 28px rgba(0,0,0,.22)", padding: 12, minWidth: 280 };
 const DT_INPUT = { border: "1px solid #cbd5e1", borderRadius: 8, padding: "6px 8px", font: "600 12px/1 Montserrat,system-ui,sans-serif", width: "100%" };
 const SAVE_BTN = { ...ICONBTN, width: 28, height: 28, position: "absolute", top: 8, right: 8, border: "1px solid #22c55e", background: "#fff" };
 const SAVE_SVG = { fill: "none", stroke: "#16a34a", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
 
-/* Móbil: info admins + popup + data bubble */
-const INFO_BTN = { ...ICONBTN, width: 30, height: 30, border: "1px solid #0f172a", placeItems: "center" }; // borde negro
-const INFO_SVG = { ...SVGI, stroke: "#0f172a", strokeWidth: 2.2 }; // icono negro, un pouco máis groso
+/* Móbil: info admins + popup + date bubble */
+const INFO_BTN = { ...ICONBTN, width: 30, height: 30, border: "1px solid #0ea5e9", placeItems: "center", background: "#fff" }; // AZUL
+const INFO_SVG = { ...SVGI, stroke: "#0ea5e9", strokeWidth: 2.1 };
 
 const MOBILE_ALIGN_POP = {
   position: "fixed",
@@ -236,7 +254,7 @@ const MOBILE_ALIGN_POP = {
   background: "#fff",
   border: "1px solid #e5e7eb",
   borderRadius: 12,
-  boxShadow: "0 24px 64px rgba(0,0,0,.45)", // moita sombra
+  boxShadow: "0 24px 64px rgba(0,0,0,.45)",
   padding: 16,
   maxHeight: "74vh",
   overflowY: "auto",
@@ -429,7 +447,7 @@ export default function ResultadosHistoricos() {
   async function loadConfirmedForMatch(matchId) {
     try {
       const { data, error } = await supabase.from("resultados_confirmados").select("match_id,user_id,confirmed_at,acertos,plantilla_ids,once_ids").eq("match_id", matchId).order("confirmed_at", { ascending: false });
-    if (error) throw error;
+      if (error) throw error;
       setResultsConfirmed(prev => ({ ...prev, [matchId]: data || [] }));
       setHasResults(prev => new Set([...prev, matchId]));
       const setU = new Set((data || []).map(r => r.user_id));
@@ -535,12 +553,59 @@ export default function ResultadosHistoricos() {
     );
   }
 
+  function renderSummaryRight(matchId) {
+    const userLabel = (new Map(users.map((u) => [u.id, u]))).get(openUserPanel)?.name || "—";
+    const playersById = new Map(players.map((p) => [p.id, p]));
+    const onceSet = new Set(selOnce);
+    const acertosLive = Array.from(selOnce).filter((id) => selPlantilla.has(id)).length;
+
+    const aliNodes = Array.from(selPlantilla).map((pid, idx, arr) => {
+      const p = playersById.get(pid);
+      const txt = p ? `${pad2(p?.dorsal ?? "")} · ${p?.name ?? ""}` : String(pid);
+      const node = onceSet.has(pid) ? <strong style={{ color: "#0ea5e9" }}>{txt}</strong> : txt;
+      return (
+        <span key={`${pid}-${idx}`}>
+          {node}
+          {idx < arr.length - 1 && <span style={{ opacity: 0.6 }}>|</span>}
+        </span>
+      );
+    });
+
+    return (
+      <div style={{ border: "1px solid #fecaca", borderRadius: 12, background: "linear-gradient(180deg,#fff6f6,#ffeaea)", padding: 8, position: "relative", width: "100%", marginTop: 8 }}>
+        <div style={SUMMARY_TITLE_WRAP}>
+          <div style={SUMMARY_TITLE}>RESULTADOS OBTIDOS</div>
+          <div style={HR} />
+        </div>
+        <div role="table" style={{ width: "100%" }}>
+          <div role="row" style={T_HEADER}>
+            <div style={{ ...CELL, minWidth: 120 }}>Data e hora</div>
+            <div style={CELL}>HDC Membro</div>
+            <div style={{ ...CELL, ...ACERTOS_CELL }}>Acertos</div>
+            <div style={CELL_LAST}>Aliñación presentada</div>
+          </div>
+          <div role="row" style={T_ROW}>
+            <div style={{ ...CELL, minWidth: 120 }}>{dmyShort(new Date().toISOString())}</div>
+            <div style={CELL}>{userLabel}</div>
+            <div style={{ ...CELL, ...ACERTOS_CELL }}>
+              <span style={CELSTE}>{acertosLive}</span>
+            </div>
+            <div style={CELL_LAST}>{aliNodes}</div>
+          </div>
+        </div>
+        <button type="button" style={onceIs11 ? BTN_CONFIRM_BLINK : BTN_CONFIRM} onClick={() => confirmarMatch(matchId)} disabled={!onceIs11 || confirmSaving}>
+          CONFIRMAR
+        </button>
+      </div>
+    );
+  }
+
   function FullResults({ match }) {
     const recs = resultsConfirmed[match.id] || [];
     const pMap = new Map(players.map((p) => [p.id, p]));
 
     if (!isMobile) {
-      /* ====== ESCRITORIO — sen cambios ====== */
+      /* ===== ESCRITORIO ===== */
       return (
         <section aria-label="Resultados do partido" style={{ marginTop: 6 }}>
           <div style={FULL_TITLE_BAR_DESKTOP}>
@@ -639,7 +704,7 @@ export default function ResultadosHistoricos() {
               const uname = userNames.get(rec.user_id) || rec.user_id;
               const onceSet = new Set(rec.once_ids || []);
 
-              // Construír grupos POR/DEF/CEN/DEL para o popup
+              // Grupos POR/DEF/CEN/DEL para popup
               const groups = { POR: [], DEF: [], CEN: [], DEL: [] };
               (rec.plantilla_ids || []).forEach((pid) => {
                 const p = pMap.get(pid);
@@ -656,13 +721,13 @@ export default function ResultadosHistoricos() {
                   <div style={{ ...FULL_CELL_SPLIT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                     {uname}
                   </div>
-                  <div style={{ ...FULL_CELL_SPLIT_CENTER }}>
+                  <div style={FULL_CELL_SPLIT_CENTER}>
                     <span style={FULL_ACERTOS_VAL}>{rec.acertos}</span>
                   </div>
                   <div style={FULL_CELL_LAST_CENTER}>
                     <button
                       type="button"
-                      style={EYE_BTN_MOBILE}
+                      style={EYE_BTN_MOBILE_SMALL}
                       title="Ver detalle"
                       aria-label="Ver detalle"
                       onClick={() =>
@@ -674,7 +739,7 @@ export default function ResultadosHistoricos() {
                         })
                       }
                     >
-                      <svg width="18" height="18" viewBox="0 0 24 24" style={EYE_SVG_BLUE}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" style={EYE_SVG_BLUE}>
                         <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />
                       </svg>
                     </button>
@@ -696,9 +761,13 @@ export default function ResultadosHistoricos() {
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>
             </button>
+
             <div style={{ font: "900 14px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", marginBottom: 8 }}>Detalle do rexistro</div>
-            <div style={{ font: "700 12.5px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", marginBottom: 10 }}>
+            <div style={{ font: "700 12.5px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", marginBottom: 4 }}>
               <span style={{ opacity: 0.85 }}>Data e hora:</span> {mobileAlignFor.dateStr}
+            </div>
+            <div style={{ font: "800 12px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", marginBottom: 10 }}>
+              RESULTADO DA ALIÑACIÓN
             </div>
 
             {/* Aliñación presentada por posicións */}
@@ -766,7 +835,7 @@ export default function ResultadosHistoricos() {
               <li key={match.id} style={{ ...ITEM_BASE, ...itemGrid(isMobile), ...itemBg, marginBottom: isPeopleOpen ? 12 : 8 }}>
                 {isMobile ? (
                   <div style={COMPACT_TEXT}>
-                    {/* Icono calendario + burbulla de data xusto debaixo (2s) */}
+                    {/* Icono calendario + burbulla de data (2s) */}
                     <div style={{ position: "relative" }}>
                       <button
                         type="button"
@@ -797,7 +866,6 @@ export default function ResultadosHistoricos() {
                 )}
 
                 <div style={ACTIONS}>
-                  {/* Escritorio: botón persoas/teclado intacto */}
                   {isAdmin && !isMobile && (
                     <>
                       {!isPeopleOpen ? (
@@ -812,7 +880,6 @@ export default function ResultadosHistoricos() {
                     </>
                   )}
 
-                  {/* Ollo (móbil/ escritorio) */}
                   <button
                     type="button"
                     style={isMobile ? EYE_BTN_MOBILE : EYE_BTN_DESKTOP(eyeActive)}
@@ -831,7 +898,6 @@ export default function ResultadosHistoricos() {
                     </svg>
                   </button>
 
-                  {/* Contador só en escritorio */}
                   {!isMobile && <span style={CONF_COUNT}>{confirmedCount}</span>}
                 </div>
 
