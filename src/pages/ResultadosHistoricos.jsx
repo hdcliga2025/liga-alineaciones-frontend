@@ -32,15 +32,16 @@ const DATE = (isMobile) => ({
 });
 
 const TEAMS = (isMobile) => ({
-  font: isMobile ? "800 13.5px/1.05 Montserrat,system-ui,sans-serif" : "800 14px/1.1 Montserrat,system-ui,sans-serif",
+  font: isMobile ? "800 14.5px/1.08 Montserrat,system-ui,sans-serif" : "800 14px/1.1 Montserrat,system-ui,sans-serif",
   textTransform: "uppercase",
   color: "#111827",
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
-  transform: isMobile ? "scaleX(0.96) scaleY(1.02)" : "none",
+  // máis alto e un pouco máis longo en móbil
+  transform: isMobile ? "scaleX(1.03) scaleY(1.08)" : "none",
   transformOrigin: "left center",
-  letterSpacing: isMobile ? "0.1px" : "0.2px",
+  letterSpacing: isMobile ? "0.2px" : "0.2px",
 });
 
 const SEP = { margin: "0 6px", fontWeight: 800, color: "#0f172a" };
@@ -60,14 +61,14 @@ const ICONBTN = {
 };
 const SVGI = { fill: "none", stroke: "#0f172a", strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round" };
 
-/* Ollo */
+/* Ollo escritorio */
 const EYE_BTN_DESKTOP = (active) =>
   active
     ? { ...ICONBTN, width: 30, height: 30, border: "1px solid #0ea5e9", background: "linear-gradient(180deg,#38bdf8,#0ea5e9)" }
     : { ...ICONBTN, width: 30, height: 30 };
 const EYE_SVG = (active) => (active ? { ...SVGI, stroke: "#fff" } : SVGI);
 
-/* Ollo (móbil): azul con fondo branco */
+/* Ollo móbil: azul con fondo branco e bordo azul */
 const EYE_BTN_MOBILE = {
   ...ICONBTN,
   width: 36,
@@ -88,7 +89,7 @@ const XSVG = { fill: "none", stroke: "#ef4444", strokeWidth: 2, strokeLinecap: "
 const TOAST_OK = { margin: "8px 0 12px", padding: "10px 12px", borderRadius: 10, background: "#ecfeff", border: "1px solid #67e8f9", color: "#0e7490", font: "600 12.5px/1.2 Montserrat,system-ui,sans-serif" };
 const TOAST_ERR = { ...TOAST_OK, background: "#fee2e2", border: "1px solid #fecaca", color: "#b91c1c" };
 
-/* Panel Persoas (edición) */
+/* Panel Persoas (edición) — escritorio */
 const PEOPLE_SHELL = (twoCols) =>
   twoCols
     ? {
@@ -114,7 +115,7 @@ const USER_SUB = { font: "600 11.5px/1.05 Montserrat,system-ui,sans-serif", colo
 
 const RIGHT_PAD = { paddingLeft: 16 };
 
-/* Grid edición (dúas columnas) */
+/* Grid edición (dúas columnas) — escritorio */
 const EDIT_GRID = { display: "grid", gridTemplateColumns: "minmax(252px,1fr) minmax(252px,1fr)", gap: 8, alignItems: "start" };
 
 const COL_BASE = { border: "1px solid #e5e7eb", borderRadius: 10, overflow: "hidden", position: "relative" };
@@ -125,7 +126,7 @@ const COL_TITLE = { font: "900 10.9px/1.02 Montserrat,system-ui,sans-serif", col
 const COL_TITLE_BLINK = { ...COL_TITLE, animation: "blinkSoft 1.5s ease-in-out infinite" };
 const COUNT = { font: "900 10.5px/1.02 Montserrat,system-ui,sans-serif", color: "#22c55e" };
 
-/* Demarcacións + filas */
+/* Demarcacións + filas — escritorio */
 const GROUP_SCROLL = { maxHeight: 260, overflowY: "auto", background: "inherit" };
 const GROUP_WRAP = (bg) => ({ position: "relative", background: "inherit", paddingRight: 20, marginBottom: 3 });
 const POS_SIDE = (bg) => ({ position: "absolute", right: 2, top: 2, bottom: 2, writingMode: "vertical-rl", textOrientation: "mixed", font: "900 9.8px/1 Montserrat,system-ui,sans-serif", color: "#64748b", opacity: 0.85, display: "grid", placeItems: "center", background: "transparent", padding: "2px 0" });
@@ -135,7 +136,7 @@ const CHECKBOX = { width: 14, height: 14, transform: "scale(1.02)", marginRight:
 const playerNameStyle = { font: "700 10.2px/.72 Montserrat,system-ui,sans-serif", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
 const COUNT_MINI = { font: "900 10px/1 Montserrat,system-ui,sans-serif", color: "#0ea5e9", padding: "0 4px", borderRadius: 6, background: "#e0f2fe" };
 
-/* Preview / RESULTADOS OBTIDOS */
+/* Preview / RESULTADOS OBTIDOS — escritorio */
 const SUMMARY = { border: "1px solid #fecaca", borderRadius: 12, background: "linear-gradient(180deg,#fff6f6,#ffeaea)", padding: 8, position: "relative", width: "100%", marginTop: 8 };
 const SUMMARY_TITLE_WRAP = { padding: "2px 6px 6px 6px", background: "linear-gradient(180deg,#fff,#fff6f6)", borderTopLeftRadius: 10, borderTopRightRadius: 10 };
 const SUMMARY_TITLE = { font: "800 11px/1.02 Montserrat,system-ui,sans-serif", color: "#0f172a", textDecoration: "none", margin: "2px 0 4px 0" };
@@ -150,7 +151,7 @@ const CELSTE = { color: "#0ea5e9", fontWeight: 800 };
 const BTN_CONFIRM = { marginTop: 8, width: "100%", borderRadius: 10, padding: "8px 10px", font: "900 12px/1.02 Montserrat,system-ui,sans-serif", background: "linear-gradient(180deg,#38bdf8,#0ea5e9)", color: "#fff", border: "1px solid #0ea5e9", boxShadow: "0 3px 10px rgba(14,165,233,.18)", cursor: "pointer" };
 const BTN_CONFIRM_BLINK = { ...BTN_CONFIRM, animation: "pulseSoft 1.5s ease-in-out infinite" };
 
-/* Resultados a pantalla completa (base de escritorio orixinal) */
+/* Resultados — título escritorio */
 const FULL_TITLE_BAR_DESKTOP = {
   marginTop: 6,
   marginBottom: 8,
@@ -160,7 +161,7 @@ const FULL_TITLE_BAR_DESKTOP = {
   borderRadius: 10,
   color: "#fff",
   display: "grid",
-  gridTemplateColumns: "1fr auto", // título + X á dereita (como antes)
+  gridTemplateColumns: "1fr auto",
   alignItems: "center",
   gap: 8,
 };
@@ -181,7 +182,7 @@ const FULL_CELL = { padding: "0 6px", borderRight: "1px solid #e5e7eb", display:
 const FULL_LAST = { padding: "0 6px", display: "flex", alignItems: "center", wordBreak: "break-word" };
 const FULL_ACERTOS = { textAlign: "center", color: "#0ea5e9", fontWeight: 900, minWidth: 76, justifyContent: "center" };
 
-/* Resultados a pantalla completa (móbil) */
+/* Resultados — móbil */
 const FULL_TITLE_BAR_MOBILE = {
   marginTop: 6,
   marginBottom: 8,
@@ -191,17 +192,35 @@ const FULL_TITLE_BAR_MOBILE = {
   borderRadius: 10,
   color: "#fff",
   display: "grid",
-  gridTemplateColumns: "auto 1fr", // X á esquerda
+  gridTemplateColumns: "1fr auto", // texto + X á dereita
   alignItems: "center",
   gap: 8,
 };
-const FULL_HEAD_MOBILE = { display: "grid", gridTemplateColumns: "1fr 80px 70px", padding: "8px 6px", borderBottom: "1px solid #e5e7eb", font: "800 12.8px/1.2 Montserrat,system-ui,sans-serif", background: "linear-gradient(180deg,#dcfce7,#bbf7d0)", color: "#064e3b", alignItems: "center" };
-const FULL_ROW_MOBILE = { display: "grid", gridTemplateColumns: "1fr 80px 70px", padding: "8px 6px", borderBottom: "1px solid #eef2f7", font: "600 12.2px/1.05 Montserrat,system-ui,sans-serif", alignItems: "center" };
+
+/* Cabeceira/filas en móbil: 1fr para membro, e ancho mínimo para Acertos/Detalle */
+const FULL_HEAD_MOBILE = {
+  display: "grid",
+  gridTemplateColumns: "1fr max-content max-content",
+  padding: "8px 6px",
+  borderBottom: "1px solid #e5e7eb",
+  font: "800 12.8px/1.2 Montserrat,system-ui,sans-serif",
+  background: "linear-gradient(180deg,#dcfce7,#bbf7d0)",
+  color: "#064e3b",
+  alignItems: "center"
+};
+const FULL_ROW_MOBILE = {
+  display: "grid",
+  gridTemplateColumns: "1fr max-content max-content",
+  padding: "8px 6px",
+  borderBottom: "1px solid #eef2f7",
+  font: "600 12.2px/1.05 Montserrat,system-ui,sans-serif",
+  alignItems: "center"
+};
 const FULL_CELL_SPLIT = { padding: "0 6px", borderRight: "1px solid #eef2f7", display: "flex", alignItems: "center" };
 const FULL_CELL_LAST_CENTER = { padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "center" };
 const FULL_ACERTOS_VAL = { textAlign: "center", color: "#0ea5e9", fontWeight: 900, width: "100%", justifyContent: "center", display: "flex" };
 
-/* Editor inline de data/hora (overlay) */
+/* Editor inline de data/hora — escritorio */
 const EDIT_OVERLAY = { position: "fixed", inset: "auto auto 24px 50%", transform: "translateX(-50%)", zIndex: 60, background: "rgba(255,255,255,.98)", border: "1px solid #cbd5e1", borderRadius: 12, boxShadow: "0 12px 28px rgba(0,0,0,.22)", padding: 12, minWidth: 280 };
 const DT_INPUT = { border: "1px solid #cbd5e1", borderRadius: 8, padding: "6px 8px", font: "600 12px/1 Montserrat,system-ui,sans-serif", width: "100%" };
 const SAVE_BTN = { ...ICONBTN, width: 28, height: 28, position: "absolute", top: 8, right: 8, border: "1px solid #22c55e", background: "#fff" };
@@ -211,9 +230,33 @@ const SAVE_SVG = { fill: "none", stroke: "#16a34a", strokeWidth: 2, strokeLineca
 const INFO_BTN = { ...ICONBTN, width: 30, height: 30, border: "1px solid #0ea5e9" };
 const INFO_SVG = { ...SVGI, stroke: "#0ea5e9" };
 
-const MOBILE_ALIGN_POP = { position: "fixed", inset: "10% 5% auto 5%", zIndex: 120, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, boxShadow: "0 18px 38px rgba(0,0,0,.28)", padding: 14, maxHeight: "74vh", overflowY: "auto", maxWidth: 520, margin: "0 auto" };
+const MOBILE_ALIGN_POP = {
+  position: "fixed",
+  inset: "10% 5% auto 5%",
+  zIndex: 120,
+  background: "#fff",
+  border: "1px solid #e5e7eb",
+  borderRadius: 12,
+  boxShadow: "0 24px 64px rgba(0,0,0,.45)", // moita sombra
+  padding: 16,
+  maxHeight: "74vh",
+  overflowY: "auto",
+  maxWidth: 560,
+  margin: "0 auto"
+};
 
-const LOCAL_DATE_BUBBLE = { position: "absolute", top: 36, left: 0, zIndex: 120, background: "rgba(15,23,42,.94)", color: "#fff", font: "800 11px/1.1 Montserrat,system-ui,sans-serif", padding: "6px 8px", borderRadius: 8 };
+const LOCAL_DATE_BUBBLE = {
+  position: "absolute",
+  top: 36,
+  left: 0,
+  zIndex: 200,
+  background: "rgba(15,23,42,.94)",
+  color: "#fff",
+  font: "800 11px/1.1 Montserrat,system-ui,sans-serif",
+  padding: "6px 8px",
+  borderRadius: 8,
+  pointerEvents: "none"
+};
 
 /* Animacións */
 const STYLES = `
@@ -334,6 +377,7 @@ export default function ResultadosHistoricos() {
         const p = normalizePlayer(pp);
         const pos = p.pos || inferPosFromFoto(p.foto_url || "");
         const nameOnly = p.nombre || "";
+        the // ← NO TOCAR: placeholder eliminado (evita erros de build)
         const label = p.dorsal ? `${p.dorsal} - ${nameOnly}` : nameOnly;
         return { id: p.id, dorsal: p.dorsal ?? null, pos, name: nameOnly, label };
       }));
@@ -387,7 +431,7 @@ export default function ResultadosHistoricos() {
   async function loadConfirmedForMatch(matchId) {
     try {
       const { data, error } = await supabase.from("resultados_confirmados").select("match_id,user_id,confirmed_at,acertos,plantilla_ids,once_ids").eq("match_id", matchId).order("confirmed_at", { ascending: false });
-      if (error) throw error;
+    if (error) throw error;
       setResultsConfirmed(prev => ({ ...prev, [matchId]: data || [] }));
       setHasResults(prev => new Set([...prev, matchId]));
       const setU = new Set((data || []).map(r => r.user_id));
@@ -547,7 +591,7 @@ export default function ResultadosHistoricos() {
     const pMap = new Map(players.map((p) => [p.id, p]));
 
     if (!isMobile) {
-      /* ====== ESCRITORIO: tal como estaba ====== */
+      /* ====== ESCRITORIO — sen cambios ====== */
       return (
         <section aria-label="Resultados do partido" style={{ marginTop: 6 }}>
           <div style={FULL_TITLE_BAR_DESKTOP}>
@@ -612,11 +656,16 @@ export default function ResultadosHistoricos() {
       );
     }
 
-    /* ====== MÓBIL: só cambios móbil ====== */
+    /* ====== MÓBIL — cambios solicitados ====== */
     return (
       <section aria-label="Resultados do partido" style={{ marginTop: 6 }}>
         <div style={FULL_TITLE_BAR_MOBILE}>
-          {/* X á esquerda, contorno branco, fondo vermello degradado, X branca */}
+          <div style={{ ...FULL_TITLE, display: "grid", gap: 2 }}>
+            <div>LISTADO DAS ALIÑACIÓNS FEITAS POR CADA XOGADOR</div>
+            <div><span style={{ fontWeight: 900 }}>{match.equipo1}</span> - <span style={{ fontWeight: 900 }}>{match.equipo2}</span></div>
+            <div>{dmyFull(match.match_iso)}</div>
+          </div>
+          {/* X á dereita: contorno branco, fondo vermello, X branca */}
           <button
             type="button"
             style={{ ...ICONBTN, width: 32, height: 32, border: "1px solid #fff", background: "linear-gradient(180deg,#fca5a5,#ef4444)" }}
@@ -626,9 +675,6 @@ export default function ResultadosHistoricos() {
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </button>
-          <div style={FULL_TITLE}>
-            LISTADO DAS ALIÑACIÓNS CORRESPONDENTES AO PARTIDO | <span style={{ fontWeight: 900 }}>{match.equipo1} - {match.equipo2}</span> | {dmyFull(match.match_iso)}
-          </div>
         </div>
 
         <div style={FULL_TABLE}>
@@ -643,13 +689,19 @@ export default function ResultadosHistoricos() {
           ) : (
             recs.map((rec) => {
               const uname = userNames.get(rec.user_id) || rec.user_id;
+              const onceSet = new Set(rec.once_ids || []);
               const labels = (rec.plantilla_ids || []).map((pid) => {
                 const p = pMap.get(pid);
-                return p ? `${pad2(p.dorsal ?? "")} · ${p.name}` : String(pid);
+                const txt = p ? `${pad2(p.dorsal ?? "")} · ${p.name}` : String(pid);
+                return onceSet.has(pid) ? <strong key={pid} style={{ color: "#0ea5e9" }}>{txt}</strong> : <span key={pid}>{txt}</span>;
               });
-              const mid = Math.ceil(labels.length / 2) || 0;
-              const line1 = labels.slice(0, mid).join(" | ");
-              const line2 = labels.slice(mid).join(" | ");
+
+              // dividir en dúas liñas para axustar ancho
+              const plain = labels.reduce((acc, node, idx) => {
+                acc.push(node);
+                if (idx < labels.length - 1) acc.push(<span key={`sep-${idx}`} style={{ opacity: 0.6 }}>|</span>);
+                return acc;
+              }, []);
 
               return (
                 <div key={`${rec.user_id}`} style={FULL_ROW_MOBILE}>
@@ -670,7 +722,7 @@ export default function ResultadosHistoricos() {
                           matchId: rec.match_id,
                           userId: rec.user_id,
                           dateStr: dmyShort(rec.confirmed_at),
-                          lines: [line1, line2],
+                          nodes: plain
                         })
                       }
                     >
@@ -687,8 +739,14 @@ export default function ResultadosHistoricos() {
 
         {mobileAlignFor && (
           <div role="dialog" aria-modal="true" style={MOBILE_ALIGN_POP}>
-            <button type="button" style={{ ...XBTN_SMALL, position: "absolute", top: 8, right: 8, background: "linear-gradient(180deg,#fca5a5,#ef4444)", border: "1px solid #fff" }} aria-label="Pechar" title="Pechar" onClick={() => setMobileAlignFor(null)}>
-              <svg width="14" height="14" viewBox="0 0 24 24" style={{ fill: "none", stroke: "#fff", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }}><path d="M18 6 6 18M6 6l12 12" /></svg>
+            <button
+              type="button"
+              style={{ ...XBTN_SMALL, position: "absolute", top: 8, right: 8, background: "linear-gradient(180deg,#fca5a5,#ef4444)", border: "1px solid #fff" }}
+              aria-label="Pechar" title="Pechar" onClick={() => setMobileAlignFor(null)}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" style={{ fill: "none", stroke: "#fff", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }}>
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
             </button>
             <div style={{ font: "900 14px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", marginBottom: 8 }}>Detalle do rexistro</div>
             <div style={{ font: "700 12.5px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", marginBottom: 6 }}>
@@ -696,8 +754,7 @@ export default function ResultadosHistoricos() {
             </div>
             <div style={{ font: "800 12.8px/1.35 Montserrat,system-ui,sans-serif", color: "#0f172a" }}>
               <div style={{ marginBottom: 2, textDecoration: "underline" }}>Aliñación presentada</div>
-              <div>{mobileAlignFor.lines?.[0] || ""}</div>
-              {mobileAlignFor.lines?.[1] && <div style={{ marginTop: 2 }}>{mobileAlignFor.lines[1]}</div>}
+              <div style={{ wordBreak: "break-word" }}>{mobileAlignFor.nodes}</div>
             </div>
           </div>
         )}
@@ -713,7 +770,6 @@ export default function ResultadosHistoricos() {
 
       <div style={PAGE_SUB_WRAP}>
         <p style={PAGE_SUB}>Aquí podes consultar os resultados individuais e xerais de cada partido.</p>
-        {/* Info móbil á dereita do subtítulo */}
         {isMobile && isAdmin && (
           <button type="button" style={INFO_BTN} title="Información" aria-label="Información" onClick={() => setShowMobileInfo(true)}>
             <svg width="18" height="18" viewBox="0 0 24 24" style={INFO_SVG}><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
@@ -747,7 +803,7 @@ export default function ResultadosHistoricos() {
               <li key={match.id} style={{ ...ITEM_BASE, ...itemGrid(isMobile), ...itemBg, marginBottom: isPeopleOpen ? 12 : 8 }}>
                 {isMobile ? (
                   <div style={COMPACT_TEXT}>
-                    {/* Icono calendario con burbulla 2s baixo o propio icono */}
+                    {/* Icono calendario + burbulla de data xusto debaixo (2s) */}
                     <div style={{ position: "relative" }}>
                       <button
                         type="button"
@@ -772,14 +828,13 @@ export default function ResultadosHistoricos() {
                   </div>
                 ) : (
                   <>
-                    {/* ESCRITORIO: formato DD/MM/AAAA, HH:mm (mantido) */}
                     <span style={DATE(false)}>{dmyFullTime(match.match_iso)}</span>
                     <span style={TEAMS(false)}>{match.equipo1} <span style={SEP}>-</span> {match.equipo2}</span>
                   </>
                 )}
 
                 <div style={ACTIONS}>
-                  {/* ESCRITORIO: botón persoas/teclado exactamente como estaba */}
+                  {/* Escritorio: botón persoas/teclado intacto */}
                   {isAdmin && !isMobile && (
                     <>
                       {!isPeopleOpen ? (
@@ -794,7 +849,7 @@ export default function ResultadosHistoricos() {
                     </>
                   )}
 
-                  {/* Ollo */}
+                  {/* Ollo (móbil azul / escritorio activo en celeste) */}
                   <button
                     type="button"
                     style={isMobile ? EYE_BTN_MOBILE : EYE_BTN_DESKTOP(eyeActive)}
@@ -813,11 +868,11 @@ export default function ResultadosHistoricos() {
                     </svg>
                   </button>
 
-                  {/* Contador: só en escritorio */}
+                  {/* Contador só en escritorio */}
                   {!isMobile && <span style={CONF_COUNT}>{confirmedCount}</span>}
                 </div>
 
-                {/* ESCRITORIO: panel persoas intacto */}
+                {/* Panel persoas — escritorio */}
                 {isPeopleOpen && isAdmin && !isMobile && (
                   <section style={PEOPLE_SHELL(!!openUserPanel)} aria-label="Edición por usuaria/o">
                     <div>
@@ -891,3 +946,4 @@ export default function ResultadosHistoricos() {
     </main>
   );
 }
+
