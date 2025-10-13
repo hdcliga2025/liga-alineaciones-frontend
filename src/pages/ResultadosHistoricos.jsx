@@ -32,19 +32,25 @@ const DATE = (isMobile) => ({
 });
 
 const TEAMS = (isMobile) => ({
-  font: isMobile ? "800 13px/1.08 Montserrat,system-ui,sans-serif" : "800 14px/1.1 Montserrat,system-ui,sans-serif",
+  font: isMobile ? "800 12.5px/1.08 Montserrat,system-ui,sans-serif" : "800 14px/1.1 Montserrat,system-ui,sans-serif",
   textTransform: "uppercase",
   color: "#111827",
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
-  transform: isMobile ? "scaleX(1.02) scaleY(1.06)" : "none",
+  transform: isMobile ? "scaleX(1.015) scaleY(1.05)" : "none",
   transformOrigin: "left center",
-  letterSpacing: isMobile ? "0.14px" : "0.2px",
+  letterSpacing: isMobile ? "0.12px" : "0.2px",
 });
 
 const SEP = { margin: "0 6px", fontWeight: 800, color: "#0f172a" };
-const COMPACT_TEXT = { display: "flex", alignItems: "center", gap: 8, minWidth: 0, overflow: "hidden" };
+const COMPACT_TEXT = (isMobile) => ({
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  minWidth: 0,
+  overflow: isMobile ? "visible" : "hidden", // ← evita que a burbulla de data se recorte en móbil
+});
 
 const ACTIONS = { display: "flex", gap: 6, alignItems: "center", justifySelf: "end" };
 const ICONBTN = {
@@ -67,17 +73,7 @@ const EYE_BTN_DESKTOP = (active) =>
     : { ...ICONBTN, width: 30, height: 30 };
 const EYE_SVG = (active) => (active ? { ...SVGI, stroke: "#fff" } : SVGI);
 
-/* Ollo móbil (para fila de resultados) — máis pequeno agora */
-const EYE_BTN_MOBILE_SMALL = {
-  ...ICONBTN,
-  width: 28,
-  height: 28,
-  border: "1px solid #0ea5e9",
-  background: "#fff",
-};
-const EYE_SVG_BLUE = { ...SVGI, stroke: "#0ea5e9" };
-
-/* Ollo móbil nas etiquetas de partido (segue algo maior) */
+/* Ollo móbil (listaxe principal de partidos) */
 const EYE_BTN_MOBILE = {
   ...ICONBTN,
   width: 36,
@@ -85,10 +81,20 @@ const EYE_BTN_MOBILE = {
   border: "1px solid #0ea5e9",
   background: "#fff",
 };
+const EYE_SVG_BLUE = { ...SVGI, stroke: "#0ea5e9" };
+
+/* Ollo móbil pequeno (na táboa de resultados) */
+const EYE_BTN_MOBILE_SMALL = {
+  ...ICONBTN,
+  width: 26,
+  height: 26,
+  border: "1px solid #0ea5e9",
+  background: "#fff",
+};
 
 const CONF_COUNT = { font: "800 12.5px/1 Montserrat,system-ui,sans-serif", color: "#16a34a", minWidth: 18, textAlign: "right" };
 
-/* Botóns X (peches) */
+/* Botóns X */
 const XBTN = { ...ICONBTN, width: 30, height: 30, border: "1px solid #ef4444", background: "#fff" };
 const XBTN_SMALL = { ...ICONBTN, width: 26, height: 26, border: "1px solid #ef4444", background: "#fff" };
 const XSVG = { fill: "none", stroke: "#ef4444", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
@@ -97,20 +103,10 @@ const XSVG = { fill: "none", stroke: "#ef4444", strokeWidth: 2, strokeLinecap: "
 const TOAST_OK = { margin: "8px 0 12px", padding: "10px 12px", borderRadius: 10, background: "#ecfeff", border: "1px solid #67e8f9", color: "#0e7490", font: "600 12.5px/1.2 Montserrat,system-ui,sans-serif" };
 const TOAST_ERR = { ...TOAST_OK, background: "#fee2e2", border: "1px solid #fecaca", color: "#b91c1c" };
 
-/* Panel Persoas — escritorio */
+/* Panel Persoas (escritorio) */
 const PEOPLE_SHELL = (twoCols) =>
   twoCols
-    ? {
-        marginTop: 8,
-        border: "1px solid #e2e8f0",
-        borderRadius: 10,
-        background: "#fff",
-        padding: 12,
-        display: "grid",
-        gridTemplateColumns: "320px 1fr",
-        gap: 16,
-        alignItems: "start",
-      }
+    ? { marginTop: 8, border: "1px solid #e2e8f0", borderRadius: 10, background: "#fff", padding: 12, display: "grid", gridTemplateColumns: "320px 1fr", gap: 16, alignItems: "start" }
     : { marginTop: 8, border: "1px solid #e2e8f0", borderRadius: 10, background: "#fff", padding: "10px 12px" };
 
 const USERS_LIST = { listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 6 };
@@ -123,7 +119,7 @@ const USER_SUB = { font: "600 11.5px/1.05 Montserrat,system-ui,sans-serif", colo
 
 const RIGHT_PAD = { paddingLeft: 16 };
 
-/* Edición — escritorio */
+/* Edición escritorio */
 const EDIT_GRID = { display: "grid", gridTemplateColumns: "minmax(252px,1fr) minmax(252px,1fr)", gap: 8, alignItems: "start" };
 
 const COL_BASE = { border: "1px solid #e5e7eb", borderRadius: 10, overflow: "hidden", position: "relative" };
@@ -190,51 +186,40 @@ const FULL_CELL = { padding: "0 6px", borderRight: "1px solid #e5e7eb", display:
 const FULL_LAST = { padding: "0 6px", display: "flex", alignItems: "center", wordBreak: "break-word" };
 const FULL_ACERTOS = { textAlign: "center", color: "#0ea5e9", fontWeight: 900, minWidth: 76, justifyContent: "center" };
 
-/* ====== Resultados — móbil (AQUÍ VAN OS CAMBIOS) ====== */
+/* ====== Resultados — móbil ====== */
 const FULL_TITLE_BAR_MOBILE = {
-  marginTop: 6,
-  marginBottom: 8,
-  padding: "9px 10px",
+  marginTop: 6, marginBottom: 8, padding: "9px 10px",
   border: "1px solid #7dd3fc",
   background: "linear-gradient(180deg,#5dd3ff,#2ab6f0)",
-  borderRadius: 10,
-  color: "#fff",
-  display: "grid",
-  gridTemplateColumns: "1fr auto",
-  alignItems: "center",
-  gap: 8,
+  borderRadius: 10, color: "#fff",
+  display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 8,
 };
 const FULL_TITLE_MOBILE = { font: "600 14.5px/1.15 Montserrat,system-ui,sans-serif", color: "#fff" };
 
-/* Cabeceira máis pequena */
+/* Cabeceira máis grande un chisco */
 const FULL_HEAD_MOBILE = {
   display: "grid",
   gridTemplateColumns: "1fr max-content max-content",
-  padding: "6px 6px",
+  padding: "7px 6px",
   borderBottom: "1px solid #e5e7eb",
   background: "linear-gradient(180deg,#dcfce7,#bbf7d0)",
   color: "#064e3b",
   alignItems: "center",
-  font: "700 11.2px/1.05 Montserrat,system-ui,sans-serif",
-  textTransform: "none"
+  font: "700 12.4px/1.1 Montserrat,system-ui,sans-serif",
 };
 
-/* Filas con contido un pouco máis grande */
 const FULL_ROW_MOBILE = {
   display: "grid",
   gridTemplateColumns: "1fr max-content max-content",
-  padding: "9px 6px",
+  padding: "10px 6px",
   borderBottom: "1px solid #eef2f7",
-  font: "600 13.4px/1.15 Montserrat,system-ui,sans-serif",
+  font: "600 13.8px/1.18 Montserrat,system-ui,sans-serif",
   alignItems: "center"
 };
 
-/* Sen liñas verticais agora */
 const FULL_CELL_SPLIT = { padding: "0 6px", display: "flex", alignItems: "center" };
-const FULL_CELL_SPLIT_CENTER = { ...FULL_CELL_SPLIT, justifyContent: "center" };
-const FULL_CELL_LAST_CENTER = { padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "center" };
-
-/* Valor de acertos centrado */
+const FULL_CELL_SPLIT_CENTER = { ...FULL_CELL_SPLIT, justifyContent: "center", textAlign: "center" };
+const FULL_CELL_LAST_CENTER = { padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" };
 const FULL_ACERTOS_VAL = { textAlign: "center", color: "#0ea5e9", fontWeight: 900, width: "100%", justifyContent: "center", display: "flex" };
 
 /* Editor inline — escritorio */
@@ -243,8 +228,13 @@ const DT_INPUT = { border: "1px solid #cbd5e1", borderRadius: 8, padding: "6px 8
 const SAVE_BTN = { ...ICONBTN, width: 28, height: 28, position: "absolute", top: 8, right: 8, border: "1px solid #22c55e", background: "#fff" };
 const SAVE_SVG = { fill: "none", stroke: "#16a34a", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
 
-/* Móbil: info admins + popup + date bubble */
-const INFO_BTN = { ...ICONBTN, width: 30, height: 30, border: "1px solid #0ea5e9", placeItems: "center", background: "#fff" }; // AZUL
+/* Móbil: info + popup + burbulla de data */
+const INFO_BTN = {
+  ...ICONBTN, width: 30, height: 30,
+  border: "1px solid #0ea5e9", background: "#fff",
+  transform: "translateX(-4px)",           // ← lixeiramente á esquerda
+  placeItems: "center"
+};
 const INFO_SVG = { ...SVGI, stroke: "#0ea5e9", strokeWidth: 2.1 };
 
 const MOBILE_ALIGN_POP = {
@@ -254,7 +244,7 @@ const MOBILE_ALIGN_POP = {
   background: "#fff",
   border: "1px solid #e5e7eb",
   borderRadius: 12,
-  boxShadow: "0 24px 64px rgba(0,0,0,.45)",
+  boxShadow: "0 28px 72px rgba(0,0,0,.5)",
   padding: 16,
   maxHeight: "74vh",
   overflowY: "auto",
@@ -262,9 +252,20 @@ const MOBILE_ALIGN_POP = {
   margin: "0 auto"
 };
 
+const RESULT_LINE = {
+  marginTop: 8,
+  marginBottom: 10,
+  padding: "6px 8px",
+  borderRadius: 8,
+  background: "linear-gradient(180deg,#e0f2fe,#bae6fd)",
+  border: "1px solid #7dd3fc",
+  font: "800 12px/1.2 Montserrat,system-ui,sans-serif",
+  color: "#0f172a"
+};
+
 const LOCAL_DATE_BUBBLE = {
   position: "absolute",
-  top: 36,
+  top: 34,
   left: 0,
   zIndex: 200,
   background: "rgba(15,23,42,.94)",
@@ -272,8 +273,23 @@ const LOCAL_DATE_BUBBLE = {
   font: "800 11px/1.1 Montserrat,system-ui,sans-serif",
   padding: "6px 8px",
   borderRadius: 8,
-  pointerEvents: "none"
+  pointerEvents: "none",
+  whiteSpace: "nowrap"
 };
+
+/* Popup INFO (móbil) */
+const INFO_POP = {
+  position: "fixed",
+  inset: "10% 6% auto 6%",
+  background: "linear-gradient(180deg,#e0f2fe,#bae6fd)",
+  border: "1px solid #7dd3fc",
+  borderRadius: 12,
+  padding: 12,
+  zIndex: 140,
+  boxShadow: "0 28px 72px rgba(0,0,0,.5)"
+};
+const INFO_TITLE = { font: "900 13px/1.2 Montserrat,system-ui,sans-serif", color: "#0c4a6e", marginBottom: 0 }; // sen espazo
+const INFO_TEXT = { font: "600 12.5px/1.25 Montserrat,system-ui,sans-serif", color: "#0c4a6e" };
 
 /* Animacións */
 const STYLES = `
@@ -303,7 +319,7 @@ function normalizePlayer(p) {
 const POS_ORDER = ["POR", "DEF", "CEN", "DEL"];
 function groupByPos(players) { const b = { POR: [], DEF: [], CEN: [], DEL: [] }; for (const p of players || []) (b[(p.pos || "CEN").toUpperCase()] || b.CEN).push(p); POS_ORDER.forEach(k => b[k].sort((a, b) => (a.dorsal ?? 999) - (b.dorsal ?? 999))); return b; }
 
-/* Sonidos */
+/* Sons */
 function bip(opacity = 0.22, freq = 880, dur = 0.11) {
   try { const AC = window.AudioContext || window.webkitAudioContext; const ctx = new AC(); const o = ctx.createOscillator(); const g = ctx.createGain(); o.type = "sine"; o.frequency.value = freq; o.connect(g); g.connect(ctx.destination); g.gain.setValueAtTime(0.0001, ctx.currentTime); g.gain.exponentialRampToValueAtTime(opacity, ctx.currentTime + 0.01); o.start(); o.stop(ctx.currentTime + dur); g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur); } catch {}
 }
@@ -704,7 +720,6 @@ export default function ResultadosHistoricos() {
               const uname = userNames.get(rec.user_id) || rec.user_id;
               const onceSet = new Set(rec.once_ids || []);
 
-              // Grupos POR/DEF/CEN/DEL para popup
               const groups = { POR: [], DEF: [], CEN: [], DEL: [] };
               (rec.plantilla_ids || []).forEach((pid) => {
                 const p = pMap.get(pid);
@@ -739,7 +754,7 @@ export default function ResultadosHistoricos() {
                         })
                       }
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" style={EYE_SVG_BLUE}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" style={EYE_SVG_BLUE}>
                         <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />
                       </svg>
                     </button>
@@ -762,15 +777,13 @@ export default function ResultadosHistoricos() {
               </svg>
             </button>
 
-            <div style={{ font: "900 14px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", marginBottom: 8 }}>Detalle do rexistro</div>
-            <div style={{ font: "700 12.5px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", marginBottom: 4 }}>
+            <div style={{ font: "900 14px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", marginBottom: 6 }}>Detalle do rexistro</div>
+            <div style={{ font: "700 12.5px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a" }}>
               <span style={{ opacity: 0.85 }}>Data e hora:</span> {mobileAlignFor.dateStr}
             </div>
-            <div style={{ font: "800 12px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", marginBottom: 10 }}>
-              RESULTADO DA ALIÑACIÓN
-            </div>
 
-            {/* Aliñación presentada por posicións */}
+            <div style={RESULT_LINE}>RESULTADO DA ALIÑACIÓN</div>
+
             {POS_ORDER.map((k) => {
               const arr = mobileAlignFor.groups?.[k] || [];
               if (!arr.length) return null;
@@ -834,9 +847,9 @@ export default function ResultadosHistoricos() {
             return (
               <li key={match.id} style={{ ...ITEM_BASE, ...itemGrid(isMobile), ...itemBg, marginBottom: isPeopleOpen ? 12 : 8 }}>
                 {isMobile ? (
-                  <div style={COMPACT_TEXT}>
+                  <div style={COMPACT_TEXT(true)}>
                     {/* Icono calendario + burbulla de data (2s) */}
-                    <div style={{ position: "relative" }}>
+                    <div style={{ position: "relative", overflow: "visible" }}>
                       <button
                         type="button"
                         style={{ ...ICONBTN, width: 26, height: 26, border: "1px solid #0ea5e9", background: "#fff" }}
@@ -961,14 +974,15 @@ export default function ResultadosHistoricos() {
 
       {/* Info admins móbil */}
       {showMobileInfo && (
-        <div role="dialog" aria-modal="true" style={{ position: "fixed", inset: "10% 6% auto 6%", background: "linear-gradient(180deg,#e0f2fe,#bae6fd)", border: "1px solid #7dd3fc", borderRadius: 12, padding: 12, zIndex: 80, boxShadow: "0 16px 36px rgba(0,0,0,.25)" }}>
+        <div role="dialog" aria-modal="true" style={INFO_POP}>
           <button type="button" style={{ ...XBTN_SMALL, position: "absolute", top: 8, right: 8 }} aria-label="Pechar" title="Pechar" onClick={() => setShowMobileInfo(false)}>
-            <svg width="14" height="14" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" style={{ fill: "none", stroke: "#ef4444", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }}>
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
           </button>
-          <p style={{ font: "900 13px/1.2 Montserrat,system-ui,sans-serif", color: "#0c4a6e", marginBottom: 6 }}>AVISO A ADMINISTRADORES</p>
-          <p style={{ font: "600 12.5px/1.25 Montserrat,system-ui,sans-serif", color: "#0c4a6e" }}>
-            No caso de ser necesaria algunha corrección, na versión PC de sobremesa existe funcionalidade engadida de
-            edición manual de resultados por partido e xogador/a.
+          <p style={INFO_TITLE}>NOTA DE FUNCIONALIDADE PARA AS ADMINISTRADORAS/ES DA APP</p>
+          <p style={INFO_TEXT}>
+            No caso de ser necesaria algunha corrección, na versión PC de sobremesa existe funcionalidade engadida de edición manual de resultados por partido e xogador/a.
           </p>
         </div>
       )}
