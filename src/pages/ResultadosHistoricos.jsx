@@ -24,19 +24,26 @@ const ITEM_BASE = {
   boxShadow: "0 2px 8px rgba(0,0,0,.05)",
   marginBottom: 8,
 };
+
 const DATE = (isMobile) => ({
   font: isMobile ? "700 11.5px/1.1 Montserrat,system-ui,sans-serif" : "600 13px/1.1 Montserrat,system-ui,sans-serif",
   color: "#0f172a",
   whiteSpace: "nowrap",
 });
+
 const TEAMS = (isMobile) => ({
-  font: isMobile ? "800 11.5px/1.1 Montserrat,system-ui,sans-serif" : "800 14px/1.1 Montserrat,system-ui,sans-serif",
+  font: isMobile ? "800 13px/1.05 Montserrat,system-ui,sans-serif" : "800 14px/1.1 Montserrat,system-ui,sans-serif",
   textTransform: "uppercase",
   color: "#111827",
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
+  // máis alto que ancho no móbil
+  transform: isMobile ? "scaleX(0.96) scaleY(1.02)" : "none",
+  transformOrigin: "left center",
+  letterSpacing: isMobile ? "0.1px" : "0.2px",
 });
+
 const SEP = { margin: "0 6px", fontWeight: 800, color: "#0f172a" };
 const COMPACT_TEXT = { display: "flex", alignItems: "center", gap: 8, minWidth: 0, overflow: "hidden" };
 
@@ -54,7 +61,9 @@ const ICONBTN = {
 };
 const SVGI = { fill: "none", stroke: "#0f172a", strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round" };
 const EYE_BTN = (active) =>
-  active ? { ...ICONBTN, width: 30, height: 30, border: "1px solid #0ea5e9", background: "linear-gradient(180deg,#38bdf8,#0ea5e9)" } : { ...ICONBTN, width: 30, height: 30 };
+  active
+    ? { ...ICONBTN, width: 30, height: 30, border: "1px solid #0ea5e9", background: "linear-gradient(180deg,#38bdf8,#0ea5e9)" }
+    : { ...ICONBTN, width: 30, height: 30 };
 const EYE_SVG = (active) => (active ? { ...SVGI, stroke: "#fff" } : SVGI);
 const CONF_COUNT = { font: "800 12.5px/1 Montserrat,system-ui,sans-serif", color: "#16a34a", minWidth: 18, textAlign: "right" };
 
@@ -145,15 +154,14 @@ const DT_INPUT = { border: "1px solid #cbd5e1", borderRadius: 8, padding: "6px 8
 const SAVE_BTN = { ...ICONBTN, width: 28, height: 28, position: "absolute", top: 8, right: 8, border: "1px solid #22c55e", background: "#fff" };
 const SAVE_SVG = { fill: "none", stroke: "#16a34a", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
 
-/* Móbil: info admins + popup aliñación por fila + tooltip data */
-const INFO_BTN = { ...ICONBTN, width: 30, height: 30 };
-const INFO_SVG = { ...SVGI };
-const INFO_POP = { position: "fixed", inset: "10% 6% auto 6%", background: "linear-gradient(180deg,#e0f2fe,#bae6fd)", border: "1px solid #7dd3fc", borderRadius: 12, padding: 12, zIndex: 80, boxShadow: "0 16px 36px rgba(0,0,0,.25)" };
-const INFO_TITLE = { font: "900 13px/1.2 Montserrat,system-ui,sans-serif", color: "#0c4a6e", marginBottom: 6 };
-const INFO_TEXT = { font: "600 12.5px/1.25 Montserrat,system-ui,sans-serif", color: "#0c4a6e" };
+/* Móbil: info admins + popup aliñación + tooltip data */
+const INFO_BTN = { ...ICONBTN, width: 34, height: 34, border: "1px solid #0ea5e9" };
+const INFO_SVG = { ...SVGI, stroke: "#0ea5e9" };
 
 const MOBILE_ALIGN_POP = { position: "fixed", inset: "12% 5% auto 5%", zIndex: 90, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, boxShadow: "0 18px 38px rgba(0,0,0,.28)", padding: 12, maxHeight: "70vh", overflowY: "auto" };
 const TOAST_DATE = { position: "fixed", left: "50%", bottom: "8%", transform: "translateX(-50%)", background: "rgba(15,23,42,.92)", color: "#fff", font: "800 12.5px/1.1 Montserrat,system-ui,sans-serif", padding: "8px 10px", borderRadius: 10, zIndex: 100 };
+
+const LOCAL_DATE_BUBBLE = { position: "absolute", top: 34, left: 0, background: "rgba(15,23,42,.92)", color: "#fff", font: "800 11.5px/1.1 Montserrat,system-ui,sans-serif", padding: "6px 8px", borderRadius: 8 };
 
 /* Animacións */
 const STYLES = `
@@ -189,6 +197,17 @@ function bip(opacity = 0.22, freq = 880, dur = 0.11) {
 }
 function bipConfirm() { bip(0.18, 820, 0.08); setTimeout(() => bip(0.14, 700, 0.28), 130); }
 
+/* Helper: lista linear como texto para 2 liñas en móbil */
+function listLinearText(ids = [], idToPlayer = new Map(), onceSet = new Set()) {
+  const labels = ids.map((pid) => {
+    const p = idToPlayer.get(pid);
+    const base = p ? `${pad2(p.dorsal ?? "")} · ${p.name || (p.label?.split(" - ").slice(-1)[0] || "")}` : String(pid);
+    return onceSet.has(pid) ? `*${base}*` : base; // * marca acertos (non negrita real, só indicativo)
+  });
+  const mid = Math.ceil(labels.length / 2) || 0;
+  return [labels.slice(0, mid).join(" | "), labels.slice(mid).join(" | ")];
+}
+
 /* ===== Compo ===== */
 export default function ResultadosHistoricos() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -218,7 +237,8 @@ export default function ResultadosHistoricos() {
   const [editOverlay, setEditOverlay] = useState(null);
   const [showMobileInfo, setShowMobileInfo] = useState(false);
   const [mobileAlignFor, setMobileAlignFor] = useState(null);
-  const [mobileDateToast, setMobileDateToast] = useState("");
+  const [mobileDateToast, setMobileDateToast] = useState(""); // (segue dispo para usos xerais)
+  const [dateBubbleFor, setDateBubbleFor] = useState(null); // id de partido que mostra burbulla local
 
   const [resultsConfirmed, setResultsConfirmed] = useState({});
   const [hasResults, setHasResults] = useState(new Set());
@@ -492,6 +512,22 @@ export default function ResultadosHistoricos() {
       setTimeout(() => setDateToast(""), 2000);
     };
 
+    const isMobileNow = isMobile;
+
+    // estilos específicos móbil para que caiban 4 columnas
+    const MOBILE_ROW = {
+      display: "grid",
+      gridTemplateColumns: "120px 1fr 54px 1.4fr",
+      alignItems: "center",
+      gap: 6,
+      padding: "8px 6px",
+      borderBottom: "1px solid #f1f5f9",
+      font: "600 12.5px/1.05 Montserrat,system-ui,sans-serif",
+    };
+    const MOBILE_CELL = { padding: "0 4px", display: "block" };
+    const MOBILE_DATE_LINE1 = { fontWeight: 800, color: "#0f172a" };
+    const MOBILE_DATE_LINE2 = { fontWeight: 700, color: "#334155", opacity: 0.9, marginTop: 2 };
+
     return (
       <section aria-label="Resultados do partido" style={{ marginTop: 6 }}>
         <div style={FULL_TITLE_BAR}>
@@ -517,32 +553,39 @@ export default function ResultadosHistoricos() {
             recs.map((rec) => {
               const uname = userNames.get(rec.user_id) || rec.user_id;
               const onceSet = new Set(rec.once_ids || []);
-              const ali = listLinear(rec.plantilla_ids || [], onceSet, pMap);
+              const aliIds = rec.plantilla_ids || [];
+              const [line1, line2] = listLinearText(aliIds, pMap, onceSet);
+              const dateStr = dmyShort(rec.confirmed_at);
+              const [d1, d2] = dateStr.split(",").map((s) => s.trim());
 
-              if (isMobile) {
+              if (isMobileNow) {
                 return (
-                  <div key={`${rec.user_id}`} style={FULL_ROW}>
-                    <div style={{ ...FULL_CELL, minWidth: 140 }}>
-                      <button type="button" style={{ ...ICONBTN, width: 28, height: 28 }} title="Ver data" aria-label="Ver data" onClick={() => revealDate(rec.confirmed_at)}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" style={SVGI}><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                      </button>
+                  <div key={`${rec.user_id}`} style={MOBILE_ROW}>
+                    {/* Data e hora en dúas liñas */}
+                    <div style={MOBILE_CELL}>
+                      <div style={MOBILE_DATE_LINE1}>{d1 || dateStr}</div>
+                      <div style={MOBILE_DATE_LINE2}>{d2 || ""}</div>
                     </div>
-                    <div style={FULL_CELL}>{uname}</div>
-                    <div style={{ ...FULL_CELL, ...FULL_ACERTOS }}>{rec.acertos}</div>
-                    <div style={FULL_LAST}>
-                      <button
-                        type="button"
-                        style={{ ...EYE_BTN(true), width: 28, height: 28 }}
-                        title="Ver aliñación"
-                        aria-label="Ver aliñación"
-                        onClick={() => setMobileAlignFor({ matchId: rec.match_id, userId: rec.user_id, labels: ali })}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" style={EYE_SVG(true)}><path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                      </button>
+                    {/* Membro */}
+                    <div style={{ ...MOBILE_CELL, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{uname}</div>
+                    {/* Acertos */}
+                    <div style={{ ...MOBILE_CELL, textAlign: "center", fontWeight: 900, color: "#0ea5e9" }}>{rec.acertos}</div>
+                    {/* Aliñación en dúas liñas */}
+                    <div style={{ ...MOBILE_CELL, whiteSpace: "normal" }}>
+                      <div>{line1}</div>
+                      {line2 && <div style={{ marginTop: 2 }}>{line2}</div>}
                     </div>
                   </div>
                 );
               }
+
+              // Desktop
+              const ali = (aliIds || []).map((pid, idx, arr) => {
+                const p = pMap.get(pid);
+                const base = p ? `${pad2(p.dorsal ?? "")} · ${p.name}` : String(pid);
+                const el = onceSet.has(pid) ? <strong style={{ color: "#0ea5e9" }}>{base}</strong> : base;
+                return <span key={`${pid}-${idx}`}>{el}{idx < arr.length - 1 && <span style={{ opacity: 0.6 }}>|</span>}</span>;
+              });
 
               return (
                 <div key={`${rec.user_id}`} style={FULL_ROW}>
@@ -550,7 +593,7 @@ export default function ResultadosHistoricos() {
                     <button type="button" style={{ ...ICONBTN, width: 28, height: 28, marginRight: 6 }} title="Editar data/hora" aria-label="Editar data/hora" onClick={() => setEditOverlay({ matchId: rec.match_id, userId: rec.user_id, valueLocal: toLocalInput(rec.confirmed_at) })}>
                       <svg width="16" height="16" viewBox="0 0 24 24" style={SVGI}><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>
                     </button>
-                    <span>{dmyShort(rec.confirmed_at)}</span>
+                    <span>{dateStr}</span>
                   </div>
                   <div style={FULL_CELL}>{uname}</div>
                   <div style={{ ...FULL_CELL, ...FULL_ACERTOS }}>{rec.acertos}</div>
@@ -598,7 +641,7 @@ export default function ResultadosHistoricos() {
         <p style={PAGE_SUB}>Aquí podes consultar os resultados individuais e xerais de cada partido.</p>
         {isMobile && isAdmin && (
           <button type="button" style={INFO_BTN} title="Información" aria-label="Información" onClick={() => setShowMobileInfo(true)}>
-            <svg width="18" height="18" viewBox="0 0 24 24" style={INFO_SVG}><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" style={INFO_SVG}><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
           </button>
         )}
       </div>
@@ -621,23 +664,37 @@ export default function ResultadosHistoricos() {
             const eyeActive = hasResults.has(match.id);
             const confirmedCount = (confirmedByMatch[match.id]?.size) || 0;
 
+            // fondo celeste degradado en móbil
+            const itemBg = isMobile
+              ? { background: "linear-gradient(180deg,#e0f2fe,#bae6fd)", border: "1px solid #7dd3fc" }
+              : {};
+
             return (
-              <li key={match.id} style={{ ...ITEM_BASE, ...itemGrid(isMobile), marginBottom: isPeopleOpen ? 12 : 8 }}>
+              <li key={match.id} style={{ ...ITEM_BASE, ...itemGrid(isMobile), ...itemBg, marginBottom: isPeopleOpen ? 12 : 8 }}>
                 {isMobile ? (
                   <div style={COMPACT_TEXT}>
-                    <button
-                      type="button"
-                      style={{ ...ICONBTN, width: 28, height: 28 }}
-                      title="Ver data do partido"
-                      aria-label="Ver data do partido"
-                      onClick={() => {
-                        setMobileDateToast(dmyFull(match.match_iso));
-                        setTimeout(() => setMobileDateToast(""), 2000);
-                      }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" style={SVGI}><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                    </button>
-                    <span style={TEAMS(true)}>{match.equipo1} <span style={{ color: "#0f172a" }}>-</span> {match.equipo2}</span>
+                    {/* Calendario con burbulla local de data */}
+                    <div style={{ position: "relative" }}>
+                      <button
+                        type="button"
+                        style={{ ...ICONBTN, width: 30, height: 30, border: "1px solid #0ea5e9" }}
+                        title="Ver data do partido"
+                        aria-label="Ver data do partido"
+                        onClick={() => {
+                          setDateBubbleFor(match.id);
+                          setTimeout(() => setDateBubbleFor((id) => (id === match.id ? null : id)), 2000);
+                        }}
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24" style={{ ...SVGI, stroke: "#0ea5e9" }}><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                      </button>
+                      {dateBubbleFor === match.id && (
+                        <div style={LOCAL_DATE_BUBBLE}>{dmyFull(match.match_iso)}</div>
+                      )}
+                    </div>
+
+                    <span style={TEAMS(true)}>
+                      {match.equipo1} <span style={{ color: "#0f172a" }}>-</span> {match.equipo2}
+                    </span>
                   </div>
                 ) : (
                   <>
@@ -775,18 +832,19 @@ export default function ResultadosHistoricos() {
       )}
 
       {showMobileInfo && (
-        <div role="dialog" aria-modal="true" style={INFO_POP}>
+        <div role="dialog" aria-modal="true" style={{ position: "fixed", inset: "10% 6% auto 6%", background: "linear-gradient(180deg,#e0f2fe,#bae6fd)", border: "1px solid #7dd3fc", borderRadius: 12, padding: 12, zIndex: 80, boxShadow: "0 16px 36px rgba(0,0,0,.25)" }}>
           <button type="button" style={{ ...XBTN_SMALL, position: "absolute", top: 8, right: 8 }} aria-label="Pechar" title="Pechar" onClick={() => setShowMobileInfo(false)}>
             <svg width="14" height="14" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
           </button>
-          <p style={INFO_TITLE}>AVISO A ADMINISTRADORES</p>
-          <p style={INFO_TEXT}>
+          <p style={{ font: "900 13px/1.2 Montserrat,system-ui,sans-serif", color: "#0c4a6e", marginBottom: 6 }}>AVISO A ADMINISTRADORES</p>
+          <p style={{ font: "600 12.5px/1.25 Montserrat,system-ui,sans-serif", color: "#0c4a6e" }}>
             No caso de ser necesaria algunha corrección, na versión PC de sobremesa existe funcionalidade engadida de
             edición manual de resultados por partido e xogador/a.
           </p>
         </div>
       )}
 
+      {/* fallback global antigo por se o queres manter noutros puntos */}
       {mobileDateToast && <div style={TOAST_DATE}>{mobileDateToast}</div>}
     </main>
   );
