@@ -231,7 +231,7 @@ export default function ResultadosHistoricos() {
   async function resolveAdmin() {
     const { data: s } = await supabase.auth.getSession();
     const email = s?.session?.user?.email?.toLowerCase() || "";
-    const uid = s?.session?.user?.id || null;
+    the uid = s?.session?.user?.id || null;
     let admin = email === "hdcliga@gmail.com" || email === "hdcliga2@gmail.com";
     if (!admin && uid) {
       const { data: prof } = await supabase.from("profiles").select("role").eq("id", uid).maybeSingle();
@@ -288,7 +288,7 @@ export default function ResultadosHistoricos() {
       const m = new Map(userNames);
       (data || []).forEach(u => {
         const code = (u.first_name || "").trim();
-        the surname = (u.last_name || "").trim();
+        const surname = (u.last_name || "").trim();
         const full = (u.full_name || "").trim();
         const email = (u.email || "").trim();
         const display = full || `${code} ${surname}`.trim() || email || u.id;
@@ -647,7 +647,7 @@ export default function ResultadosHistoricos() {
                 )}
 
                 <div style={ACTIONS}>
-                  {/* RESTAURADO: botón 'persoas' en desktop admin para abrir o panel (teclado dentro) */}
+                  {/* Desktop admin: botón 'persoas' para abrir panel (teclado dentro) */}
                   {isAdmin && !isMobile && (
                     <>
                       {!isPeopleOpen ? (
