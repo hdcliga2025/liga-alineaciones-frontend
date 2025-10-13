@@ -231,7 +231,7 @@ export default function ResultadosHistoricos() {
   async function resolveAdmin() {
     const { data: s } = await supabase.auth.getSession();
     const email = s?.session?.user?.email?.toLowerCase() || "";
-    the uid = s?.session?.user?.id || null;
+    const uid = s?.session?.user?.id || null;
     let admin = email === "hdcliga@gmail.com" || email === "hdcliga2@gmail.com";
     if (!admin && uid) {
       const { data: prof } = await supabase.from("profiles").select("role").eq("id", uid).maybeSingle();
@@ -257,7 +257,7 @@ export default function ResultadosHistoricos() {
           const map = {};
           (rc || []).forEach(r => { if (!map[r.match_id]) map[r.match_id] = new Set(); map[r.match_id].add(r.user_id); });
           if (alive) setConfirmedByMatch(map);
-          const s = new Set((rc || []).map(x => x.match_id)); if (alive) setHasResults(s);
+          const sset = new Set((rc || []).map(x => x.match_id)); if (alive) setHasResults(sset);
         }
       } catch (e) { console.error("Historico load:", e); if (alive) setErr("Produciuse un erro ao cargar o histórico."); }
       finally { if (alive) setLoading(false); }
