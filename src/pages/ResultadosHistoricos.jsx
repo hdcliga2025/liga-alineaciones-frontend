@@ -38,7 +38,6 @@ const TEAMS = (isMobile) => ({
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
-  // máis alto que ancho no móbil
   transform: isMobile ? "scaleX(0.96) scaleY(1.02)" : "none",
   transformOrigin: "left center",
   letterSpacing: isMobile ? "0.1px" : "0.2px",
@@ -60,10 +59,14 @@ const ICONBTN = {
   cursor: "pointer",
 };
 const SVGI = { fill: "none", stroke: "#0f172a", strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round" };
-const EYE_BTN = (active) =>
+const EYE_BTN_DESKTOP = (active) =>
   active
     ? { ...ICONBTN, width: 30, height: 30, border: "1px solid #0ea5e9", background: "linear-gradient(180deg,#38bdf8,#0ea5e9)" }
     : { ...ICONBTN, width: 30, height: 30 };
+const EYE_BTN_MOBILE = (active) =>
+  active
+    ? { ...ICONBTN, width: 30, height: 30, border: "1px solid #ffffff", background: "linear-gradient(180deg,#38bdf8,#0ea5e9)" }
+    : { ...ICONBTN, width: 30, height: 30, border: "1px solid #ffffff", background: "#fff" };
 const EYE_SVG = (active) => (active ? { ...SVGI, stroke: "#fff" } : SVGI);
 const CONF_COUNT = { font: "800 12.5px/1 Montserrat,system-ui,sans-serif", color: "#16a34a", minWidth: 18, textAlign: "right" };
 
@@ -155,13 +158,13 @@ const SAVE_BTN = { ...ICONBTN, width: 28, height: 28, position: "absolute", top:
 const SAVE_SVG = { fill: "none", stroke: "#16a34a", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
 
 /* Móbil: info admins + popup aliñación + tooltip data */
-const INFO_BTN = { ...ICONBTN, width: 34, height: 34, border: "1px solid #0ea5e9" };
+const INFO_BTN = { ...ICONBTN, width: 36, height: 36, border: "1px solid #0ea5e9" };
 const INFO_SVG = { ...SVGI, stroke: "#0ea5e9" };
 
-const MOBILE_ALIGN_POP = { position: "fixed", inset: "12% 5% auto 5%", zIndex: 90, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, boxShadow: "0 18px 38px rgba(0,0,0,.28)", padding: 12, maxHeight: "70vh", overflowY: "auto" };
+const MOBILE_ALIGN_POP = { position: "fixed", inset: "10% 5% auto 5%", zIndex: 120, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, boxShadow: "0 18px 38px rgba(0,0,0,.28)", padding: 14, maxHeight: "74vh", overflowY: "auto", maxWidth: 520, margin: "0 auto" };
 const TOAST_DATE = { position: "fixed", left: "50%", bottom: "8%", transform: "translateX(-50%)", background: "rgba(15,23,42,.92)", color: "#fff", font: "800 12.5px/1.1 Montserrat,system-ui,sans-serif", padding: "8px 10px", borderRadius: 10, zIndex: 100 };
 
-const LOCAL_DATE_BUBBLE = { position: "absolute", top: 34, left: 0, background: "rgba(15,23,42,.92)", color: "#fff", font: "800 11.5px/1.1 Montserrat,system-ui,sans-serif", padding: "6px 8px", borderRadius: 8 };
+const LOCAL_DATE_BUBBLE = { position: "absolute", top: 36, left: 0, zIndex: 110, background: "rgba(15,23,42,.94)", color: "#fff", font: "800 11.2px/1.1 Montserrat,system-ui,sans-serif", padding: "6px 8px", borderRadius: 8 };
 
 /* Animacións */
 const STYLES = `
@@ -197,12 +200,12 @@ function bip(opacity = 0.22, freq = 880, dur = 0.11) {
 }
 function bipConfirm() { bip(0.18, 820, 0.08); setTimeout(() => bip(0.14, 700, 0.28), 130); }
 
-/* Helper: lista linear como texto para 2 liñas en móbil */
+/* Helper móbil: lista en dúas liñas */
 function listLinearText(ids = [], idToPlayer = new Map(), onceSet = new Set()) {
   const labels = ids.map((pid) => {
     const p = idToPlayer.get(pid);
     const base = p ? `${pad2(p.dorsal ?? "")} · ${p.name || (p.label?.split(" - ").slice(-1)[0] || "")}` : String(pid);
-    return onceSet.has(pid) ? `*${base}*` : base; // * marca acertos (non negrita real, só indicativo)
+    return onceSet.has(pid) ? `*${base}*` : base;
   });
   const mid = Math.ceil(labels.length / 2) || 0;
   return [labels.slice(0, mid).join(" | "), labels.slice(mid).join(" | ")];
@@ -237,8 +240,8 @@ export default function ResultadosHistoricos() {
   const [editOverlay, setEditOverlay] = useState(null);
   const [showMobileInfo, setShowMobileInfo] = useState(false);
   const [mobileAlignFor, setMobileAlignFor] = useState(null);
-  const [mobileDateToast, setMobileDateToast] = useState(""); // (segue dispo para usos xerais)
-  const [dateBubbleFor, setDateBubbleFor] = useState(null); // id de partido que mostra burbulla local
+  const [mobileDateToast, setMobileDateToast] = useState("");
+  const [dateBubbleFor, setDateBubbleFor] = useState(null);
 
   const [resultsConfirmed, setResultsConfirmed] = useState({});
   const [hasResults, setHasResults] = useState(new Set());
@@ -514,10 +517,10 @@ export default function ResultadosHistoricos() {
 
     const isMobileNow = isMobile;
 
-    // estilos específicos móbil para que caiban 4 columnas
-    const MOBILE_ROW = {
+    // MÓBIL: 3 columnas (Membro, Acertos, Detalle)
+    const MOBILE_ROW_3 = {
       display: "grid",
-      gridTemplateColumns: "120px 1fr 54px 1.4fr",
+      gridTemplateColumns: "1fr 70px 48px",
       alignItems: "center",
       gap: 6,
       padding: "8px 6px",
@@ -525,8 +528,6 @@ export default function ResultadosHistoricos() {
       font: "600 12.5px/1.05 Montserrat,system-ui,sans-serif",
     };
     const MOBILE_CELL = { padding: "0 4px", display: "block" };
-    const MOBILE_DATE_LINE1 = { fontWeight: 800, color: "#0f172a" };
-    const MOBILE_DATE_LINE2 = { fontWeight: 700, color: "#334155", opacity: 0.9, marginTop: 2 };
 
     return (
       <section aria-label="Resultados do partido" style={{ marginTop: 6 }}>
@@ -541,10 +542,20 @@ export default function ResultadosHistoricos() {
 
         <div style={FULL_TABLE}>
           <div style={FULL_HEAD}>
-            <div style={{ ...FULL_CELL, minWidth: 140 }}>Data e hora</div>
-            <div style={FULL_CELL}>HDC Membro</div>
-            <div style={{ ...FULL_CELL, ...FULL_ACERTOS }}>Acertos</div>
-            <div style={FULL_LAST}>Aliñación presentada</div>
+            {isMobileNow ? (
+              <>
+                <div style={{ ...FULL_CELL, minWidth: 120 }}>HDC Membro</div>
+                <div style={{ ...FULL_CELL, ...FULL_ACERTOS }}>Acertos</div>
+                <div style={FULL_LAST}>Detalle</div>
+              </>
+            ) : (
+              <>
+                <div style={{ ...FULL_CELL, minWidth: 140 }}>Data e hora</div>
+                <div style={FULL_CELL}>HDC Membro</div>
+                <div style={{ ...FULL_CELL, ...FULL_ACERTOS }}>Acertos</div>
+                <div style={FULL_LAST}>Aliñación presentada</div>
+              </>
+            )}
           </div>
 
           {recs.length === 0 ? (
@@ -556,24 +567,31 @@ export default function ResultadosHistoricos() {
               const aliIds = rec.plantilla_ids || [];
               const [line1, line2] = listLinearText(aliIds, pMap, onceSet);
               const dateStr = dmyShort(rec.confirmed_at);
-              const [d1, d2] = dateStr.split(",").map((s) => s.trim());
 
               if (isMobileNow) {
                 return (
-                  <div key={`${rec.user_id}`} style={MOBILE_ROW}>
-                    {/* Data e hora en dúas liñas */}
-                    <div style={MOBILE_CELL}>
-                      <div style={MOBILE_DATE_LINE1}>{d1 || dateStr}</div>
-                      <div style={MOBILE_DATE_LINE2}>{d2 || ""}</div>
-                    </div>
-                    {/* Membro */}
+                  <div key={`${rec.user_id}`} style={MOBILE_ROW_3}>
                     <div style={{ ...MOBILE_CELL, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{uname}</div>
-                    {/* Acertos */}
                     <div style={{ ...MOBILE_CELL, textAlign: "center", fontWeight: 900, color: "#0ea5e9" }}>{rec.acertos}</div>
-                    {/* Aliñación en dúas liñas */}
-                    <div style={{ ...MOBILE_CELL, whiteSpace: "normal" }}>
-                      <div>{line1}</div>
-                      {line2 && <div style={{ marginTop: 2 }}>{line2}</div>}
+                    <div style={{ ...MOBILE_CELL, display: "flex", justifyContent: "center" }}>
+                      <button
+                        type="button"
+                        style={EYE_BTN_MOBILE(true)}
+                        title="Ver detalle"
+                        aria-label="Ver detalle"
+                        onClick={() =>
+                          setMobileAlignFor({
+                            matchId: rec.match_id,
+                            userId: rec.user_id,
+                            dateStr,
+                            lines: [line1, line2],
+                          })
+                        }
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" style={EYE_SVG(true)}>
+                          <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
                 );
@@ -621,8 +639,15 @@ export default function ResultadosHistoricos() {
             <button type="button" style={{ ...XBTN_SMALL, position: "absolute", top: 8, right: 8 }} aria-label="Pechar" title="Pechar" onClick={() => setMobileAlignFor(null)}>
               <svg width="14" height="14" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
             </button>
-            <div style={{ font: "800 13px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", marginBottom: 8 }}>Aliñación presentada</div>
-            <div style={{ font: "700 12.8px/1.35 Montserrat,system-ui,sans-serif", color: "#0f172a" }}>{mobileAlignFor.labels}</div>
+            <div style={{ font: "900 14px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", marginBottom: 8 }}>Detalle do rexistro</div>
+            <div style={{ font: "700 12.5px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", marginBottom: 6 }}>
+              <span style={{ opacity: 0.85 }}>Data e hora:</span> {mobileAlignFor.dateStr}
+            </div>
+            <div style={{ font: "800 12.8px/1.35 Montserrat,system-ui,sans-serif", color: "#0f172a" }}>
+              <div style={{ marginBottom: 2 }}>Aliñación presentada</div>
+              <div>{mobileAlignFor.lines?.[0] || ""}</div>
+              {mobileAlignFor.lines?.[1] && <div style={{ marginTop: 2 }}>{mobileAlignFor.lines[1]}</div>}
+            </div>
           </div>
         )}
 
@@ -641,7 +666,7 @@ export default function ResultadosHistoricos() {
         <p style={PAGE_SUB}>Aquí podes consultar os resultados individuais e xerais de cada partido.</p>
         {isMobile && isAdmin && (
           <button type="button" style={INFO_BTN} title="Información" aria-label="Información" onClick={() => setShowMobileInfo(true)}>
-            <svg width="20" height="20" viewBox="0 0 24 24" style={INFO_SVG}><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" style={INFO_SVG}><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
           </button>
         )}
       </div>
@@ -704,7 +729,7 @@ export default function ResultadosHistoricos() {
                 )}
 
                 <div style={ACTIONS}>
-                  {/* Desktop admin: botón 'persoas' para abrir panel (teclado dentro) */}
+                  {/* Desktop admin: botón 'persoas' para abrir panel */}
                   {isAdmin && !isMobile && (
                     <>
                       {!isPeopleOpen ? (
@@ -738,7 +763,7 @@ export default function ResultadosHistoricos() {
 
                   <button
                     type="button"
-                    style={EYE_BTN(eyeActive)}
+                    style={isMobile ? EYE_BTN_MOBILE(eyeActive) : EYE_BTN_DESKTOP(eyeActive)}
                     title="Ver resultados do partido"
                     aria-label="Ver resultados do partido"
                     onClick={async () => {
@@ -754,7 +779,7 @@ export default function ResultadosHistoricos() {
                     </svg>
                   </button>
 
-                  {/* En móbil, ocultamos o contador verde; en desktop, móstrase */}
+                  {/* En móbil, ocultamos o contador verde; en desktop móstrase */}
                   {!isMobile && <span style={CONF_COUNT}>{confirmedCount}</span>}
                 </div>
 
@@ -784,7 +809,6 @@ export default function ResultadosHistoricos() {
                                     aria-label="Abrir táboas desta persoa"
                                     onClick={() => onOpenUserEditor(u.id)}
                                   >
-                                    {/* Teclado */}
                                     <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}>
                                       <rect x="3" y="6" width="18" height="12" rx="2" />
                                       <path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" />
@@ -844,7 +868,6 @@ export default function ResultadosHistoricos() {
         </div>
       )}
 
-      {/* fallback global antigo por se o queres manter noutros puntos */}
       {mobileDateToast && <div style={TOAST_DATE}>{mobileDateToast}</div>}
     </main>
   );
