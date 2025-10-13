@@ -11,7 +11,7 @@ const PAGE_SUB_WRAP = { display: "grid", gridTemplateColumns: "1fr auto", alignI
 
 const LIST = { listStyle: "none", margin: 0, padding: 0 };
 const itemGrid = (isMobile) =>
-  isMobile ? { gridTemplateColumns: "1fr auto auto" } : { gridTemplateColumns: "140px 1fr auto" };
+  isMobile ? { gridTemplateColumns: "1fr auto" } : { gridTemplateColumns: "140px 1fr auto" };
 
 const ITEM_BASE = {
   display: "grid",
@@ -60,22 +60,22 @@ const ICONBTN = {
 };
 const SVGI = { fill: "none", stroke: "#0f172a", strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round" };
 
+/* Ollo */
 const EYE_BTN_DESKTOP = (active) =>
   active
     ? { ...ICONBTN, width: 30, height: 30, border: "1px solid #0ea5e9", background: "linear-gradient(180deg,#38bdf8,#0ea5e9)" }
     : { ...ICONBTN, width: 30, height: 30 };
-
-const EYE_BTN_MOBILE = (active) =>
-  ({
-    ...ICONBTN,
-    width: 34, // un pouco máis grande en móbil
-    height: 34,
-    border: "1px solid #0ea5e9",
-    background: "#fff",
-  });
-
-const EYE_SVG_BLUE = { ...SVGI, stroke: "#0ea5e9" };
 const EYE_SVG = (active) => (active ? { ...SVGI, stroke: "#fff" } : SVGI);
+
+/* Ollo (móbil): azul con fondo branco */
+const EYE_BTN_MOBILE = {
+  ...ICONBTN,
+  width: 36,
+  height: 36,
+  border: "1px solid #0ea5e9",
+  background: "#fff",
+};
+const EYE_SVG_BLUE = { ...SVGI, stroke: "#0ea5e9" };
 
 const CONF_COUNT = { font: "800 12.5px/1 Montserrat,system-ui,sans-serif", color: "#16a34a", minWidth: 18, textAlign: "right" };
 
@@ -105,7 +105,7 @@ const PEOPLE_SHELL = (twoCols) =>
     : { marginTop: 8, border: "1px solid #e2e8f0", borderRadius: 10, background: "#fff", padding: "10px 12px" };
 
 const USERS_LIST = { listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 6 };
-const USER_ROW_BASE = { display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 6, alignItems: "center", padding: "6px 8px", borderRadius: 8, border: "1px solid #eef2f7", background: "f9fafb" };
+const USER_ROW_BASE = { display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 6, alignItems: "center", padding: "6px 8px", borderRadius: 8, border: "1px solid #eef2f7", background: "#f9fafb" };
 const USER_ROW_BLINK = { ...USER_ROW_BASE, animation: "userBlink 1.5s ease-in-out infinite", background: "linear-gradient(180deg,#e6f4ff,#f2f8ff)" };
 const USER_ROW_CONFIRMED = { ...USER_ROW_BASE, background: "linear-gradient(180deg,#eafff3,#f7fff9)", border: "1px solid #22c55e" };
 const USER_BADGE = { font: "900 11px/1 Montserrat,system-ui,sans-serif", color: "#0ea5e9", background: "#e0f2fe", padding: "4px 7px", borderRadius: 8, minWidth: 38, textAlign: "center" };
@@ -127,8 +127,8 @@ const COUNT = { font: "900 10.5px/1.02 Montserrat,system-ui,sans-serif", color: 
 
 /* Demarcacións + filas */
 const GROUP_SCROLL = { maxHeight: 260, overflowY: "auto", background: "inherit" };
-const GROUP_WRAP = () => ({ position: "relative", background: "inherit", paddingRight: 20, marginBottom: 3 });
-const POS_SIDE = () => ({ position: "absolute", right: 2, top: 2, bottom: 2, writingMode: "vertical-rl", textOrientation: "mixed", font: "900 9.8px/1 Montserrat,system-ui,sans-serif", color: "#64748b", opacity: 0.85, display: "grid", placeItems: "center", background: "transparent", padding: "2px 0" });
+const GROUP_WRAP = (bg) => ({ position: "relative", background: "inherit", paddingRight: 20, marginBottom: 3 });
+const POS_SIDE = (bg) => ({ position: "absolute", right: 2, top: 2, bottom: 2, writingMode: "vertical-rl", textOrientation: "mixed", font: "900 9.8px/1 Montserrat,system-ui,sans-serif", color: "#64748b", opacity: 0.85, display: "grid", placeItems: "center", background: "transparent", padding: "2px 0" });
 const POS_SEP = { height: 1, background: "#e5e7eb" };
 const ROW_PLAYER = { display: "grid", gridTemplateColumns: "16px 1fr auto", gap: 8, alignItems: "center", padding: "0 2px", minWidth: 0 };
 const CHECKBOX = { width: 14, height: 14, transform: "scale(1.02)", marginRight: 10 };
@@ -150,8 +150,39 @@ const CELSTE = { color: "#0ea5e9", fontWeight: 800 };
 const BTN_CONFIRM = { marginTop: 8, width: "100%", borderRadius: 10, padding: "8px 10px", font: "900 12px/1.02 Montserrat,system-ui,sans-serif", background: "linear-gradient(180deg,#38bdf8,#0ea5e9)", color: "#fff", border: "1px solid #0ea5e9", boxShadow: "0 3px 10px rgba(14,165,233,.18)", cursor: "pointer" };
 const BTN_CONFIRM_BLINK = { ...BTN_CONFIRM, animation: "pulseSoft 1.5s ease-in-out infinite" };
 
-/* Resultados a pantalla completa */
-const FULL_TITLE_BAR = {
+/* Resultados a pantalla completa (base de escritorio orixinal) */
+const FULL_TITLE_BAR_DESKTOP = {
+  marginTop: 6,
+  marginBottom: 8,
+  padding: "9px 10px",
+  border: "1px solid #7dd3fc",
+  background: "linear-gradient(180deg,#5dd3ff,#2ab6f0)",
+  borderRadius: 10,
+  color: "#fff",
+  display: "grid",
+  gridTemplateColumns: "1fr auto", // título + X á dereita (como antes)
+  alignItems: "center",
+  gap: 8,
+};
+const FULL_TITLE = { font: "900 15px/1.15 Montserrat,system-ui,sans-serif", color: "#fff" };
+const FULL_TABLE = { width: "100%", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden", background: "#fff" };
+const FULL_HEAD_DESKTOP = {
+  display: "grid",
+  gridTemplateColumns: "auto 1fr auto 3fr",
+  padding: "10px 6px",
+  borderBottom: "1px solid #e5e7eb",
+  font: "800 13.5px/1.2 Montserrat,system-ui,sans-serif",
+  background: "linear-gradient(180deg,#dcfce7,#bbf7d0)",
+  color: "#064e3b",
+  alignItems: "center",
+};
+const FULL_ROW_DESKTOP = { display: "grid", gridTemplateColumns: "auto 1fr auto 3fr", padding: "8px 6px", borderBottom: "1px solid #f1f5f9", font: "600 12.6px/1.05 Montserrat,system-ui,sans-serif", alignItems: "center" };
+const FULL_CELL = { padding: "0 6px", borderRight: "1px solid #e5e7eb", display: "flex", alignItems: "center" };
+const FULL_LAST = { padding: "0 6px", display: "flex", alignItems: "center", wordBreak: "break-word" };
+const FULL_ACERTOS = { textAlign: "center", color: "#0ea5e9", fontWeight: 900, minWidth: 76, justifyContent: "center" };
+
+/* Resultados a pantalla completa (móbil) */
+const FULL_TITLE_BAR_MOBILE = {
   marginTop: 6,
   marginBottom: 8,
   padding: "9px 10px",
@@ -164,12 +195,10 @@ const FULL_TITLE_BAR = {
   alignItems: "center",
   gap: 8,
 };
-const FULL_TITLE = { font: "900 15px/1.15 Montserrat,system-ui,sans-serif", color: "#fff" };
-const FULL_TABLE = { width: "100%", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden", background: "#fff" };
-const FULL_HEAD = { display: "grid", gridTemplateColumns: "1fr 80px 70px", padding: "8px 6px", borderBottom: "1px solid #e5e7eb", font: "800 12.8px/1.2 Montserrat,system-ui,sans-serif", background: "linear-gradient(180deg,#dcfce7,#bbf7d0)", color: "#064e3b", alignItems: "center" };
+const FULL_HEAD_MOBILE = { display: "grid", gridTemplateColumns: "1fr 80px 70px", padding: "8px 6px", borderBottom: "1px solid #e5e7eb", font: "800 12.8px/1.2 Montserrat,system-ui,sans-serif", background: "linear-gradient(180deg,#dcfce7,#bbf7d0)", color: "#064e3b", alignItems: "center" };
 const FULL_ROW_MOBILE = { display: "grid", gridTemplateColumns: "1fr 80px 70px", padding: "8px 6px", borderBottom: "1px solid #eef2f7", font: "600 12.2px/1.05 Montserrat,system-ui,sans-serif", alignItems: "center" };
-const FULL_CELL = { padding: "0 6px", borderRight: "1px solid #eef2f7", display: "flex", alignItems: "center" };
-const FULL_CELL_LAST = { padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "center" };
+const FULL_CELL_SPLIT = { padding: "0 6px", borderRight: "1px solid #eef2f7", display: "flex", alignItems: "center" };
+const FULL_CELL_LAST_CENTER = { padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "center" };
 const FULL_ACERTOS_VAL = { textAlign: "center", color: "#0ea5e9", fontWeight: 900, width: "100%", justifyContent: "center", display: "flex" };
 
 /* Editor inline de data/hora (overlay) */
@@ -178,8 +207,8 @@ const DT_INPUT = { border: "1px solid #cbd5e1", borderRadius: 8, padding: "6px 8
 const SAVE_BTN = { ...ICONBTN, width: 28, height: 28, position: "absolute", top: 8, right: 8, border: "1px solid #22c55e", background: "#fff" };
 const SAVE_SVG = { fill: "none", stroke: "#16a34a", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
 
-/* Móbil: info admins + popup aliñación + tooltip data */
-const INFO_BTN = { ...ICONBTN, width: 32, height: 32, border: "1px solid #0ea5e9" }; // máis pequeno
+/* Móbil: info admins + popup + data bubble */
+const INFO_BTN = { ...ICONBTN, width: 30, height: 30, border: "1px solid #0ea5e9" };
 const INFO_SVG = { ...SVGI, stroke: "#0ea5e9" };
 
 const MOBILE_ALIGN_POP = { position: "fixed", inset: "10% 5% auto 5%", zIndex: 120, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, boxShadow: "0 18px 38px rgba(0,0,0,.28)", padding: 14, maxHeight: "74vh", overflowY: "auto", maxWidth: 520, margin: "0 auto" };
@@ -219,17 +248,6 @@ function bip(opacity = 0.22, freq = 880, dur = 0.11) {
   try { const AC = window.AudioContext || window.webkitAudioContext; const ctx = new AC(); const o = ctx.createOscillator(); const g = ctx.createGain(); o.type = "sine"; o.frequency.value = freq; o.connect(g); g.connect(ctx.destination); g.gain.setValueAtTime(0.0001, ctx.currentTime); g.gain.exponentialRampToValueAtTime(opacity, ctx.currentTime + 0.01); o.start(); o.stop(ctx.currentTime + dur); g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur); } catch {}
 }
 function bipConfirm() { bip(0.18, 820, 0.08); setTimeout(() => bip(0.14, 700, 0.28), 130); }
-
-/* Helper móbil: texto en 2 liñas (sen asteriscos) */
-function listLinearText(ids = [], idToPlayer = new Map(), onceSet = new Set()) {
-  const labels = ids.map((pid) => {
-    const p = idToPlayer.get(pid);
-    const base = p ? `${pad2(p.dorsal ?? "")} · ${p.name || (p.label?.split(" - ").slice(-1)[0] || "")}` : String(pid);
-    return base; // sen marcadores
-  });
-  const mid = Math.ceil(labels.length / 2) || 0;
-  return [labels.slice(0, mid).join(" | "), labels.slice(mid).join(" | ")];
-}
 
 /* ===== Compo ===== */
 export default function ResultadosHistoricos() {
@@ -463,8 +481,9 @@ export default function ResultadosHistoricos() {
         {POS_ORDER.map((k) => {
           const group = buckets[k] || [];
           if (!group.length) return null;
+          const bgcol = (bg && bg.background) || "#fff";
           return (
-            <div key={k} style={GROUP_WRAP()}>
+            <div key={k} style={GROUP_WRAP(bgcol)}>
               <div style={POS_SEP} />
               <div style={GROUP_SCROLL}>
                 {group.map((p) => {
@@ -478,7 +497,7 @@ export default function ResultadosHistoricos() {
                   );
                 })}
               </div>
-              <div aria-hidden="true" style={POS_SIDE()}>{k}</div>
+              <div aria-hidden="true" style={POS_SIDE(bgcol)}>{k}</div>
             </div>
           );
         })}
@@ -527,34 +546,96 @@ export default function ResultadosHistoricos() {
     const recs = resultsConfirmed[match.id] || [];
     const pMap = new Map(players.map((p) => [p.id, p]));
 
-    const isMobileNow = isMobile;
+    if (!isMobile) {
+      /* ====== ESCRITORIO: tal como estaba ====== */
+      return (
+        <section aria-label="Resultados do partido" style={{ marginTop: 6 }}>
+          <div style={FULL_TITLE_BAR_DESKTOP}>
+            <div style={FULL_TITLE}>
+              LISTADO DOS RESULTADOS DO PARTIDO | <span style={{ fontWeight: 900 }}>{match.equipo1} - {match.equipo2}</span> do {dmyFull(match.match_iso)}
+            </div>
+            <button type="button" style={{ ...XBTN_SMALL }} aria-label="Pechar" title="Pechar" onClick={() => setOpenResultsMatchId(null)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
+            </button>
+          </div>
 
-    // Botón X (vermello degradado, contorno branco, X branca), á esquerda
-    const CLOSE_BTN = {
-      ...ICONBTN, width: 32, height: 32,
-      border: "1px solid #fff",
-      background: "linear-gradient(180deg,#fca5a5,#ef4444)",
-    };
-    const CLOSE_X = { fill: "none", stroke: "#fff", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
+          <div style={FULL_TABLE}>
+            <div style={FULL_HEAD_DESKTOP}>
+              <div style={{ ...FULL_CELL, minWidth: 140 }}>Data e hora</div>
+              <div style={FULL_CELL}>HDC Membro</div>
+              <div style={{ ...FULL_CELL, ...FULL_ACERTOS }}>Acertos</div>
+              <div style={FULL_LAST}>Aliñación presentada</div>
+            </div>
 
+            {recs.length === 0 ? (
+              <div style={{ padding: 10, font: "600 13px/1.2 Montserrat,system-ui,sans-serif", color: "#64748b" }}>Sen confirmacións aínda para este partido.</div>
+            ) : (
+              recs.map((rec) => {
+                const uname = userNames.get(rec.user_id) || rec.user_id;
+                const onceSet = new Set(rec.once_ids || []);
+                const ali = (rec.plantilla_ids || []).map((pid, idx, arr) => {
+                  const p = pMap.get(pid);
+                  const txt = p ? `${pad2(p.dorsal ?? "")} · ${p.name}` : String(pid);
+                  const mark = onceSet.has(pid) ? <strong style={{ color: "#0ea5e9" }}>{txt}</strong> : txt;
+                  return <span key={`${pid}-${idx}`}>{mark}{idx < arr.length - 1 && <span style={{ opacity: .6 }}>|</span>}</span>;
+                });
+
+                return (
+                  <div key={`${rec.user_id}`} style={FULL_ROW_DESKTOP}>
+                    <div style={{ ...FULL_CELL, minWidth: 140 }}>
+                      <button type="button" style={{ ...ICONBTN, width: 28, height: 28, marginRight: 6 }} title="Editar data/hora" aria-label="Editar data/hora" onClick={() => setEditOverlay({ matchId: rec.match_id, userId: rec.user_id, valueLocal: toLocalInput(rec.confirmed_at) })}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" style={SVGI}><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                      </button>
+                      <span>{dmyShort(rec.confirmed_at)}</span>
+                    </div>
+                    <div style={FULL_CELL}>{uname}</div>
+                    <div style={{ ...FULL_CELL, ...FULL_ACERTOS }}>{rec.acertos}</div>
+                    <div style={FULL_LAST}>{ali}</div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {editOverlay && (
+            <div role="dialog" aria-modal="true" style={EDIT_OVERLAY}>
+              <button type="button" style={XBTN_SMALL} aria-label="Pechar" title="Pechar" onClick={() => setEditOverlay(null)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
+              </button>
+              <input type="datetime-local" style={{ ...DT_INPUT, marginTop: 10 }} value={editOverlay.valueLocal || ""} onInput={(e) => setEditOverlay((s) => ({ ...s, valueLocal: e.currentTarget.value }))} />
+              <button type="button" style={SAVE_BTN} title="Gardar" aria-label="Gardar" onClick={() => saveEditedTs(editOverlay.matchId, editOverlay.userId, editOverlay.valueLocal)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" style={SAVE_SVG}><path d="M4 4h12l4 4v12H4z" /><path d="M16 4v6H8V4" /><path d="M8 18h8" /></svg>
+              </button>
+            </div>
+          )}
+        </section>
+      );
+    }
+
+    /* ====== MÓBIL: só cambios móbil ====== */
     return (
       <section aria-label="Resultados do partido" style={{ marginTop: 6 }}>
-        <div style={FULL_TITLE_BAR}>
-          <button type="button" style={CLOSE_BTN} aria-label="Pechar" title="Pechar" onClick={() => setOpenResultsMatchId(null)}>
-            <svg width="16" height="16" viewBox="0 0 24 24" style={CLOSE_X}><path d="M18 6 6 18M6 6l12 12" /></svg>
+        <div style={FULL_TITLE_BAR_MOBILE}>
+          {/* X á esquerda, contorno branco, fondo vermello degradado, X branca */}
+          <button
+            type="button"
+            style={{ ...ICONBTN, width: 32, height: 32, border: "1px solid #fff", background: "linear-gradient(180deg,#fca5a5,#ef4444)" }}
+            aria-label="Pechar" title="Pechar" onClick={() => setOpenResultsMatchId(null)}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" style={{ fill: "none", stroke: "#fff", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }}>
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
           </button>
           <div style={FULL_TITLE}>
-            {/* Título en galego co novo texto */}
             LISTADO DAS ALIÑACIÓNS CORRESPONDENTES AO PARTIDO | <span style={{ fontWeight: 900 }}>{match.equipo1} - {match.equipo2}</span> | {dmyFull(match.match_iso)}
           </div>
         </div>
 
-        {/* Cabeceira en 3 columnas (Membro / Acertos / Detalle) */}
         <div style={FULL_TABLE}>
-          <div style={FULL_HEAD}>
-            <div style={{ ...FULL_CELL, fontWeight: 800, borderRight: "1px solid #dbe3ef" }}>HDC Membro</div>
-            <div style={{ ...FULL_CELL, fontWeight: 800, justifyContent: "center", borderRight: "1px solid #dbe3ef" }}>Acertos</div>
-            <div style={{ ...FULL_CELL_LAST, fontWeight: 800 }}>Detalle</div>
+          <div style={FULL_HEAD_MOBILE}>
+            <div style={{ ...FULL_CELL_SPLIT, fontWeight: 800, borderRight: "1px solid #dbe3ef" }}>HDC Membro</div>
+            <div style={{ ...FULL_CELL_SPLIT, fontWeight: 800, justifyContent: "center", borderRight: "1px solid #dbe3ef" }}>Acertos</div>
+            <div style={{ ...FULL_CELL_LAST_CENTER, fontWeight: 800 }}>Detalle</div>
           </div>
 
           {recs.length === 0 ? (
@@ -562,11 +643,7 @@ export default function ResultadosHistoricos() {
           ) : (
             recs.map((rec) => {
               const uname = userNames.get(rec.user_id) || rec.user_id;
-              const onceSet = new Set(rec.once_ids || []);
-              const aliIds = rec.plantilla_ids || [];
-
-              // Texto en 2 liñas (sen asteriscos); subliñado no popup, non aquí
-              const labels = aliIds.map((pid) => {
+              const labels = (rec.plantilla_ids || []).map((pid) => {
                 const p = pMap.get(pid);
                 return p ? `${pad2(p.dorsal ?? "")} · ${p.name}` : String(pid);
               });
@@ -576,16 +653,16 @@ export default function ResultadosHistoricos() {
 
               return (
                 <div key={`${rec.user_id}`} style={FULL_ROW_MOBILE}>
-                  <div style={{ ...FULL_CELL, borderRight: "1px solid #eef2f7", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  <div style={{ ...FULL_CELL_SPLIT, borderRight: "1px solid #eef2f7", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                     {uname}
                   </div>
-                  <div style={{ ...FULL_CELL, borderRight: "1px solid #eef2f7", justifyContent: "center" }}>
+                  <div style={{ ...FULL_CELL_SPLIT, borderRight: "1px solid #eef2f7", justifyContent: "center" }}>
                     <span style={FULL_ACERTOS_VAL}>{rec.acertos}</span>
                   </div>
-                  <div style={FULL_CELL_LAST}>
+                  <div style={FULL_CELL_LAST_CENTER}>
                     <button
                       type="button"
-                      style={EYE_BTN_MOBILE(true)}
+                      style={EYE_BTN_MOBILE}
                       title="Ver detalle"
                       aria-label="Ver detalle"
                       onClick={() =>
@@ -607,18 +684,6 @@ export default function ResultadosHistoricos() {
             })
           )}
         </div>
-
-        {editOverlay && !isMobile && (
-          <div role="dialog" aria-modal="true" style={EDIT_OVERLAY}>
-            <button type="button" style={XBTN_SMALL} aria-label="Pechar" title="Pechar" onClick={() => setEditOverlay(null)}>
-              <svg width="14" height="14" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
-            </button>
-            <input type="datetime-local" style={{ ...DT_INPUT, marginTop: 10 }} value={editOverlay.valueLocal || ""} onInput={(e) => setEditOverlay((s) => ({ ...s, valueLocal: e.currentTarget.value }))} />
-            <button type="button" style={SAVE_BTN} title="Gardar" aria-label="Gardar" onClick={() => saveEditedTs(editOverlay.matchId, editOverlay.userId, editOverlay.valueLocal)}>
-              <svg width="14" height="14" viewBox="0 0 24 24" style={SAVE_SVG}><path d="M4 4h12l4 4v12H4z" /><path d="M16 4v6H8V4" /><path d="M8 18h8" /></svg>
-            </button>
-          </div>
-        )}
 
         {mobileAlignFor && (
           <div role="dialog" aria-modal="true" style={MOBILE_ALIGN_POP}>
@@ -648,10 +713,10 @@ export default function ResultadosHistoricos() {
 
       <div style={PAGE_SUB_WRAP}>
         <p style={PAGE_SUB}>Aquí podes consultar os resultados individuais e xerais de cada partido.</p>
-        {/* Info móbil (máis pequeno, borde azul) */}
+        {/* Info móbil á dereita do subtítulo */}
         {isMobile && isAdmin && (
           <button type="button" style={INFO_BTN} title="Información" aria-label="Información" onClick={() => setShowMobileInfo(true)}>
-            <svg width="20" height="20" viewBox="0 0 24 24" style={INFO_SVG}><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" style={INFO_SVG}><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
           </button>
         )}
       </div>
@@ -674,7 +739,6 @@ export default function ResultadosHistoricos() {
             const eyeActive = hasResults.has(match.id);
             const confirmedCount = (confirmedByMatch[match.id]?.size) || 0;
 
-            // fondo celeste degradado en móbil
             const itemBg = isMobile
               ? { background: "linear-gradient(180deg,#e0f2fe,#bae6fd)", border: "1px solid #7dd3fc" }
               : {};
@@ -683,7 +747,7 @@ export default function ResultadosHistoricos() {
               <li key={match.id} style={{ ...ITEM_BASE, ...itemGrid(isMobile), ...itemBg, marginBottom: isPeopleOpen ? 12 : 8 }}>
                 {isMobile ? (
                   <div style={COMPACT_TEXT}>
-                    {/* Calendario con burbulla local de data (2s) */}
+                    {/* Icono calendario con burbulla 2s baixo o propio icono */}
                     <div style={{ position: "relative" }}>
                       <button
                         type="button"
@@ -699,9 +763,7 @@ export default function ResultadosHistoricos() {
                           <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
                         </svg>
                       </button>
-                      {dateBubbleFor === match.id && (
-                        <div style={LOCAL_DATE_BUBBLE}>{dmyFull(match.match_iso)}</div>
-                      )}
+                      {dateBubbleFor === match.id && <div style={LOCAL_DATE_BUBBLE}>{dmyFull(match.match_iso)}</div>}
                     </div>
 
                     <span style={TEAMS(true)}>
@@ -710,48 +772,32 @@ export default function ResultadosHistoricos() {
                   </div>
                 ) : (
                   <>
+                    {/* ESCRITORIO: formato DD/MM/AAAA, HH:mm (mantido) */}
                     <span style={DATE(false)}>{dmyFullTime(match.match_iso)}</span>
                     <span style={TEAMS(false)}>{match.equipo1} <span style={SEP}>-</span> {match.equipo2}</span>
                   </>
                 )}
 
                 <div style={ACTIONS}>
-                  {/* Desktop admin: botón 'persoas' para abrir panel */}
+                  {/* ESCRITORIO: botón persoas/teclado exactamente como estaba */}
                   {isAdmin && !isMobile && (
                     <>
                       {!isPeopleOpen ? (
-                        <button
-                          type="button"
-                          style={ICONBTN}
-                          title="Ver usuarias/os"
-                          aria-label="Ver usuarias/os"
-                          onClick={() => onClickPeople(match.id)}
-                        >
-                          <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}>
-                            <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                            <circle cx="9" cy="7" r="4" />
-                            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                          </svg>
+                        <button type="button" style={ICONBTN} title="Ver usuarias/os" aria-label="Ver usuarias/os" onClick={() => onClickPeople(match.id)}>
+                          <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
                         </button>
                       ) : (
-                        <button
-                          type="button"
-                          style={XBTN}
-                          title="Pechar etiqueta do partido"
-                          aria-label="Pechar etiqueta do partido"
-                          onClick={() => { setOpenPeopleMatchId(null); setOpenUserPanel(null); }}
-                        >
+                        <button type="button" style={XBTN} title="Pechar etiqueta do partido" aria-label="Pechar etiqueta do partido" onClick={() => { setOpenPeopleMatchId(null); setOpenUserPanel(null); }}>
                           <svg width="16" height="16" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
                         </button>
                       )}
                     </>
                   )}
 
-                  {/* Ollo: máis grande, contorno azul, icono azul, fondo branco en móbil */}
+                  {/* Ollo */}
                   <button
                     type="button"
-                    style={isMobile ? EYE_BTN_MOBILE(eyeActive) : EYE_BTN_DESKTOP(eyeActive)}
+                    style={isMobile ? EYE_BTN_MOBILE : EYE_BTN_DESKTOP(eyeActive)}
                     title="Ver resultados do partido"
                     aria-label="Ver resultados do partido"
                     onClick={async () => {
@@ -767,10 +813,11 @@ export default function ResultadosHistoricos() {
                     </svg>
                   </button>
 
-                  {/* En móbil, ocultamos o contador verde */}
+                  {/* Contador: só en escritorio */}
                   {!isMobile && <span style={CONF_COUNT}>{confirmedCount}</span>}
                 </div>
 
+                {/* ESCRITORIO: panel persoas intacto */}
                 {isPeopleOpen && isAdmin && !isMobile && (
                   <section style={PEOPLE_SHELL(!!openUserPanel)} aria-label="Edición por usuaria/o">
                     <div>
@@ -790,26 +837,11 @@ export default function ResultadosHistoricos() {
                                   {u.surname && <div style={USER_SUB}>{u.surname}</div>}
                                 </div>
                                 {!isOpen ? (
-                                  <button
-                                    type="button"
-                                    style={ICONBTN}
-                                    title="Abrir táboas desta persoa"
-                                    aria-label="Abrir táboas desta persoa"
-                                    onClick={() => onOpenUserEditor(u.id)}
-                                  >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}>
-                                      <rect x="3" y="6" width="18" height="12" rx="2" />
-                                      <path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" />
-                                    </svg>
+                                  <button type="button" style={ICONBTN} title="Abrir táboas desta persoa" aria-label="Abrir táboas desta persoa" onClick={() => onOpenUserEditor(u.id)}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" /></svg>
                                   </button>
                                 ) : (
-                                  <button
-                                    type="button"
-                                    style={XBTN}
-                                    title="Pechar editor desta persoa"
-                                    aria-label="Pechar editor desta persoa"
-                                    onClick={() => setOpenUserPanel(null)}
-                                  >
+                                  <button type="button" style={XBTN} title="Pechar editor desta persoa" aria-label="Pechar editor desta persoa" onClick={() => setOpenUserPanel(null)}>
                                     <svg width="16" height="16" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
                                   </button>
                                 )}
