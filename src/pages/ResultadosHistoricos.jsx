@@ -32,7 +32,7 @@ const DATE = (isMobile) => ({
 });
 
 const TEAMS = (isMobile) => ({
-  font: isMobile ? "800 13.3px/1.08 Montserrat,system-ui,sans-serif" : "800 14px/1.1 Montserrat,system-ui,sans-serif",
+  font: isMobile ? "800 13px/1.08 Montserrat,system-ui,sans-serif" : "800 14px/1.1 Montserrat,system-ui,sans-serif",
   textTransform: "uppercase",
   color: "#111827",
   overflow: "hidden",
@@ -40,7 +40,7 @@ const TEAMS = (isMobile) => ({
   whiteSpace: "nowrap",
   transform: isMobile ? "scaleX(1.02) scaleY(1.06)" : "none",
   transformOrigin: "left center",
-  letterSpacing: isMobile ? "0.16px" : "0.2px",
+  letterSpacing: isMobile ? "0.14px" : "0.2px",
 });
 
 const SEP = { margin: "0 6px", fontWeight: 800, color: "#0f172a" };
@@ -67,7 +67,7 @@ const EYE_BTN_DESKTOP = (active) =>
     : { ...ICONBTN, width: 30, height: 30 };
 const EYE_SVG = (active) => (active ? { ...SVGI, stroke: "#fff" } : SVGI);
 
-/* Ollo móbil: azul con fondo branco e bordo azul (lixeiramente maior) */
+/* Ollo móbil: azul con fondo branco e bordo azul (un chisco maior) */
 const EYE_BTN_MOBILE = {
   ...ICONBTN,
   width: 36,
@@ -105,7 +105,7 @@ const PEOPLE_SHELL = (twoCols) =>
     : { marginTop: 8, border: "1px solid #e2e8f0", borderRadius: 10, background: "#fff", padding: "10px 12px" };
 
 const USERS_LIST = { listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 6 };
-const USER_ROW_BASE = { display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 6, alignItems: "center", padding: "6px 8px", borderRadius: 8, border: "1px solid #eef2f7", background: "#f9fafb" };
+const USER_ROW_BASE = { display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 6, alignItems: "center", padding: "6px 8px", borderRadius: 8, border: "1px solid #eef2f7", background: "f9fafb" };
 const USER_ROW_BLINK = { ...USER_ROW_BASE, animation: "userBlink 1.5s ease-in-out infinite", background: "linear-gradient(180deg,#e6f4ff,#f2f8ff)" };
 const USER_ROW_CONFIRMED = { ...USER_ROW_BASE, background: "linear-gradient(180deg,#eafff3,#f7fff9)", border: "1px solid #22c55e" };
 const USER_BADGE = { font: "900 11px/1 Montserrat,system-ui,sans-serif", color: "#0ea5e9", background: "#e0f2fe", padding: "4px 7px", borderRadius: 8, minWidth: 38, textAlign: "center" };
@@ -182,6 +182,7 @@ const FULL_LAST = { padding: "0 6px", display: "flex", alignItems: "center", wor
 const FULL_ACERTOS = { textAlign: "center", color: "#0ea5e9", fontWeight: 900, minWidth: 76, justifyContent: "center" };
 
 /* Resultados — móbil */
+const BORDER_V = "1px solid #dbe3ef";
 const FULL_TITLE_BAR_MOBILE = {
   marginTop: 6,
   marginBottom: 8,
@@ -195,17 +196,12 @@ const FULL_TITLE_BAR_MOBILE = {
   alignItems: "center",
   gap: 8,
 };
-/* título móbil: sen bold por defecto */
 const FULL_TITLE_MOBILE = { font: "600 14.5px/1.15 Montserrat,system-ui,sans-serif", color: "#fff" };
-
-/* Cabeceira/filas móbil con liñas verticais finas */
-const BORDER_V = "1px solid #dbe3ef";
 const FULL_HEAD_MOBILE = {
   display: "grid",
   gridTemplateColumns: "1fr max-content max-content",
   padding: "8px 6px",
   borderBottom: "1px solid #e5e7eb",
-  font: "800 12.8px/1.2 Montserrat,system-ui,sans-serif",
   background: "linear-gradient(180deg,#dcfce7,#bbf7d0)",
   color: "#064e3b",
   alignItems: "center"
@@ -219,6 +215,7 @@ const FULL_ROW_MOBILE = {
   alignItems: "center"
 };
 const FULL_CELL_SPLIT = { padding: "0 6px", borderRight: BORDER_V, display: "flex", alignItems: "center" };
+const FULL_CELL_SPLIT_CENTER = { ...FULL_CELL_SPLIT, justifyContent: "center" };
 const FULL_CELL_LAST_CENTER = { padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "center", borderLeft: BORDER_V };
 const FULL_ACERTOS_VAL = { textAlign: "center", color: "#0ea5e9", fontWeight: 900, width: "100%", justifyContent: "center", display: "flex" };
 
@@ -229,8 +226,8 @@ const SAVE_BTN = { ...ICONBTN, width: 28, height: 28, position: "absolute", top:
 const SAVE_SVG = { fill: "none", stroke: "#16a34a", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
 
 /* Móbil: info admins + popup + data bubble */
-const INFO_BTN = { ...ICONBTN, width: 30, height: 30, border: "1px solid #0ea5e9" };
-const INFO_SVG = { ...SVGI, stroke: "#0ea5e9" };
+const INFO_BTN = { ...ICONBTN, width: 30, height: 30, border: "1px solid #0f172a", placeItems: "center" }; // borde negro
+const INFO_SVG = { ...SVGI, stroke: "#0f172a", strokeWidth: 2.2 }; // icono negro, un pouco máis groso
 
 const MOBILE_ALIGN_POP = {
   position: "fixed",
@@ -239,7 +236,7 @@ const MOBILE_ALIGN_POP = {
   background: "#fff",
   border: "1px solid #e5e7eb",
   borderRadius: 12,
-  boxShadow: "0 24px 64px rgba(0,0,0,.45)",
+  boxShadow: "0 24px 64px rgba(0,0,0,.45)", // moita sombra
   padding: 16,
   maxHeight: "74vh",
   overflowY: "auto",
@@ -432,7 +429,7 @@ export default function ResultadosHistoricos() {
   async function loadConfirmedForMatch(matchId) {
     try {
       const { data, error } = await supabase.from("resultados_confirmados").select("match_id,user_id,confirmed_at,acertos,plantilla_ids,once_ids").eq("match_id", matchId).order("confirmed_at", { ascending: false });
-      if (error) throw error;
+    if (error) throw error;
       setResultsConfirmed(prev => ({ ...prev, [matchId]: data || [] }));
       setHasResults(prev => new Set([...prev, matchId]));
       const setU = new Set((data || []).map(r => r.user_id));
@@ -500,18 +497,6 @@ export default function ResultadosHistoricos() {
   const onceIs11 = selOnce.size === 11;
 
   const fmtPlayer = (p) => `${pad2(p.dorsal ?? "")} · ${p.name || (p.label?.split(" - ").slice(-1)[0] || "")}`;
-  const listLinear = (ids, onceIdsSet, map) =>
-    ids.map((pid, idx, arr) => {
-      const p = map.get(pid);
-      const baseTxt = p ? `${pad2(p?.dorsal ?? "")} · ${p?.name ?? ""}` : "—";
-      const part = onceIdsSet?.has(pid) ? <strong style={{ color: "#0ea5e9" }}>{baseTxt}</strong> : baseTxt;
-      return (
-        <span key={`${pid}-${idx}`}>
-          {part}
-          {idx < arr.length - 1 && <span style={{ opacity: 0.6 }}>|</span>}
-        </span>
-      );
-    });
 
   function renderPlayersColumn(list, checkedSet, setSet, bg) {
     const buckets = groupByPos(list);
@@ -546,43 +531,6 @@ export default function ResultadosHistoricos() {
             </div>
           );
         })}
-      </div>
-    );
-  }
-
-  function renderSummaryRight(matchId) {
-    const uMap = new Map(users.map((u) => [u.id, u]));
-    const userLabel = uMap.get(openUserPanel)?.name || "—";
-    const playersById = new Map(players.map((p) => [p.id, p]));
-    const onceSet = new Set(selOnce);
-    const aliNodes = listLinear(Array.from(selPlantilla), onceSet, playersById);
-    const acertosLive = Array.from(selOnce).filter((id) => selPlantilla.has(id)).length;
-
-    return (
-      <div style={SUMMARY}>
-        <div style={SUMMARY_TITLE_WRAP}>
-          <div style={SUMMARY_TITLE}>RESULTADOS OBTIDOS</div>
-          <div style={HR} />
-        </div>
-        <div role="table" style={{ width: "100%" }}>
-          <div role="row" style={T_HEADER}>
-            <div style={{ ...CELL, minWidth: 120 }}>Data e hora</div>
-            <div style={CELL}>HDC Membro</div>
-            <div style={{ ...CELL, ...ACERTOS_CELL }}>Acertos</div>
-            <div style={CELL_LAST}>Aliñación presentada</div>
-          </div>
-          <div role="row" style={T_ROW}>
-            <div style={{ ...CELL, minWidth: 120 }}>{dmyShort(new Date().toISOString())}</div>
-            <div style={CELL}>{userLabel}</div>
-            <div style={{ ...CELL, ...ACERTOS_CELL }}>
-              <span style={CELSTE}>{acertosLive}</span>
-            </div>
-            <div style={CELL_LAST}>{aliNodes}</div>
-          </div>
-        </div>
-        <button type="button" style={onceIs11 ? BTN_CONFIRM_BLINK : BTN_CONFIRM} onClick={() => confirmarMatch(matchId)} disabled={!onceIs11 || confirmSaving}>
-          CONFIRMAR
-        </button>
       </div>
     );
   }
@@ -680,7 +628,7 @@ export default function ResultadosHistoricos() {
         <div style={FULL_TABLE}>
           <div style={FULL_HEAD_MOBILE}>
             <div style={{ ...FULL_CELL_SPLIT, fontWeight: 800 }}>HDC Membro</div>
-            <div style={{ ...FULL_CELL_SPLIT, fontWeight: 800, justifyContent: "center" }}>Acertos</div>
+            <div style={{ ...FULL_CELL_SPLIT_CENTER, fontWeight: 800 }}>Acertos</div>
             <div style={{ ...FULL_CELL_LAST_CENTER, fontWeight: 800 }}>Detalle</div>
           </div>
 
@@ -691,25 +639,24 @@ export default function ResultadosHistoricos() {
               const uname = userNames.get(rec.user_id) || rec.user_id;
               const onceSet = new Set(rec.once_ids || []);
 
-              const labels = (rec.plantilla_ids || []).map((pid, idx) => {
+              // Construír grupos POR/DEF/CEN/DEL para o popup
+              const groups = { POR: [], DEF: [], CEN: [], DEL: [] };
+              (rec.plantilla_ids || []).forEach((pid) => {
                 const p = pMap.get(pid);
                 const label = p ? `${pad2(p.dorsal ?? "")} · ${p.name}` : "—";
-                return onceSet.has(pid)
-                  ? <strong key={`${pid}-${idx}`} style={{ color: "#0ea5e9" }}>{label}</strong>
-                  : <span key={`${pid}-${idx}`}>{label}</span>;
+                const node = onceSet.has(pid)
+                  ? <strong key={`g-${pid}`} style={{ color: "#0ea5e9" }}>{label}</strong>
+                  : <span key={`g-${pid}`}>{label}</span>;
+                const pos = (p?.pos || "CEN").toUpperCase();
+                (groups[pos] || groups.CEN).push(node);
               });
-              const plain = labels.reduce((acc, node, idx) => {
-                acc.push(node);
-                if (idx < labels.length - 1) acc.push(<span key={`sep-${idx}`} style={{ opacity: 0.6 }}>|</span>);
-                return acc;
-              }, []);
 
               return (
                 <div key={`${rec.user_id}`} style={FULL_ROW_MOBILE}>
                   <div style={{ ...FULL_CELL_SPLIT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                     {uname}
                   </div>
-                  <div style={{ ...FULL_CELL_SPLIT, justifyContent: "center" }}>
+                  <div style={{ ...FULL_CELL_SPLIT_CENTER }}>
                     <span style={FULL_ACERTOS_VAL}>{rec.acertos}</span>
                   </div>
                   <div style={FULL_CELL_LAST_CENTER}>
@@ -723,7 +670,7 @@ export default function ResultadosHistoricos() {
                           matchId: rec.match_id,
                           userId: rec.user_id,
                           dateStr: dmyShort(rec.confirmed_at),
-                          nodes: plain
+                          groups
                         })
                       }
                     >
@@ -750,13 +697,28 @@ export default function ResultadosHistoricos() {
               </svg>
             </button>
             <div style={{ font: "900 14px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", marginBottom: 8 }}>Detalle do rexistro</div>
-            <div style={{ font: "700 12.5px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", marginBottom: 6 }}>
+            <div style={{ font: "700 12.5px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", marginBottom: 10 }}>
               <span style={{ opacity: 0.85 }}>Data e hora:</span> {mobileAlignFor.dateStr}
             </div>
-            <div style={{ font: "800 12.8px/1.35 Montserrat,system-ui,sans-serif", color: "#0f172a" }}>
-              <div style={{ marginBottom: 2, textDecoration: "underline" }}>Aliñación presentada</div>
-              <div style={{ wordBreak: "break-word" }}>{mobileAlignFor.nodes}</div>
-            </div>
+
+            {/* Aliñación presentada por posicións */}
+            {POS_ORDER.map((k) => {
+              const arr = mobileAlignFor.groups?.[k] || [];
+              if (!arr.length) return null;
+              return (
+                <div key={`sec-${k}`} style={{ marginBottom: 8 }}>
+                  <div style={{ font: "900 11.5px/1 Montserrat,system-ui,sans-serif", color: "#64748b", marginBottom: 4 }}>{k}</div>
+                  <div style={{ font: "800 12.8px/1.35 Montserrat,system-ui,sans-serif", color: "#0f172a", wordBreak: "break-word" }}>
+                    {arr.map((node, idx) => (
+                      <span key={`n-${k}-${idx}`}>
+                        {node}
+                        {idx < arr.length - 1 && <span style={{ opacity: 0.6, margin: "0 2px" }}>|</span>}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </section>
