@@ -49,7 +49,7 @@ const COMPACT_TEXT = (isMobile) => ({
   alignItems: "center",
   gap: 8,
   minWidth: 0,
-  overflow: isMobile ? "visible" : "hidden", // ← evita que a burbulla de data se recorte en móbil
+  overflow: isMobile ? "visible" : "hidden", // evita que a burbulla de data se recorte en móbil
 });
 
 const ACTIONS = { display: "flex", gap: 6, alignItems: "center", justifySelf: "end" };
@@ -74,23 +74,11 @@ const EYE_BTN_DESKTOP = (active) =>
 const EYE_SVG = (active) => (active ? { ...SVGI, stroke: "#fff" } : SVGI);
 
 /* Ollo móbil (listaxe principal de partidos) */
-const EYE_BTN_MOBILE = {
-  ...ICONBTN,
-  width: 36,
-  height: 36,
-  border: "1px solid #0ea5e9",
-  background: "#fff",
-};
+const EYE_BTN_MOBILE = { ...ICONBTN, width: 36, height: 36, border: "1px solid #0ea5e9", background: "#fff" };
 const EYE_SVG_BLUE = { ...SVGI, stroke: "#0ea5e9" };
 
 /* Ollo móbil pequeno (na táboa de resultados) */
-const EYE_BTN_MOBILE_SMALL = {
-  ...ICONBTN,
-  width: 26,
-  height: 26,
-  border: "1px solid #0ea5e9",
-  background: "#fff",
-};
+const EYE_BTN_MOBILE_SMALL = { ...ICONBTN, width: 26, height: 26, border: "1px solid #0ea5e9", background: "#fff" };
 
 const CONF_COUNT = { font: "800 12.5px/1 Montserrat,system-ui,sans-serif", color: "#16a34a", minWidth: 18, textAlign: "right" };
 
@@ -155,37 +143,6 @@ const CELSTE = { color: "#0ea5e9", fontWeight: 800 };
 const BTN_CONFIRM = { marginTop: 8, width: "100%", borderRadius: 10, padding: "8px 10px", font: "900 12px/1.02 Montserrat,system-ui,sans-serif", background: "linear-gradient(180deg,#38bdf8,#0ea5e9)", color: "#fff", border: "1px solid #0ea5e9", boxShadow: "0 3px 10px rgba(14,165,233,.18)", cursor: "pointer" };
 const BTN_CONFIRM_BLINK = { ...BTN_CONFIRM, animation: "pulseSoft 1.5s ease-in-out infinite" };
 
-/* Resultados — escritorio */
-const FULL_TITLE_BAR_DESKTOP = {
-  marginTop: 6,
-  marginBottom: 8,
-  padding: "9px 10px",
-  border: "1px solid #7dd3fc",
-  background: "linear-gradient(180deg,#5dd3ff,#2ab6f0)",
-  borderRadius: 10,
-  color: "#fff",
-  display: "grid",
-  gridTemplateColumns: "1fr auto",
-  alignItems: "center",
-  gap: 8,
-};
-const FULL_TITLE = { font: "900 15px/1.15 Montserrat,system-ui,sans-serif", color: "#fff" };
-const FULL_TABLE = { width: "100%", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden", background: "#fff" };
-const FULL_HEAD_DESKTOP = {
-  display: "grid",
-  gridTemplateColumns: "auto 1fr auto 3fr",
-  padding: "10px 6px",
-  borderBottom: "1px solid #e5e7eb",
-  font: "800 13.5px/1.2 Montserrat,system-ui,sans-serif",
-  background: "linear-gradient(180deg,#dcfce7,#bbf7d0)",
-  color: "#064e3b",
-  alignItems: "center",
-};
-const FULL_ROW_DESKTOP = { display: "grid", gridTemplateColumns: "auto 1fr auto 3fr", padding: "8px 6px", borderBottom: "1px solid #f1f5f9", font: "600 12.6px/1.05 Montserrat,system-ui,sans-serif", alignItems: "center" };
-const FULL_CELL = { padding: "0 6px", borderRight: "1px solid #e5e7eb", display: "flex", alignItems: "center" };
-const FULL_LAST = { padding: "0 6px", display: "flex", alignItems: "center", wordBreak: "break-word" };
-const FULL_ACERTOS = { textAlign: "center", color: "#0ea5e9", fontWeight: 900, minWidth: 76, justifyContent: "center" };
-
 /* ====== Resultados — móbil ====== */
 const FULL_TITLE_BAR_MOBILE = {
   marginTop: 6, marginBottom: 8, padding: "9px 10px",
@@ -196,10 +153,10 @@ const FULL_TITLE_BAR_MOBILE = {
 };
 const FULL_TITLE_MOBILE = { font: "600 14.5px/1.15 Montserrat,system-ui,sans-serif", color: "#fff" };
 
-/* Cabeceira máis grande un chisco */
+/* Cabeceira máis grande un chisco e centrada */
 const FULL_HEAD_MOBILE = {
   display: "grid",
-  gridTemplateColumns: "1fr max-content max-content",
+  gridTemplateColumns: "1fr 90px 90px",
   padding: "7px 6px",
   borderBottom: "1px solid #e5e7eb",
   background: "linear-gradient(180deg,#dcfce7,#bbf7d0)",
@@ -210,16 +167,16 @@ const FULL_HEAD_MOBILE = {
 
 const FULL_ROW_MOBILE = {
   display: "grid",
-  gridTemplateColumns: "1fr max-content max-content",
+  gridTemplateColumns: "1fr 90px 90px",
   padding: "10px 6px",
   borderBottom: "1px solid #eef2f7",
   font: "600 13.8px/1.18 Montserrat,system-ui,sans-serif",
   alignItems: "center"
 };
 
-const FULL_CELL_SPLIT = { padding: "0 6px", display: "flex", alignItems: "center" };
+const FULL_CELL_SPLIT = { padding: "0 6px", display: "flex", alignItems: "center", width: "100%" };
 const FULL_CELL_SPLIT_CENTER = { ...FULL_CELL_SPLIT, justifyContent: "center", textAlign: "center" };
-const FULL_CELL_LAST_CENTER = { padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" };
+const FULL_CELL_LAST_CENTER = { padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", width: "100%" };
 const FULL_ACERTOS_VAL = { textAlign: "center", color: "#0ea5e9", fontWeight: 900, width: "100%", justifyContent: "center", display: "flex" };
 
 /* Editor inline — escritorio */
@@ -229,12 +186,7 @@ const SAVE_BTN = { ...ICONBTN, width: 28, height: 28, position: "absolute", top:
 const SAVE_SVG = { fill: "none", stroke: "#16a34a", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
 
 /* Móbil: info + popup + burbulla de data */
-const INFO_BTN = {
-  ...ICONBTN, width: 30, height: 30,
-  border: "1px solid #0ea5e9", background: "#fff",
-  transform: "translateX(-4px)",           // ← lixeiramente á esquerda
-  placeItems: "center"
-};
+const INFO_BTN = { ...ICONBTN, width: 30, height: 30, border: "1px solid #0ea5e9", background: "#fff", transform: "translateX(-4px)", placeItems: "center" };
 const INFO_SVG = { ...SVGI, stroke: "#0ea5e9", strokeWidth: 2.1 };
 
 const MOBILE_ALIGN_POP = {
@@ -277,7 +229,7 @@ const LOCAL_DATE_BUBBLE = {
   whiteSpace: "nowrap"
 };
 
-/* Popup INFO (móbil) */
+/* Popup INFO (móbil) — axustes pedidos */
 const INFO_POP = {
   position: "fixed",
   inset: "10% 6% auto 6%",
@@ -288,14 +240,31 @@ const INFO_POP = {
   zIndex: 140,
   boxShadow: "0 28px 72px rgba(0,0,0,.5)"
 };
-const INFO_TITLE = { font: "900 13px/1.2 Montserrat,system-ui,sans-serif", color: "#0c4a6e", marginBottom: 0 }; // sen espazo
-const INFO_TEXT = { font: "600 12.5px/1.25 Montserrat,system-ui,sans-serif", color: "#0c4a6e" };
+const INFO_TITLE = { font: "900 13.5px/1.2 Montserrat,system-ui,sans-serif", color: "#0c4a6e", marginTop: 12, marginBottom: 0 };
+const INFO_TEXT = { font: "600 13.2px/1.25 Montserrat,system-ui,sans-serif", color: "#0c4a6e", marginTop: 0 };
 
-/* Animacións */
+/* Bloqueo orientación (solo CSS; sin JS) */
+const ORIENTATION_BLOCK = {
+  position: "fixed", inset: 0, zIndex: 9999,
+  background: "linear-gradient(180deg,#e2e8f0,#cbd5e1)",
+  display: "none",                     // por defecto oculto; lo muestra el @media
+  placeItems: "center",
+  textAlign: "center", padding: 24
+};
+const ORIENTATION_MSG = { font: "800 15px/1.25 Montserrat,system-ui,sans-serif", color: "#0f172a" };
+
+/* Animacións + reglas CSS globales (incluye bloqueo orientación móvil en landscape) */
 const STYLES = `
 @keyframes blinkSoft{0%{opacity:1}50%{opacity:.7}100%{opacity:1}}
 @keyframes pulseSoft{0%{transform:scale(1)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
 @keyframes userBlink{0%{box-shadow:0 0 0 rgba(14,165,233,0)}50%{box-shadow:0 10px 26px rgba(14,165,233,.45)}100%{box-shadow:0 0 0 rgba(14,165,233,0)}}
+
+/* Bloqueo de landscape solo en pantallas estrechas (móvil). 
+   Es robusto y no depende de JS, evitando conflictos con popups. */
+@media (orientation: landscape) and (max-width: 560px){
+  .oblk { display: grid !important; }
+  .mroot { display: none !important; }
+}
 `;
 
 /* ===== Utils ===== */
@@ -334,7 +303,11 @@ export default function ResultadosHistoricos() {
   const [loading, setLoading] = useState(true);
 
   const [isMobile, setIsMobile] = useState(typeof window !== "undefined" ? window.innerWidth <= 560 : false);
-  useEffect(() => { const onR = () => setIsMobile(window.innerWidth <= 560); window.addEventListener("resize", onR); return () => window.removeEventListener("resize", onR); }, []);
+  useEffect(() => {
+    const onR = () => setIsMobile(window.innerWidth <= 560);
+    window.addEventListener("resize", onR);
+    return () => window.removeEventListener("resize", onR);
+  }, []);
 
   const [openPeopleMatchId, setOpenPeopleMatchId] = useState(null);
   const [openResultsMatchId, setOpenResultsMatchId] = useState(null);
@@ -742,7 +715,7 @@ export default function ResultadosHistoricos() {
                   <div style={FULL_CELL_LAST_CENTER}>
                     <button
                       type="button"
-                      style={EYE_BTN_MOBILE_SMALL}
+                      style={{ ...EYE_BTN_MOBILE_SMALL, margin: "0 auto" }}
                       title="Ver detalle"
                       aria-label="Ver detalle"
                       onClick={() =>
@@ -779,10 +752,10 @@ export default function ResultadosHistoricos() {
 
             <div style={{ font: "900 14px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a", marginBottom: 6 }}>Detalle do rexistro</div>
             <div style={{ font: "700 12.5px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a" }}>
-              <span style={{ opacity: 0.85 }}>Data e hora:</span> {mobileAlignFor.dateStr}
+              <span style={{ opacity: 0.85, textDecoration: "underline" }}>Data e hora:</span> {mobileAlignFor.dateStr}
             </div>
 
-            <div style={RESULT_LINE}>RESULTADO DA ALIÑACIÓN</div>
+            <div style={RESULT_LINE}>RESULTADO DO ONCE ALIÑADO</div>
 
             {POS_ORDER.map((k) => {
               const arr = mobileAlignFor.groups?.[k] || [];
@@ -808,7 +781,7 @@ export default function ResultadosHistoricos() {
   }
 
   return (
-    <main style={WRAP}>
+    <main style={WRAP} class="mroot">
       <style>{STYLES}</style>
 
       <h2 style={PAGE_HEAD}>HISTÓRICO DE RESULTADOS</h2>
@@ -980,13 +953,22 @@ export default function ResultadosHistoricos() {
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </button>
-          <p style={INFO_TITLE}>NOTA DE FUNCIONALIDADE PARA AS ADMINISTRADORAS/ES DA APP</p>
+          <p style={INFO_TITLE}>NOTA DE FUNCIONALIDADE PARA AS ADMINISTRADORXS DA APP</p>
           <p style={INFO_TEXT}>
             No caso de ser necesaria algunha corrección, na versión PC de sobremesa existe funcionalidade engadida de edición manual de resultados por partido e xogador/a.
           </p>
         </div>
       )}
     </main>
+  );
+}
+
+/* Capa de bloqueo para landscape en móbil (se renderiza sempre pero só se ve en landscape por CSS) */
+export function OrientationBlock() {
+  return (
+    <div class="oblk" style={ORIENTATION_BLOCK} role="dialog" aria-modal="true" aria-label="Orientación non permitida">
+      <div style={ORIENTATION_MSG}>Por favor, usa o móbil en vertical (orientación retrato).</div>
+    </div>
   );
 }
 
