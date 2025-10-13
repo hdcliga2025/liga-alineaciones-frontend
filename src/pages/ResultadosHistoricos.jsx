@@ -6,7 +6,8 @@ import { supabase } from "../lib/supabaseClient.js";
 /* ===== Estilos base ===== */
 const WRAP = { maxWidth: 1120, margin: "0 auto", padding: "16px" };
 const PAGE_HEAD = { margin: "0 0 6px", font: "700 22px/1.2 Montserrat,system-ui,sans-serif", color: "#0f172a" };
-const PAGE_SUB = { margin: "0 0 12px", font: "400 14.5px/1.25 Montserrat,system-ui,sans-serif", color: "#475569" };
+const PAGE_SUB = { margin: 0, font: "400 14.5px/1.25 Montserrat,system-ui,sans-serif", color: "#475569" };
+const PAGE_SUB_WRAP = { display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 8, marginBottom: 12 };
 
 const LIST = { listStyle: "none", margin: 0, padding: 0 };
 const itemGrid = (isMobile) =>
@@ -37,7 +38,7 @@ const TEAMS = (isMobile) => ({
   whiteSpace: "nowrap",
 });
 const SEP = { margin: "0 6px", fontWeight: 800, color: "#0f172a" };
-const COMPACT_TEXT = { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
+const COMPACT_TEXT = { display: "flex", alignItems: "center", gap: 8, minWidth: 0, overflow: "hidden" };
 
 const ACTIONS = { display: "flex", gap: 6, alignItems: "center", justifySelf: "end" };
 const ICONBTN = {
@@ -109,11 +110,11 @@ const GROUP_WRAP = (bg) => ({ position: "relative", background: "inherit", paddi
 const POS_SIDE = (bg) => ({ position: "absolute", right: 2, top: 2, bottom: 2, writingMode: "vertical-rl", textOrientation: "mixed", font: "900 9.8px/1 Montserrat,system-ui,sans-serif", color: "#64748b", opacity: 0.85, display: "grid", placeItems: "center", background: "transparent", padding: "2px 0" });
 const POS_SEP = { height: 1, background: "#e5e7eb" };
 const ROW_PLAYER = { display: "grid", gridTemplateColumns: "16px 1fr auto", gap: 8, alignItems: "center", padding: "0 2px", minWidth: 0 };
-const CHECKBOX = { width: 14, height: 14, transform: "scale(1.02)", marginRight: 10 }; // +espazo co dorsal
+const CHECKBOX = { width: 14, height: 14, transform: "scale(1.02)", marginRight: 10 };
 const playerNameStyle = { font: "700 10.2px/.72 Montserrat,system-ui,sans-serif", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
 const COUNT_MINI = { font: "900 10px/1 Montserrat,system-ui,sans-serif", color: "#0ea5e9", padding: "0 4px", borderRadius: 6, background: "#e0f2fe" };
 
-/* Preview / RESULTADOS OBTIDOS (EN DEREITA) */
+/* Preview / RESULTADOS OBTIDOS */
 const SUMMARY = { border: "1px solid #fecaca", borderRadius: 12, background: "linear-gradient(180deg,#fff6f6,#ffeaea)", padding: 8, position: "relative", width: "100%", marginTop: 8 };
 const SUMMARY_TITLE_WRAP = { padding: "2px 6px 6px 6px", background: "linear-gradient(180deg,#fff,#fff6f6)", borderTopLeftRadius: 10, borderTopRightRadius: 10 };
 const SUMMARY_TITLE = { font: "800 11px/1.02 Montserrat,system-ui,sans-serif", color: "#0f172a", textDecoration: "none", margin: "2px 0 4px 0" };
@@ -129,31 +130,10 @@ const BTN_CONFIRM = { marginTop: 8, width: "100%", borderRadius: 10, padding: "8
 const BTN_CONFIRM_BLINK = { ...BTN_CONFIRM, animation: "pulseSoft 1.5s ease-in-out infinite" };
 
 /* Resultados a pantalla completa (ollo) */
-const FULL_TITLE_BAR = {
-  marginTop: 6,
-  marginBottom: 8,
-  padding: "9px 10px",
-  border: "1px solid #7dd3fc",
-  background: "linear-gradient(180deg,#5dd3ff,#2ab6f0)",
-  borderRadius: 10,
-  color: "#fff",
-  display: "grid",
-  gridTemplateColumns: "1fr auto",
-  alignItems: "center",
-  gap: 8,
-};
+const FULL_TITLE_BAR = { marginTop: 6, marginBottom: 8, padding: "9px 10px", border: "1px solid #7dd3fc", background: "linear-gradient(180deg,#5dd3ff,#2ab6f0)", borderRadius: 10, color: "#fff", display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 8 };
 const FULL_TITLE = { font: "900 15px/1.15 Montserrat,system-ui,sans-serif", color: "#fff" };
 const FULL_TABLE = { width: "100%", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden", background: "#fff" };
-const FULL_HEAD = {
-  display: "grid",
-  gridTemplateColumns: "auto 1fr auto 3fr",
-  padding: "10px 6px",
-  borderBottom: "1px solid #e5e7eb",
-  font: "800 13.5px/1.2 Montserrat,system-ui,sans-serif",
-  background: "linear-gradient(180deg,#dcfce7,#bbf7d0)",
-  color: "#064e3b",
-  alignItems: "center",
-};
+const FULL_HEAD = { display: "grid", gridTemplateColumns: "auto 1fr auto 3fr", padding: "10px 6px", borderBottom: "1px solid #e5e7eb", font: "800 13.5px/1.2 Montserrat,system-ui,sans-serif", background: "linear-gradient(180deg,#dcfce7,#bbf7d0)", color: "#064e3b", alignItems: "center" };
 const FULL_ROW = { display: "grid", gridTemplateColumns: "auto 1fr auto 3fr", padding: "8px 6px", borderBottom: "1px solid #f1f5f9", font: "600 12.6px/1.05 Montserrat,system-ui,sans-serif", alignItems: "center" };
 const FULL_CELL = { padding: "0 6px", borderRight: "1px solid #e5e7eb", display: "flex", alignItems: "center" };
 const FULL_LAST = { padding: "0 6px", display: "flex", alignItems: "center", wordBreak: "break-word" };
@@ -166,7 +146,7 @@ const SAVE_BTN = { ...ICONBTN, width: 28, height: 28, position: "absolute", top:
 const SAVE_SVG = { fill: "none", stroke: "#16a34a", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
 
 /* Móbil: info admins + popup aliñación por fila + tooltip data */
-const INFO_BTN = { ...ICONBTN, width: 26, height: 26 };
+const INFO_BTN = { ...ICONBTN, width: 30, height: 30 };
 const INFO_SVG = { ...SVGI };
 const INFO_POP = { position: "fixed", inset: "10% 6% auto 6%", background: "linear-gradient(180deg,#e0f2fe,#bae6fd)", border: "1px solid #7dd3fc", borderRadius: 12, padding: 12, zIndex: 80, boxShadow: "0 16px 36px rgba(0,0,0,.25)" };
 const INFO_TITLE = { font: "900 13px/1.2 Montserrat,system-ui,sans-serif", color: "#0c4a6e", marginBottom: 6 };
@@ -187,6 +167,7 @@ const pad2 = (n) => String(n ?? "").padStart(2, "0");
 const sortDescByDate = (a, b) => (b.match_iso ? new Date(b.match_iso).getTime() : -Infinity) - (a.match_iso ? new Date(a.match_iso).getTime() : -Infinity);
 const dmyShort = (iso) => { if (!iso) return "—"; const d = new Date(iso); return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${String(d.getFullYear()).slice(-2)}, ${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
 const dmyFull = (iso) => { if (!iso) return "—"; const d = new Date(iso); return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`; };
+const dmyFullTime = (iso) => { if (!iso) return "—"; const d = new Date(iso); return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}, ${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
 const toLocalInput = (iso) => { if (!iso) return ""; const d = new Date(iso); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
 const fromLocalInput = (localStr) => { if (!localStr) return null; const ms = Date.parse(localStr); return isNaN(ms) ? null : new Date(ms).toISOString(); };
 
@@ -307,7 +288,7 @@ export default function ResultadosHistoricos() {
       const m = new Map(userNames);
       (data || []).forEach(u => {
         const code = (u.first_name || "").trim();
-        const surname = (u.last_name || "").trim();
+        the surname = (u.last_name || "").trim();
         const full = (u.full_name || "").trim();
         const email = (u.email || "").trim();
         const display = full || `${code} ${surname}`.trim() || email || u.id;
@@ -388,7 +369,6 @@ export default function ResultadosHistoricos() {
       const { error: upErr } = await supabase.from("resultados_confirmados").upsert(payload, { onConflict: "match_id,user_id", ignoreDuplicates: false });
       if (upErr) return showToast(`Erro gardando: ${upErr.message || upErr.code}`, false);
 
-      // Deixar aberto o panel do partido; pechar só o editor da persoa
       setOpenUserPanel(null);
       setSelPlantilla(new Set());
       setSelOnce(new Set());
@@ -414,7 +394,6 @@ export default function ResultadosHistoricos() {
   const aliIs11 = selPlantilla.size === 11;
   const onceIs11 = selOnce.size === 11;
 
-  /* Helpers de formateo 'DD · Nome' e unión con '|' */
   const fmtPlayer = (p) => `${pad2(p.dorsal ?? "")} · ${p.name || (p.label?.split(" - ").slice(-1)[0] || "")}`;
   const listLinear = (ids, onceIdsSet, map) =>
     ids.map((pid, idx, arr) => {
@@ -614,7 +593,15 @@ export default function ResultadosHistoricos() {
       <style>{STYLES}</style>
 
       <h2 style={PAGE_HEAD}>HISTÓRICO DE RESULTADOS</h2>
-      <p style={PAGE_SUB}>Aquí podes consultar os resultados individuais e xerais de cada partido.</p>
+
+      <div style={PAGE_SUB_WRAP}>
+        <p style={PAGE_SUB}>Aquí podes consultar os resultados individuais e xerais de cada partido.</p>
+        {isMobile && isAdmin && (
+          <button type="button" style={INFO_BTN} title="Información" aria-label="Información" onClick={() => setShowMobileInfo(true)}>
+            <svg width="18" height="18" viewBox="0 0 24 24" style={INFO_SVG}><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
+          </button>
+        )}
+      </div>
 
       {toast?.msg && <div style={toast.ok ? TOAST_OK : TOAST_ERR} aria-live="polite">{toast.msg}</div>}
       {err && <div style={{ ...TOAST_ERR }} role="status">{err}</div>}
@@ -638,31 +625,54 @@ export default function ResultadosHistoricos() {
               <li key={match.id} style={{ ...ITEM_BASE, ...itemGrid(isMobile), marginBottom: isPeopleOpen ? 12 : 8 }}>
                 {isMobile ? (
                   <div style={COMPACT_TEXT}>
-                    <span style={DATE(true)}>{dmyFull(match.match_iso)}</span>
-                    <span style={{ margin: "0 6px" }}>·</span>
+                    <button
+                      type="button"
+                      style={{ ...ICONBTN, width: 28, height: 28 }}
+                      title="Ver data do partido"
+                      aria-label="Ver data do partido"
+                      onClick={() => {
+                        setMobileDateToast(dmyFull(match.match_iso));
+                        setTimeout(() => setMobileDateToast(""), 2000);
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" style={SVGI}><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                    </button>
                     <span style={TEAMS(true)}>{match.equipo1} <span style={{ color: "#0f172a" }}>-</span> {match.equipo2}</span>
                   </div>
                 ) : (
                   <>
-                    <span style={DATE(false)}>{dmyShort(match.match_iso)}</span>
+                    <span style={DATE(false)}>{dmyFullTime(match.match_iso)}</span>
                     <span style={TEAMS(false)}>{match.equipo1} <span style={SEP}>-</span> {match.equipo2}</span>
                   </>
                 )}
 
                 <div style={ACTIONS}>
-                  {isAdmin && isMobile && (
-                    <button type="button" style={INFO_BTN} title="Información" aria-label="Información" onClick={() => setShowMobileInfo(true)}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" style={INFO_SVG}><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
-                    </button>
-                  )}
+                  {/* RESTAURADO: botón 'persoas' en desktop admin para abrir o panel (teclado dentro) */}
                   {isAdmin && !isMobile && (
                     <>
                       {!isPeopleOpen ? (
-                        <button type="button" style={ICONBTN} title="Ver usuarias/os" aria-label="Ver usuarias/os" onClick={() => onClickPeople(match.id)}>
-                          <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                        <button
+                          type="button"
+                          style={ICONBTN}
+                          title="Ver usuarias/os"
+                          aria-label="Ver usuarias/os"
+                          onClick={() => onClickPeople(match.id)}
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}>
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                          </svg>
                         </button>
                       ) : (
-                        <button type="button" style={XBTN} title="Pechar etiqueta do partido" aria-label="Pechar etiqueta do partido" onClick={() => { setOpenPeopleMatchId(null); setOpenUserPanel(null); }}>
+                        <button
+                          type="button"
+                          style={XBTN}
+                          title="Pechar etiqueta do partido"
+                          aria-label="Pechar etiqueta do partido"
+                          onClick={() => { setOpenPeopleMatchId(null); setOpenUserPanel(null); }}
+                        >
                           <svg width="16" height="16" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
                         </button>
                       )}
@@ -686,7 +696,9 @@ export default function ResultadosHistoricos() {
                       <path d="M2 12s4.6-7 10-7 10 7 10 7-4.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />
                     </svg>
                   </button>
-                  <span style={CONF_COUNT}>{confirmedCount}</span>
+
+                  {/* En móbil, ocultamos o contador verde; en desktop, móstrase */}
+                  {!isMobile && <span style={CONF_COUNT}>{confirmedCount}</span>}
                 </div>
 
                 {isPeopleOpen && isAdmin && !isMobile && (
@@ -708,11 +720,27 @@ export default function ResultadosHistoricos() {
                                   {u.surname && <div style={USER_SUB}>{u.surname}</div>}
                                 </div>
                                 {!isOpen ? (
-                                  <button type="button" style={ICONBTN} title="Abrir táboas desta persoa" aria-label="Abrir táboas desta persoa" onClick={() => onOpenUserEditor(u.id)}>
-                                    <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" /></svg>
+                                  <button
+                                    type="button"
+                                    style={ICONBTN}
+                                    title="Abrir táboas desta persoa"
+                                    aria-label="Abrir táboas desta persoa"
+                                    onClick={() => onOpenUserEditor(u.id)}
+                                  >
+                                    {/* Teclado */}
+                                    <svg width="20" height="20" viewBox="0 0 24 24" style={SVGI}>
+                                      <rect x="3" y="6" width="18" height="12" rx="2" />
+                                      <path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" />
+                                    </svg>
                                   </button>
                                 ) : (
-                                  <button type="button" style={XBTN} title="Pechar editor desta persoa" aria-label="Pechar editor desta persoa" onClick={() => setOpenUserPanel(null)}>
+                                  <button
+                                    type="button"
+                                    style={XBTN}
+                                    title="Pechar editor desta persoa"
+                                    aria-label="Pechar editor desta persoa"
+                                    onClick={() => setOpenUserPanel(null)}
+                                  >
                                     <svg width="16" height="16" viewBox="0 0 24 24" style={XSVG}><path d="M18 6 6 18M6 6l12 12" /></svg>
                                   </button>
                                 )}
@@ -733,7 +761,6 @@ export default function ResultadosHistoricos() {
                               {renderPlayersColumn(players, selPlantilla, setSelPlantilla, COL_BG_ALI)}
                               {renderPlayersColumn(players, selOnce, setSelOnce, COL_BG_OFI)}
                             </div>
-                            {/* Resumo SÓ NA COLUMNA DEREITA (non invade etiquetas) */}
                             {renderSummaryRight(match.id)}
                           </>
                         )}
@@ -747,7 +774,6 @@ export default function ResultadosHistoricos() {
         </ul>
       )}
 
-      {/* Info admins móbil */}
       {showMobileInfo && (
         <div role="dialog" aria-modal="true" style={INFO_POP}>
           <button type="button" style={{ ...XBTN_SMALL, position: "absolute", top: 8, right: 8 }} aria-label="Pechar" title="Pechar" onClick={() => setShowMobileInfo(false)}>
@@ -760,7 +786,8 @@ export default function ResultadosHistoricos() {
           </p>
         </div>
       )}
+
+      {mobileDateToast && <div style={TOAST_DATE}>{mobileDateToast}</div>}
     </main>
   );
 }
-
