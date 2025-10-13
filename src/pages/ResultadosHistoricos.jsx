@@ -32,16 +32,15 @@ const DATE = (isMobile) => ({
 });
 
 const TEAMS = (isMobile) => ({
-  font: isMobile ? "800 14.5px/1.08 Montserrat,system-ui,sans-serif" : "800 14px/1.1 Montserrat,system-ui,sans-serif",
+  font: isMobile ? "800 13.3px/1.08 Montserrat,system-ui,sans-serif" : "800 14px/1.1 Montserrat,system-ui,sans-serif",
   textTransform: "uppercase",
   color: "#111827",
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
-  // máis alto e un pouco máis longo en móbil
-  transform: isMobile ? "scaleX(1.03) scaleY(1.08)" : "none",
+  transform: isMobile ? "scaleX(1.02) scaleY(1.06)" : "none",
   transformOrigin: "left center",
-  letterSpacing: isMobile ? "0.2px" : "0.2px",
+  letterSpacing: isMobile ? "0.16px" : "0.2px",
 });
 
 const SEP = { margin: "0 6px", fontWeight: 800, color: "#0f172a" };
@@ -68,7 +67,7 @@ const EYE_BTN_DESKTOP = (active) =>
     : { ...ICONBTN, width: 30, height: 30 };
 const EYE_SVG = (active) => (active ? { ...SVGI, stroke: "#fff" } : SVGI);
 
-/* Ollo móbil: azul con fondo branco e bordo azul */
+/* Ollo móbil: azul con fondo branco e bordo azul (lixeiramente maior) */
 const EYE_BTN_MOBILE = {
   ...ICONBTN,
   width: 36,
@@ -192,12 +191,15 @@ const FULL_TITLE_BAR_MOBILE = {
   borderRadius: 10,
   color: "#fff",
   display: "grid",
-  gridTemplateColumns: "1fr auto", // texto + X á dereita
+  gridTemplateColumns: "1fr auto",
   alignItems: "center",
   gap: 8,
 };
+/* título móbil: sen bold por defecto */
+const FULL_TITLE_MOBILE = { font: "600 14.5px/1.15 Montserrat,system-ui,sans-serif", color: "#fff" };
 
-/* Cabeceira/filas en móbil: 1fr para membro, e ancho mínimo para Acertos/Detalle */
+/* Cabeceira/filas móbil con liñas verticais finas */
+const BORDER_V = "1px solid #dbe3ef";
 const FULL_HEAD_MOBILE = {
   display: "grid",
   gridTemplateColumns: "1fr max-content max-content",
@@ -216,8 +218,8 @@ const FULL_ROW_MOBILE = {
   font: "600 12.2px/1.05 Montserrat,system-ui,sans-serif",
   alignItems: "center"
 };
-const FULL_CELL_SPLIT = { padding: "0 6px", borderRight: "1px solid #eef2f7", display: "flex", alignItems: "center" };
-const FULL_CELL_LAST_CENTER = { padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "center" };
+const FULL_CELL_SPLIT = { padding: "0 6px", borderRight: BORDER_V, display: "flex", alignItems: "center" };
+const FULL_CELL_LAST_CENTER = { padding: "0 6px", display: "flex", alignItems: "center", justifyContent: "center", borderLeft: BORDER_V };
 const FULL_ACERTOS_VAL = { textAlign: "center", color: "#0ea5e9", fontWeight: 900, width: "100%", justifyContent: "center", display: "flex" };
 
 /* Editor inline de data/hora — escritorio */
@@ -237,7 +239,7 @@ const MOBILE_ALIGN_POP = {
   background: "#fff",
   border: "1px solid #e5e7eb",
   borderRadius: 12,
-  boxShadow: "0 24px 64px rgba(0,0,0,.45)", // moita sombra
+  boxShadow: "0 24px 64px rgba(0,0,0,.45)",
   padding: 16,
   maxHeight: "74vh",
   overflowY: "auto",
@@ -377,7 +379,6 @@ export default function ResultadosHistoricos() {
         const p = normalizePlayer(pp);
         const pos = p.pos || inferPosFromFoto(p.foto_url || "");
         const nameOnly = p.nombre || "";
-        the // ← NO TOCAR: placeholder eliminado (evita erros de build)
         const label = p.dorsal ? `${p.dorsal} - ${nameOnly}` : nameOnly;
         return { id: p.id, dorsal: p.dorsal ?? null, pos, name: nameOnly, label };
       }));
@@ -431,7 +432,7 @@ export default function ResultadosHistoricos() {
   async function loadConfirmedForMatch(matchId) {
     try {
       const { data, error } = await supabase.from("resultados_confirmados").select("match_id,user_id,confirmed_at,acertos,plantilla_ids,once_ids").eq("match_id", matchId).order("confirmed_at", { ascending: false });
-    if (error) throw error;
+      if (error) throw error;
       setResultsConfirmed(prev => ({ ...prev, [matchId]: data || [] }));
       setHasResults(prev => new Set([...prev, matchId]));
       const setU = new Set((data || []).map(r => r.user_id));
@@ -502,8 +503,8 @@ export default function ResultadosHistoricos() {
   const listLinear = (ids, onceIdsSet, map) =>
     ids.map((pid, idx, arr) => {
       const p = map.get(pid);
-      const txt = p ? fmtPlayer(p) : String(pid);
-      const part = onceIdsSet?.has(pid) ? <strong style={{ color: "#0ea5e9" }}>{txt}</strong> : txt;
+      const baseTxt = p ? `${pad2(p?.dorsal ?? "")} · ${p?.name ?? ""}` : "—";
+      const part = onceIdsSet?.has(pid) ? <strong style={{ color: "#0ea5e9" }}>{baseTxt}</strong> : baseTxt;
       return (
         <span key={`${pid}-${idx}`}>
           {part}
@@ -619,8 +620,8 @@ export default function ResultadosHistoricos() {
                 const onceSet = new Set(rec.once_ids || []);
                 const ali = (rec.plantilla_ids || []).map((pid, idx, arr) => {
                   const p = pMap.get(pid);
-                  const txt = p ? `${pad2(p.dorsal ?? "")} · ${p.name}` : String(pid);
-                  const mark = onceSet.has(pid) ? <strong style={{ color: "#0ea5e9" }}>{txt}</strong> : txt;
+                  const label = p ? `${pad2(p.dorsal ?? "")} · ${p.name}` : "—";
+                  const mark = onceSet.has(pid) ? <strong style={{ color: "#0ea5e9" }}>{label}</strong> : label;
                   return <span key={`${pid}-${idx}`}>{mark}{idx < arr.length - 1 && <span style={{ opacity: .6 }}>|</span>}</span>;
                 });
 
@@ -656,16 +657,15 @@ export default function ResultadosHistoricos() {
       );
     }
 
-    /* ====== MÓBIL — cambios solicitados ====== */
+    /* ====== MÓBIL ====== */
     return (
       <section aria-label="Resultados do partido" style={{ marginTop: 6 }}>
         <div style={FULL_TITLE_BAR_MOBILE}>
-          <div style={{ ...FULL_TITLE, display: "grid", gap: 2 }}>
+          <div style={{ ...FULL_TITLE_MOBILE, display: "grid", gap: 2 }}>
             <div>LISTADO DAS ALIÑACIÓNS FEITAS POR CADA XOGADOR</div>
             <div><span style={{ fontWeight: 900 }}>{match.equipo1}</span> - <span style={{ fontWeight: 900 }}>{match.equipo2}</span></div>
             <div>{dmyFull(match.match_iso)}</div>
           </div>
-          {/* X á dereita: contorno branco, fondo vermello, X branca */}
           <button
             type="button"
             style={{ ...ICONBTN, width: 32, height: 32, border: "1px solid #fff", background: "linear-gradient(180deg,#fca5a5,#ef4444)" }}
@@ -679,8 +679,8 @@ export default function ResultadosHistoricos() {
 
         <div style={FULL_TABLE}>
           <div style={FULL_HEAD_MOBILE}>
-            <div style={{ ...FULL_CELL_SPLIT, fontWeight: 800, borderRight: "1px solid #dbe3ef" }}>HDC Membro</div>
-            <div style={{ ...FULL_CELL_SPLIT, fontWeight: 800, justifyContent: "center", borderRight: "1px solid #dbe3ef" }}>Acertos</div>
+            <div style={{ ...FULL_CELL_SPLIT, fontWeight: 800 }}>HDC Membro</div>
+            <div style={{ ...FULL_CELL_SPLIT, fontWeight: 800, justifyContent: "center" }}>Acertos</div>
             <div style={{ ...FULL_CELL_LAST_CENTER, fontWeight: 800 }}>Detalle</div>
           </div>
 
@@ -690,13 +690,14 @@ export default function ResultadosHistoricos() {
             recs.map((rec) => {
               const uname = userNames.get(rec.user_id) || rec.user_id;
               const onceSet = new Set(rec.once_ids || []);
-              const labels = (rec.plantilla_ids || []).map((pid) => {
-                const p = pMap.get(pid);
-                const txt = p ? `${pad2(p.dorsal ?? "")} · ${p.name}` : String(pid);
-                return onceSet.has(pid) ? <strong key={pid} style={{ color: "#0ea5e9" }}>{txt}</strong> : <span key={pid}>{txt}</span>;
-              });
 
-              // dividir en dúas liñas para axustar ancho
+              const labels = (rec.plantilla_ids || []).map((pid, idx) => {
+                const p = pMap.get(pid);
+                const label = p ? `${pad2(p.dorsal ?? "")} · ${p.name}` : "—";
+                return onceSet.has(pid)
+                  ? <strong key={`${pid}-${idx}`} style={{ color: "#0ea5e9" }}>{label}</strong>
+                  : <span key={`${pid}-${idx}`}>{label}</span>;
+              });
               const plain = labels.reduce((acc, node, idx) => {
                 acc.push(node);
                 if (idx < labels.length - 1) acc.push(<span key={`sep-${idx}`} style={{ opacity: 0.6 }}>|</span>);
@@ -705,10 +706,10 @@ export default function ResultadosHistoricos() {
 
               return (
                 <div key={`${rec.user_id}`} style={FULL_ROW_MOBILE}>
-                  <div style={{ ...FULL_CELL_SPLIT, borderRight: "1px solid #eef2f7", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  <div style={{ ...FULL_CELL_SPLIT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                     {uname}
                   </div>
-                  <div style={{ ...FULL_CELL_SPLIT, borderRight: "1px solid #eef2f7", justifyContent: "center" }}>
+                  <div style={{ ...FULL_CELL_SPLIT, justifyContent: "center" }}>
                     <span style={FULL_ACERTOS_VAL}>{rec.acertos}</span>
                   </div>
                   <div style={FULL_CELL_LAST_CENTER}>
@@ -807,7 +808,7 @@ export default function ResultadosHistoricos() {
                     <div style={{ position: "relative" }}>
                       <button
                         type="button"
-                        style={{ ...ICONBTN, width: 28, height: 28, border: "1px solid #0ea5e9", background: "#fff" }}
+                        style={{ ...ICONBTN, width: 26, height: 26, border: "1px solid #0ea5e9", background: "#fff" }}
                         title="Ver data do partido"
                         aria-label="Ver data do partido"
                         onClick={() => {
@@ -815,7 +816,7 @@ export default function ResultadosHistoricos() {
                           setTimeout(() => setDateBubbleFor((id) => (id === match.id ? null : id)), 2000);
                         }}
                       >
-                        <svg width="16" height="16" viewBox="0 0 24 24" style={{ ...SVGI, stroke: "#0ea5e9" }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" style={{ ...SVGI, stroke: "#0ea5e9" }}>
                           <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
                         </svg>
                       </button>
@@ -849,7 +850,7 @@ export default function ResultadosHistoricos() {
                     </>
                   )}
 
-                  {/* Ollo (móbil azul / escritorio activo en celeste) */}
+                  {/* Ollo (móbil/ escritorio) */}
                   <button
                     type="button"
                     style={isMobile ? EYE_BTN_MOBILE : EYE_BTN_DESKTOP(eyeActive)}
